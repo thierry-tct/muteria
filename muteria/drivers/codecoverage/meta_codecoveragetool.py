@@ -1,0 +1,246 @@
+# TODO Fix the call of sub tool by toolname
+# TODO also fix duplucation in __init__ for tool with many criteria
+
+# The tools are organized by programming language
+# For each language, there is a folder for each tool, 
+# named after the tool in lowercase
+
+# Each codecoverage tool package have the following in the __init__.py file:
+# import <Module>.<class extending BaseCodecoverageTool> as CodecoverageTool
+
+from __future__ import print_function
+import os
+import sys
+import glob
+import logging
+
+import muteria.common.fs as common_fs
+import muteria.common.matrices as common_matrices
+import muteria.common.mix as common_mix
+
+from base_codecoveragetool import BaseCodecoverageTool
+
+from ... import ToolsModulesLoader
+
+from ...checkpoint_handler import CheckpointHandlerForMeta
+
+ERROR_HANDLER = common_mix.ErrorHandler()
+
+class MetaCodecoverageTool(object):
+    '''
+    '''
+
+    STATEMENT_DEFAULT = True
+    BRANCH_DEFAULT = True
+    FUNCTION_DEFAULT = True
+
+    STATEMENT_KEY = BaseCodecoverageTool.STATEMENT_KEY
+    BRANCH_KEY = BaseCodecoverageTool.BRANCH_KEY
+    FUNCTION_KEY = BaseCodecoverageTool.FUNCTION_KEY
+
+    CRITERIA_LIST = [STATEMENT_KEY, BRANCH_KEY, FUNCTION_KEY]
+
+    def __init__(self, meta_test_generation_obj, codecoverage_working_dir, 
+                                                tool_by_criterion_dict,
+                                                code_builder, config_dict):
+        self.modules_dict = ToolsModulesLoader.get_tools_modules(
+                                    ToolsModulesLoader.CODE_COVERAGE_TOOLS)
+        self.meta_test_generation_obj = meta_test_generation_obj
+        sefl.codecoverage_working_dir = codecoverage_working_dir
+        self.code_builder = code_builder
+        self.config_dict = config_dict
+
+        assert set(self.config_dict) == set(tool_by_criterion_dict),
+                "mismatch between tools and config"
+        if self.codecoverage_working_dir is not None:
+            if not os.path.isdir(self.codecoverage_working_dir):
+                os.mkdir(self.codecoverage_working_dir)
+        else:
+            logging.error("Must specify codecoverage_working_dir")
+            ERROR_HANDLER.error_exit()
+
+        self.checkpoints_dir = os.path.join(self.codecoverage_working_dir, "_checkpoints_")
+        if not os.path.isdir(self.checkpoints_dir):
+            os.mkdir(self.checkpoints_dir)
+
+        self.checkpointer = common_mix.CheckpointState(*self.get_checkpoint_files())
+
+        self.codecoverage_tool_by_criterion = {}
+        for criterion in tool_by_criterion_dict:
+            toolname = tool_by_criterion_dict[criterion]
+            tool_working_dir = self.get_codecoverage_tool_out_folder(toolname)
+            config = config_dict[criterion]
+            tool_checkpointer = common_mix.CheckpointState(*self.get_mutation_tool_checkpoint_files(toolname))
+            self.checkpointer.add_dep_checkpoint_state(tool_checkpointer)
+            self.codecoverage_tool_by_criterion[criterion] = {}
+            self.codecoverage_tool_by_criterion[criterion][toolname] = {
+                "tool_obj": self.get_codecoverage_tool(language, toolname, tool_working_dir, config, tool_checkpointer),
+                "tool_working_dir": tool_working_dir,
+            }
+    #~ def __init__()
+
+    def get_codecoverage_tool(self, language, toolname, tool_working_dir, config, tool_checkpointer):
+        '''
+            Each tool module must have the function createCodecoverageTool() implemented
+        '''
+        ccov_tool = self.modules_dict[language][toolname].createCodecoverageTool(
+                                            self.meta_test_generation_obj,
+                                            tool_working_dir,
+                                            self.code_builder,
+                                            config,
+                                            tool_checkpointer)
+        return ccov_tool
+    #~ def get_codecoverage_tool()
+
+    def get_tool2criteria_values(criteria_passed_values)
+        none_activated_default = {c: None for c in self.CRITERIA_LIST}
+        tool2criteria_values = {}
+        for criterion in criteria_passed_values:
+            ctoolname = self.tool_by_criterion_dict[criterion]
+            if ctoolname not in tool2criteria_values:
+                tool2criteria_values[ctoolname] = \
+                                                none_activated_default.copy()
+            tool2criteria_values[ctoolname][criterion] = \
+                                        criteria_passed_values[criterion]
+        return tool2criteria_values
+    #~ def get_tool2criteria_values()
+                                            
+    def runtests_code_coverage (self, testcases, re_instrument_code=True, \
+                                            statement_matrix=None, \
+                                            branch_matrix=None, \
+                                            function_matrix=None):
+        '''
+        Executes the instrumented executable code with testscases and
+        returns the different code coverage matrices.
+
+        :param testcases: list of testcases to execute
+        :param re_instrument_code: Decide whether to instrument code before 
+                        running the tests. (Example when instrumentation was 
+                        not specifically called. This is True by default)
+        :param statement_matrix: Matrix object where to store statement 
+                        coverage. If None, statement coverage is disabled
+        :param branch_matrix: Matrix object where to store branch 
+                        coverage. If None, branch coverage is disabled
+        :param function_matrix: Matrix object where to store function 
+                        coverage. If None, function coverage is disabled
+        '''
+
+        # @Checkpoint: create a checkpoint handler
+        checkpoint_handler = CheckpointHandlerForMeta(self.get_checkpointer())
+        if checkpoint_handler.is_finished():
+            return
+
+        assert statement_matrix is not None or branch_matrix is not None \
+                                            or function_matrix is not None, \
+                                                    "no criterion is enabled"
+        criteria_passed_values = {}
+        criteria_passed_values[self.STATEMENT_KEY] = statement_matrix
+        criteria_passed_values[self.BRANCH_KEY] = branch_matrix
+        criteria_passed_values[self.FUNCTION_KEY] = function_matrix
+
+        assert len(set(criteria_passed_values) - \
+                    set(self.tool_by_criterion_dict)) = 0, \
+                        "Passed matrices output are more than tool specified"
+
+        tool2criteria_values = get_tool2criteria_values(criteria_passed_values)
+
+        for ctoolname in tool2criteria_values:
+            # Check whether already executed
+            if checkpoint_handler.is_to_execute( \
+                                        func_name="runtests_code_coverage", \
+                                        taskid=1, \
+                                        tool=ctoolname)
+
+                # Actual execution
+                ctoolname.runtests_code_coverage(testcases, \
+                        criterion_to_matrix = tool2criteria_values[ctoolname], \
+                        re_instrument_code=re_instrument_code)
+
+                # Checkpointing
+                checkpoint_handler.do_checkpoint( \
+                                        func_name="runtests_code_coverage", \
+                                        taskid=1, \
+                                        tool=ctoolname)
+
+        # @Checkpoint: Finished
+        detailed_exectime = {ct: ct.get_checkpointer().get_execution_time() \
+                                                for ct in tool2criteria_values}
+        checkpoint_handler.set_finished(detailed_exectime_obj=detailed_exectime)
+    #~ def runtests_code_coverage()
+
+    def instrument_code (self, outputdir=None, code_builder_override=None,
+                                statement_enabled=self.STATEMENT_DEFAULT,
+                                branch_enabled=self.BRANCH_DEFAULT,
+                                function_enabled=self.FUNCTION_DEFAULT):
+        '''
+        '''
+        # @Checkpoint: create a checkpoint handler
+        checkpoint_handler = CheckpointHandlerForMeta(self.get_checkpointer())
+        if checkpoint_handler.is_finished():
+            return
+
+        assert statement_enabled or branch_enabled or function_enabled, \
+                                                    "no criterion is enabled"
+
+        criteria_passed_values = {}
+        criteria_passed_values[self.STATEMENT_KEY] = statement_enabled
+        criteria_passed_values[self.BRANCH_KEY] = branch_enabled
+        criteria_passed_values[self.FUNCTION_KEY] = function_enabled
+
+        assert len(set(criteria_passed_values) - \
+                    set(self.tool_by_criterion_dict)) = 0, \
+                        "Passed matrice output are more than toll specified"
+
+        tool2criteria_values = get_tool2criteria_values(criteria_passed_values)
+
+        for ctoolname in tool2criteria_values:
+            # Check whether already executed
+            if checkpoint_handler.is_to_execute( \
+                                        func_name="instrument_code", \
+                                        taskid=1, \
+                                        tool=ctoolname)
+                # Actual execution
+                ctoolname.instrument_code(outputdir, code_builder_override, \
+                        criterion_to_enabling = tool2criteria_values[ctoolname])
+
+                # Checkpointing
+                checkpoint_handler.do_checkpoint( \
+                                        func_name="instrument_code", \
+                                        taskid=1, \
+                                        tool=ctoolname)
+
+        # @Checkpoint: Finished
+        detailed_exectime = {ct: ct.get_checkpointer().get_execution_time() \
+                                                for ct in tool2criteria_values}
+        checkpoint_handler.set_finished(detailed_exectime_obj=detailed_exectime)
+    #~ def instrument_code()
+
+    def get_codecoverage_tool_out_folder(ccov_toolname, top_outdir=None):
+        if top_outdir is None:
+            top_outdir = self.codecoverage_working_dir
+        return os.path.join(top_outdir, ccov_toolname)
+    #~def get_codecoverage_tool_out_folder()
+
+    def get_codecoverage_tool_checkpoint_files(self, codecoverage_toolname, top_checkpoint_dir=None):
+        if top_checkpoint_dir is None:
+            top_checkpoint_dir = self.checkpoints_dir
+        return [os.path.join(top_checkpoint_dir, \
+                            codecoverage_toolname+"_checkpoint.state"+suffix) \
+                            for suffix in ("", ".backup")]
+    #~def get_codecoverage_tool_checkpoint_files()
+        
+    def get_checkpoint_files(self):
+        top_checkpoint_dir = self.checkpoints_dir
+        return [os.path.join(top_checkpoint_dir, \
+                        "checkpoint.state"+suffix) \
+                        for suffix in ("", ".backup")]
+    #~def get_checkpoint_files()
+
+    def get_checkpointer(self):
+        return self.checkpointer
+    #~ def get_checkpointer()
+
+    def has_checkpointer(self):
+        return self.checkpointer is not None
+    #~ def has_checkpointer()
+#~ class MetaCodecoverageTool
