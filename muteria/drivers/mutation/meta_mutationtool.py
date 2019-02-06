@@ -1,12 +1,17 @@
 
 # This module is used through MetaMutationTool class
 # Which access the relevant mutation tools as specified
+
 # The tools are organized by programming language
 # For each language, there is a folder for each tool, 
-# named after the toolin lowercase
+# named after the tool in lowercase
+
+# Each mutation tool package have the following in the __init__.py file:
+# import <Module>.<class extending BaseMutationTool> as MutationTool
 
 from __future__ import print_function
-import os, sys
+import os
+import sys
 import glob
 import copy
 import logging
@@ -27,6 +32,9 @@ class MetaMutationTool(object):
     ''' 
     '''
 
+    TOOL_OBJ_KEY = "tool_obj"
+    TOOL_WORKDIR_KEY = "tool_working_dir"
+
     def __init__(self, meta_test_generation_obj,
                         mutation_working_dir,
                         code_builder,
@@ -35,8 +43,13 @@ class MetaMutationTool(object):
                         config_list):
         self.modules_dict = ToolsModulesLoader.get_tools_modules(
                                     ToolsModulesLoader.MUTATION_TOOLS)
-        assert len(mutation_toolname_list) == len(config_list), \
-                    "mismatch between number of toolnames and configs"
+        if len(mutation_toolname_list) != len(config_list):
+            logging.error("mismatch between number of toolnames and configs")
+            ERROR_HANDLER.error_exit()
+        if len(mutation_toolname_list) != len(set(mutation_toolname_list)):
+            logging.error("some tools appear multiple times.")
+            ERROR_HANDLER.error_exit()
+
         self.meta_test_generation_obj = meta_test_generation_obj
         self.mutation_working_dir = mutation_working_dir
         self.code_builder = code_builder
@@ -48,11 +61,13 @@ class MetaMutationTool(object):
             logging.error("Must specify mutation_working_dir")
             ERROR_HANDLER.error_exit()
 
-        self.checkpoints_dir = os.path.join(self.mutation_working_dir, "_checkpoints_")
+        self.checkpoints_dir = os.path.join(self.mutation_working_dir, \
+                                                            "_checkpoints_")
         if not os.path.isdir(self.checkpoints_dir):
             os.mkdir(self.checkpoints_dir)
 
-        self.checkpointer = common_mix.CheckpointState(*self.get_checkpoint_files())
+        self.checkpointer = common_mix.CheckpointState( \
+                                                *self.get_checkpoint_files())
         
         #self.mutant_id_mapping_jsonfile = \
         #    os.path.join(self.mutation_working_dir, "mutant_id_mapping.json")
@@ -65,11 +80,14 @@ class MetaMutationTool(object):
             toolname = mutation_toolname_list[idx]
             tool_working_dir = self.get_mutation_tool_out_folder(toolname)
             config = config_list[idx]
-            tool_checkpointer = common_mix.CheckpointState(*self.get_mutation_tool_checkpoint_files(toolname))
+            tool_checkpointer = common_mix.CheckpointState( \
+                            *self.get_mutation_tool_checkpoint_files(toolname))
             self.checkpointer.add_dep_checkpoint_state(tool_checkpointer)
             self.mutation_tools[toolname] = {
-                "tool_obj": self.get_mutation_tool(language, toolname, tool_working_dir, config, tool_checkpointer),
-                "tool_working_dir": tool_working_dir,
+                self.TOOL_OBJ_KEY: self.get_mutation_tool(language, toolname, \
+                                                tool_working_dir, config, \
+                                                tool_checkpointer),
+                self.TOOL_WORKDIR_KEY: tool_working_dir,
             }
     #~ def __init__()
 
@@ -77,7 +95,7 @@ class MetaMutationTool(object):
         '''
             Each tool module must have the function createMutationTool() implemented
         '''
-        mutation_tool = self.modules_dict[language][toolname].createMutationTool(
+        mutation_tool = self.modules_dict[language][toolname].MutationTool(
                                             self.meta_test_generation_obj,
                                             tool_working_dir,
                                             self.code_builder,
@@ -90,6 +108,8 @@ class MetaMutationTool(object):
                                                 mode, serialize_period=1, \
                                                 strong_kill_only_once=False):
         # @Checkpoint: create a checkpoint handler
+        cp_func_name = "runtest_generic:"+mode
+        cp_task_id = 1
         checkpoint_handler = CheckpointHandlerForMeta(self.get_checkpointer())
         if checkpoint_handler.is_finished():
             return
@@ -111,10 +131,10 @@ class MetaMutationTool(object):
                                                 "tool in data not registered"
         matrix_files_map = {}
         for mtoolname in mutantlist_by_tool:
-            # Check whether already executed
+            # @Checkpoint: Check whether already executed
             if not checkpoint_handler.is_to_execute( \
-                                        func_name="runtest_generic:"+mode, \
-                                        taskid=1, \
+                                        func_name=cp_func_name, \
+                                        taskid=cp_task_id, \
                                         tool=mtoolname)
                 continue
 
@@ -122,24 +142,25 @@ class MetaMutationTool(object):
                                             matrices_dir_tmp, mtoolname+'.csv')
             tool_matrix = result_matrix.get_a_deepcopy(\
                                     new_filename=matrix_files_map[mtoolname])
+            mut_tool = self.mutation_tools[mtoolname][self.TOOL_OBJ_KEY]
             if mode == "mutant_coverage":
-                self.mutation_tools[mtoolname]['tool_obj'].\
-                            runtest_mutant_coverage(testcases, tool_matrix, \
+                mut_tool.runtest_mutant_coverage(testcases, tool_matrix, \
                                                 mutantlist_by_tool[mtoolname])
             elif mode == "weak_mutation":
-                self.mutation_tools[mtoolname]['tool_obj'].\
-                            runtest_weak_mutation(testcases, tool_matrix, \
+                mut_tool.runtest_weak_mutation(testcases, tool_matrix, \
                                                 mutantlist_by_tool[mtoolname])
             elif mode == "strong_mutation":
-                self.mutation_tools[mtoolname]['tool_obj'].\
-                            runtest_strong_mutation(testcases, tool_matrix, \
+                mut_tool.runtest_strong_mutation(testcases, tool_matrix, \
                             mutantlist_by_tool[mtoolname], serialize_period, \
                                                         strong_kill_only_once)
+            else:
+                logging("Invalid mode: {}".format(mode))
+                ERROR_HANDLER.error_exit()
             
-            # Checkpointing
+            # @Checkpoint: Checkpointing
             checkpoint_handler.do_checkpoint( \
-                                    func_name="runtest_generic:"+mode, \
-                                    taskid=1, \
+                                    func_name=cp_func_name, \
+                                    taskid=cp_task_id, \
                                     tool=mtoolname)
 
         # Aggregate the matrices
@@ -177,12 +198,16 @@ class MetaMutationTool(object):
         checkpoint_handler.set_finished(detailed_exectime_obj=detailed_exectime)
     #~ runtest_generic()
 
-    def runtest_mutant_coverage (self, testcases, mutant_coverage_matrix, mutantlist):
-        self.runtest_generic (testcases, mutant_coverage_matrix, mutantlist, "mutant_coverage")
+    def runtest_mutant_coverage (self, testcases, mutant_coverage_matrix, \
+                                                                    mutantlist):
+        self.runtest_generic (testcases, mutant_coverage_matrix, mutantlist, \
+                                                            "mutant_coverage")
     #~ def runtest_mutant_coverage()
         
-    def runtest_weak_mutation (self, testcases, weak_mutation_matrix, mutantlist):
-        self.runtest_generic (testcases, weak_mutation_matrix, mutantlist, "weak_mutation")
+    def runtest_weak_mutation (self, testcases, weak_mutation_matrix, \
+                                                                    mutantlist):
+        self.runtest_generic (testcases, weak_mutation_matrix, mutantlist, \
+                                                                "weak_mutation")
     #~ runtest_weak_mutation()
 
     def runtest_strong_mutation (self, testcases, strong_mutation_matrix,
@@ -195,34 +220,39 @@ class MetaMutationTool(object):
 
     def mutate_programs (self):
         # @Checkpoint: create a checkpoint handler
+        cp_func_name = "mutate_programs"
+        cp_task_id = 1
         checkpoint_handler = CheckpointHandlerForMeta(self.get_checkpointer())
         if checkpoint_handler.is_finished():
             return
 
         # Mutate
         for mtoolname in self.mutation_tools:
-            # Check whether already executed
+            # @Checkpoint: Check whether already executed
             if checkpoint_handler.is_to_execute( \
-                                        func_name="mutate_programs", \
-                                        taskid=1, \
+                                        func_name=cp_func_name, \
+                                        taskid=cp_task_id, \
                                         tool=mtoolname)
 
                 # Actual Execution
-                self.mutation_tools[mtoolname]['tool_obj'].mutate_programs()
+                mut_tool = self.mutation_tools[mtoolname][self.TOOL_OBJ_KEY]
+                mut_tool.mutate_programs()
 
-                # Checkpointing
+                # @Checkpoint: Checkpointing
                 checkpoint_handler.do_checkpoint( \
-                                        func_name="mutate_programs", \
-                                        taskid=1, \
+                                        func_name=cp_func_name, \
+                                        taskid=cp_task_id, \
                                         tool=mtoolname)
 
         # Compute mutant info
         meta_mutant_info_obj = {}
         for mtoolname in self.mutation_tools:
-            tool_mutant_info = self.mutation_tools[mtoolname]['tool_obj'].get_mutant_info_object()
+            mut_tool = self.mutation_tools[mtoolname][self.TOOL_OBJ_KEY]
+            tool_mutant_info = mut_tool.get_mutant_info_object()
             for m_key in tool_mutant_info:
                 meta_m_key = self.get_meta_key(m_key, mtoolname)
-                assert meta_m_key not in meta_mutant_info_obj, "Key already existing (BUG)"
+                assert meta_m_key not in meta_mutant_info_obj, \
+                                                "Key already existing (BUG)"
                 meta_mutant_info_obj[meta_m_key] = tool_mutant_info[m_key]
         self.store_mutant_info_to_file(meta_mutant_info_obj)
 
@@ -261,7 +291,8 @@ class MetaMutationTool(object):
         return os.path.join(top_outdir, mutation_toolname)
     #~ def get_mutation_tool_out_folder()
 
-    def get_mutation_tool_checkpoint_files(self, mutation_toolname, top_checkpoint_dir=None):
+    def get_mutation_tool_checkpoint_files(self, mutation_toolname, \
+                                                    top_checkpoint_dir=None):
         if top_checkpoint_dir is None:
             top_checkpoint_dir = self.checkpoints_dir
         return [os.path.join(top_checkpoint_dir, \

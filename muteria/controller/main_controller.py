@@ -61,8 +61,9 @@ class MainController (object):
     :param output_pathdir: Path to the directory where the execution take place
                             and the resulting data are stored.
     '''
-    def __init__(self, execution_config, reporting_config, tools_config,
-                    project_config, output_pathdir):
+    def __init__(self, execution_config=None, reporting_config=None, \
+                    tools_config=None, project_config=None, \
+                    output_pathdir=None):
         self.execution_config = execution_config
         self.reporting_config = reporting_config
         self.tools_config = tools_config
@@ -148,7 +149,7 @@ class MainController (object):
         Log information showing a new run of resume of previous run
         '''
 
-    def main(self):
+    def mainrun(self):
         '''
         Entry point function
         Method that extract the cmd arguments, 
