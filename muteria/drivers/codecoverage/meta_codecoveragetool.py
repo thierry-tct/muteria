@@ -86,7 +86,7 @@ class MetaCodecoverageTool(object):
         if not os.path.isdir(self.checkpoints_dir):
             os.mkdir(self.checkpoints_dir)
 
-        self.checkpointer = common_mix.CheckpointState(\
+        self.checkpointer = common_fs.CheckpointState(\
                                                 *self.get_checkpoint_files())
 
         self.codecoverage_tool_handle = {}
@@ -101,7 +101,7 @@ class MetaCodecoverageTool(object):
                 else:
                     tool_working_dir = self.get_codecoverage_tool_out_folder( \
                                                                     toolname)
-                    tool_checkpointer = common_mix.CheckpointState( \
+                    tool_checkpointer = common_fs.CheckpointState( \
                             *self.get_mutation_tool_checkpoint_files(toolname))
                     self.checkpointer.add_dep_checkpoint_state( \
                                                             tool_checkpointer)

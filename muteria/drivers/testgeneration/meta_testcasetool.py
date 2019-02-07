@@ -70,7 +70,7 @@ class MetaTestcaseTool(object):
         if not os.path.isdir(self.checkpoints_dir):
             os.mkdir(self.checkpoints_dir)
 
-        self.checkpointer = common_mix.CheckpointState(\
+        self.checkpointer = common_fs.CheckpointState(\
                                                 *self.get_checkpoint_files())
 
         self.testcases_info_file = \
@@ -81,7 +81,7 @@ class MetaTestcaseTool(object):
             toolname = tests_toolname_list[idx]
             tool_working_dir = self.get_test_tool_out_folder(toolname)
             config = config_list[idx]
-            tool_checkpointer = common_mix.CheckpointState(\
+            tool_checkpointer = common_fs.CheckpointState(\
                             *self.get_mutation_tool_checkpoint_files(toolname))
             self.checkpointer.add_dep_checkpoint_state(tool_checkpointer)
             self.testcases_tools[toolname] = {

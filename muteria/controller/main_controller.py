@@ -13,10 +13,12 @@ import logging
 import muteria.common.fs as common_fs
 import muteria.common.matrices as common_matrices
 
-import muteria.configmanager.ExecutionConfig as ExecutionConfig
-import muteria.configmanager.ReportingConfig as ReportingConfig
-import muteria.configmanager.ToolsConfig as ToolsConfig
-import muteria.configmanager.ProjectConfig as ProjectConfig
+from muteria.configmanager.configurations import ExecutionConfig
+from muteria.configmanager.configurations import ReportingConfig
+from muteria.configmanager.configurations import MutationToolsConfig
+from muteria.configmanager.configurations import TestcaseToolsConfig
+from muteria.configmanager.configurations import CodecoverageToolsConfig
+from muteria.configmanager.configurations import ProjectConfig
 
 # from this package
 import logging_setup
@@ -94,15 +96,16 @@ class MainController (object):
 
     def get_outputdir_structure_by_filesdirs(self):
         '''
-        :returns: The structure of the output directory as directely controlled
-                    by this controller. The structure is a 'dict' where keys
+        :returns: The structure of the output directory as directely 
+                    controlled by this controller. 
+                    The structure is a 'dict' where keys
                     are files or folders and values are None for files and
                     another dict for folders.
         '''
         TopExecutionDir = {
-            MUTATION_DIR: [MUTATION_DIR],
-            CODECOVERAGE_DIR: [CODECOVERAGE_DIR],
-            TESTSCASES_DIR: [TESTSCASES_DIR],
+            MUTATION_WORKDIR: [MUTATION_WORKDIR],
+            CODECOVERAGE_WORKDIR: [CODECOVERAGE_WORKDIR],
+            TESTSCASES_WORKDIR: [TESTSCASES_WORKDIR],
             RESULTS_DATA_DIR: [RESULTS_DATA_DIR],
             RESULTS_MATRICES: [RESULTS_DATA_DIR, RESULTS_MATRICES],
             RESULTS_STATS: [RESULTS_DATA_DIR, RESULTS_STATS],
@@ -111,10 +114,16 @@ class MainController (object):
             CTRL_LOGS: [CONTROLLER_DATA, CTRL_LOGS],
         }
 
-        TopExecutionDir[SAVED_CONF] = TopExecutionDir[CTRL_CHECKPOINT_DIR] + [SAVED_CONF]
-        TopExecutionDir[EXECUTION_STATE] = TopExecutionDir[CTRL_CHECKPOINT_DIR] + [EXECUTION_STATE]
-        TopExecutionDir[EXECUTION_STATE_BAKUP] = TopExecutionDir[CTRL_CHECKPOINT_DIR] + [EXECUTION_STATE_BAKUP]
-        TopExecutionDir[EXECUTION_TIMES] = TopExecutionDir[CONTROLLER_DATA] + [EXECUTION_TIMES]
+        TopExecutionDir[SAVED_CONF] = TopExecutionDir[CTRL_CHECKPOINT_DIR] \
+                                        + [SAVED_CONF]
+        TopExecutionDir[EXECUTION_STATE] = \
+                                        TopExecutionDir[CTRL_CHECKPOINT_DIR] \
+                                        + [EXECUTION_STATE]
+        TopExecutionDir[EXECUTION_STATE_BAKUP] = \
+                                        TopExecutionDir[CTRL_CHECKPOINT_DIR] \
+                                        + [EXECUTION_STATE_BAKUP]
+        TopExecutionDir[EXECUTION_TIMES] = TopExecutionDir[CONTROLLER_DATA] \
+                                            + [EXECUTION_TIMES]
         TopExecutionDir[LOG_FILE] = TopExecutionDir[CTRL_LOGS] + [LOG_FILE]
 
         return TopExecutionDir
@@ -142,7 +151,7 @@ class MainController (object):
         Extract the command line argument, return the execution configs
         '''
 
-    def log_run_summary():
+    def log_run_summary(self):
         '''
         Log information showing a new run of resume of previous run
         '''

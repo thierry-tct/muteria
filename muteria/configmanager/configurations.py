@@ -1,5 +1,9 @@
 import logging
 
+import muteria.common.mix as common_mix 
+
+ERROR_HANDLER = common_mix.ErrorHandler
+
 # TODO Find way to make the classes so that new elements cannot be added on the fly
 
 RUN_MODE = 0
@@ -92,8 +96,71 @@ class ExecutionConfig(object):
     RESTART_CURRENT_EXECUTING_META_TASKS = False
     # Specify a Step to go back to
     RE_EXECUTE_FROM_CHECKPOINT_META_TASKS = [] # Make interaction easy
+#~class ExecutionConfig
 
+class ReportingConfig(object):
+
+#~class ReportingConfig
+
+class ProjectConfig(object):
+
+#~class ProjectConfig
+
+class ToolUserCustom(dict):
+    '''
+    This config file is helpful to specify tool specific configurations
+    For example:
+    conf = ToolUserCustom(
+        PATH_TO_TOOL_EXECUTABLE='/fullpath/to/tool/dir', 
+        ENV_VARS_DICT={'var1': 'value1'},
+        PRE_TARGET_CMD_ORDERED_FLAGS_LIST=[('-solver', 'stp'), \
+                    ('-mutation-scope', os.path.abspath("scopefile"))],
+        POST_TARGET_CMD_ORDERED_FLAGS_LIST=[('-sym-args', '0', '2', '3')]
+    )
+
+    Note: It is possibled to only specify a subset of the values.
+    '''
+    # -str- custom path to executable parent dir to use for tool.
+    # Directory containing executables (fullpath: string)
+    # Useful especially for tools having many executables like 'klee'
+    PATH_TO_TOOL_BINARY_DIR = None
+    # -dict- key value of <environment var: var value> both strings
+    ENV_VARS_DICT = None
+    # -list of tuples- ordered list of tuples, each tuple represent a flag
+    # as first element and its values. ordering is kept
+    # example: for GNU find, we can have:
+    # [('-type', 'f'), ('-exec', 'grep', '{}', '\\;')]
+    # PRE_TARGET_... is the arguments list that must go before the 
+    # analyzed program (target) in command line order POST_TARGET go after. 
+    PRE_TARGET_CMD_ORDERED_FLAGS_LIST = None
+    POST_TARGET_CMD_ORDERED_FLAGS_LIST = None
+
+    def __init__(self, **kwargs):
+        num_elem = len(self.__dict__)
+        super(ToolUserCustom, self).__init__(**kwargs)
+        self.__dict__ = self
+        diff = len(self.__dict__) - num_elem
+        if diff != 0:
+            logging.error("{} invalid parameter was/were added".format(diff))
+            ERROR_HANDLER.error_exit_file(__file__)
+    #~def __init__()
+#~class ToolUserCustom
+
+class MutationToolsConfig(object):
+
+#~class MutationToolsConfig
     
+class TestcaseToolsConfig(object):
+
+#~class TestcaseToolsConfig
+    
+class CodecoverageToolsConfig(object):
+
+#~class CodecoverageToolsConfig
+    
+
+
+
 class ControlArgsBase(object):
     clean_start = False
     re_execute_from_task = None
