@@ -8,19 +8,17 @@ import muteria.common.mix as common_mix
 
 ERROR_HANDLER = common_mix.ErrorHandler()
 
-# TODO Find way to make the classes so that new elements cannot be added on the fly
-
 class EnumAutoName(enum.Enum):
     # This function do not have 'self'
-#    def _generate_next_value_(name, start, count, last_values):
-#        return name
+    #def _generate_next_value_(name, start, count, last_values):
+        #return name
 
     def get_str(self):
         return self.name
 
     @classmethod
     def has_element_named(cls, e_name):
-        return ename in cls.__members__
+        return e_name in cls.__members__
 #~ class EnumAutoName
 
 @enum.unique
@@ -50,7 +48,7 @@ class Tasks(EnumAutoName):
     STRONG_MUTATION_STATS = 16 #enum.auto()
     AGGREGATED_STATS = 17 #enum.auto()
 
-    FINISHING = 18 #enum.auto()
+    FINISHED = 18 #enum.auto()
 #~ class Tasks
 
 @enum.unique
@@ -109,7 +107,7 @@ class TaskOrderingDependency(object):
                              | WEAK_MUTATION_STATS
                              | STRONG_MUTATION_STATS
 
-        FINISHING --> AGGREGATED_STATS
+        FINISHED --> AGGREGATED_STATS
     ------------------------------------------------------------------------
 
     '''
@@ -130,12 +128,12 @@ class TaskOrderingDependency(object):
             for key_t in Tasks:
                 if key_t.get_name() not in json_obj:
                     logging.error("{} {} {} {}".format( \
-                        "Invalid object to initialize TaskOrderingDependency", \
+                        "Invalid object to initialize TaskOrderingDependency",\
                         "The task", key_t.get_name(), "is absent in json_obj"))
                     ERROR_HANDLER.error_exit_file(__file__)
                 if not Status.has_element_named(json_obj[key_t.get_name()]):
                     logging.error("{} {} {} {}".format( \
-                        "Invalid object to initialize TaskOrderingDependency", \
+                        "Invalid object to initialize TaskOrderingDependency",\
                         "The task", key_t.get_name(), "has invalid status"))
                     ERROR_HANDLER.error_exit_file(__file__)
             # initialize
@@ -187,17 +185,17 @@ class TaskOrderingDependency(object):
                 task_status_map[key_t] = Status.UNTOUCHED
 
         # set the root cell (The root has no uses)
-        finishing = self.Cell(Tasks.FINISHING)
-        finishing.set_status(finishing)
+        finished = self.Cell(Tasks.FINISHED)
+        finished.set_status(task_status_map(Tasks.FINISHED))
 
-        self.root = finishing
+        self.root = finished
 
         # Construct the rest of the dependence graph, starting at the root
         ## Stats Layer
         ### Aggregate stats
         agg_stats =  self.Cell(Tasks.AGGREGATED_STATS)
         agg_stats.set_status(task_status_map(Tasks.AGGREGATED_STATS))        
-        finishing.add_dependency(agg_stats)
+        finished.add_dependency(agg_stats)
 
         ### Other stats
         passfail_stats = self.Cell(Tasks.PASS_FAIL_STATS)
@@ -249,7 +247,8 @@ class TaskOrderingDependency(object):
 
         # Artifact Selection and Prioritization
         cs_sp = self.Cell(Tasks.CODE_SCOPE_SELECTION_PRIORITIZATION)
-        cs_sp.set_status(task_status_map(Tasks.CODE_SCOPE_SELECTION_PRIORITIZATION))
+        cs_sp.set_status(task_status_map( \
+                                    Tasks.CODE_SCOPE_SELECTION_PRIORITIZATION))
         cc.add_dependency(cs_sp)
 
         t_sp = self.Cell(Tasks.TESTS_SELECTION_PRIORITIZATION)
@@ -257,7 +256,8 @@ class TaskOrderingDependency(object):
         passfail.add_dependency(t_sp)
 
         m_sp = self.Cell(Tasks.MUTANTS_SELECTION_PRIORITIZATION)
-        m_sp.set_status(task_status_map(Tasks.MUTANTS_SELECTION_PRIORITIZATION))
+        m_sp.set_status(task_status_map( \
+                                    Tasks.MUTANTS_SELECTION_PRIORITIZATION))
         wm.add_dependency(m_sp)
         mc.add_dependency(m_sp)
 
@@ -295,14 +295,23 @@ class TaskOrderingDependency(object):
         self._recursive_verify(self.root, visited)
     #~ def initialize_data_graph()
 
-    def complete_task (self, task_name):
+    def set_task_completed (self, task_name):
         # look the task up from the root
         t = self._lookup_task_cell(task_name)
         # Check that all deps are done
         self._recursive_check_deps_are_done(t)
         # set it to complete
         t.set_done()
-    #~ def complete_task()
+    #~ def set_task_completed()
+
+    def set_task_executing (self, task_name):
+        # look the task up from the root
+        t = self._lookup_task_cell(task_name)
+        # Check that all deps are done
+        self._recursive_check_deps_are_done(t)
+        # set it to complete
+        t.set_executing()
+    #~ def set_task_executing()
 
     def task_is_complete(self, task_name):
         t = self._lookup_task_cell(task_name)
@@ -324,7 +333,7 @@ class TaskOrderingDependency(object):
         self._recursive_get_next_todo_tasks(task_node_set, self.root)
         task_set = {x.get_task_name() for x in task_node_set}
         if len(task_set) != len(task_node_set):
-            logging.error("%s" % (("BUG) same task appears in multiple nodes")))
+            logging.error("BUG) same task appears in multiple nodes")
             ERROR_HANDLER.error_exit()
         return task_set
     #~ def get_next_todo_tasks()

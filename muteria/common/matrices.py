@@ -1,20 +1,23 @@
 
 from __future__ import print_function
 
-import os, sys
+import os
+import sys
 import itertools
+import copy
 import pandas as pd
 
-import muteria.common.fs
+import muteria.common.fs as common_fs
 
-DEFAULT_KEY_COLUMN_NAME="MAGMA_MATRIX_KEY_COL"
+DEFAULT_KEY_COLUMN_NAME="MUTERIA_MATRIX_KEY_COL"
 class RawExecutionMatrix(object):
     '''
         A 2D matrix representation of the execution of entities by test cases.
-        Each entity is represented as a 'key' (The keys are unique) on each row,
-        and, the test cases represented as columns. The behavior of each entity
-        with regard to each test case (affected or not) is represented as 
-        active or not. The cell of the matrix with row key E and 
+        Each entity is represented as a 'key' (The keys are unique) 
+        on each row, and, the test cases represented as columns. 
+        The behavior of each entity with regard to each test case 
+        (affected or not) is represented as active or not. 
+        The cell of the matrix with row key E and 
         column test case T represents whether T affects E.
 
         This class represent a configurable implementation of the Matrix.
@@ -82,22 +85,26 @@ class RawExecutionMatrix(object):
             assert not self.is_uncertain_cell_func(v)
 
         if self.filename is not None:
-            self.dataframe = fs.loadCSV(self.filename)
-            assert len(self.dataframe.columns) >= 2, "expect at least 2 columns in dataframe: key, values..."
+            self.dataframe = common_fs.loadCSV(self.filename)
+            assert len(self.dataframe.columns) >= 2, \
+                    "expect at least 2 columns in dataframe: key, values..."
             assert self.key_column_name == list(self.dataframe)[0], \
-                        "key_column name missing or not first column in dataframe"
+                    "key_column name missing or not first column in dataframe"
             if self.non_key_col_list is None:
                 self.non_key_col_list = list(self.dataframe)[1:]
             else:
-                assert self.non_key_col_list == list(self.dataframe)[1:], "non key mismatch"
+                assert self.non_key_col_list == list(self.dataframe)[1:], \
+                                                            "non key mismatch"
         else:
             ordered_cols = [self.key_column_name] + self.non_key_col_list
-            self.dataframe = pd.DataFrame({c:[] for c in ordered_cols})[ordered_cols]
-            self.dataframe = self.dataframe.astype(cell_dtype).astype({self.key_column_name: str})
+            self.dataframe = \
+                    pd.DataFrame({c:[] for c in ordered_cols})[ordered_cols]
+            self.dataframe = self.dataframe.astype(cell_dtype)\
+                                           .astype({self.key_column_name: str})
 
         self.keys_set = set(self.get_keys())
 
-    def get_a_deepcopy(new_filename=None):
+    def get_a_deepcopy(self, new_filename=None):
         ret_matrix = copy.deepcopy(self)
         if new_filename is not None:
             ret_matrix.filename = new_filename
@@ -114,7 +121,7 @@ class RawExecutionMatrix(object):
 
     def serialize(self):
         if self.filename is not None:
-            fs.dumpCSV(self.dataframe, self.filename)
+            common_fs.dumpCSV(self.dataframe, self.filename)
 
     #def raw_add_row(self):
 
@@ -125,7 +132,8 @@ class RawExecutionMatrix(object):
         if type(values) == list:
             self.dataframe.loc[len(self.dataframe)] = [key] + values
         elif type(values) == dict:
-            assert self.key_column_name not in values, "key column name in values"
+            assert self.key_column_name not in values, \
+                                                "key column name in values"
             tmpdict = {self.key_column_name: key}
             tmpdict.update(values)
             self.dataframe.append(tmpdict, ignore_index=True)
@@ -136,7 +144,9 @@ class RawExecutionMatrix(object):
             self.serialize()
 
     def delete_rows_by_key(self, key_list, serialize=True):
-        self.dataframe = self.dataframe.ix[~self.dataframe[self.key_column_name].isin(set(key_list))]
+        self.dataframe = \
+            self.dataframe.ix[~self.dataframe[self.key_column_name]\
+                                                        .isin(set(key_list))]
 
         if serialize:
             self.serialize()
@@ -157,7 +167,8 @@ class RawExecutionMatrix(object):
         return len(self.get_keys()) == 0
 
     def extract_by_rowkey(self, row_key_list):
-        return self.dataframe.loc[self.dataframe[self.key_column_name].isin(row_key_list)]
+        return self.dataframe.loc[self.dataframe[self.key_column_name]\
+                                                        .isin(row_key_list)]
 
     def extract_by_column(self, non_key_col_list):
         return self.dataframe[[self.key_column_name]+non_key_col_list]
@@ -170,10 +181,11 @@ class RawExecutionMatrix(object):
             row_key_list = self.get_keys()
 
         result = {}
-        small_df = extract_by_rowkey(row_key_list)
-        for index, row in small_df.iterrows():
+        small_df = self.extract_by_rowkey(row_key_list)
+        for _, row in small_df.iterrows():
             result[row[self.key_column_name]] = \
-                [x for x in self.non_key_col_list if self.is_active_cell_func(row[x])]
+                                        [x for x in self.non_key_col_list \
+                                        if self.is_active_cell_func(row[x])]
 
         return result
 
@@ -187,7 +199,9 @@ class RawExecutionMatrix(object):
         result = {}
         small_df = self.extract_by_column(non_key_col_list)
         for col in small_df:
-            result[col] = list(small_df.loc[~small_df[col].isin(self.inactive_cell_vals)][self.key_column_name])
+            result[col] = list( \
+                small_df.loc[~small_df[col].isin(self.inactive_cell_vals)]\
+                                                        [self.key_column_name])
 
         return result
 
@@ -197,5 +211,6 @@ class ExecutionMatrix(RawExecutionMatrix):
         This class is the default extension of the class RawExecutionMatrix. 
     '''
     def __init__(self, filename=None, non_key_col_list=None):
-        RawExecutionMatrix.__init__(self, filename=filename, non_key_col_list=non_key_col_list)
+        RawExecutionMatrix.__init__(self, filename=filename, \
+                                            non_key_col_list=non_key_col_list)
 

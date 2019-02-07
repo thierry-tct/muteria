@@ -35,5 +35,5 @@ def setup(logfile=None, logconsole=False, file_level=logging.INFO,
 
 def console_tmp_log_setup(loglevel=logging.INFO, root_name=''):
     logging.basicConfig(level=loglevel, \
-                    format='%(asctime)s [%(name)s] [%(levelname)s] %(message)s', \
-                    datefmt='%m/%d/%Y %I:%M:%S %p')
+                format='%(asctime)s [%(name)s] [%(levelname)s] %(message)s', \
+                datefmt='%m/%d/%Y %I:%M:%S %p')

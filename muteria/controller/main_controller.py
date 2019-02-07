@@ -84,9 +84,7 @@ class MainController (object):
         self.top_execution_struct = common_fs.FileDirStructureHandling(\
                                                         output_pathdir, \
                                                         TOP_OUTPUT_DIR_KEY, \
-                                                        output_structure, \
-                                                        error_module, \
-                                                        log_module)
+                                                        output_structure)
 
         # Set the logger temporarily (before the log file can be dispo)
         logging_setup.console_tmp_log_setup()
@@ -104,7 +102,7 @@ class MainController (object):
         TopExecutionDir = {
             MUTATION_DIR: [MUTATION_DIR],
             CODECOVERAGE_DIR: [CODECOVERAGE_DIR],
-            TESTSCASES_DIR: [TESTSCASES_DIR]
+            TESTSCASES_DIR: [TESTSCASES_DIR],
             RESULTS_DATA_DIR: [RESULTS_DATA_DIR],
             RESULTS_MATRICES: [RESULTS_DATA_DIR, RESULTS_MATRICES],
             RESULTS_STATS: [RESULTS_DATA_DIR, RESULTS_STATS],
@@ -169,7 +167,7 @@ class MainController (object):
 
         # Setup the logger
         if not self.logger_is_set:
-            logging_setup.setup(logfile=self.top_execution_struct.)
+            logging_setup.setup(logfile=self.top_execution_struct)
             self.logger_is_set = True
 
         # XXX Actual Execution
