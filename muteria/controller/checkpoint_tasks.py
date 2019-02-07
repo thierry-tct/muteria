@@ -119,22 +119,22 @@ class TaskOrderingDependency(object):
         else:
             # Check that every task is present
             if type(json_obj) != dict:
-                logging.error("{} {}".format("Invalid object to initialize", \ 
+                logging.error("{} {}".format("Invalid object to initialize", \
                                 "TaskOrderingDependency, must be a 'dict'"))
                 ERROR_HANDLER.error_exit_file(__file__)
             if len(json_obj) != len(Tasks):
-                logging.error("{} {}".format("Invalid object to initialize", \ 
+                logging.error("{} {}".format("Invalid object to initialize", \
                                 "TaskOrderingDependency. Size mismatch"))
                 ERROR_HANDLER.error_exit_file(__file__)
             # verify
             for key_t in Tasks:
                 if key_t.get_name() not in json_obj:
-                    logging.error("{} {}".format( \
+                    logging.error("{} {} {} {}".format( \
                         "Invalid object to initialize TaskOrderingDependency", \
                         "The task", key_t.get_name(), "is absent in json_obj"))
                     ERROR_HANDLER.error_exit_file(__file__)
                 if not Status.has_element_named(json_obj[key_t.get_name()]):
-                    logging.error("{} {}".format( \
+                    logging.error("{} {} {} {}".format( \
                         "Invalid object to initialize TaskOrderingDependency", \
                         "The task", key_t.get_name(), "has invalid status"))
                     ERROR_HANDLER.error_exit_file(__file__)
@@ -149,7 +149,7 @@ class TaskOrderingDependency(object):
         ret_obj = {}
         for key_t in Tasks:
             ret_obj[key_t.get_name()] = \
-                            _lookup_task_cell(key_t).get_status().get_name()
+                            self._lookup_task_cell(key_t).get_status().get_name()
         return ret_obj
     #~ def get_as_json_object()
 
@@ -184,10 +184,10 @@ class TaskOrderingDependency(object):
         if task_status_map is None:
             task_status_map = {}
             for key_t in Tasks:
-                task_status_map[kay_t] = Status.UNTOUCHED
+                task_status_map[key_t] = Status.UNTOUCHED
 
         # set the root cell (The root has no uses)
-        finishing = Cell(Tasks.FINISHING)
+        finishing = self.Cell(Tasks.FINISHING)
         finishing.set_status(finishing)
 
         self.root = finishing
@@ -195,52 +195,52 @@ class TaskOrderingDependency(object):
         # Construct the rest of the dependence graph, starting at the root
         ## Stats Layer
         ### Aggregate stats
-        agg_stats =  Cell(Tasks.AGGREGATED_STATS)
+        agg_stats =  self.Cell(Tasks.AGGREGATED_STATS)
         agg_stats.set_status(task_status_map(Tasks.AGGREGATED_STATS))        
         finishing.add_dependency(agg_stats)
 
         ### Other stats
-        passfail_stats = Cell(Tasks.PASS_FAIL_STATS)
+        passfail_stats = self.Cell(Tasks.PASS_FAIL_STATS)
         passfail_stats.set_status(task_status_map(Tasks.PASS_FAIL_STATS))
         agg_stats.add_dependency(passfail_stats)
 
-        cc_stats = Cell(Tasks.CODE_COVERAGE_STATS)
+        cc_stats = self.Cell(Tasks.CODE_COVERAGE_STATS)
         cc_stats.set_status(task_status_map(Tasks.CODE_COVERAGE_STATS))
         agg_stats.add_dependency(cc_stats)
 
-        mc_stats = Cell(Tasks.MUTANT_COVERAGE_STATS)
+        mc_stats = self.Cell(Tasks.MUTANT_COVERAGE_STATS)
         mc_stats.set_status(task_status_map(Tasks.MUTANT_COVERAGE_STATS))
         agg_stats.add_dependency(mc_stats)
 
-        wm_stats = Cell(Tasks.WEAK_MUTATION_STATS)
+        wm_stats = self.Cell(Tasks.WEAK_MUTATION_STATS)
         wm_stats.set_status(task_status_map(Tasks.WEAK_MUTATION_STATS))
         agg_stats.add_dependency(wm_stats)
 
-        sm_stats = Cell(Tasks.STRONG_MUTATION_STATS)
+        sm_stats = self.Cell(Tasks.STRONG_MUTATION_STATS)
         sm_stats.set_status(task_status_map(Tasks.STRONG_MUTATION_STATS))
         agg_stats.add_dependency(sm_stats)
 
         ## Matrices Layer
-        sm = Cell(Tasks.STRONG_MUTATION_TESTS_EXECUTION)
+        sm = self.Cell(Tasks.STRONG_MUTATION_TESTS_EXECUTION)
         sm.set_status(task_status_map(Tasks.STRONG_MUTATION_TESTS_EXECUTION))
         sm_stats.add_dependency(sm)
 
-        cc = Cell(Tasks.CODE_COVERAGE_TESTS_EXECUTION)
+        cc = self.Cell(Tasks.CODE_COVERAGE_TESTS_EXECUTION)
         cc.set_status(task_status_map(Tasks.CODE_COVERAGE_TESTS_EXECUTION))
         cc_stats.add_dependency(cc)
         sm.add_dependency(cc)
 
-        mc = Cell(Tasks.MUTANT_COVERAGE_TESTS_EXECUTION)
+        mc = self.Cell(Tasks.MUTANT_COVERAGE_TESTS_EXECUTION)
         mc.set_status(task_status_map(Tasks.MUTANT_COVERAGE_TESTS_EXECUTION))
         mc_stats.add_dependency(mc)
         sm.add_dependency(mc)
 
-        wm = Cell(Tasks.WEAK_MUTATION_TESTS_EXECUTION)
+        wm = self.Cell(Tasks.WEAK_MUTATION_TESTS_EXECUTION)
         wm.set_status(task_status_map(Tasks.WEAK_MUTATION_TESTS_EXECUTION))
         wm_stats.add_dependency(wm)
         sm.add_dependency(wm)
 
-        passfail = Cell(Tasks.PASS_FAIL_TESTS_EXECUTION)
+        passfail = self.Cell(Tasks.PASS_FAIL_TESTS_EXECUTION)
         passfail.set_status(task_status_map(Tasks.PASS_FAIL_TESTS_EXECUTION))
         passfail_stats.add_dependency(passfail)
         cc.add_dependency(passfail)
@@ -248,34 +248,34 @@ class TaskOrderingDependency(object):
         wm.add_dependency(passfail)
 
         # Artifact Selection and Prioritization
-        cs_sp = Cell(Tasks.CODE_SCOPE_SELECTION_PRIORITIZATION)
+        cs_sp = self.Cell(Tasks.CODE_SCOPE_SELECTION_PRIORITIZATION)
         cs_sp.set_status(task_status_map(Tasks.CODE_SCOPE_SELECTION_PRIORITIZATION))
         cc.add_dependency(cs_sp)
 
-        t_sp = Cell(Tasks.TESTS_SELECTION_PRIORITIZATION)
+        t_sp = self.Cell(Tasks.TESTS_SELECTION_PRIORITIZATION)
         t_sp.set_status(task_status_map(Tasks.TESTS_SELECTION_PRIORITIZATION))
         passfail.add_dependency(t_sp)
 
-        m_sp = Cell(Tasks.MUTANTS_SELECTION_PRIORITIZATION)
+        m_sp = self.Cell(Tasks.MUTANTS_SELECTION_PRIORITIZATION)
         m_sp.set_status(task_status_map(Tasks.MUTANTS_SELECTION_PRIORITIZATION))
         wm.add_dependency(m_sp)
         mc.add_dependency(m_sp)
 
         # Artifact Generation
-        cs_gen = Cell(Tasks.CODE_SCOPE_GENERATION)
+        cs_gen = self.Cell(Tasks.CODE_SCOPE_GENERATION)
         cs_gen.set_status(task_status_map(Tasks.CODE_SCOPE_GENERATION))
         cs_sp.add_dependency(cs_gen)
 
-        t_gen = Cell(Tasks.TESTS_GENERATION)
+        t_gen = self.Cell(Tasks.TESTS_GENERATION)
         t_gen.set_status(task_status_map(Tasks.TESTS_GENERATION))
         t_sp.add_dependency(t_gen)
 
-        m_gen = Cell(Tasks.MUTANTS_GENERATION)
+        m_gen = self.Cell(Tasks.MUTANTS_GENERATION)
         m_gen.set_status(task_status_map(Tasks.MUTANTS_GENERATION))
         m_sp.add_dependency(m_gen)
 
         # Starting
-        starting = Cell(Tasks.STARTING)
+        starting = self.Cell(Tasks.STARTING)
         starting.set_status(task_status_map(Tasks.STARTING))
         cs_gen.add_dependency(starting)
         t_gen.add_dependency(starting)
@@ -289,8 +289,8 @@ class TaskOrderingDependency(object):
         number_of_tasks = len(Tasks) # Number of instances in 'Tasks' class
         if len(visited) != number_of_tasks:
             logging.error("%s %s" % ("BUG in the Task Ordering Dependency.", \
-                    "got %d but expects %d" % (len(visied), number_of_tasks))
-            error_handler.error_exit()
+                    "got %d but expects %d" % (len(visited), number_of_tasks)))
+            ERROR_HANDLER.error_exit()
         visited = {}
         self._recursive_verify(self.root, visited)
     #~ def initialize_data_graph()
@@ -324,8 +324,8 @@ class TaskOrderingDependency(object):
         self._recursive_get_next_todo_tasks(task_node_set, self.root)
         task_set = {x.get_task_name() for x in task_node_set}
         if len(task_set) != len(task_node_set):
-            logging.error("%s" % (("BUG) same task appears in multiple nodes"))
-            error_handler.error_exit()
+            logging.error("%s" % (("BUG) same task appears in multiple nodes")))
+            ERROR_HANDLER.error_exit()
         return task_set
     #~ def get_next_todo_tasks()
 
@@ -393,7 +393,7 @@ class TaskOrderingDependency(object):
             visited.add(start_node)
             for d in start_node.get_dependencies():
                 d.add_use(start_node)
-                _compute_uses_recursive(d, visited)
+                self._compute_uses_recursive(d, visited)
     #~ def _compute_uses_recursive() 
 
     def _recursive_verify(self, start_node, visited):
@@ -412,7 +412,7 @@ class TaskOrderingDependency(object):
                                     start_node.get_task_name().get_name(), \
                                     "is either executing or done"))
                     ERROR_HANDLER.error_exit_file(__file__)
-            _recursive_verify(d, visited.copy())
+            self._recursive_verify(d, visited.copy())
     #~ def _recursive_verify()
 
     def _recursive_lookup(self, task_name, start_node):
@@ -427,10 +427,10 @@ class TaskOrderingDependency(object):
 
     def _lookup_task_cell(self, task_name):
         cell = self._recursive_lookup(task_name, self.root)
-        if cell in None:
+        if cell is None:
             logging.error("%s %s" % \
                 ("The Task looked up does not exist in dep graph", task_name))
-            error_handler.error_exit()
+            ERROR_HANDLER.error_exit()
         return cell
     #~ def _lookup_task_cell()
 
@@ -443,8 +443,8 @@ class TaskOrderingDependency(object):
             self._recursive_check_deps_are_done(d)
         if problem is not None:
             logging.error("%s %s %s %s" % ("task", start_node.get_task_name, \
-                        "is done while the dependencies are not:", problem)
-            error_handler.error_exit()
+                        "is done while the dependencies are not:", problem))
+            ERROR_HANDLER.error_exit()
     #~ def _recursive_check_deps_are_done()
 
     def _recursive_set_task_back_as_todo_untouched(self, start_node):
@@ -454,7 +454,7 @@ class TaskOrderingDependency(object):
                 self._recursive_set_task_back_as_todo_untouched(u)
     #~ def _recursive_set_task_back_as_todo_untouched
 
-    def _recursive_get_next_todo_tasks(task_set, start_node):
+    def _recursive_get_next_todo_tasks(self, task_set, start_node):
         if start_node.is_done():
             return
         is_leaf = True
