@@ -19,6 +19,7 @@ from muteria.configmanager.configurations import MutationToolsConfig
 from muteria.configmanager.configurations import TestcaseToolsConfig
 from muteria.configmanager.configurations import CodecoverageToolsConfig
 from muteria.configmanager.configurations import ProjectConfig
+from muteria.configmanager.configurations import ToolUserCustom
 
 # from this package
 import logging_setup
