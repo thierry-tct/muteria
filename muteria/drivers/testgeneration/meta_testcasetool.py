@@ -26,7 +26,7 @@ from ... import ToolsModulesLoader
 
 from ...checkpoint_handler import CheckpointHandlerForMeta
 
-ERROR_HANDLER = common_mix.ErrorHandler()
+ERROR_HANDLER = common_mix.ErrorHandler
 
 class MetaTestcaseTool(object):
     ''' 

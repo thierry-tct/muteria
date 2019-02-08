@@ -3,7 +3,7 @@ import logging
 
 import muteria.common.mix as common_mix
 
-ERROR_HANDLER = common_mix.ErrorHandler()
+ERROR_HANDLER = common_mix.ErrorHandler
 
 class CheckpointHandlerForMeta(object):
     FUNC_NAME_KEY = "method_name"

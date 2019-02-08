@@ -1,0 +1,52 @@
+===============================================================================
+EXTENSION NAME : linecount
+EXTENSION VERSION : 0.1.7
+-------------------------------------------------------------------------------
+count time : 2019-02-08 13:49:44
+count workspace : c:\Users\thierry.titcheu-chek\Desktop\muteria
+total files : 40
+total code lines : 2436
+total comment lines : 978
+total blank lines : 664
+
+.gitignore, code is 1, comment is 0, blank is 0.
+developer-requirements.txt, code is 3, comment is 0, blank is 0.
+muteria\__init__.py, code is 0, comment is 0, blank is 0.
+muteria\common\__init__.py, code is 0, comment is 0, blank is 0.
+muteria\common\fs.py, code is 284, comment is 109, blank is 51.
+muteria\common\matrices.py, code is 119, comment is 58, blank is 39.
+muteria\common\mix.py, code is 34, comment is 7, blank is 10.
+muteria\configmanager\__init__.py, code is 0, comment is 0, blank is 0.
+muteria\configmanager\configurations.py, code is 97, comment is 105, blank is 50.
+muteria\controller\__init__.py, code is 0, comment is 0, blank is 0.
+muteria\controller\checkpoint_tasks.py, code is 305, comment is 136, blank is 61.
+muteria\controller\logging_setup.py, code is 23, comment is 8, blank is 8.
+muteria\controller\main_controller.py, code is 87, comment is 65, blank is 33.
+muteria\controller\repository_manager.py, code is 57, comment is 10, blank is 12.
+muteria\drivers\__init__.py, code is 51, comment is 10, blank is 11.
+muteria\drivers\checkpoint_handler.py, code is 62, comment is 2, blank is 13.
+muteria\drivers\codecoverage\__init__.py, code is 0, comment is 0, blank is 0.
+muteria\drivers\codecoverage\base_codecoveragetool.py, code is 170, comment is 63, blank is 58.
+muteria\drivers\codecoverage\meta_codecoveragetool.py, code is 204, comment is 64, blank is 49.
+muteria\drivers\codecoverage\tools_by_languages\__init__.py, code is 0, comment is 0, blank is 0.
+muteria\drivers\mutation\__init__.py, code is 2, comment is 0, blank is 3.
+muteria\drivers\mutation\base_mutationtool.py, code is 165, comment is 86, blank is 57.
+muteria\drivers\mutation\meta_mutationtool.py, code is 214, comment is 54, blank is 58.
+muteria\drivers\mutation\tools_by_languages\__init__.py, code is 0, comment is 0, blank is 0.
+muteria\drivers\testgeneration\__init__.py, code is 0, comment is 0, blank is 0.
+muteria\drivers\testgeneration\base_testcasetool.py, code is 77, comment is 57, blank is 26.
+muteria\drivers\testgeneration\meta_testcasetool.py, code is 215, comment is 77, blank is 59.
+muteria\drivers\testgeneration\tools_by_languages\__init__.py, code is 0, comment is 0, blank is 0.
+muteria\README.md, code is 0, comment is 0, blank is 0.
+muteria\statistics\__init__.py, code is 0, comment is 0, blank is 0.
+muteria\statistics\algorithms.py, code is 82, comment is 25, blank is 20.
+name.txt, code is 1, comment is 0, blank is 0.
+README.md, code is 11, comment is 1, blank is 1.
+requirements.txt, code is 6, comment is 0, blank is 0.
+test\__init__.py, code is 0, comment is 0, blank is 0.
+test\unittests\__init__.py, code is 0, comment is 0, blank is 0.
+test\unittests\common\__init__.py, code is 0, comment is 0, blank is 0.
+test\unittests\common\test_fs.py, code is 129, comment is 36, blank is 36.
+test\unittests\statistics\__init__.py, code is 0, comment is 0, blank is 0.
+test\unittests\statistics\test_algorithms.py, code is 37, comment is 5, blank is 9.
+===============================================================================

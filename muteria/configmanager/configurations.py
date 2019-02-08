@@ -1,3 +1,20 @@
+""" This module implements the definition of the different configuration.
+    We have a class defined for each configuration type. namely:
+        - `ExecutionConfig`: Execution Configuration.
+        - `ReportingConfig`: Reporting Configuration.
+        - `ProjectConfig`: Project Configuration.
+        - `TestcaseToolsConfig`: Testcase Tools Configuration.
+        - `CodecoverageToolsConfig`: Codecoverage Tools Configuration.
+        - `MutationToolsConfig`: Mutation Tools Configuration.
+
+    TODO: Implement the restriction in adding extra element after creation
+    TODO: Implement the verification of the parameters of each config
+    TODO: Implement loading the values of the parameters from files... and 
+            Checking
+"""
+
+from __future__ import print_function
+
 import logging
 
 import muteria.common.mix as common_mix 
@@ -49,30 +66,50 @@ class ReportingConfig(object):
 #~class ReportingConfig
 
 class ProjectConfig(object):
-    OUTPUT_TOP_DIR = None
-    REPO_DIR = None
+    # Output dir pathname
+    OUTPUT_ROOT_DIR = None
+    # Repository dir pathname
+    REPOSITORY_ROOT_DIR = None
     
     # string representing the relative path to the executable
     # (or entry point file) in the repository
-    EXECUTABLE_REPO_RELATIVE_PATH = None
+    REPO_EXECUTABLE_RELATIVE_PATH = None
 
     # Specify the general scope of the evaluation, 
     # Specific scope can be specified per tool
     TARGET_CLASS_NAME = None
     # None value mean all functions
     TARGET_CLASS_TARGET_FUNCTIONS = None
+    # each source file element is the relative path from repos rootdir.
     # None value means all source files
     TARGET_SOURCE_FILES_LIST = None
+    # each test file element is the relative path from repos rootdir.
     # None value means all dev tests
     DEVELOPER_TESTS_LIST = None
 
-    # Function that takes the dev_test name as single input
+    # Function that takes 3 arguments:
+    #   <test_name: str>
+    #   <repos directory rootdir: str>
+    #   <Executable relative path: str>
     # and run with the executable as in repository
+    # The function return:
+    #   0 on passing test
+    #   1 on failing test
+    #   -1 on error
     CUSTOM_DEV_TEST_RUNNER = None
 
-    # Function that build the code to execute (for compiled languages)
-    # The function has 3 parameters: 
-    # <Optional compiler to use> <optional flags to pass to compiler> <clean?>
+    # Function that build the code to execute 
+    # (for compiled languages such as C)
+    # The function has 5 parameters: 
+    #   <repos directory rootdir: str>
+    #   <Executable relative path: str>
+    #   <Optional compiler to use(compiler name): str> 
+    #   <optional flags to pass to compiler: str or list of flags> 
+    #   <clean temporary before build: bool>
+    #   <reconfigure before build: bool>
+    # And returns:
+    #   True on success  
+    #   False on failure
     # A code builder class is defined and make use of this function 
     # It ensure on call to this functin at the time and no call while any 
     # processing in the repodir. 
@@ -109,7 +146,7 @@ class ToolUserCustom(dict):
     POST_TARGET_CMD_ORDERED_FLAGS_LIST = None
 
     def __init__(self, **kwargs):
-        num_elem = len(self.__dict__)
+        num_elem = len(self)
         super(ToolUserCustom, self).__init__(**kwargs)
         self.__dict__ = self
         diff = len(self.__dict__) - num_elem
@@ -203,15 +240,15 @@ class MutationToolsConfig(object):
 
 
 
-class ControlArgsBase(object):
-    clean_start = False
-    re_execute_from_task = None
-
-
-class RunControlArgs(ExecutionConfig):
-
-class NavigateControlArgs(ExecutionConfig):
-
-class ReposReverseControlArgs(ExecutionConfig):
-    clean_revert = False
+#class ControlArgsBase(object):
+#    clean_start = False
+#    re_execute_from_task = None
+#
+#
+#class RunControlArgs(ExecutionConfig):
+#
+#class NavigateControlArgs(ExecutionConfig):
+#
+#class ReposReverseControlArgs(ExecutionConfig):
+#    clean_revert = False
     

@@ -4,7 +4,7 @@ import importlib
 
 import muteria.common.mix as common_mix
 
-ERROR_HANDLER = common_mix.ErrorHandler()
+ERROR_HANDLER = common_mix.ErrorHandler
 
 class ToolsModulesLoader(object):
     MUTATION_TOOLS = "MUTATION"

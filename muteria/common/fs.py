@@ -17,7 +17,7 @@ import pandas as pd
 
 import muteria.common.mix as common_mix
 
-ERROR_HANDLER = common_mix.ErrorHandler()
+ERROR_HANDLER = common_mix.ErrorHandler
 
 # JSON
 def loadJSON (in_file_pathname):

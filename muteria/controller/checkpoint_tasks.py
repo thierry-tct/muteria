@@ -6,7 +6,7 @@ import networkx
 
 import muteria.common.mix as common_mix
 
-ERROR_HANDLER = common_mix.ErrorHandler()
+ERROR_HANDLER = common_mix.ErrorHandler
 
 class EnumAutoName(enum.Enum):
     # This function do not have 'self'

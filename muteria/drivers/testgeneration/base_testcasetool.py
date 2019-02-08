@@ -19,7 +19,7 @@ import logging
 import muteria.common.matrices as common_matrices
 import muteria.common.mix as common_mix
 
-ERROR_HANDLER = common_mix.ErrorHandler()
+ERROR_HANDLER = common_mix.ErrorHandler
 
 class BaseTestcaseTool(object):
     '''
