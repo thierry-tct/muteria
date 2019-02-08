@@ -31,10 +31,10 @@ class BaseCodecoverageTool(object):
     FUNCTION_KEY = "FUNCTION_COVERAGE"
 
     def __init__(self, meta_test_generation_obj, codecoverage_working_dir, 
-                                            code_builder, config, checkpointer):
+                                repository_manager, config, checkpointer):
         self.meta_test_generation_obj = meta_test_generation_obj
         sefl.codecoverage_working_dir = codecoverage_working_dir
-        self.code_builder = code_builder
+        self.repository_manager = repository_manager
         self.config = config
         self.checkpointer = checkpointer
 
@@ -136,10 +136,12 @@ class BaseCodecoverageTool(object):
 
         # Check that the result_matrix is empty and fine
         for criterion in enabled_criteria_matrices:
-            assert enabled_criteria_matrices[criterion].is_empty(), "the matrix must be empty"
-            assert set(testcases) == 
-                        set(enabled_criteria_matrices[criterion].get_nonkey_colname_list()),
-                "The specified test cases are not same in the matrix"
+            assert enabled_criteria_matrices[criterion].is_empty(), \
+                                                    "the matrix must be empty"
+            assert set(testcases) == \
+                            set(enabled_criteria_matrices[criterion]\
+                                            .get_nonkey_colname_list()), \
+                        "The specified test cases are not same in the matrix"
 
         # Intrument the codes and get instrumented executables
         if re_instrument_code:
@@ -184,20 +186,22 @@ class BaseCodecoverageTool(object):
                 for e_pos in range(c_pos+1, len(criterialist)):
                     if criterion2executable_path[criterialist[e_pos]] == \
                                             groups[-1]['exe_path'] and \
-                            criterion2environment_vars[criterialist[e_pos]] == \
+                            criterion2environment_vars[criterialist[e_pos]] ==\
                                                         groups[-1]['env_vars']:
                        groups[-1]['criteria'].append(criterialist[e_pos]) 
 
         # Execute each test and gather the data
-        criterion2coverage_per_test = {criterion: {} for criterion in criterialist}
+        criterion2coverage_per_test = \
+                                {criterion: {} for criterion in criterialist}
         for testcase in testcases:
             for c_group in groups:
                 # Create reult_tmp_dir
                 os.mkdir(result_dir_tmp)
 
                 # run testcase
-                verdict = self.meta_test_generation_obj.execute_testcase (testcase,
-                                        exe_path=c_group['exe_path'], 
+                verdict = self.meta_test_generation_obj.execute_testcase ( \
+                                        testcase, \
+                                        exe_path=c_group['exe_path'], \
                                         env_vars=c_group['env_vars'])
                 
                 # Collect temporary data into result_dir_tmp
@@ -232,8 +236,8 @@ class BaseCodecoverageTool(object):
                                                     "cov num type must be int"
                         assert coverage_tmp_data[elem] >= 0, \
                                                 "invalid cov num(negative)"
-                        criterion2coverage_per_test[criterion][elem][testcase] =\
-                                                        coverage_tmp_data[elem]
+                        criterion2coverage_per_test[criterion][elem][testcase]\
+                                                    = coverage_tmp_data[elem]
 
                 # remove dir created for temporal storage
                 shutil.rmtree(result_dir_tmp)
@@ -254,7 +258,7 @@ class BaseCodecoverageTool(object):
     #~ def runtests_code_coverage()
 
     def instrument_code (self, criterion_to_enabling, outputdir=None, \
-                                                code_builder_override=None)
+                                            repository_manager_override=None)
         '''
         '''
         # @Checkpoint: create a checkpoint handler (for time)
@@ -263,7 +267,7 @@ class BaseCodecoverageTool(object):
 
             assert len[x for x in criterion_to_enabling \
                                             if criterion_to_enabling[x]] > 0, \
-                                                        "no criterion is enabled"
+                                                    "no criterion is enabled"
 
             if outputdir is None:
                 outputdir = self.instrumented_code_storage_dir
@@ -272,12 +276,12 @@ class BaseCodecoverageTool(object):
                 shutil.rmtree(outputdir)
             os.mkdir(outputdir)
 
-            if code_builder_override is None:
-                code_builder_override = self.code_builder
+            if repository_manager_override is None:
+                repository_manager_override = self.repository_manager
 
             self._do_instrument_code (outputdir=outputdir, 
-                                        code_builder=code_builder_override,
-                                        criterion_to_enabling)
+                                repository_manager=repository_manager_override,
+                                criterion_to_enabling)
 
             # @Checkpoint: Finished (for time)
             checkpoint_handler.set_finished()
@@ -286,6 +290,7 @@ class BaseCodecoverageTool(object):
     #~ def instrument_code()
         
     @abc.abstractmethod
-    def _do_instrument_code (self, outputdir, code_builder, criterion_to_enabling):
+    def _do_instrument_code (self, outputdir, repository_manager, \
+                                                        criterion_to_enabling):
         print ("!!! Must be implemented in child class !!!")
     #~ def do_instrument()

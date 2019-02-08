@@ -1,5 +1,8 @@
 #! /bin/bash
 
+# Execute the script by running:
+# >> bash .staticanalysis
+
 curdir="$(dirname $(readlink -f $0))"
 
 srcdir="$curdir/magma"

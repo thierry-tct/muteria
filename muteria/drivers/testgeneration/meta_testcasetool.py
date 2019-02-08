@@ -41,7 +41,7 @@ class MetaTestcaseTool(object):
     FAULT_MATRIX_KEY = "fault_revealed"
 
     def __init__(self, tests_working_dir,
-                        code_builder,
+                        repository_manager,
                         language, 
                         tests_toolname_list, 
                         config_list):
@@ -56,7 +56,7 @@ class MetaTestcaseTool(object):
             ERROR_HANDLER.error_exit()
 
         self.tests_working_dir = tests_working_dir
-        self.code_builder = code_builder
+        self.repository_manager = repository_manager
 
         if self.tests_working_dir is not None:
             if not os.path.isdir(self.tests_working_dir):
@@ -100,7 +100,7 @@ class MetaTestcaseTool(object):
         '''
         testcase_tool = self.modules_dict[language][toolname].TestcaseTool(
                                             tool_working_dir,
-                                            self.code_builder,
+                                            self.repository_manager,
                                             config,
                                             tool_checkpointer)
         return testcase_tool
@@ -176,7 +176,8 @@ class MetaTestcaseTool(object):
             meta_test_failed_verdicts = {} 
 
         # Make sure the tests are unique
-        assert len(meta_testcases) == len(set(meta_testcases)), "not all tests are unique"
+        assert len(meta_testcases) == len(set(meta_testcases)), \
+                                                    "not all tests are unique"
 
         testcases_by_tool = {}
         for meta_testcase in meta_testcases:
@@ -235,11 +236,11 @@ class MetaTestcaseTool(object):
             assert fault_test_execution_matrix.is_empty(), \
                                                 "matrix must be empty"
             failverdict2val = {
-                        True: fault_test_execution_matrix.getActiveCellDefaultVal(),
-                        False: fault_test_execution_matrix.getInactiveCellVal(),
-                        self.UNCERTAIN_TEST_VERDICT: \
-                            fault_test_execution_matrix.getUncertainCellDefaultVal()
-                                }
+                True: fault_test_execution_matrix.getActiveCellDefaultVal(),
+                False: fault_test_execution_matrix.getInactiveCellVal(),
+                self.UNCERTAIN_TEST_VERDICT: \
+                    fault_test_execution_matrix.getUncertainCellDefaultVal()
+            }
             cells_dict = {}
             for meta_testcase in meta_test_failed_verdicts
                 cells_dict[meta_testcase] = \
@@ -251,7 +252,8 @@ class MetaTestcaseTool(object):
         # @Checkpoint: Finished
         detailed_exectime = {tt: tt.get_checkpointer().get_execution_time() \
                                             for tt in testcases_by_tool.keys()}
-        checkpoint_handler.set_finished(detailed_exectime_obj=detailed_exectime)
+        checkpoint_handler.set_finished( \
+                                    detailed_exectime_obj=detailed_exectime)
 
         return meta_test_failed_verdicts
     #~ def runtests()
@@ -295,7 +297,8 @@ class MetaTestcaseTool(object):
         # @Checkpoint: Finished
         detailed_exectime = {tt: tt.get_checkpointer().get_execution_time() \
                                                 for tt in self.testcases_tools}
-        checkpoint_handler.set_finished(detailed_exectime_obj=detailed_exectime)
+        checkpoint_handler.set_finished( \
+                                    detailed_exectime_obj=detailed_exectime)
     #~ def generate_tests()
     
     def get_meta_column(column, toolname):
@@ -327,7 +330,8 @@ class MetaTestcaseTool(object):
         return os.path.join(top_outdir, test_toolname)
     #~ def get_test_tool_out_folder()
 
-    def get_test_tool_checkpoint_files(self, test_toolname, top_checkpoint_dir=None):
+    def get_test_tool_checkpoint_files(self, test_toolname, \
+                                                    top_checkpoint_dir=None):
         if top_checkpoint_dir is None:
             top_checkpoint_dir = self.checkpoints_dir
         return [os.path.join(top_checkpoint_dir, \

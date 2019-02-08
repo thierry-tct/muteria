@@ -1,3 +1,20 @@
+""" This Module implement the data structore and format for the 
+    Checkpointing of the main controller during the execution phase
+
+    The importants classes or elements are:
+    - `Tasks` enum: enum that defines the differents tasks that are 
+                    checkpointed during the controller execution.    
+    - `Status` enum: enum defining the different states that a task can 
+                    have (untouched, executing or done)
+    - `TaskOrderingDependency` class: That defines the dependency between
+                    the different tasks as well as their status.
+                    The state changes as well as the task to run next are 
+                    also implemented in the class.
+"""
+
+
+from __future__ import print_function
+
 import logging
 import enum
 import collections
@@ -126,15 +143,15 @@ class TaskOrderingDependency(object):
                 ERROR_HANDLER.error_exit_file(__file__)
             # verify
             for key_t in Tasks:
-                if key_t.get_name() not in json_obj:
+                if key_t.get_str() not in json_obj:
                     logging.error("{} {} {} {}".format( \
                         "Invalid object to initialize TaskOrderingDependency",\
-                        "The task", key_t.get_name(), "is absent in json_obj"))
+                        "The task", key_t.get_str(), "is absent in json_obj"))
                     ERROR_HANDLER.error_exit_file(__file__)
-                if not Status.has_element_named(json_obj[key_t.get_name()]):
+                if not Status.has_element_named(json_obj[key_t.get_str()]):
                     logging.error("{} {} {} {}".format( \
                         "Invalid object to initialize TaskOrderingDependency",\
-                        "The task", key_t.get_name(), "has invalid status"))
+                        "The task", key_t.get_str(), "has invalid status"))
                     ERROR_HANDLER.error_exit_file(__file__)
             # initialize
             decoded_json_obj = {}
@@ -146,8 +163,8 @@ class TaskOrderingDependency(object):
     def get_as_json_object(self):
         ret_obj = {}
         for key_t in Tasks:
-            ret_obj[key_t.get_name()] = \
-                            self._lookup_task_cell(key_t).get_status().get_name()
+            ret_obj[key_t.get_str()] = \
+                            self._lookup_task_cell(key_t).get_status().get_str()
         return ret_obj
     #~ def get_as_json_object()
 
@@ -155,7 +172,7 @@ class TaskOrderingDependency(object):
         graph = networkx.Graph()
         # add nodes
         for key_t in Tasks:
-            graph.add_node(key_t.get_name())
+            graph.add_node(key_t.get_str())
         # add edges
         visited = set()
         queue = collections.deque()
@@ -164,8 +181,8 @@ class TaskOrderingDependency(object):
         while queue:
             cur_node = queue.popleft()
             for d in cur_node.get_dependencies():
-                graph.add_edge(d.get_task_name().get_name(), \
-                                        cur_node.get_task_name().get_name())
+                graph.add_edge(d.get_task_name().get_str(), \
+                                        cur_node.get_task_name().get_str())
                 if d not in visited:
                     visited.add(d)
                     queue.append(d)
@@ -409,16 +426,16 @@ class TaskOrderingDependency(object):
         # verify no loop and status soundness
         if start_node in visited:
             logging.error("There is a loop involving task {}".format( \
-                                    start_node.get_task_name().get_name()))
+                                    start_node.get_task_name().get_str()))
             ERROR_HANDLER.error_exit_file(__file__)
         for d in start_node.get_dependencies():
             if not start_node.is_untouched():
                 if not d.is_done():
                     logging.error("{} {} {} {} {}".format( \
                                     "Unsoundness of status. dependency", \
-                                    d.get_task_name().get_name(), \
+                                    d.get_task_name().get_str(), \
                                     "not done while use", \
-                                    start_node.get_task_name().get_name(), \
+                                    start_node.get_task_name().get_str(), \
                                     "is either executing or done"))
                     ERROR_HANDLER.error_exit_file(__file__)
             self._recursive_verify(d, visited.copy())

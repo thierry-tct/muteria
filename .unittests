@@ -1,5 +1,8 @@
 #! /bin/bash
 
+# Execute the tests by running:
+# >> bash .unittests
+
 set -u
 
 error_exit()

@@ -2,7 +2,8 @@
 # The tools are organized by programming language
 
 # For each language, there is a folder for each tool, 
-# named after the tool in all lowercase , starting with letter or underscore(_),
+# named after the tool in all lowercase , 
+# starting with letter or underscore(_),
 # The remaining caracters are either letter, number or underscore
 
 
@@ -27,10 +28,10 @@ class BaseMutationTool(object):
     '''
 
     def __init__(self, meta_test_generation_obj, mutation_working_dir, 
-                                            code_builder, config, checkpointer):
+                                    repository_manager, config, checkpointer):
         self.meta_test_generation_obj = meta_test_generation_obj
         sefl.mutation_working_dir = mutation_working_dir
-        self.code_builder = code_builder
+        self.repository_manager = repository_manager
         self.config = config
         self.checkpointer = checkpointer
 
@@ -128,11 +129,12 @@ class BaseMutationTool(object):
 
         executable_path = self.get_executable_path_func()
 
-        result_dir_tmp = os.path.join(self.mutation_working_dir, "mutant_meta_result_tmp")
+        result_dir_tmp = os.path.join(self.mutation_working_dir, \
+                                                    "mutant_meta_result_tmp")
         if os.isdir(result_dir_tmp):
             shutil.rmtree(result_dir_tmp)
 
-        execution_environment_vars = self.get_environment_vars_func(
+        execution_environment_vars = self.get_environment_vars_func( \
                                                                 result_dir_tmp)
 
         update_data_dict = {mutant_id: {} for mutant_id in mutantlist}
@@ -143,8 +145,8 @@ class BaseMutationTool(object):
             os.mkdir(result_dir_tmp)
 
             # run testcase (expecting the coverage data output in env_vars) 
-            verdict = self.meta_test_generation_obj.execute_testcase (testcase,
-                                    exe_path=executable_path, 
+            verdict = self.meta_test_generation_obj.execute_testcase(testcase,\
+                                    exe_path=executable_path,\
                                     env_vars=execution_environment_vars)
             # extract covered mutants list
             covered_mutants = self.extract_data_of_a_test(result_dir_tmp)
@@ -162,8 +164,8 @@ class BaseMutationTool(object):
 
         # update the matrix form update_data_dict
         for key in update_data_dict:
-            result_matrix.add_row_by_key(key, update_data_dict[key],
-                                                                serialize=False)
+            result_matrix.add_row_by_key(key, update_data_dict[key], \
+                                                            serialize=False)
         # Serialize to disk
         result_matrix.serialize()
     #~def _runtest_using_meta_mutant ()
@@ -178,11 +180,11 @@ class BaseMutationTool(object):
         if checkpoint_handler.is_finished():
             return
 
-        self._runtest_using_meta_mutant (testcases, mutant_coverage_matrix,
-                                    mutantlist,
-                                    self._get_mutantcoverage_executable_path,
-                                    self._get_mutantcoverage_environment_vars,
-                                    self._extract_mutantcoverage_data_of_a_test)
+        self._runtest_using_meta_mutant(testcases, mutant_coverage_matrix, \
+                                mutantlist, \
+                                self._get_mutantcoverage_executable_path, \
+                                self._get_mutantcoverage_environment_vars, \
+                                self._extract_mutantcoverage_data_of_a_test)
 
         # @Checkpoint: Finished (for time)
         checkpoint_handler.set_finished()
@@ -228,7 +230,7 @@ class BaseMutationTool(object):
         }
 
         assert serialize_period >= 1, \
-                                "Serialize period must be an integer in [1,inf["
+                            "Serialize period must be an integer in [1,inf["
 
         # matrix based checkpoint
         completed_muts = set(strong_mutation_matrix.get_keys())
@@ -251,7 +253,7 @@ class BaseMutationTool(object):
             # put in row format for matrix
             matrix_row_key = mutant
             matrix_row_values = {tc:failverdict_to_val_map[fail_verdicts[tc]] \
-                                                        for tc in fail_verdicts}
+                                                    for tc in fail_verdicts}
             serialize_on = (pos % serialize_period == 0)
             strong_mutation_matrix.add_row_by_key(matrix_row_key, \
                                         matrix_row_values, \
@@ -269,7 +271,8 @@ class BaseMutationTool(object):
         checkpoint_handler.set_finished()
     #~ def runtest_strong_mutation()
 
-    def mutate_programs (self, outputdir=None, code_builder_override=None):
+    def mutate_programs (self, outputdir=None, \
+                                            repository_manager_override=None):
         '''
         '''
         # @Checkpoint: create a checkpoint handler (for time)
@@ -279,20 +282,20 @@ class BaseMutationTool(object):
 
         if outputdir is None:
             outputdir = self.mutants_storage_dir
-        if code_builder_override is None:
-            code_builder_override = self.code_builder
+        if repository_manager_override is None:
+            repository_manager_override = self.repository_manager
         if os.path.isdir(outputdir):
             shutil.rmtree(outputdir)
         os.mkdir(outputdir)
-        self._do_mutate_programs (outputdir=outputdir, 
-                                    code_builder=code_builder_override)
+        self._do_mutate_programs (outputdir=outputdir, \
+                                repository_manager=repository_manager_override)
 
         # @Checkpoint: Finished (for time)
         checkpoint_handler.set_finished()
     #~ def mutate_programs()
         
     @abc.abstractmethod
-    def _do_mutate_programs (self, outputdir, code_builder):
+    def _do_mutate_programs (self, outputdir, repository_manager):
         print ("!!! Must be implemented in child class !!!")
     #~ def _do_mutate_programs()
 

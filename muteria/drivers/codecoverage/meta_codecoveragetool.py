@@ -47,14 +47,14 @@ class MetaCodecoverageTool(object):
     TOOL_WORKDIR_KEY = "tool_working_dir"
 
     def __init__(self, meta_test_generation_obj, codecoverage_working_dir, 
-                                                tools_by_criterion_dict,
-                                                code_builder, config_dict):
+                                            tools_by_criterion_dict,
+                                            repository_manager, config_dict):
         self.modules_dict = ToolsModulesLoader.get_tools_modules(
                                     ToolsModulesLoader.CODE_COVERAGE_TOOLS)
         self.meta_test_generation_obj = meta_test_generation_obj
         sefl.codecoverage_working_dir = codecoverage_working_dir
         self.tools_by_criterion_dict = tools_by_criterion_dict
-        self.code_builder = code_builder
+        self.repository_manager = repository_manager
         self.config_dict = config_dict
 
         if set(self.config_dict) != set(self.tools_by_criterion_dict):
@@ -69,8 +69,8 @@ class MetaCodecoverageTool(object):
                 ERROR_HANDLER.error_exit()
             if len(self.config_dict[criterion]) != \
                                 len(self.tools_by_criterion_dict[criterion]):
-                logging.error("{} {} {}".format("mismatch in number of tools", \
-                        "between config and tools_by_criterion for criterion", \
+                logging.error("{} {} {}".format("mismatch in number of tools",\
+                        "between config and tools_by_criterion for criterion",\
                                                                     criterion))
                 ERROR_HANDLER.error_exit()
 
@@ -82,7 +82,7 @@ class MetaCodecoverageTool(object):
             ERROR_HANDLER.error_exit()
 
         self.checkpoints_dir = os.path.join(self.codecoverage_working_dir, \
-                                                                "_checkpoints_")
+                                                            "_checkpoints_")
         if not os.path.isdir(self.checkpoints_dir):
             os.mkdir(self.checkpoints_dir)
 
@@ -140,7 +140,7 @@ class MetaCodecoverageTool(object):
         ccov_tool = self.modules_dict[language][toolname].CodecoverageTool(
                                             self.meta_test_generation_obj,
                                             tool_working_dir,
-                                            self.code_builder,
+                                            self.repository_manager,
                                             config,
                                             tool_checkpointer)
         return ccov_tool
@@ -152,8 +152,8 @@ class MetaCodecoverageTool(object):
         criteria to the correspondng tools to have each tool linked to its
         representing criteria which are further linked to the object values.
 
-        :param criteria_passed_values: dict representing a certain object value
-                by criterion (value for each criterion)
+        :param criteria_passed_values: dict representing a certain object 
+                value by criterion (value for each criterion)
         :return: return the object values by tools
         '''
         none_activated_default = {c: None for c in self.CRITERIA_LIST}
@@ -219,7 +219,7 @@ class MetaCodecoverageTool(object):
                 ctool = self.codecoverage_tool_handle[ctoolname][\
                                                             self.TOOL_OBJ_KEY]
                 ctool.runtests_code_coverage(testcases, \
-                        criterion_to_matrix = tool2criteria_values[ctoolname], \
+                        criterion_to_matrix = tool2criteria_values[ctoolname],\
                         re_instrument_code=re_instrument_code)
 
                 # Checkpointing
@@ -231,10 +231,12 @@ class MetaCodecoverageTool(object):
         # @Checkpoint: Finished
         detailed_exectime = {ct: ct.get_checkpointer().get_execution_time() \
                                                 for ct in tool2criteria_values}
-        checkpoint_handler.set_finished(detailed_exectime_obj=detailed_exectime)
+        checkpoint_handler.set_finished(\
+                                    detailed_exectime_obj=detailed_exectime)
     #~ def runtests_code_coverage()
 
-    def instrument_code (self, outputdir=None, code_builder_override=None,
+    def instrument_code (self, outputdir=None, 
+                                repository_manager_override=None,
                                 statement_enabled=self.STATEMENT_DEFAULT,
                                 branch_enabled=self.BRANCH_DEFAULT,
                                 function_enabled=self.FUNCTION_DEFAULT):
@@ -270,8 +272,8 @@ class MetaCodecoverageTool(object):
                 # Actual execution
                 ctool = self.codecoverage_tool_handle[ctoolname][\
                                                             self.TOOL_OBJ_KEY]
-                ctool.instrument_code(outputdir, code_builder_override, \
-                        criterion_to_enabling = tool2criteria_values[ctoolname])
+                ctool.instrument_code(outputdir, repository_manager_override, \
+                        criterion_to_enabling=tool2criteria_values[ctoolname])
 
                 # @Checkpoint: Checkpointing
                 checkpoint_handler.do_checkpoint( \
@@ -282,7 +284,8 @@ class MetaCodecoverageTool(object):
         # @Checkpoint: Finished
         detailed_exectime = {ct: ct.get_checkpointer().get_execution_time() \
                                                 for ct in tool2criteria_values}
-        checkpoint_handler.set_finished(detailed_exectime_obj=detailed_exectime)
+        checkpoint_handler.set_finished( \
+                                    detailed_exectime_obj=detailed_exectime)
     #~ def instrument_code()
 
     def get_codecoverage_tool_out_folder(ccov_toolname, top_outdir=None):

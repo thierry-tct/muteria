@@ -37,7 +37,7 @@ class MetaMutationTool(object):
 
     def __init__(self, meta_test_generation_obj,
                         mutation_working_dir,
-                        code_builder,
+                        repository_manager,
                         language, 
                         mutation_toolname_list, 
                         config_list):
@@ -52,7 +52,7 @@ class MetaMutationTool(object):
 
         self.meta_test_generation_obj = meta_test_generation_obj
         self.mutation_working_dir = mutation_working_dir
-        self.code_builder = code_builder
+        self.repository_manager = repository_manager
 
         if self.mutation_working_dir is not None:
             if not os.path.isdir(self.mutation_working_dir):
@@ -98,7 +98,7 @@ class MetaMutationTool(object):
         mutation_tool = self.modules_dict[language][toolname].MutationTool(
                                             self.meta_test_generation_obj,
                                             tool_working_dir,
-                                            self.code_builder,
+                                            self.repository_manager,
                                             config,
                                             tool_checkpointer)
         return mutation_tool

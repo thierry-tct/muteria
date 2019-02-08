@@ -27,9 +27,10 @@ class BaseTestcaseTool(object):
 
     UNCERTAIN_TEST_VERDICT = None
 
-    def __init__(self, tests_working_dir, code_builder, config, checkpointer):
+    def __init__(self, tests_working_dir, repository_manager, config, \
+                                                                checkpointer):
         sefl.tests_working_dir = tests_working_dir
-        self.code_builder = code_builder
+        self.repository_manager = repository_manager
         self.config = config
         self.checkpointer = checkpointer
 
@@ -122,7 +123,8 @@ class BaseTestcaseTool(object):
         return test_failed_verdicts
     #~ def runtests()
 
-    def generate_tests (self, outputdir=None, code_builder_override=None):
+    def generate_tests (self, outputdir=None, \
+                                            repository_manager_override=None):
         '''
         '''
         # @Checkpoint: create a checkpoint handler (for time)
@@ -132,20 +134,20 @@ class BaseTestcaseTool(object):
 
         if outputdir is None:
             outputdir = self.tests_storage_dir
-        if code_builder_override is None:
-            code_builder_override = self.code_builder
+        if repository_manager_override is None:
+            repository_manager_override = self.repository_manager
         if os.path.isdir(outputdir):
             shutil.rmtree(outputdir)
         os.mkdir(outputdir)
-        self._do_generate_tests (outputdir=outputdir, 
-                                    code_builder=code_builder_override)
+        self._do_generate_tests (outputdir=outputdir, \
+                                repository_manager=repository_manager_override)
 
         # @Checkpoint: Finished (for time)
         checkpoint_handler.set_finished()
     #~ def generate_tests()
 
     @abc.abstractmethod
-    def _do_generate_tests (self, outputdir, code_builder)
+    def _do_generate_tests (self, outputdir, repository_manager)
         print ("!!! Must be implemented in child class !!!")
     #~ def _do_generate_tests()
 
