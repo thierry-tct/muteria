@@ -1,0 +1,24 @@
+#! /bin/bash
+
+set -u
+
+error_exit()
+{
+    echo "error@unittests: $1"
+    exit 1
+}
+
+TOP_DIR=$(python -c "import os; print (os.path.dirname(os.path.realpath('$0')))")
+
+cd $TOP_DIR
+
+if [ $# = 1 ]
+then
+    python -m unittest $1 -v
+else
+    [ $# = 0 ] || error_exit "expect no argument for unittests"
+    python -m unittest discover -s test/unittests -v #test.unittests.common.test_fs
+fi
+
+test -d tmp && rm -rf tmp
+

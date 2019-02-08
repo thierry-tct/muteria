@@ -1,0 +1,16 @@
+#! /bin/bash
+
+curdir="$(dirname $(readlink -f $0))"
+
+srcdir="$curdir/magma"
+tests="$curdir/test"
+
+srcdir_py_files=$(find $srcdir -type f -name "*.py")
+tests_py_files=$(find $tests -type f -name "*.py")
+
+# Sources
+pylint $srcdir_py_files
+
+# Tests
+pylint $tests_py_files
+
