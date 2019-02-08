@@ -1,6 +1,24 @@
+"""
+This module implement the main controller class, whic is the entry point
+of the execution.
+The entry class is `MainController` and the entrypoint method is 
+`MainController.mainrun`
 
-#
-#
+TODO:
+    0. write the out directory structure component properly 
+        (This is shared between the 3 modes: RUN, REVERT and NAVIGATE)
+
+    Pipiline:
+    1. load the default configuration.
+    2. parse the command lines, then load the users config, then update the
+        default configs.
+    3. setup the ERROR_HANDLER module (pass the repodir).
+    4. setup the log facility.
+    5. based on the loaded config and command mode, call the relevant 
+        mode executor with its configs. (RUN, REVERT, NAVIGATE)
+
+    a) RUN will implement checkpoint and run tasks....
+"""
 
 from __future__ import print_function
 import os, sys
@@ -73,10 +91,15 @@ class MainController (object):
         self.project_config = project_config
         self.output_pathdir = output_pathdir
 
-        for v, T, e in [
+        for v, T, e in [ \
                  (self.execution_config, ExecutionConfig, 'execution_config'), 
                  (self.reporting_config, ReportingConfig, 'reporting_config'), 
-                 (self.tools_config, ToolsConfig, 'tools_config'), 
+                 (self.tools_config, TestcaseToolsConfig, \
+                                                    'testcasetools_config'), 
+                 (self.tools_config, CodecoverageToolsConfig, \
+                                                'codecoveragetools_config'), 
+                 (self.tools_config, MutationToolsConfig, \
+                                                    'mutationtools_config'), 
                  (self.project_config, ProjectConfig, 'project_config')]: 
             assert type(v) == T, "%s %s" % ("Invalid", e)
 

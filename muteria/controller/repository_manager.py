@@ -136,11 +136,8 @@ class RepositoryManager(object):
         :raises: Terminates execution with error if the specified
                 `self.code_builder_func` is None.
 
-        :rtype: bool if `post_process_callback` is None, the returned value 
-                is True if build succeed, False otherwise. The returned
-                value is the returned value of `post_process_callback`
-                 `post_process_callback` is not None.
-                    
+        :rtype: The returned value is the returned value of 
+                `post_process_callback` is not None.
         """
 
         if self.code_builder_func is None:
@@ -164,23 +161,33 @@ class RepositoryManager(object):
 
     def custom_access(self, post_process_callback, callback_args=None):
         """ Execute the callback function and return its returned value
-        TODO: Complete the doc
-        :type post_process_callback:
-        :param post_process_callback:
+        :type post_process_callback: function
+        :param post_process_callback: function that will be called after
+                the code is build. The call pass first the returned
+                value of the build (True is succeed, False if failed).
+                the second argument is the `callback_args` passed 
+                to the function. the remaining four arguments are the
+                project element (repos rootdir absolute path, 
+                executable relative path, list of source files,
+                list of developer tests). Default to None.
 
-        :type callback_args:
-        :param callback_args:
+        :type callback_args: anything
+        :param callback_args: data that will be passed (untouched) to the
+                callback function `post_process_callback`. Default to None.
 
-        :raises:
+        :raises: error if post_process_callback is None
 
-        :rtype:
+        :rtype: 
         """
 
         self.lock.acquire()
         try:
             ret = None
-            if post_process_callback is not None:
-                ret = post_process_callback(ret, callback_args, \
+            if post_process_callback is None:
+                logging.error("{} {}".format("post_process_callback must", \
+                                        "not be None in custom_access call"))
+                ERROR_HANDLER.error_exit_file(__file__)
+            ret = post_process_callback(ret, callback_args, \
                                         self.repository_rootdir, \
                                         self.repo_executable_relpath, \
                                         self.source_files_list, \
