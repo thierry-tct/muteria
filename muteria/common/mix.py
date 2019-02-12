@@ -6,7 +6,6 @@
         - The class `ErrorHandler` define function that are called to 
             terminate the execution gracefully and informativelly 
             upon error. 
-            TODO: Implement revert in the ErrorHandler.error_exit function
 """
 
 from __future__ import print_function
@@ -15,9 +14,6 @@ import sys
 import shutil
 import logging
 import inspect
-
-#import muteria.common.reposutils as common_reposutils
-
 
 def confirm_execution(question):
     """
@@ -36,30 +32,47 @@ def confirm_execution(question):
 #~ def confirm_execution()
 
 class ErrorHandler(object):
+    repos_dir_manager = None
+    # Make sure that there is no infinite recursive call to error_exit
+    # if the function `RepositoryManager.revert_repository` make a call
+    # to `error_exit`
+    error_exit_revert_repo_called = False
+    
     def __init__(self):
         pass
+
+    @classmethod
+    def set_corresponding_repos_manager(cls, repos_dir_manager):
+        if cls.repos_dir_manager is not None:
+            cls.error_exit_file(__file__, \
+                            err_string="the repo dir manager is already set")
+        cls.repos_dir_manager = repos_dir_manager
+    #~ def set_corresponding_repos_manager()
 
     @classmethod
     def error_exit(cls, error_code=1, err_string=None, ask_revert=True):
         logging.error("#Error happened in function %s" % inspect.stack()[1][3])
         if err_string:
             logging.error(err_string)
-        if ask_revert:
+        if ask_revert and not cls.error_exit_revert_repo_called:
             if confirm_execution("Do you want to revert repository files?"):
-                logging.info("@post error: Reverting repository files")
-                # TODO implement revert
+                logging.info("@ post error: Reverting repository files")
+                cls.error_exit_revert_repo_called = True
+                cls.repos_dir_manager.revert_repository(as_initial=False)
         else:
-            logging.info("@post error: Manually revert the repository files")
+            logging.info("@ post error: Manually revert the repository files")
         print("# Exiting with code %d" % error_code)
         exit(error_code)
+    #~ def error_exit()
 
     @classmethod
-    def error_exit_file(cls, file_called_from, error_code=1, \
+    def error_exit_file(cls, location_called_from, error_code=1, \
                                     err_string=None, ask_revert=True):
         '''
         Call this function with the parameter *__file__*
         '''
-        logging.error("# Error happened in file %s" % file_called_from)
+        logging.error("# Error happened in location %s" % location_called_from)
         cls.error_exit(error_code=error_code, err_string=err_string, \
                                                     ask_revert=ask_revert)
+    #~ def error_exit_file()
 #~ class ErrorHandler

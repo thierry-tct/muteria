@@ -41,30 +41,7 @@ from muteria.configmanager.configurations import ToolUserCustom
 
 # from this package
 import logging_setup
-
-
-# Directories
-## CONSTANTS
-TOP_OUTPUT_DIR_KEY = "main_controller_top_output"
-
-MUTATION_WORKDIR = "mutation_workdir"
-CODECOVERAGE_WORKDIR = "codecoverage_workdir"
-TESTSCASES_WORKDIR = "testscases_workdir"
-RESULTS_DATA_DIR = "RESULTS_DATA"
-RESULTS_MATRICES = "matrices"
-RESULTS_STATS = "statistics"
-
-CONTROLLER_DATA = "_controller_data"
-CTRL_CHECKPOINT_DIR = "checkpoint_states"
-CTRL_LOGS = "logs"
-
-# Files
-## CONSTANTS
-SAVED_CONF = "saved_configuration"
-EXECUTION_STATE = "execution_state"
-EXECUTION_STATE_BAKUP = "execution_state" + ".bak"
-EXECUTION_TIMES = "execution_times"
-LOG_FILE = "ctrl_log.log"
+import output_structure
 
 
 class MainController (object):
@@ -106,51 +83,18 @@ class MainController (object):
 
         #self.alerter = Alerter ... # error_exit, warning, ...
 
-        output_structure = self.get_outputdir_structure_by_filesdirs()
-        self.top_execution_struct = common_fs.FileDirStructureHandling(\
-                                                        output_pathdir, \
-                                                        TOP_OUTPUT_DIR_KEY, \
-                                                        output_structure)
+        out_struct = output_structure.get_outputdir_structure_by_filesdirs()
+        self.top_execution_struct_handle = \
+                        common_fs.FileDirStructureHandling(\
+                                        output_pathdir, \
+                                        output_structure.TOP_OUTPUT_DIR_KEY, \
+                                        out_struct)
 
         # Set the logger temporarily (before the log file can be dispo)
         logging_setup.console_tmp_log_setup()
         self.logger_is_set = False
 
         self.task_scheduler = ... #TODO TaskScheduler(self.execution_config, self.project_config) # extend the checkpointing class
-
-    def get_outputdir_structure_by_filesdirs(self):
-        '''
-        :returns: The structure of the output directory as directely 
-                    controlled by this controller. 
-                    The structure is a 'dict' where keys
-                    are files or folders and values are None for files and
-                    another dict for folders.
-        '''
-        TopExecutionDir = {
-            MUTATION_WORKDIR: [MUTATION_WORKDIR],
-            CODECOVERAGE_WORKDIR: [CODECOVERAGE_WORKDIR],
-            TESTSCASES_WORKDIR: [TESTSCASES_WORKDIR],
-            RESULTS_DATA_DIR: [RESULTS_DATA_DIR],
-            RESULTS_MATRICES: [RESULTS_DATA_DIR, RESULTS_MATRICES],
-            RESULTS_STATS: [RESULTS_DATA_DIR, RESULTS_STATS],
-            CONTROLLER_DATA: [CONTROLLER_DATA],
-            CTRL_CHECKPOINT_DIR: [CONTROLLER_DATA, CTRL_CHECKPOINT_DIR],
-            CTRL_LOGS: [CONTROLLER_DATA, CTRL_LOGS],
-        }
-
-        TopExecutionDir[SAVED_CONF] = TopExecutionDir[CTRL_CHECKPOINT_DIR] \
-                                        + [SAVED_CONF]
-        TopExecutionDir[EXECUTION_STATE] = \
-                                        TopExecutionDir[CTRL_CHECKPOINT_DIR] \
-                                        + [EXECUTION_STATE]
-        TopExecutionDir[EXECUTION_STATE_BAKUP] = \
-                                        TopExecutionDir[CTRL_CHECKPOINT_DIR] \
-                                        + [EXECUTION_STATE_BAKUP]
-        TopExecutionDir[EXECUTION_TIMES] = TopExecutionDir[CONTROLLER_DATA] \
-                                            + [EXECUTION_TIMES]
-        TopExecutionDir[LOG_FILE] = TopExecutionDir[CTRL_LOGS] + [LOG_FILE]
-
-        return TopExecutionDir
 
     def navigate(self):
         '''
@@ -200,7 +144,8 @@ class MainController (object):
 
         # Setup the logger
         if not self.logger_is_set:
-            logging_setup.setup(logfile=self.top_execution_struct)
+            logging_setup.setup(logfile=self.top_execution_struct_handle\
+                                .get_file_pathname(output_structure.LOG_FILE))
             self.logger_is_set = True
 
         # XXX Actual Execution
