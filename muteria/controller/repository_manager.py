@@ -62,15 +62,21 @@ class RepositoryManager(object):
     PASS = 0
     FAIL = 1
     ERROR = -1
+    DEFAULT_TESTS_BRANCH_NAME = "_tests_tmp_muteria_"
     def __init__(self, repository_rootdir, repo_executable_relpath, \
                         dev_test_runner_func, code_builder_func, \
-                        source_files_list, dev_tests_list):
+                        source_files_list, dev_tests_list, \
+                        do_backup_complete_repo=False, \
+                        test_branch_name=DEFAULT_TESTS_BRANCH_NAME):
         self.repository_rootdir = repository_rootdir
         self.repo_executable_relpath = repo_executable_relpath
         self.dev_test_runner_func = dev_test_runner_func
         self.code_builder_func = code_builder_func
         self.source_files_list = source_files_list
         self.dev_tests_list = dev_tests_list
+
+        self.do_backup_complete_repo = do_backup_complete_repo
+        self.test_branch_name = test_branch_name
 
         if self.repository_rootdir is None:
             logging.error("repository rootdir cannot be none")
@@ -194,7 +200,7 @@ class RepositoryManager(object):
                                         compiler, flags, clean_tmp, \
                                         reconfigure)
                 if post_process_callback is not None:
-                    post_ret = post_process_callback(ret, callback_args, \
+                    post_ret = post_process_callback(ret, post_callback_args, \
                                             self.repository_rootdir, \
                                             self.repo_executable_relpath, \
                                             self.source_files_list, \
@@ -242,15 +248,88 @@ class RepositoryManager(object):
         return ret
     #~ def custom_read_access()
 
+
+    def revert_repository_file (self, file_rel_path):
+        repo = git_repo(self.repository_rootdir)
+        gitobj = repo.git
+        gitobj.checkout(file_rel_path)
+    #~ def revert_repository_file()
+
+    def revert_src_list_files (self):
+        repo = git_repo(self.repository_rootdir)
+        gitobj = repo.git
+        for src in self.source_files_list:
+            gitobj.checkout(src)
+    #~ def revert_src_list_files()
+
     def revert_repository(self, as_initial=False):
+        repo = git_repo(self.repository_rootdir)
+        gitobj = repo.git
+
+        if self.do_backup_complete_repo:
+            if as_initial:
+                self._delete_testing_branch(self.repository_rootdir, \
+                                            self.test_branch_name)
+            else:
+                pass #TODO
         #TODO: delete the branch is as_initial is true
         # Only revert the files to initial otherwise
     #~ def revert_repository()
 
     def setup_repository(self):
-        # Check to see if it is a git repository
+        repo = git_repo(self.repository_rootdir)
+        gitobj = repo.git
 
-        # 
-        #TODO : create git repos if not. Use git branch
+        if self.do_backup_complete_repo:
+            self._make_testing_branch(self.repository_rootdir, \
+                                        self.test_branch_name)
+            # checkout
+            gitobj.checkout(self.test_branch_name)
+
+            #TODO create muteria branch and the muteria metadir 
     #~ setup repository()
+
+
+    def _make_testing_branch(self, repo_dir, branch_name):
+        # create 'test' branch if it doesn't exist 
+        # so that it can be used for tests in this module
+        clean_branch_list = self._get_branches_list(repo_dir)
+
+        repo = git_repo(repo_dir)
+        gitobj = repo.git
+        
+        if branch_name in clean_branch_list:
+            newly_made = False
+        else:
+            gitobj.branch(branch_name)
+            newly_made = True
+        return newly_made
+    #~ def _make_testing_branch()
+
+    def _delete_testing_branch(self, repo_dir, branch_name):
+        clean_branch_list = self._get_branches_list(repo_dir)
+
+        repo = git_repo(repo_dir)
+        gitobj = repo.git
+        
+        just_deleted = False
+        if branch_name in clean_branch_list:
+            gitobj.branch('-d', branch_name)
+            just_deleted = True
+        return just_deleted
+    #~ def _delete_testing_branch()
+
+    def _get_branches_list(self, repo_dir):
+        repo = git_repo(repo_dir)
+        gitobj = repo.git
+
+        git_branch_string = gitobj.branch()
+        git_branch_list = git_branch_string.split("\n")
+        clean_branch_list = []
+        for branch in git_branch_list:
+            branch = branch.replace('*', '')
+            branch = branch.replace(' ', '')
+            clean_branch_list.append(branch)
+        return clean_branch_list
+    #~ def _get_branches_list()
 #~ class RepositoryManager
