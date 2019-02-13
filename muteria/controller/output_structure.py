@@ -1,4 +1,4 @@
-""" This module defines the files and directory as organized in the 
+""" Thir module defines the files and directory as organized in the 
     output directory
 """
 
