@@ -66,7 +66,7 @@ class RepositoryManager(object):
     def __init__(self, repository_rootdir, repo_executable_relpath, \
                         dev_test_runner_func, code_builder_func, \
                         source_files_list, dev_tests_list, \
-                        do_backup_complete_repo=False, \
+                        delete_created_on_revert_as_initial=False, \
                         test_branch_name=DEFAULT_TESTS_BRANCH_NAME):
         self.repository_rootdir = repository_rootdir
         self.repo_executable_relpath = repo_executable_relpath
@@ -75,7 +75,8 @@ class RepositoryManager(object):
         self.source_files_list = source_files_list
         self.dev_tests_list = dev_tests_list
 
-        self.do_backup_complete_repo = do_backup_complete_repo
+        self.delete_created_on_revert_as_initial = \
+                                        delete_created_on_revert_as_initial
         self.test_branch_name = test_branch_name
 
         if self.repository_rootdir is None:
@@ -252,35 +253,38 @@ class RepositoryManager(object):
     def revert_repository_file (self, file_rel_path):
         repo = git_repo(self.repository_rootdir)
         gitobj = repo.git
-        gitobj.checkout(file_rel_path)
+        gitobj.checkout('--', file_rel_path)
     #~ def revert_repository_file()
 
     def revert_src_list_files (self):
         repo = git_repo(self.repository_rootdir)
         gitobj = repo.git
         for src in self.source_files_list:
-            gitobj.checkout(src)
+            gitobj.checkout('--', src)
     #~ def revert_src_list_files()
 
     def revert_repository(self, as_initial=False):
         repo = git_repo(self.repository_rootdir)
         gitobj = repo.git
 
-        if self.do_backup_complete_repo:
-            if as_initial:
+        if as_initial:
+            if self.delete_created_on_revert_as_initial:
                 self._delete_testing_branch(self.repository_rootdir, \
                                             self.test_branch_name)
             else:
-                pass #TODO
-        #TODO: delete the branch is as_initial is true
-        # Only revert the files to initial otherwise
+                logging.error("{} {}".format("revert_repository called with", \
+                            "'delete_created_on_revert_as_initial' disabled"))
+                ERROR_HANDLER.error_exit_file(__file__)
+        else:
+            # Reset the files but do not delete created files and dir
+            gitobj.reset('--hard') 
     #~ def revert_repository()
 
     def setup_repository(self):
         repo = git_repo(self.repository_rootdir)
         gitobj = repo.git
 
-        if self.do_backup_complete_repo:
+        if self.delete_created_on_revert_as_initial:
             self._make_testing_branch(self.repository_rootdir, \
                                         self.test_branch_name)
             # checkout
