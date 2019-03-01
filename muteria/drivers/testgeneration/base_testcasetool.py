@@ -29,7 +29,7 @@ class BaseTestcaseTool(object):
 
     def __init__(self, tests_working_dir, repository_manager, config, \
                                                                 checkpointer):
-        sefl.tests_working_dir = tests_working_dir
+        self.tests_working_dir = tests_working_dir
         self.repository_manager = repository_manager
         self.config = config
         self.checkpointer = checkpointer

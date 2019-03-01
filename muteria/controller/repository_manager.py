@@ -43,6 +43,11 @@
                                     repo_executable_relpath, \
                                     source_files_list, \
                                     dev_tests_list)
+    
+    TODO: IMPORTANT BEFORE ANY PARALLELISM: make sure to avoid deadlock
+        and release the lock when there is failure (call to error_exit).
+        Implement tools with subprocess for parallelism so as to kill all the 
+        subprocess upon error_exit, or continue until join.
 """
 
 
@@ -86,7 +91,9 @@ class RepositoryManager(object):
             logging.error("repo executable relpath cannot be none")
             ERROR_HANDLER.error_exit_file(__file__)
 
-        self.lock = threading.Lock()
+        # TODO: Implement a mechanism to avoid deadlock (multiple levels of
+        # parallelism)
+        self.lock = threading.RLock()
     #~ def __init__()
 
     def run_dev_test(self, dev_test_name, \
@@ -277,7 +284,8 @@ class RepositoryManager(object):
                 ERROR_HANDLER.error_exit_file(__file__)
         else:
             # Reset the files but do not delete created files and dir
-            gitobj.reset('--hard') 
+            self.revert_src_list_files()
+            #gitobj.reset('--hard') 
     #~ def revert_repository()
 
     def setup_repository(self):

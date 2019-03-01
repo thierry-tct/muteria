@@ -1,0 +1,161 @@
+@startuml
+/'-------------- Style ----------------'/
+skinparam roundcorner 20
+skinparam class {
+	BackgroundColor Moccasin
+	ArrowColor Maroon
+	BorderColor Purple
+}
+skinparam stereotypeCBackgroundColor YellowGreen
+/'---------------------------------------'/
+
+/'-------------- TestcasesComponent ----------------'/
+'namespace muteria.drivers.testgeneration #DDDDDD {
+package muteria.drivers.testcasescomponent #DDEDD0 {
+    class MetaTestcaseTool
+    abstract class BaseTestcaseTool
+    package languages.[language].[testcasetool] #DDEDEE{
+       class StaticTestcaseTool 
+       class DynamicTestcaseTool 
+    }
+    class "      " as Hook_TestTool
+    hide Hook_TestTool fields 
+    hide Hook_TestTool methods 
+    hide Hook_TestTool circle 
+    note right of Hook_TestTool #white\FFFFFE
+        Each plugged-in 
+        testcase tool    
+    end note
+
+    StaticTestcaseTool -- Hook_TestTool
+    DynamicTestcaseTool -- Hook_TestTool
+    Hook_TestTool --|> BaseTestcaseTool : extends >
+    Hook_TestTool "1..*" --* "1" MetaTestcaseTool : < manages
+}
+MetaTestcaseTool --() TestcasesManager 
+'muteria.drivers.testcasescomponent +-- languages.<<language>>.<<testtool>>
+
+' Other components dependences
+/'---------------------------------------'/
+
+/'-------------- CodecoverageComponent ----------------'/
+package muteria.drivers.codecoveragecomponent #EDDDD0 {
+    class MetaCodecoverageTool
+    abstract class BaseCodecoverageTool
+    package languages.[language].[codecoveragetool] #EDDDEE{
+       class CodecoverageTool 
+    }
+    class "      " as Hook_CodecovTool
+    hide Hook_CodecovTool fields 
+    hide Hook_CodecovTool methods 
+    hide Hook_CodecovTool circle 
+    note right of Hook_CodecovTool #white\FFFFFE
+        Each plugged-in 
+        codecoverage tool    
+    end note
+
+    CodecoverageTool -- Hook_CodecovTool
+    Hook_CodecovTool --|> BaseCodecoverageTool : extends >
+    Hook_CodecovTool "1..*" --* "1" MetaCodecoverageTool : < manages
+}
+MetaCodecoverageTool --() CodecoverageManager 
+
+' Other components dependences
+MetaCodecoverageTool o-- MetaTestcaseTool 
+/'---------------------------------------'/
+
+/'-------------- MutantionComponent ----------------'/
+package muteria.drivers.mutationcomponent #DDDDEE {
+    class MetaMutationTool
+    abstract class BaseMutationTool
+    package languages.[language].[mutationtool] #CDDDFF{
+       class MutationTool 
+    }
+    class "      " as Hook_MutationTool
+    hide Hook_MutationTool fields 
+    hide Hook_MutationTool methods 
+    hide Hook_MutationTool circle 
+    note right of Hook_MutationTool #white\FFFFFE
+        Each plugged-in 
+        mutation tool    
+    end note
+
+    MutationTool -- Hook_MutationTool
+    Hook_MutationTool --|> BaseMutationTool : extends >
+    Hook_MutationTool "1..*" --* "1" MetaMutationTool : < manages
+}
+MetaMutationTool --() MutationManager 
+
+' Other components dependences
+MetaTestcaseTool --o MetaMutationTool
+/'---------------------------------------'/
+
+/'-------------- TestcasePrioritizationSelectionComponent ----------------'/
+package muteria.drivers.testcaseoptimizationcomponent #DDDDD0 {
+    class MetaTestcaseOptimizerTool
+    abstract class BaseTestcaseOptimizerTool
+    package languages.[language].[testcaseoptimizertool] #DDFDEE{
+       class TargetingTestcaseOptimizerTool 
+       class ExecutingTestcaseOptimizerTool 
+    }
+    class "      " as Hook_TestcaseOptimizerTool
+    hide Hook_TestcaseOptimizerTool fields 
+    hide Hook_TestcaseOptimizerTool methods 
+    hide Hook_TestcaseOptimizerTool circle 
+    note right of Hook_TestcaseOptimizerTool #white\FFFFFE
+        Each plugged-in 
+        testcase optimizer tool    
+    end note
+
+    TargetingTestcaseOptimizerTool -- Hook_TestcaseOptimizerTool
+    ExecutingTestcaseOptimizerTool -- Hook_TestcaseOptimizerTool
+    Hook_TestcaseOptimizerTool --|> BaseTestcaseOptimizerTool : extends >
+    Hook_TestcaseOptimizerTool "1..*" --* "1" MetaTestcaseOptimizerTool : < manages
+}
+MetaTestcaseOptimizerTool --() TestcaseOptimizerManager 
+
+' Other components dependences
+MetaTestcaseTool o-- MetaTestcaseOptimizerTool
+/'---------------------------------------'/
+
+/'-------------- CodecoveragePrioritizationSelectionComponent ----------------'/
+package muteria.drivers.mutationoptimizationcomponent #DEDDDD {
+    class MetaMutationOptimizerTool
+    abstract class BaseMutationOptimizerTool
+    package languages.[language].[mutationoptimizertool] #DFDDEE{
+       class TargetingMutationOptimizerTool 
+       class ExecutingMutationOptimizerTool 
+    }
+    class "      " as Hook_MutationOptimizerTool
+    hide Hook_MutationOptimizerTool fields 
+    hide Hook_MutationOptimizerTool methods 
+    hide Hook_MutationOptimizerTool circle 
+    note right of Hook_MutationOptimizerTool #white\FFFFFE
+        Each plugged-in 
+        mutation optimizer tool    
+    end note
+
+    TargetingMutationOptimizerTool -- Hook_MutationOptimizerTool
+    ExecutingMutationOptimizerTool -- Hook_MutationOptimizerTool
+    Hook_MutationOptimizerTool --|> BaseMutationOptimizerTool : extends >
+    Hook_MutationOptimizerTool "1..*" --* "1" MetaMutationOptimizerTool : < manages
+}
+MetaMutationOptimizerTool --() MutationOptimizerManager 
+
+' Other components dependences
+'MetaTestcaseOptimizerTool --o MetaMutationOptimizerTool
+MetaMutationTool o-- MetaMutationOptimizerTool 
+/'---------------------------------------'/
+@enduml
+
+' For Prioritization, We have target artifact selection/prioritization
+' and evaluate artifact selection/execution. The are as following:
+' - Testcases: Evaluation (execution) (find failures)
+' - Codecoverage: Target (test generation)
+' - Mutation: Target (mutant guided test gen) or Evaluation(test ranking and mutant ranking) 
+/'@startuml
+() "rrr" as foo:
+() "trrr" as tfoo:
+foo -- tfoo
+@enduml
+'/

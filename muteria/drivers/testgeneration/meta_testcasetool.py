@@ -48,7 +48,7 @@ class MetaTestcaseTool(object):
         self.modules_dict = ToolsModulesLoader.get_tools_modules(
                                     ToolsModulesLoader.TESTCASES_TOOLS)
         if len(tests_toolname_list) != len(config_list):
-            logging.error("mismatch between tools and config"}
+            logging.error("mismatch between tools and config")
             ERROR_HANDLER.error_exit()
 
         if len(tests_toolname_list) != len(set(tests_toolname_list)):
@@ -85,14 +85,14 @@ class MetaTestcaseTool(object):
                             *self.get_mutation_tool_checkpoint_files(toolname))
             self.checkpointer.add_dep_checkpoint_state(tool_checkpointer)
             self.testcases_tools[toolname] = {
-                self.TOOL_OBJ_KEY: self.get_testcase_tool(language, toolname, \
+                self.TOOL_OBJ_KEY: self.create_testcase_tool(language, toolname, \
                                                     tool_working_dir, config, \
                                                     tool_checkpointer),
                 self.TOOL_WORKDIR_KEY: tool_working_dir,
             }
     #~ def __init__()
 
-    def get_testcase_tool(self, language, toolname, tool_working_dir, \
+    def create_testcase_tool(self, language, toolname, tool_working_dir, \
                                                     config, tool_checkpointer):
         '''
             Each tool module must have the function createTestcaseTool() 
@@ -104,7 +104,7 @@ class MetaTestcaseTool(object):
                                             config,
                                             tool_checkpointer)
         return testcase_tool
-    #~ def get_testcase_tool()
+    #~ def create_testcase_tool()
 
 
     def execute_testcase (self, meta_testcase, exe_path, env_vars):
@@ -201,7 +201,7 @@ class MetaTestcaseTool(object):
                                                 exe_path, env_vars, \
                                                 stop_on_failure)
             for testcase in test_failed_verdicts:
-                meta_testcase = get_meta_column(testcase, ttoolname)
+                meta_testcase = make_meta_testcase(testcase, ttoolname)
                 meta_test_failed_verdicts[meta_testcase] = \
                                                 test_failed_verdicts[testcase]
                 if test_failed_verdicts[testcase == True]:
@@ -288,11 +288,11 @@ class MetaTestcaseTool(object):
             ttool = self.testcases_tools[ttoolname][self.TOOL_OBJ_KEY]
             tool_testcase_info = ttool.get_testcase_info_object()
             for t_test in tool_testcase_info:
-                meta_t_key = self.get_meta_column(t_test, ttoolname)
+                meta_t_key = self.make_meta_testcase(t_test, ttoolname)
                 assert meta_t_key not in meta_testcase_info_obj, \
                                                 "Key already existing (BUG)"
                 meta_testcase_info_obj[meta_t_key] = tool_testcase_info[t_test]
-        self.storeTestcaseInfoToFile(meta_testcase_info_obj)
+        self.store_testcase_info_to_file(meta_testcase_info_obj)
 
         # @Checkpoint: Finished
         detailed_exectime = {tt: tt.get_checkpointer().get_execution_time() \
@@ -301,9 +301,9 @@ class MetaTestcaseTool(object):
                                     detailed_exectime_obj=detailed_exectime)
     #~ def generate_tests()
     
-    def get_meta_column(column, toolname):
-        return ":".join([toolname, column])
-    #~ def get_meta_column()
+    def make_meta_testcase(testname, toolname):
+        return ":".join([toolname, testname])
+    #~ def make_meta_testcase()
 
     def reverse_meta_testcase(meta_testcase, toolname):
         parts = meta_testcase.split(':', 1)
@@ -316,9 +316,9 @@ class MetaTestcaseTool(object):
         return common_fs.loadJSON(self.get_testcase_info_file())
     #~ def get_testcase_info_object()
 
-    def storeTestcaseInfoToFile(self, data_object):
+    def store_testcase_info_to_file(self, data_object):
         common_fs.dumpJSON(data_object, self.get_testcase_info_file())
-    #~ def storeTestcaseInfoToFile()
+    #~ def store_testcase_info_to_file()
 
     def get_testcase_info_file(self):
         return self.testcases_info_file
