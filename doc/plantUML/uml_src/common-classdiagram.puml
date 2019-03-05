@@ -1,0 +1,45 @@
+@startuml
+/'-------------- Style ----------------'/
+skinparam roundcorner 20
+skinparam class {
+	BackgroundColor Moccasin
+	ArrowColor Maroon
+	BorderColor Purple
+}
+skinparam stereotypeCBackgroundColor YellowGreen
+/'---------------------------------------'/
+
+'interface 
+package muteria.common {
+    package matrices {
+        class ExecutionMatrix
+        abstract class RawExecutionMatrix
+    }
+    RawExecutionMatrix <|-- ExecutionMatrix
+    package fs {
+        class loadJSON <<Function>> 
+        class dumpJSON <<Function>> 
+        class loadCSV <<Function>> 
+        class dumpCSV <<Function>> 
+        class compressDir <<Function>> 
+        class decompressDir <<Function>> 
+        hide <<Function>> circle
+        hide <<Function>> fields
+        hide <<Function>> methods
+
+        class FileDirStructureHandling
+        class CheckpointState
+    }
+    package mix {
+        class confirm_execution <<Function>> 
+        hide <<Function>> circle
+        hide <<Function>> fields
+        hide <<Function>> methods
+
+        class ErrorHandler
+        class Logger
+
+        note "The code here must\n be independent on any\n other code from\n this project" as N1
+    }
+}
+@enduml

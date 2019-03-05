@@ -1,0 +1,56 @@
+@startuml
+/'-------------- Style ----------------'/
+skinparam roundcorner 20
+skinparam class {
+	BackgroundColor Moccasin
+	ArrowColor Maroon
+	BorderColor Purple
+}
+skinparam stereotypeCBackgroundColor YellowGreen
+/'---------------------------------------'/
+
+'interface 
+package muteria.configurationmanager {
+    object ConfigurationObject {
+        PROGRAMMING_LANGUAGE = <>
+        REPOSITORY_DIR = <>
+        OUTPUT_DIR = <>
+        TESTCASE_TOOLS = <>
+        MUTATION_TOOLS = <>
+        CODECOVERAGE_TOOLS = <>
+        ...
+    }
+    object MutationToolConfigObject {
+        MUTATION_SCOPE = <>
+        OPERATORS_SELECTION = <>
+        ENABLED_WEAK_MUTATION = <>
+        ENABLED_MUTANT_COVERAGE = <>
+        ...
+    }
+    object TestcaseToolConfigObject {
+        MAX_GENRATION_TIME = <>
+        MAX_NUMBER_OF_TESTS = <>
+        MAX_MEMORY_USAGE = <>
+        TESTS_FORMAT = <>
+        ...
+    }
+    object CodecoverageToolConfigObject {
+        COVERAGE_TYPE = <>
+        COVERAGE_SCOPE = <>
+        KEEP_TEMPORARY_FILES = <>
+        ...
+    }
+    class ConfigurationObjectManager {
+        - config_object
+        - _setters...()
+        - _load_default_config_objects()
+        - _update_config_object_from_commandline_args()
+        + getters...()
+    }
+    ConfigurationObjectManager "1" *-- "1" ConfigurationObject: contains > 
+    ConfigurationObject "1" *-- "0.." MutationToolConfigObject: contains
+    ConfigurationObject "1" *-- "0.." TestcaseToolConfigObject: contains
+    ConfigurationObject "1" *-- "0.." CodecoverageToolConfigObject: contains
+}
+
+@enduml

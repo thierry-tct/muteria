@@ -90,72 +90,55 @@ MetaMutationTool --() MutationManager
 MetaTestcaseTool --o MetaMutationTool
 /'---------------------------------------'/
 
-/'-------------- TestcasePrioritizationSelectionComponent ----------------'/
-package muteria.drivers.testcaseoptimizationcomponent #DDDDD0 {
-    class MetaTestcaseOptimizerTool
-    abstract class BaseTestcaseOptimizerTool
-    package languages.[language].[testcaseoptimizertool] #DDFDEE{
-       class TargetingTestcaseOptimizerTool 
-       class ExecutingTestcaseOptimizerTool 
+/'-------------- TestGenerationGuidanceComponent ----------------'/
+package muteria.drivers.testgenerationguidancecomponent #DDDDA0 {
+    class MetaTestcaseGenerationGuidanceTool
+    abstract class BaseTestcaseGenerationGuidanceTool
+    package languages.[language].[testcaseguidancetool] #DDFDAE{
+       class TestcaseGenerationGuidanceTool 
     }
-    class "      " as Hook_TestcaseOptimizerTool
-    hide Hook_TestcaseOptimizerTool fields 
-    hide Hook_TestcaseOptimizerTool methods 
-    hide Hook_TestcaseOptimizerTool circle 
-    note right of Hook_TestcaseOptimizerTool #white\FFFFFE
-        Each plugged-in 
-        testcase optimizer tool    
-    end note
 
-    TargetingTestcaseOptimizerTool -- Hook_TestcaseOptimizerTool
-    ExecutingTestcaseOptimizerTool -- Hook_TestcaseOptimizerTool
-    Hook_TestcaseOptimizerTool --|> BaseTestcaseOptimizerTool : extends >
-    Hook_TestcaseOptimizerTool "1..*" --* "1" MetaTestcaseOptimizerTool : < manages
+    BaseTestcaseGenerationGuidanceTool <|-- TestcaseGenerationGuidanceTool: extends >
+    TestcaseGenerationGuidanceTool "1..*" --* "1" MetaTestcaseGenerationGuidanceTool : < manages
 }
-MetaTestcaseOptimizerTool --() TestcaseOptimizerManager 
+MetaTestcaseGenerationGuidanceTool --() TestcaseGenerationGuidanceManager 
 
 ' Other components dependences
-MetaTestcaseTool o-- MetaTestcaseOptimizerTool
+MetaTestcaseTool o-- MetaTestcaseGenerationGuidanceTool
+/'---------------------------------------'/
+
+/'-------------- TestcaseExecutionOPtimizationComponent ----------------'/
+package muteria.drivers.testcaseexecutionoptimizationcomponent #DDDCC0 {
+    class MetaTestcaseExecutionOptimizerTool
+    abstract class BaseTestcaseExecutionOptimizerTool
+    package languages.[language].[testcaseoptimizertool] #DDFDEE{
+       class TestcaseExecutionOptimizerTool 
+    }
+
+    BaseTestcaseExecutionOptimizerTool <|-- TestcaseExecutionOptimizerTool : extends >
+    TestcaseExecutionOptimizerTool "1..*" --* "1" MetaTestcaseExecutionOptimizerTool : < manages
+}
+MetaTestcaseExecutionOptimizerTool --() TestcaseOptimizerManager 
+
+' Other components dependences
+MetaTestcaseTool o-- MetaTestcaseExecutionOptimizerTool
 /'---------------------------------------'/
 
 /'-------------- CodecoveragePrioritizationSelectionComponent ----------------'/
-package muteria.drivers.mutationoptimizationcomponent #DEDDDD {
-    class MetaMutationOptimizerTool
-    abstract class BaseMutationOptimizerTool
-    package languages.[language].[mutationoptimizertool] #DFDDEE{
-       class TargetingMutationOptimizerTool 
-       class ExecutingMutationOptimizerTool 
+package muteria.drivers.mutatantexecutionoptimizationcomponent #DEDDDD {
+    class MetaMutantExecutionOptimizerTool
+    abstract class BaseMutantExecutionOptimizerTool
+    package languages.[language].[mutantexecutionoptimizertool] #DFDDEE{
+       class MutantExecutionOptimizerTool 
     }
-    class "      " as Hook_MutationOptimizerTool
-    hide Hook_MutationOptimizerTool fields 
-    hide Hook_MutationOptimizerTool methods 
-    hide Hook_MutationOptimizerTool circle 
-    note right of Hook_MutationOptimizerTool #white\FFFFFE
-        Each plugged-in 
-        mutation optimizer tool    
-    end note
 
-    TargetingMutationOptimizerTool -- Hook_MutationOptimizerTool
-    ExecutingMutationOptimizerTool -- Hook_MutationOptimizerTool
-    Hook_MutationOptimizerTool --|> BaseMutationOptimizerTool : extends >
-    Hook_MutationOptimizerTool "1..*" --* "1" MetaMutationOptimizerTool : < manages
+    MutantExecutionOptimizerTool --|> BaseMutantExecutionOptimizerTool : extends >
+    MutantExecutionOptimizerTool "1..*" --* "1" MetaMutantExecutionOptimizerTool : < manages
 }
-MetaMutationOptimizerTool --() MutationOptimizerManager 
+MetaMutantExecutionOptimizerTool --() MutantExecutionOptimizerManager 
 
 ' Other components dependences
 'MetaTestcaseOptimizerTool --o MetaMutationOptimizerTool
-MetaMutationTool o-- MetaMutationOptimizerTool 
+MetaMutationTool o-- MetaMutantExecutionOptimizerTool 
 /'---------------------------------------'/
 @enduml
-
-' For Prioritization, We have target artifact selection/prioritization
-' and evaluate artifact selection/execution. The are as following:
-' - Testcases: Evaluation (execution) (find failures)
-' - Codecoverage: Target (test generation)
-' - Mutation: Target (mutant guided test gen) or Evaluation(test ranking and mutant ranking) 
-/'@startuml
-() "rrr" as foo:
-() "trrr" as tfoo:
-foo -- tfoo
-@enduml
-'/

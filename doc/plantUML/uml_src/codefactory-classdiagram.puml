@@ -1,0 +1,38 @@
+@startuml
+/'-------------- Style ----------------'/
+skinparam roundcorner 20
+skinparam class {
+	BackgroundColor Moccasin
+	ArrowColor Maroon
+	BorderColor Purple
+}
+skinparam stereotypeCBackgroundColor YellowGreen
+/'---------------------------------------'/
+
+'interface 
+package muteria.codefactory {
+    package handling_functions {
+        note "The handling functions\n for different formats\n are defined here" as N1        
+    }
+    enum CodeFormats {
+        C_SOURCE
+        C_PREPROCESSED_SOURCE
+        CPP_PREPROCESSED_SOURCE
+        LLVM_BITCODE
+        JAVA_BITCODE
+        NATIVE_CODE
+        ASSEMBLY_CODE
+        ...
+    }
+    class RepositoryManager 
+    class CodeBuildFactory {
+        - src_dest_fmt_to_handling_function
+        + format_names 
+        - _fmt_from_to_registration()
+        - _register(src_fmt, dest_fmt, handling_function)
+        + transform_src_into_dest (src_fmt, dest_fmt, src_files_paths, dest_paths, **kwars)
+    }
+    CodeBuildFactory "1" o-- "1" RepositoryManager
+}
+
+@enduml

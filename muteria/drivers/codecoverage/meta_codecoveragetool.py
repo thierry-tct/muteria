@@ -58,7 +58,7 @@ class MetaCodecoverageTool(object):
         self.config_dict = config_dict
 
         if set(self.config_dict) != set(self.tools_by_criterion_dict):
-            logging.error("mismatch between tools and config"}
+            logging.error("mismatch between tools and config")
             ERROR_HANDLER.error_exit()
         for criterion in self.config_dict:
             if len(self.tools_by_criterion_dict[criterion]) != \

@@ -1,0 +1,22 @@
+@startuml
+/'-------------- Style ----------------'/
+skinparam roundcorner 20
+skinparam class {
+	BackgroundColor Moccasin
+	ArrowColor Maroon
+	BorderColor Purple
+}
+skinparam stereotypeCBackgroundColor YellowGreen
+/'---------------------------------------'/
+
+'interface 
+package muteria.controller {
+    class MainController {
+    }
+    class Navigator
+    class Runner
+    Runner "1" --* "1" MainController: contains > 
+    Navigator "1" --* "1" MainController: contains > 
+    Runner "1" o-- "1" Navigator
+}
+@enduml
