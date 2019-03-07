@@ -22,12 +22,13 @@ class ToolsModulesLoader(object):
     # containing corresponding tools
     COMMON_TOOLS_BY_LANGUAGE_DIR = "tools_by_languages"
 
-    def get_tools_modules(self, tool_category):
+    @classmethod
+    def get_tools_modules(cls, tool_category):
         '''
         Import all tools modules of the specified tool category into a Dict 
         as following:  {<language>: {<toolname>: <module>}}
         '''
-        if tool_category not in self.TOOL_CATEGORIES_DIRS:
+        if tool_category not in cls.TOOL_CATEGORIES_DIRS:
             logging.error("%s: %s" % ("invalid tool_category", tool_category))
 
         modules = {}
@@ -35,9 +36,9 @@ class ToolsModulesLoader(object):
         drivers_pkg_init_py = os.path.abspath(__file__)
         drivers_pkg_path = os.path.dirname(drivers_pkg_init_py)
         pkg_path = os.path.join(drivers_pkg_path, \
-                                    self.TOOL_CATEGORIES_DIRS[tool_category], \
-                                    self.COMMON_TOOLS_BY_LANGUAGE_DIR)
-        language_list = [lang for lang in os.path.listdir(pkg_path) \
+                                    cls.TOOL_CATEGORIES_DIRS[tool_category], \
+                                    cls.COMMON_TOOLS_BY_LANGUAGE_DIR)
+        language_list = [lang for lang in os.listdir(pkg_path) \
                                                         if os.path.isdir(lang)]
         for language in language_list:
             if '.' in language:
@@ -46,7 +47,7 @@ class ToolsModulesLoader(object):
                         "Language (package) name must not contain dot('.')"))
                 ERROR_HANDLER.error_exit()
             language_pkg_path = os.path.join(pkg_path, language)
-            toolname_list = [fd for fd in os.path.listdir(language_pkg_path) \
+            toolname_list = [fd for fd in os.listdir(language_pkg_path) \
                                                         if os.path.isdir(fd)]
             for toolname in toolname_list:
                 if '.' in toolname:

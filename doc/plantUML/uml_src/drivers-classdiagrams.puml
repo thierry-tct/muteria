@@ -12,7 +12,7 @@ skinparam stereotypeCBackgroundColor YellowGreen
 /'-------------- TestcasesComponent ----------------'/
 'namespace muteria.drivers.testgeneration #DDDDDD {
 package muteria.drivers.testcasescomponent #DDEDD0 {
-    class TestsInfoObject
+    class TestcasesInfoObject
     class MetaTestcaseTool
     abstract class BaseTestcaseTool
     package languages.[language].[testcasetool] #DDEDEE{
@@ -32,8 +32,8 @@ package muteria.drivers.testcasescomponent #DDEDD0 {
     DynamicTestcaseTool -- Hook_TestTool
     Hook_TestTool --|> BaseTestcaseTool : extends >
     Hook_TestTool "1..*" --* "1" MetaTestcaseTool : < manages
-    TestsInfoObject "1" -* "1" BaseTestcaseTool
-    MetaTestcaseTool "1" *- "1" TestsInfoObject 
+    TestcasesInfoObject "1" -* "1" BaseTestcaseTool
+    MetaTestcaseTool "1" *- "1" TestcasesInfoObject 
 }
 MetaTestcaseTool --() TestcasesManager 
 'muteria.drivers.testcasescomponent +-- languages.<<language>>.<<testtool>>

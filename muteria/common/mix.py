@@ -50,7 +50,11 @@ class ErrorHandler(object):
     #~ def set_corresponding_repos_manager()
 
     @classmethod
-    def error_exit(cls, error_code=1, err_string=None, ask_revert=True):
+    def error_exit(cls, err_string=None, call_location=None, error_code=1, \
+                                                            ask_revert=True):
+        if call_location is not None:
+            logging.error("# Error happened in location {}".format(\
+                                                            call_location))
         logging.error("#Error happened in function %s" % inspect.stack()[1][3])
         if err_string:
             logging.error(err_string)
@@ -73,13 +77,19 @@ class ErrorHandler(object):
         as location_called_from
         '''
         if not condition:
-            if call_location is not None:
-                logging.error("# Error happened in location {}".format(\
-                                                                call_location))
-            cls.error_exit(err_string=err_string, ask_revert=ask_revert)
+            cls.error_exit(err_string=err_string, \
+                            call_location=call_location, ask_revert=ask_revert)
     #~ def error_exit_file()
 #~ class ErrorHandler
 
 class GlobalConstants(object):
     UNCERTAIN_TEST_VERDICT = None
+
+    PASS_TEST_VERDICT = False
+    
+    FAIL_TEST_VERDICT = True
+    
+    MUTANT_ALIVE_VERDICT = False
+    
+    MUTANT_KILLED_VERDICT = True
 #~ class GlobalConstants

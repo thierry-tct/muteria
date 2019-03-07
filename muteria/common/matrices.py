@@ -84,7 +84,13 @@ class RawExecutionMatrix(object):
         for v in self.inactive_cell_vals:
             assert not self.is_uncertain_cell_func(v)
 
-        if self.filename is not None:
+        if self.filename is None or not os.path.isfile(self.filename):
+            ordered_cols = [self.key_column_name] + self.non_key_col_list
+            self.dataframe = \
+                    pd.DataFrame({c:[] for c in ordered_cols})[ordered_cols]
+            self.dataframe = self.dataframe.astype(cell_dtype)\
+                                           .astype({self.key_column_name: str})
+        else:
             self.dataframe = common_fs.loadCSV(self.filename)
             assert len(self.dataframe.columns) >= 2, \
                     "expect at least 2 columns in dataframe: key, values..."
@@ -95,12 +101,6 @@ class RawExecutionMatrix(object):
             else:
                 assert self.non_key_col_list == list(self.dataframe)[1:], \
                                                             "non key mismatch"
-        else:
-            ordered_cols = [self.key_column_name] + self.non_key_col_list
-            self.dataframe = \
-                    pd.DataFrame({c:[] for c in ordered_cols})[ordered_cols]
-            self.dataframe = self.dataframe.astype(cell_dtype)\
-                                           .astype({self.key_column_name: str})
 
         self.keys_set = set(self.get_keys())
 

@@ -20,11 +20,11 @@ import muteria.common.fs as common_fs
 import muteria.common.matrices as common_matrices
 import muteria.common.mix as common_mix
 
-from base_testcasetool import BaseTestcaseTool
+from muteria.drivers.testgeneration.testcases_info import TestcasesInfoObject
 
-from ... import ToolsModulesLoader
+from muteria.drivers import ToolsModulesLoader
 
-from ...checkpoint_handler import CheckpointHandlerForMeta
+from muteria.drivers.checkpoint_handler import CheckpointHandlerForMeta
 
 ERROR_HANDLER = common_mix.ErrorHandler
 
@@ -72,10 +72,10 @@ class MetaTestcaseTool(object):
 
         # Verify Direct Arguments Variables
         ERROR_HANDLER.assert_true(self.tests_working_dir is None, \
-                                    "Must specify tests_working_dir", __FILE__)
+                                    "Must specify tests_working_dir", __file__)
         ERROR_HANDLER.assert_true(len(self.test_tool_config_list) != \
                                         len(set(self.test_tool_config_list), \
-                        "some tool configs appear multiple times", __FILE__))
+                        "some tool configs appear multiple times", __file__))
 
         # Set Indirect Arguments Variables
         self.checkpoints_dir = os.path.join(self.tests_working_dir, \
@@ -103,8 +103,9 @@ class MetaTestcaseTool(object):
         # Create the diffent tools
         for idx in range(len(test_tool_config_list)):
             toolname = test_tool_config_list[idx].get_tool_name()
+            toolalias = test_tool_config_list[idx].get_tool_conf_alias()
             tool_working_dir = self._get_test_tool_out_folder(toolname)
-            config = config_list[idx]
+            config = test_tool_config_list[idx]
             tool_checkpointer = common_fs.CheckpointState(\
                             *self._get_test_tool_checkpoint_files(toolname))
             self.checkpointer.add_dep_checkpoint_state(tool_checkpointer)
@@ -148,15 +149,19 @@ class MetaTestcaseTool(object):
         
         # Find which test tool's the testcase is, then execute
         ttoolname, testcase = self.reverse_meta_testcase(meta_testcase)
-        if ttoolname not in testcases_tools:
-            logging.error("Test tool {} not registered".format(ttoolname))
-            ERROR_HANDLER.error_exit_file(__file__)
+        ERROR_HANDLER.assert_true(ttoolname in self.testcases_tools, \
+                            "Test tool {} not registered".format(ttoolname), \
+                                                                    __file__)
         ttool = self.testcases_tools[ttoolname][self.TOOL_OBJ_KEY]
         return ttool.execute_testcase(testcase, exe_path, env_vars)
     #~ def execute_testcase()
 
     def runtests(self, meta_testcases, exe_path, env_vars, \
-                    stop_on_failure=False, fault_test_execution_matrix=None):
+                        stop_on_failure=False, \
+                        fault_test_execution_matrix_file=None, \
+                        test_prioritization_module=None, \
+                        parallel_test_count=1, \
+                        parallel_test_scheduler=None):
         '''
         Execute the list of test cases with the given executable and 
         say, for each test case, whether it failed
@@ -168,8 +173,17 @@ class MetaTestcaseTool(object):
                         executing each test ({<variable>: <value>})
         :param stop_on_failure: decide whether to stop the test 
                         execution once a test fails
-        :param fault_test_execution_matrix: Optional matrix to store the 
-                        tests' pass fail execution data
+        :param fault_test_execution_matrix_file: Optional matrix file 
+                        to store the tests' pass fail execution data
+        :param test_prioritization_module: Specify the test prioritization
+                        module. 
+                        (TODO: Implement support)
+        :param parallel_test_count: Specify the number of parallel test
+                        Execution. must be an integer >= 1
+        :param parallel_test_scheduler: Specify the function that will
+                        handle parallel test scheduling by tool, using
+                        the test execution optimizer. 
+                        (TODO: Implement support)
         :returns: dict of testcase and their failed verdict.
                  {<test case name>: <True if failed, False if passed,
                     UNCERTAIN_TEST_VERDICT if uncertain>}
@@ -177,23 +191,38 @@ class MetaTestcaseTool(object):
                  have been executed until the failure
         '''
         
+        # FIXME: Make sure that the support are implemented for 
+        # parallelism and test prioritization. Remove the code bellow 
+        # once supported:
+        ERROR_HANDLER.assert_true(test_prioritization_module is None, \
+                        "Must implement test prioritization support here", \
+                                                                    __file__)
+        ERROR_HANDLER.assert_true(parallel_test_count <= 1, \
+                    "Must implement parallel tests execution support here", \
+                                                                    __file__)
+        ERROR_HANDLER.assert_true(parallel_test_scheduler is None, \
+                    "Must implement parallel tests execution support here", \
+                                                                    __file__)
+        #~FIXMEnd
+
         # @Checkpoint: create a checkpoint handler
         cp_func_name = "runtests"
         cp_task_id = 1
-        checkpoint_handler = CheckpointHandlerForMeta(self.get_checkpointer())
+        checkpoint_handler = \
+                CheckpointHandlerForMeta(self.get_checkpoint_state_object())
         if checkpoint_handler.is_finished():
             logging.warning("%s %s" %("The function 'runtests' is finished", \
-                    "according to checkpoint, but called again. None returned")
+                "according to checkpoint, but called again. None returned"))
             if common_mix.confirm_execution("%s %s" % ( \
-                                "Function 'runtests' is already", \
-                                "finished, do yo want to restart?")):
+                                        "Function 'runtests' is already", \
+                                        "finished, do you want to restart?")):
                 checkpoint_handler.restart()
                 logging.info("Restarting the finished 'runtests'")
             else:
-                ERROR_HANDLER.error_exit_file(__file__, \
-                        err_string="%s %s %s" % ("Execution halted. Cannot", \
-                        "continue because no value can be returned. Check", \
-                        "the results of the finished execution"))
+                ERROR_HANDLER.error_exit(err_string="%s %s %s" % (\
+                        "Execution halted. Cannot continue because no value", \
+                        " can be returned. Check the results of the", \
+                        "finished execution"), call_location=__file__)
 
         # @Checkpoint: Get the saved payload (data kapt for each tool)
         meta_test_failed_verdicts = checkpoint_handler.get_optional_payload()
@@ -201,8 +230,9 @@ class MetaTestcaseTool(object):
             meta_test_failed_verdicts = {} 
 
         # Make sure the tests are unique
-        assert len(meta_testcases) == len(set(meta_testcases)), \
-                                                    "not all tests are unique"
+        ERROR_HANDLER.assert_true(len(meta_testcases) == \
+                                                len(set(meta_testcases)), \
+                                        "not all tests are unique", __file__)
 
         testcases_by_tool = {}
         for meta_testcase in meta_testcases:
@@ -226,7 +256,7 @@ class MetaTestcaseTool(object):
                                                 exe_path, env_vars, \
                                                 stop_on_failure)
             for testcase in test_failed_verdicts:
-                meta_testcase = make_meta_testcase(testcase, ttoolname)
+                meta_testcase = self.make_meta_testcase(testcase, ttoolname)
                 meta_test_failed_verdicts[meta_testcase] = \
                                                 test_failed_verdicts[testcase]
                 if test_failed_verdicts[testcase == True]:
@@ -240,7 +270,7 @@ class MetaTestcaseTool(object):
 
             if stop_on_failure and found_a_failure:
                 # @Checkpoint: Chekpointing for remaining tools
-                for rem_tool in testcases_by_tool.keys()[tpos+:]:
+                for rem_tool in testcases_by_tool.keys()[tpos+1:]:
                     checkpoint_handler.do_checkpoint(func_name=cp_func_name, \
                                         taskid=cp_task_id, \
                                         tool=rem_tool, \
@@ -254,20 +284,25 @@ class MetaTestcaseTool(object):
                     meta_test_failed_verdicts[meta_testcase] = \
                                                 self.UNCERTAIN_TEST_VERDICT
                     
-        assert len(meta_test_failed_verdicts) == len(meta_testcases), \
-                    "Not all tests have a verdict reported"
+        ERROR_HANDLER.assert_true(len(meta_test_failed_verdicts) == \
+                                                        len(meta_testcases), \
+                            "Not all tests have a verdict reported", __file__)
 
-        if fault_test_execution_matrix is not None:
-            assert fault_test_execution_matrix.is_empty(), \
-                                                "matrix must be empty"
+        if fault_test_execution_matrix_file is not None:
+            # Load or Create the matrix 
+            fault_test_execution_matrix = common_matrices.ExecutionMatrix( \
+                                filename=fault_test_execution_matrix_file, \
+                                            non_key_col_list=meta_testcases)
+            ERROR_HANDLER.assert_true(fault_test_execution_matrix.is_empty(), \
+                                            "matrix must be empty", __file__)
             failverdict2val = {
                 True: fault_test_execution_matrix.getActiveCellDefaultVal(),
                 False: fault_test_execution_matrix.getInactiveCellVal(),
                 self.UNCERTAIN_TEST_VERDICT: \
-                    fault_test_execution_matrix.getUncertainCellDefaultVal()
+                    fault_test_execution_matrix.getUncertainCellDefaultVal(),
             }
             cells_dict = {}
-            for meta_testcase in meta_test_failed_verdicts
+            for meta_testcase in meta_test_failed_verdicts:
                 cells_dict[meta_testcase] = \
                     failverdict2val[meta_test_failed_verdicts[meta_testcase]]
 
@@ -283,11 +318,19 @@ class MetaTestcaseTool(object):
         return meta_test_failed_verdicts
     #~ def runtests()
 
-    def generate_tests (self):
+    def generate_tests (self, test_generation_guidance_obj=None):
+
+        # FIXME: Support test_generation_guidance_obj, then remove the code
+        # bellow:
+        ERROR_HANDLER.assert_true(test_generation_guidance_obj is None, \
+                "FIXME: Must first implement support for test gen guidance")
+
+
         # @Checkpoint: create a checkpoint handler
         cp_func_name = "generate_tests"
         cp_task_id = 1
-        checkpoint_handler = CheckpointHandlerForMeta(self.get_checkpointer())
+        checkpoint_handler = CheckpointHandlerForMeta(\
+                                            self.get_checkpoint_state_object())
         if checkpoint_handler.is_finished():
             return
 
@@ -296,7 +339,7 @@ class MetaTestcaseTool(object):
             # Check whether already executed
             if checkpoint_handler.is_to_execute(func_name=cp_func_name, \
                                                 taskid=cp_task_id, \
-                                                tool=ttoolname)
+                                                tool=ttoolname):
 
                 # Actual Execution
                 ttool = self.testcases_tools[ttoolname][self.TOOL_OBJ_KEY]
@@ -308,15 +351,16 @@ class MetaTestcaseTool(object):
                                                 tool=ttoolname)
 
         # Compute testcases info
-        meta_testcase_info_obj = {}
+        meta_testcase_info_obj = TestcasesInfoObject()
         for ttoolname in self.testcases_tools:
             ttool = self.testcases_tools[ttoolname][self.TOOL_OBJ_KEY]
             tool_testcase_info = ttool.get_testcase_info_object()
-            for t_test in tool_testcase_info:
+            old2new_tests = {}
+            for t_test in tool_testcase_info.get_tests_list():
                 meta_t_key = self.make_meta_testcase(t_test, ttoolname)
-                assert meta_t_key not in meta_testcase_info_obj, \
-                                                "Key already existing (BUG)"
-                meta_testcase_info_obj[meta_t_key] = tool_testcase_info[t_test]
+                old2new_tests[t_test] = meta_t_key
+            meta_testcase_info_obj.update_using(ttoolname, old2new_tests, \
+                                                            tool_testcase_info)
         self._store_testcase_info_to_file(meta_testcase_info_obj)
 
         # @Checkpoint: Finished
@@ -326,11 +370,11 @@ class MetaTestcaseTool(object):
                                     detailed_exectime_obj=detailed_exectime)
     #~ def generate_tests()
     
-    def make_meta_testcase(testname, toolname):
+    def make_meta_testcase(self, testname, toolname):
         return ":".join([toolname, testname])
     #~ def make_meta_testcase()
 
-    def reverse_meta_testcase(meta_testcase, toolname):
+    def reverse_meta_testcase(self, meta_testcase):
         parts = meta_testcase.split(':', 1)
         assert len(parts) >= 2, "invalibd meta testcase"
         toolname, testcase = parts
@@ -349,7 +393,7 @@ class MetaTestcaseTool(object):
         return self.testcases_info_file
     #~ def get_testcase_info_file()
 
-    def _get_test_tool_out_folder(test_toolname, top_outdir=None):
+    def _get_test_tool_out_folder(self, test_toolname, top_outdir=None):
         if top_outdir is None:
             top_outdir = self.tests_working_dir
         return os.path.join(top_outdir, test_toolname)
@@ -377,4 +421,5 @@ class MetaTestcaseTool(object):
 
     def has_checkpointer(self):
         return self.checkpointer is not None
+    #~ def has_checkpointer()
 #~ class MetaTestcaseTool
