@@ -32,7 +32,7 @@ class MetaTestcaseTool(object):
     ''' 
     '''
 
-    UNCERTAIN_TEST_VERDICT = BaseTestcaseTool.UNCERTAIN_TEST_VERDICT
+    UNCERTAIN_TEST_VERDICT = common_mix.GlobalConstants.UNCERTAIN_TEST_VERDICT
 
     TOOL_OBJ_KEY = "tool_obj"
     TOOL_WORKDIR_KEY = "tool_working_dir"
@@ -40,71 +40,96 @@ class MetaTestcaseTool(object):
     # The Fault execution matrix has a unique key represented by this string
     FAULT_MATRIX_KEY = "fault_revealed"
 
-    def __init__(self, tests_working_dir,
-                        repository_manager,
-                        language, 
-                        tests_toolname_list, 
-                        config_list):
-        self.modules_dict = ToolsModulesLoader.get_tools_modules(
-                                    ToolsModulesLoader.TESTCASES_TOOLS)
-        if len(tests_toolname_list) != len(config_list):
-            logging.error("mismatch between tools and config")
-            ERROR_HANDLER.error_exit()
+    def __init__(self, language, tests_working_dir, code_builds_factory,
+                                                    test_tool_config_list):
 
-        if len(tests_toolname_list) != len(set(tests_toolname_list)):
-            logging.error("some tools appear multiple times")
-            ERROR_HANDLER.error_exit()
+        """ Initialize a meta testcase tool object.
+        :type language:
+        :param language:
 
+        :type tests_working_dir:
+        :param tests_working_dir:
+
+        :type code_builds_factory:
+        :param code_builds_factory:
+
+        :type test_tool_config_list:
+        :param test_tool_config_list:
+
+        :raises:
+
+        :rtype:
+        """
+        # Set Constants
+        self.modules_dict = ToolsModulesLoader.get_tools_modules( \
+                                            ToolsModulesLoader.TESTCASES_TOOLS)
+
+        # Set Direct Arguments Variables
+        self.language = language
         self.tests_working_dir = tests_working_dir
-        self.repository_manager = repository_manager
+        self.code_builds_factory = code_builds_factory
+        self.test_tool_config_list = test_tool_config_list
 
-        if self.tests_working_dir is not None:
-            if not os.path.isdir(self.tests_working_dir):
-                os.mkdir(self.tests_working_dir)
-        else:
-            logging.error("Must specify tests_working_dir")
-            ERROR_HANDLER.error_exit()
+        # Verify Direct Arguments Variables
+        ERROR_HANDLER.assert_true(self.tests_working_dir is None, \
+                                    "Must specify tests_working_dir", __FILE__)
+        ERROR_HANDLER.assert_true(len(self.test_tool_config_list) != \
+                                        len(set(self.test_tool_config_list), \
+                        "some tool configs appear multiple times", __FILE__))
 
+        # Set Indirect Arguments Variables
         self.checkpoints_dir = os.path.join(self.tests_working_dir, \
                                                             "_checkpoints_")
+        self.testcases_info_file = \
+                os.path.join(self.tests_working_dir, "testcasesInfos.json")
+        # Verify Indirect Arguments Variables
+
+        # Initialize other Fields
+        self.testcases_tools = {}
+        self.checkpointer = None 
+
+        # Make Initialization Computation ()
+        ## Create dirs
+        if not os.path.isdir(self.tests_working_dir):
+            os.mkdir(self.tests_working_dir)
+
         if not os.path.isdir(self.checkpoints_dir):
             os.mkdir(self.checkpoints_dir)
 
+        # Set the checkpointer
         self.checkpointer = common_fs.CheckpointState(\
-                                                *self.get_checkpoint_files())
+                                                *self._get_checkpoint_files())
 
-        self.testcases_info_file = \
-                os.path.join(self.tests_working_dir, "testcasesInfos.json")
-
-        self.testcases_tools = {}
-        for idx in range(len(tests_toolname_list)):
-            toolname = tests_toolname_list[idx]
-            tool_working_dir = self.get_test_tool_out_folder(toolname)
+        # Create the diffent tools
+        for idx in range(len(test_tool_config_list)):
+            toolname = test_tool_config_list[idx].get_tool_name()
+            tool_working_dir = self._get_test_tool_out_folder(toolname)
             config = config_list[idx]
             tool_checkpointer = common_fs.CheckpointState(\
-                            *self.get_mutation_tool_checkpoint_files(toolname))
+                            *self._get_test_tool_checkpoint_files(toolname))
             self.checkpointer.add_dep_checkpoint_state(tool_checkpointer)
             self.testcases_tools[toolname] = {
-                self.TOOL_OBJ_KEY: self.create_testcase_tool(language, toolname, \
+                self.TOOL_OBJ_KEY: self._create_testcase_tool(toolname, \
                                                     tool_working_dir, config, \
                                                     tool_checkpointer),
                 self.TOOL_WORKDIR_KEY: tool_working_dir,
             }
     #~ def __init__()
 
-    def create_testcase_tool(self, language, toolname, tool_working_dir, \
+    def _create_testcase_tool(self, toolname, tool_working_dir, \
                                                     config, tool_checkpointer):
         '''
             Each tool module must have the function createTestcaseTool() 
             implemented
         '''
-        testcase_tool = self.modules_dict[language][toolname].TestcaseTool(
-                                            tool_working_dir,
-                                            self.repository_manager,
-                                            config,
+        testcase_tool = \
+                    self.modules_dict[self.language][toolname].TestcaseTool( \
+                                            tool_working_dir, \
+                                            self.code_builds_factory, \
+                                            config, \
                                             tool_checkpointer)
         return testcase_tool
-    #~ def create_testcase_tool()
+    #~ def _create_testcase_tool()
 
 
     def execute_testcase (self, meta_testcase, exe_path, env_vars):
@@ -292,7 +317,7 @@ class MetaTestcaseTool(object):
                 assert meta_t_key not in meta_testcase_info_obj, \
                                                 "Key already existing (BUG)"
                 meta_testcase_info_obj[meta_t_key] = tool_testcase_info[t_test]
-        self.store_testcase_info_to_file(meta_testcase_info_obj)
+        self._store_testcase_info_to_file(meta_testcase_info_obj)
 
         # @Checkpoint: Finished
         detailed_exectime = {tt: tt.get_checkpointer().get_execution_time() \
@@ -316,35 +341,35 @@ class MetaTestcaseTool(object):
         return common_fs.loadJSON(self.get_testcase_info_file())
     #~ def get_testcase_info_object()
 
-    def store_testcase_info_to_file(self, data_object):
+    def _store_testcase_info_to_file(self, data_object):
         common_fs.dumpJSON(data_object, self.get_testcase_info_file())
-    #~ def store_testcase_info_to_file()
+    #~ def _store_testcase_info_to_file()
 
     def get_testcase_info_file(self):
         return self.testcases_info_file
     #~ def get_testcase_info_file()
 
-    def get_test_tool_out_folder(test_toolname, top_outdir=None):
+    def _get_test_tool_out_folder(test_toolname, top_outdir=None):
         if top_outdir is None:
             top_outdir = self.tests_working_dir
         return os.path.join(top_outdir, test_toolname)
-    #~ def get_test_tool_out_folder()
+    #~ def _get_test_tool_out_folder()
 
-    def get_test_tool_checkpoint_files(self, test_toolname, \
+    def _get_test_tool_checkpoint_files(self, test_toolname, \
                                                     top_checkpoint_dir=None):
         if top_checkpoint_dir is None:
             top_checkpoint_dir = self.checkpoints_dir
         return [os.path.join(top_checkpoint_dir, \
                             test_toolname+"_checkpoint.state"+suffix) \
                             for suffix in ("", ".backup")]
-    #~ def get_test_tool_checkpoint_files()
+    #~ def _get_test_tool_checkpoint_files()
         
-    def get_checkpoint_files(self):
+    def _get_checkpoint_files(self):
         top_checkpoint_dir = self.checkpoints_dir
         return [os.path.join(top_checkpoint_dir, \
                         "checkpoint.state"+suffix) \
                         for suffix in ("", ".backup")]
-    #~ def get_checkpoint_files()
+    #~ def _get_checkpoint_files()
 
     def get_checkpoint_state_object(self):
         return self.checkpointer

@@ -25,7 +25,7 @@ class BaseTestcaseTool(object):
     '''
     '''
 
-    UNCERTAIN_TEST_VERDICT = None
+    UNCERTAIN_TEST_VERDICT = common_mix.GlobalConstants.UNCERTAIN_TEST_VERDICT
 
     def __init__(self, tests_working_dir, repository_manager, config, \
                                                                 checkpointer):

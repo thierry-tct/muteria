@@ -43,9 +43,9 @@ class ErrorHandler(object):
 
     @classmethod
     def set_corresponding_repos_manager(cls, repos_dir_manager):
-        if cls.repos_dir_manager is not None:
-            cls.error_exit_file(__file__, \
-                            err_string="the repo dir manager is already set")
+        cls.assert_true (cls.repos_dir_manager is not None, \
+                            err_string="the repo dir manager is already set", \
+                            call_location=__file__)
         cls.repos_dir_manager = repos_dir_manager
     #~ def set_corresponding_repos_manager()
 
@@ -66,13 +66,20 @@ class ErrorHandler(object):
     #~ def error_exit()
 
     @classmethod
-    def error_exit_file(cls, location_called_from, error_code=1, \
-                                    err_string=None, ask_revert=True):
+    def assert_true(cls, condition, err_string=None, \
+                                call_location=None, ask_revert=True):
         '''
         Call this function with the parameter *__file__*
+        as location_called_from
         '''
-        logging.error("# Error happened in location %s" % location_called_from)
-        cls.error_exit(error_code=error_code, err_string=err_string, \
-                                                    ask_revert=ask_revert)
+        if not condition:
+            if call_location is not None:
+                logging.error("# Error happened in location {}".format(\
+                                                                call_location))
+            cls.error_exit(err_string=err_string, ask_revert=ask_revert)
     #~ def error_exit_file()
 #~ class ErrorHandler
+
+class GlobalConstants(object):
+    UNCERTAIN_TEST_VERDICT = None
+#~ class GlobalConstants

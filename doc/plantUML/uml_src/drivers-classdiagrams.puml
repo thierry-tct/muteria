@@ -12,6 +12,7 @@ skinparam stereotypeCBackgroundColor YellowGreen
 /'-------------- TestcasesComponent ----------------'/
 'namespace muteria.drivers.testgeneration #DDDDDD {
 package muteria.drivers.testcasescomponent #DDEDD0 {
+    class TestsInfoObject
     class MetaTestcaseTool
     abstract class BaseTestcaseTool
     package languages.[language].[testcasetool] #DDEDEE{
@@ -31,6 +32,8 @@ package muteria.drivers.testcasescomponent #DDEDD0 {
     DynamicTestcaseTool -- Hook_TestTool
     Hook_TestTool --|> BaseTestcaseTool : extends >
     Hook_TestTool "1..*" --* "1" MetaTestcaseTool : < manages
+    TestsInfoObject "1" -* "1" BaseTestcaseTool
+    MetaTestcaseTool "1" *- "1" TestsInfoObject 
 }
 MetaTestcaseTool --() TestcasesManager 
 'muteria.drivers.testcasescomponent +-- languages.<<language>>.<<testtool>>
@@ -40,6 +43,7 @@ MetaTestcaseTool --() TestcasesManager
 
 /'-------------- CodecoverageComponent ----------------'/
 package muteria.drivers.codecoveragecomponent #EDDDD0 {
+    class CodeInfoObject
     class MetaCodecoverageTool
     abstract class BaseCodecoverageTool
     package languages.[language].[codecoveragetool] #EDDDEE{
@@ -57,6 +61,8 @@ package muteria.drivers.codecoveragecomponent #EDDDD0 {
     CodecoverageTool -- Hook_CodecovTool
     Hook_CodecovTool --|> BaseCodecoverageTool : extends >
     Hook_CodecovTool "1..*" --* "1" MetaCodecoverageTool : < manages
+    CodeInfoObject "1" -* "1" BaseCodecoverageTool
+    MetaCodecoverageTool "1" *- "1" CodeInfoObject 
 }
 MetaCodecoverageTool --() CodecoverageManager 
 
@@ -66,6 +72,7 @@ MetaCodecoverageTool o-- MetaTestcaseTool
 
 /'-------------- MutantionComponent ----------------'/
 package muteria.drivers.mutationcomponent #DDDDEE {
+    class MutantsInfoObject
     class MetaMutationTool
     abstract class BaseMutationTool
     package languages.[language].[mutationtool] #CDDDFF{
@@ -75,7 +82,7 @@ package muteria.drivers.mutationcomponent #DDDDEE {
     hide Hook_MutationTool fields 
     hide Hook_MutationTool methods 
     hide Hook_MutationTool circle 
-    note right of Hook_MutationTool #white\FFFFFE
+    note left of Hook_MutationTool #white\FFFFFE
         Each plugged-in 
         mutation tool    
     end note
@@ -83,6 +90,8 @@ package muteria.drivers.mutationcomponent #DDDDEE {
     MutationTool -- Hook_MutationTool
     Hook_MutationTool --|> BaseMutationTool : extends >
     Hook_MutationTool "1..*" --* "1" MetaMutationTool : < manages
+    BaseMutationTool "1" *- "1" MutantsInfoObject
+    MutantsInfoObject "1" -* "1" MetaMutationTool 
 }
 MetaMutationTool --() MutationManager 
 
@@ -98,13 +107,13 @@ package muteria.drivers.testgenerationguidancecomponent #DDDDA0 {
        class TestcaseGenerationGuidanceTool 
     }
 
-    BaseTestcaseGenerationGuidanceTool <|-- TestcaseGenerationGuidanceTool: extends >
+    TestcaseGenerationGuidanceTool --|> BaseTestcaseGenerationGuidanceTool: extends >
     TestcaseGenerationGuidanceTool "1..*" --* "1" MetaTestcaseGenerationGuidanceTool : < manages
 }
 MetaTestcaseGenerationGuidanceTool --() TestcaseGenerationGuidanceManager 
 
 ' Other components dependences
-MetaTestcaseTool o-- MetaTestcaseGenerationGuidanceTool
+'MetaTestcaseTool o-- MetaTestcaseGenerationGuidanceTool
 /'---------------------------------------'/
 
 /'-------------- TestcaseExecutionOPtimizationComponent ----------------'/
@@ -115,16 +124,16 @@ package muteria.drivers.testcaseexecutionoptimizationcomponent #DDDCC0 {
        class TestcaseExecutionOptimizerTool 
     }
 
-    BaseTestcaseExecutionOptimizerTool <|-- TestcaseExecutionOptimizerTool : extends >
+    TestcaseExecutionOptimizerTool --|> BaseTestcaseExecutionOptimizerTool : extends >
     TestcaseExecutionOptimizerTool "1..*" --* "1" MetaTestcaseExecutionOptimizerTool : < manages
 }
 MetaTestcaseExecutionOptimizerTool --() TestcaseOptimizerManager 
 
 ' Other components dependences
-MetaTestcaseTool o-- MetaTestcaseExecutionOptimizerTool
+'MetaTestcaseTool o-- MetaTestcaseExecutionOptimizerTool
 /'---------------------------------------'/
 
-/'-------------- CodecoveragePrioritizationSelectionComponent ----------------'/
+/'-------------- MutantPrioritizationSelectionComponent ----------------'/
 package muteria.drivers.mutatantexecutionoptimizationcomponent #DEDDDD {
     class MetaMutantExecutionOptimizerTool
     abstract class BaseMutantExecutionOptimizerTool
@@ -138,7 +147,16 @@ package muteria.drivers.mutatantexecutionoptimizationcomponent #DEDDDD {
 MetaMutantExecutionOptimizerTool --() MutantExecutionOptimizerManager 
 
 ' Other components dependences
-'MetaTestcaseOptimizerTool --o MetaMutationOptimizerTool
-MetaMutationTool o-- MetaMutantExecutionOptimizerTool 
+'MetaMutationTool o-- MetaMutantExecutionOptimizerTool 
 /'---------------------------------------'/
+
+/'------------- Beautify the layout ------------------'/
+'muteria.drivers.mutatantexecutionoptimizationcomponent --[hidden]-- 
+'muteria.drivers.testcasescomponent --[hidden]-- muteria.drivers.mutationcomponent
+'muteria.drivers.codecoveragecomponent --[hidden]-- muteria.drivers.testcasescomponent
+'muteria.drivers.codecoveragecomponent --[hidden]-- muteria.drivers.mutationcomponent
+muteria.drivers.testgenerationguidancecomponent --[hidden]-- muteria.drivers.testcaseexecutionoptimizationcomponent 
+muteria.drivers.testcaseexecutionoptimizationcomponent --[hidden]-- muteria.drivers.mutatantexecutionoptimizationcomponent
+muteria.drivers.testcasescomponent --[hidden]-- muteria.drivers.mutatantexecutionoptimizationcomponent
+/'----------------------------------------------------'/
 @enduml
