@@ -16,7 +16,6 @@
 from __future__ import print_function
 
 import logging
-import enum
 import collections
 
 import networkx
@@ -25,21 +24,8 @@ import muteria.common.mix as common_mix
 
 ERROR_HANDLER = common_mix.ErrorHandler
 
-class EnumAutoName(enum.Enum):
-    # This function do not have 'self'
-    #def _generate_next_value_(name, start, count, last_values):
-        #return name
 
-    def get_str(self):
-        return self.name
-
-    @classmethod
-    def has_element_named(cls, e_name):
-        return e_name in cls.__members__
-#~ class EnumAutoName
-
-@enum.unique
-class Tasks(EnumAutoName):
+class Tasks(common_mix.EnumAutoName):
     STARTING = 0 #enum.auto()
 
     TESTS_GENERATION = 1 #enum.auto()
@@ -68,15 +54,10 @@ class Tasks(EnumAutoName):
     FINISHED = 18 #enum.auto()
 #~ class Tasks
 
-@enum.unique
-class Status(EnumAutoName):
+class Status(common_mix.EnumAutoName):
     UNTOUCHED = -1 #enum.auto()
     EXECUTING = 0 #enum.auto()
     DONE = 1 #enum.auto()
-    
-    @classmethod
-    def is_valid(cls, elem):
-        return elem in cls
 #~ class Status
 
 class TaskOrderingDependency(object): 

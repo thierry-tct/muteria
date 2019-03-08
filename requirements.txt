@@ -4,3 +4,4 @@ scipy
 matplotlib
 networkx
 gitpython
+# enum (python 2.7)

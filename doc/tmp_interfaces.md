@@ -82,3 +82,22 @@ execute_testcase()
 6. select_elements()
 
 ---
+
+## Tool Config Class methods:
+```python
+1. get_tool_name()
+# compute alias by using <toolname>.<configID>, when configID is not None.
+2. get_tool_config_alias()  
+3. get_tool_type()
+```
+
+---
+---
+## TODO Next:
+1. Implement BaseTestcaseTool
+2. Finalize TescaseInfo, must separate simple and meta
+3. refactor Checkpoint handler name (common name)
+4. Make squeletton for all other components (classed and interfaces). so as to just fill in later
+5. Implement testcasetool config and BaseToolConfig
+6. reorganize the classes to have them finalized. Also create dirs and source files for test prioritization...
+7. Continue with main executor controller, code factory, repo manager, config manager, navigator,...

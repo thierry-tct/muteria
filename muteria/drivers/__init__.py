@@ -38,7 +38,7 @@ class ToolsModulesLoader(object):
         pkg_path = os.path.join(drivers_pkg_path, \
                                     cls.TOOL_CATEGORIES_DIRS[tool_category], \
                                     cls.COMMON_TOOLS_BY_LANGUAGE_DIR)
-        language_list = [lang for lang in os.listdir(pkg_path) \
+        language_list = [lang.lower() for lang in os.listdir(pkg_path) \
                                                         if os.path.isdir(lang)]
         for language in language_list:
             if '.' in language:

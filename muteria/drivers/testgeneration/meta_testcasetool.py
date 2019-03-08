@@ -1,13 +1,17 @@
+#
+# [LICENCE]
+#
+"""
+This module is used through MetaTestcaseTool class
+Which access the relevant testcase tools as specified
 
-# This module is used through MetaTestcaseTool class
-# Which access the relevant testcase tools as specified
+The tools are organized by programming language
+For each language, there is a folder for each tool, 
+named after the tool in lowercase
 
-# The tools are organized by programming language
-# For each language, there is a folder for each tool, 
-# named after the tool in lowercase
-
-# Each testcase tool package have the following in the __init__.py file:
-# import <Module>.<class extending BaseTestcaseTool> as TestcaseTool
+Each testcase tool package have the following in the __init__.py file:
+import <Module>.<class extending BaseTestcaseTool> as TestcaseTool
+"""
 
 from __future__ import print_function
 import os
@@ -25,6 +29,7 @@ from muteria.drivers.testgeneration.testcases_info import TestcasesInfoObject
 from muteria.drivers import ToolsModulesLoader
 
 from muteria.drivers.checkpoint_handler import CheckpointHandlerForMeta
+from muteria.drivers.testgeneration import TestToolType
 
 ERROR_HANDLER = common_mix.ErrorHandler
 
@@ -36,6 +41,7 @@ class MetaTestcaseTool(object):
 
     TOOL_OBJ_KEY = "tool_obj"
     TOOL_WORKDIR_KEY = "tool_working_dir"
+    TOOL_TYPE_KEY = "tool_type"
 
     # The Fault execution matrix has a unique key represented by this string
     FAULT_MATRIX_KEY = "fault_revealed"
@@ -65,7 +71,7 @@ class MetaTestcaseTool(object):
                                             ToolsModulesLoader.TESTCASES_TOOLS)
 
         # Set Direct Arguments Variables
-        self.language = language
+        self.language = language.lower()
         self.tests_working_dir = tests_working_dir
         self.code_builds_factory = code_builds_factory
         self.test_tool_config_list = test_tool_config_list
@@ -85,7 +91,7 @@ class MetaTestcaseTool(object):
         # Verify Indirect Arguments Variables
 
         # Initialize other Fields
-        self.testcases_tools = {}
+        self.testcases_configured_tools = {}
         self.checkpointer = None 
 
         # Make Initialization Computation ()
@@ -102,18 +108,19 @@ class MetaTestcaseTool(object):
 
         # Create the diffent tools
         for idx in range(len(test_tool_config_list)):
-            toolname = test_tool_config_list[idx].get_tool_name()
-            toolalias = test_tool_config_list[idx].get_tool_conf_alias()
-            tool_working_dir = self._get_test_tool_out_folder(toolname)
             config = test_tool_config_list[idx]
+            toolname = config.get_tool_name()
+            toolalias = config.get_tool_config_alias()
+            tool_working_dir = self._get_test_tool_out_folder(toolalias)
             tool_checkpointer = common_fs.CheckpointState(\
-                            *self._get_test_tool_checkpoint_files(toolname))
+                            *self._get_test_tool_checkpoint_files(toolalias))
             self.checkpointer.add_dep_checkpoint_state(tool_checkpointer)
-            self.testcases_tools[toolname] = {
+            self.testcases_configured_tools[toolalias] = {
                 self.TOOL_OBJ_KEY: self._create_testcase_tool(toolname, \
                                                     tool_working_dir, config, \
                                                     tool_checkpointer),
                 self.TOOL_WORKDIR_KEY: tool_working_dir,
+                self.TOOL_TYPE_KEY: config.get_tool_type()
             }
     #~ def __init__()
 
@@ -123,12 +130,29 @@ class MetaTestcaseTool(object):
             Each tool module must have the function createTestcaseTool() 
             implemented
         '''
-        testcase_tool = \
-                    self.modules_dict[self.language][toolname].TestcaseTool( \
-                                            tool_working_dir, \
-                                            self.code_builds_factory, \
-                                            config, \
-                                            tool_checkpointer)
+        ERROR_HANDLER.assert_true( \
+            toolname in self.modules_dict[self.language],
+            "Invalid toolname given: {}".format(toolname), __file__)
+        try:
+            # the tooltype is returned by config.get_tool_type()
+            TestcaseTool = getattr(self.modules_dict[self.language][toolname],\
+                                    config.get_tool_type().get_field_value())
+        except AttributeError:
+            ERROR_HANDLER.error_exit("{} {} {} {}".format( \
+                                "(REPORT BUG) The test case tool of type", \
+                                config.get_tool_type().get_field_value(),\
+                                "is not present for test tool", toolname), \
+                                                                    __file__)
+
+        ERROR_HANDLER.assert_true(TestcaseTool is not None, \
+                                "The {} language's tool {} {} {}.".format( \
+                                self.language, toolname, \
+                                "does not implement the test tool type", \
+                                config.get_tool_type().get_str()), __file__)
+
+        testcase_tool = TestcaseTool(tool_working_dir, \
+                                        self.code_builds_factory, config, \
+                                                        tool_checkpointer)
         return testcase_tool
     #~ def _create_testcase_tool()
 
@@ -148,11 +172,12 @@ class MetaTestcaseTool(object):
         '''
         
         # Find which test tool's the testcase is, then execute
-        ttoolname, testcase = self.reverse_meta_testcase(meta_testcase)
-        ERROR_HANDLER.assert_true(ttoolname in self.testcases_tools, \
-                            "Test tool {} not registered".format(ttoolname), \
+        ttoolalias, testcase = self.reverse_meta_testcase(meta_testcase)
+        ERROR_HANDLER.assert_true( \
+                            ttoolalias in self.testcases_configured_tools, \
+                            "Test tool {} not registered".format(ttoolalias), \
                                                                     __file__)
-        ttool = self.testcases_tools[ttoolname][self.TOOL_OBJ_KEY]
+        ttool = self.testcases_configured_tools[ttoolalias][self.TOOL_OBJ_KEY]
         return ttool.execute_testcase(testcase, exe_path, env_vars)
     #~ def execute_testcase()
 
@@ -161,7 +186,9 @@ class MetaTestcaseTool(object):
                         fault_test_execution_matrix_file=None, \
                         test_prioritization_module=None, \
                         parallel_test_count=1, \
-                        parallel_test_scheduler=None):
+                        parallel_test_scheduler=None, \
+                        restart_checkpointer=False,
+                        finish_destroy_checkpointer=True):
         '''
         Execute the list of test cases with the given executable and 
         say, for each test case, whether it failed
@@ -184,6 +211,16 @@ class MetaTestcaseTool(object):
                         handle parallel test scheduling by tool, using
                         the test execution optimizer. 
                         (TODO: Implement support)
+
+        :type restart_checkointer: bool
+        :param restart_checkointer: Decide whether to discard checkpoint
+                        and restart anew.
+
+        :type finish_destroy_checkpointer: bool
+        :param finish_destroy_checkpointer: Decide whether to automatically 
+                        destroy the checkpointer when done or not
+                        Useful is caller has a checkpointer to update. 
+
         :returns: dict of testcase and their failed verdict.
                  {<test case name>: <True if failed, False if passed,
                     UNCERTAIN_TEST_VERDICT if uncertain>}
@@ -205,11 +242,18 @@ class MetaTestcaseTool(object):
                                                                     __file__)
         #~FIXMEnd
 
+        # Check arguments Validity
+        ERROR_HANDLER.assert_true(parallel_test_count > 0, \
+                    "invalid parallel test execution count: {}. {}".format( \
+                                    parallel_test_count, "must be >= 1"))
+
         # @Checkpoint: create a checkpoint handler
         cp_func_name = "runtests"
         cp_task_id = 1
         checkpoint_handler = \
                 CheckpointHandlerForMeta(self.get_checkpoint_state_object())
+        if restart_checkpointer:
+            checkpoint_handler.restart()
         if checkpoint_handler.is_finished():
             logging.warning("%s %s" %("The function 'runtests' is finished", \
                 "according to checkpoint, but called again. None returned"))
@@ -236,27 +280,28 @@ class MetaTestcaseTool(object):
 
         testcases_by_tool = {}
         for meta_testcase in meta_testcases:
-            ttoolname, testcase = self.reverse_meta_testcase(meta_testcase)
-            if ttoolname not in testcases_by_tool:
-                testcases_by_tool[ttoolname] = []
-            testcases_by_tool[ttoolname].append(testcase)
+            ttoolalias, testcase = self.reverse_meta_testcase(meta_testcase)
+            if ttoolalias not in testcases_by_tool:
+                testcases_by_tool[ttoolalias] = []
+            testcases_by_tool[ttoolalias].append(testcase)
             
         found_a_failure = False
-        for tpos, ttoolname in enumerate(testcases_by_tool.keys()):
+        for tpos, ttoolalias in enumerate(testcases_by_tool.keys()):
             # @Checkpoint: Check whether already executed
             if not checkpoint_handler.is_to_execute(func_name=cp_func_name, \
                                                 taskid=cp_task_id, \
-                                                tool=ttoolname):
+                                                tool=ttoolalias):
                 continue
 
             # Actual execution
-            ttool = self.testcases_tools[ttoolname][self.TOOL_OBJ_KEY]
+            ttool = \
+                self.testcases_configured_tools[ttoolalias][self.TOOL_OBJ_KEY]
             test_failed_verdicts = ttool.runtests( \
-                                                testcases_by_tool[ttoolname], \
-                                                exe_path, env_vars, \
-                                                stop_on_failure)
+                                            testcases_by_tool[ttoolalias], \
+                                            exe_path, env_vars, \
+                                            stop_on_failure)
             for testcase in test_failed_verdicts:
-                meta_testcase = self.make_meta_testcase(testcase, ttoolname)
+                meta_testcase = self.make_meta_testcase(testcase, ttoolalias)
                 meta_test_failed_verdicts[meta_testcase] = \
                                                 test_failed_verdicts[testcase]
                 if test_failed_verdicts[testcase == True]:
@@ -265,7 +310,7 @@ class MetaTestcaseTool(object):
             # @Checkpoint: Chekpointing
             checkpoint_handler.do_checkpoint(func_name=cp_func_name, \
                                         taskid=cp_task_id, \
-                                        tool=ttoolname, \
+                                        tool=ttoolalias, \
                                         opt_payload=meta_test_failed_verdicts)
 
             if stop_on_failure and found_a_failure:
@@ -315,83 +360,166 @@ class MetaTestcaseTool(object):
         checkpoint_handler.set_finished( \
                                     detailed_exectime_obj=detailed_exectime)
 
+        if finish_destroy_checkpointer:
+            checkpoint_handler.destroy()
+
         return meta_test_failed_verdicts
     #~ def runtests()
 
-    def generate_tests (self, test_generation_guidance_obj=None):
+    def generate_tests (self, test_tool_type=None, \
+                                test_generation_guidance_obj=None, \
+                                parallel_testgen_count=1, \
+                                restart_checkpointer=False,
+                                finish_destroy_checkpointer=True):
+        """ This method should be used to generate the tests and must 
+            always have a single instance running (it has single checkpoint
+            file). 
+            Note: The caller must explicitely destroy the checkpointer
+            after this call succeed, to ensure that a sceduler will not
+            re-execute this 
+        :type test_tool_type:
+        :param test_tool_type:
+    
+        :type \test_generation_guidance_obj:
+        :param \test_generation_guidance_obj:
+    
+        :type \parallel_testgen_count:
+        :param \parallel_testgen_count:
 
+        :type restart_checkointer: bool
+        :param restart_checkointer: Decide whether to discard checkpoint
+                        and restart anew.
+
+        :type finish_destroy_checkpointer: bool
+        :param finish_destroy_checkpointer: Decide whether to automatically 
+                        destroy the checkpointer when done or not
+                        Useful is caller has a checkpointer to update. 
+    
+        :raises:
+    
+        :rtype:
+        """
         # FIXME: Support test_generation_guidance_obj, then remove the code
         # bellow:
         ERROR_HANDLER.assert_true(test_generation_guidance_obj is None, \
                 "FIXME: Must first implement support for test gen guidance")
+        ERROR_HANDLER.assert_true(parallel_testgen_count <= 1, \
+                "FIXME: Must first implement support for parallel test gen")
+        #~ FXIMEnd
 
+        # Check arguments Validity
+        ERROR_HANDLER.assert_true(parallel_testgen_count > 0, \
+                    "invalid parallel test generation count: {}. {}".format( \
+                                    parallel_testgen_count, "must be >= 1"))
+        if test_tool_type is None:
+            candidate_tools_aliases = self.testcases_configured_tools
+        else:
+            candidate_tools_aliases = []
+            # validate the test_tool_types values
+            ERROR_HANDLER.assert_true(TestToolType.is_valid(test_tool_type), \
+                        "Invalid test tool type passed to test generation", \
+                                                                    __file__)
+            for ttoolalias in self.testcases_configured_tools:
+                if self.testcases_configured_tools[ttoolalias]\
+                                    [self.TOOL_TYPE_KEY] == test_tool_type:
+                    candidate_tools_aliases.append(ttoolalias) 
 
         # @Checkpoint: create a checkpoint handler
         cp_func_name = "generate_tests"
+        if test_tool_type is not None:
+            cp_func_name += ":" + test_tool_type.get_str()
         cp_task_id = 1
         checkpoint_handler = CheckpointHandlerForMeta(\
                                             self.get_checkpoint_state_object())
+        if restart_checkpointer:
+            checkpoint_handler.restart()
         if checkpoint_handler.is_finished():
             return
 
         # Generate
-        for ttoolname in self.testcases_tools:
+        for ttoolalias in candidate_tools_aliases:
             # Check whether already executed
             if checkpoint_handler.is_to_execute(func_name=cp_func_name, \
                                                 taskid=cp_task_id, \
-                                                tool=ttoolname):
+                                                tool=ttoolalias):
 
                 # Actual Execution
-                ttool = self.testcases_tools[ttoolname][self.TOOL_OBJ_KEY]
+                ttool = self.testcases_configured_tools[ttoolalias]\
+                                                            [self.TOOL_OBJ_KEY]
                 ttool.generate_tests()
 
                 # @Checkpoint: Checkpointing
                 checkpoint_handler.do_checkpoint(func_name=cp_func_name, \
                                                 taskid=cp_task_id, \
-                                                tool=ttoolname)
+                                                tool=ttoolalias)
 
-        # Compute testcases info
-        meta_testcase_info_obj = TestcasesInfoObject()
-        for ttoolname in self.testcases_tools:
-            ttool = self.testcases_tools[ttoolname][self.TOOL_OBJ_KEY]
-            tool_testcase_info = ttool.get_testcase_info_object()
-            old2new_tests = {}
-            for t_test in tool_testcase_info.get_tests_list():
-                meta_t_key = self.make_meta_testcase(t_test, ttoolname)
-                old2new_tests[t_test] = meta_t_key
-            meta_testcase_info_obj.update_using(ttoolname, old2new_tests, \
-                                                            tool_testcase_info)
-        self._store_testcase_info_to_file(meta_testcase_info_obj)
+        # Invalidate any existing testcase info so it can be recomputed
+        self._invalidate_testcase_info()
 
         # @Checkpoint: Finished
         detailed_exectime = {tt: tt.get_checkpointer().get_execution_time() \
-                                                for tt in self.testcases_tools}
+                                    for tt in candidate_tools_aliases}
         checkpoint_handler.set_finished( \
                                     detailed_exectime_obj=detailed_exectime)
+
+        if finish_destroy_checkpointer:
+            checkpoint_handler.destroy()
     #~ def generate_tests()
+
+    def _compute_testcases_info(self, candidate_tool_aliases=None):
+        meta_testcase_info_obj = TestcasesInfoObject()
+        if candidate_tool_aliases is None:
+            candidate_tool_aliases = self.testcases_configured_tools
+        for ttoolalias in candidate_tool_aliases:
+            ttool = \
+                self.testcases_configured_tools[ttoolalias][self.TOOL_OBJ_KEY]
+            tool_testcase_info = ttool.get_testcase_info_object()
+            old2new_tests = {}
+            for t_test in tool_testcase_info.get_tests_list():
+                meta_t_key = self.make_meta_testcase(t_test, ttoolalias)
+                old2new_tests[t_test] = meta_t_key
+            meta_testcase_info_obj.update_using(ttoolalias, old2new_tests, \
+                                                            tool_testcase_info)
+        return meta_testcase_info_obj
+    #~ def _compute_testcases_info()
     
-    def make_meta_testcase(self, testname, toolname):
-        return ":".join([toolname, testname])
+    def make_meta_testcase(self, testname, toolalias):
+        return ":".join([toolalias, testname])
     #~ def make_meta_testcase()
 
     def reverse_meta_testcase(self, meta_testcase):
         parts = meta_testcase.split(':', 1)
         assert len(parts) >= 2, "invalibd meta testcase"
-        toolname, testcase = parts
-        return toolname, testcase
+        toolalias, testcase = parts
+        return toolalias, testcase
     #~ def reverse_meta_testcase()
 
     def get_testcase_info_object(self):
-        return common_fs.loadJSON(self.get_testcase_info_file())
+        return TestcasesInfoObject().load_from_file(\
+                                                self.get_testcase_info_file())
     #~ def get_testcase_info_object()
 
-    def _store_testcase_info_to_file(self, data_object):
-        common_fs.dumpJSON(data_object, self.get_testcase_info_file())
-    #~ def _store_testcase_info_to_file()
-
     def get_testcase_info_file(self):
-        return self.testcases_info_file
+        # Compute and write the testcase info if not present
+        # only place where the meta info is written
+        if self._testcase_info_is_invalidated():
+            self._compute_testcases_info().write_to_file(\
+                                                    self.testcases_info_file)
+        return self._unchecked_get_testcase_info_file()
     #~ def get_testcase_info_file()
+
+    def _unchecked_get_testcase_info_file(self):
+        return self.testcases_info_file
+    #~ def _unchecked_get_testcase_info_file():
+
+    def _invalidate_testcase_info(self):
+        if os.path.isfile(self._unchecked_get_testcase_info_file()):
+            os.remove(self._unchecked_get_testcase_info_file())
+    #~ def _invalidate_testcase_info()
+
+    def _testcase_info_is_invalidated(self):
+        return not os.path.isfile(self._unchecked_get_testcase_info_file())
+    #~ def _testcase_info_is_invalidated()
 
     def _get_test_tool_out_folder(self, test_toolname, top_outdir=None):
         if top_outdir is None:

@@ -15,6 +15,8 @@ import shutil
 import logging
 import inspect
 
+import enum
+
 def confirm_execution(question):
     """
     Ask user to enter Y or N (case-insensitive).
@@ -93,3 +95,77 @@ class GlobalConstants(object):
     
     MUTANT_KILLED_VERDICT = True
 #~ class GlobalConstants
+
+@enum.unique
+class EnumAutoName(enum.Enum):
+    
+    """ This is a base class that can be used to define enums, 
+        Extend this class to generate an enum that will have the methods
+        defined here.
+    """
+        
+        # This function do not have 'self'
+    #def _generate_next_value_(name, start, count, last_values):
+        #return name
+
+    def get_str(self):
+        """ get the string representation of the enum field.
+            Example:
+            >>> class MyEnum(EnumAutoName):
+            ...     FIELD1 = "abc"
+            ...     FIELD2 = 3
+            ...
+            >>> my = MyEnum()
+            >>> my.FIELD1.get_str()
+            'FIELD1'
+        """
+        return self.name
+    #~ def get_str():
+
+    def get_field_value(self):
+        """ get the value of the enum field.
+            Example:
+            >>> class MyEnum(EnumAutoName):
+            ...     FIELD1 = "abc"
+            ...     FIELD2 = 3
+            ...
+            >>> my = MyEnum()
+            >>> my.FIELD1.get_field_value()
+            'abc'
+        """
+        return self.name
+    #~ def get_field_value():
+
+    @classmethod
+    def has_element_named(cls, e_name):
+        """ Check that the string e_name represent the name of a field
+            of the enum.
+            Example:
+            >>> class MyEnum(EnumAutoName):
+            ...     FIELD1 = "abc"
+            ...     FIELD2 = 3
+            ...
+            >>> MyEnum.has_element_named("FIELD1")
+            True
+            >>> MyEnum.has_element_named("xyz")
+            False
+        """
+        return e_name in cls.__members__
+    #~ def has_element_named()
+    
+    @classmethod
+    def is_valid(cls, elem):
+        """ Check that the object elem is a field of the enum
+            Example:
+            >>> class MyEnum(EnumAutoName):
+            ...     FIELD1 = "abc"
+            ...     FIELD2 = 3
+            ...
+            >>> MyEnum.is_valid(MyEnum.FIELD1)
+            True
+            >>> MyEnum.is_valid("FIELD1")
+            False
+        """
+        return elem in cls
+    #~ def is_valid()
+#~ class EnumAutoName

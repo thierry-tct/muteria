@@ -73,5 +73,8 @@ class CheckpointHandlerForMeta(object):
 
     def restart(self):
         self.used_checkpointer.restart_task()
+
+    def destroy(self):
+        self.used_checkpointer.destroy_checkpoint()
 #~ class CheckpointHandlerForMeta
 
