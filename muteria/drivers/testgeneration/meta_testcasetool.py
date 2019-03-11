@@ -10,7 +10,7 @@ For each language, there is a folder for each tool,
 named after the tool in lowercase
 
 Each testcase tool package have the following in the __init__.py file:
-import <Module>.<class extending BaseTestcaseTool> as TestcaseTool
+>>> import <Module>.<class extending BaseTestcaseTool> as TestcaseTool
 """
 
 from __future__ import print_function
@@ -24,11 +24,11 @@ import muteria.common.fs as common_fs
 import muteria.common.matrices as common_matrices
 import muteria.common.mix as common_mix
 
-from muteria.drivers.testgeneration.testcases_info import TestcasesInfoObject
-
 from muteria.drivers import ToolsModulesLoader
 
 from muteria.drivers.checkpoint_handler import CheckPointHandler
+
+from muteria.drivers.testgeneration.testcases_info import TestcasesInfoObject
 from muteria.drivers.testgeneration import TestToolType
 
 ERROR_HANDLER = common_mix.ErrorHandler
@@ -88,6 +88,7 @@ class MetaTestcaseTool(object):
                                                             "_checkpoints_")
         self.testcases_info_file = \
                 os.path.join(self.tests_working_dir, "testcasesInfos.json")
+
         # Verify Indirect Arguments Variables
 
         # Initialize other Fields
@@ -102,7 +103,7 @@ class MetaTestcaseTool(object):
         if not os.path.isdir(self.checkpoints_dir):
             os.mkdir(self.checkpoints_dir)
 
-        # Set the checkpointer
+        ## Set the checkpointer
         self.checkpointer = common_fs.CheckpointState(\
                                                 *self._get_checkpoint_files())
 
@@ -127,8 +128,7 @@ class MetaTestcaseTool(object):
     def _create_testcase_tool(self, toolname, tool_working_dir, \
                                                     config, tool_checkpointer):
         '''
-            Each tool module must have the function createTestcaseTool() 
-            implemented
+            
         '''
         ERROR_HANDLER.assert_true( \
             toolname in self.modules_dict[self.language],

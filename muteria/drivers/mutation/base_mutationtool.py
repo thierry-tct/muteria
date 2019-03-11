@@ -36,22 +36,22 @@ class BaseMutationTool(abc.ABC):
     '''
 
     def __init__(self, meta_test_generation_obj, mutation_working_dir, 
-                                    code_build_factory, config, checkpointer):
+                                    code_builds_factory, config, checkpointer):
         # Set Constants
 
         # Set Direct Arguments Variables
         self.meta_test_generation_obj = meta_test_generation_obj
         self.mutation_working_dir = mutation_working_dir
-        self.code_build_factory = code_build_factory
+        self.code_builds_factory = code_builds_factory
         self.config = config
         self.checkpointer = checkpointer
         
         # Verify Direct Arguments Variables
         ERROR_HANDLER.assert_true(self.mutation_working_dir is None, \
-                                    "Must specify mutation_working_dir", __file__)
+                                "Must specify mutation_working_dir", __file__)
         
         # Set Indirect Arguments Variables
-        # Generate the mutants into this folder (to be created by user)
+        ## Generate the mutants into this folder (to be created by user)
         self.mutants_storage_dir = os.path.join(
                         self.mutation_working_dir, "mutant_files")
         
@@ -294,7 +294,7 @@ class BaseMutationTool(abc.ABC):
     #~ def runtest_strong_mutation()
 
     def mutate_programs (self, outputdir=None, \
-                                            code_build_factory_override=None):
+                                            code_builds_factory_override=None):
         '''
         '''
         # @Checkpoint: create a checkpoint handler (for time)
@@ -304,20 +304,20 @@ class BaseMutationTool(abc.ABC):
 
         if outputdir is None:
             outputdir = self.mutants_storage_dir
-        if code_build_factory_override is None:
-            code_build_factory_override = self.code_build_factory
+        if code_builds_factory_override is None:
+            code_builds_factory_override = self.code_builds_factory
         if os.path.isdir(outputdir):
             shutil.rmtree(outputdir)
         os.mkdir(outputdir)
         self._do_mutate_programs (outputdir=outputdir, \
-                                code_build_factory=code_build_factory_override)
+                            code_builds_factory=code_builds_factory_override)
 
         # @Checkpoint: Finished (for time)
         checkpoint_handler.set_finished(None)
     #~ def mutate_programs()
         
     @abc.abstractmethod
-    def _do_mutate_programs (self, outputdir, code_build_factory):
+    def _do_mutate_programs (self, outputdir, code_builds_factory):
         print ("!!! Must be implemented in child class !!!")
     #~ def _do_mutate_programs()
 

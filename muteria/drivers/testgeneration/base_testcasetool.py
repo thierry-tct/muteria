@@ -31,7 +31,8 @@ For Example:
 """
 
 from __future__ import print_function
-import os, sys
+import os
+import sys
 import glob
 import shutil
 import logging

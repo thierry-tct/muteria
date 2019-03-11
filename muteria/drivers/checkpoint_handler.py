@@ -35,7 +35,7 @@ class CheckPointHandler(object):
     def is_finished(self):
         return self.used_checkpointer.is_finished()
 
-    def is_to_execute(self, func_name, taskid, tool):
+    def is_to_execute(self, func_name, taskid, tool=None):
         dat = self.get_current_data()
         if dat is None:
             return True
