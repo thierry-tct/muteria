@@ -1,14 +1,28 @@
+#
+# [LICENCE]
+#
+"""
+The tools are organized by programming language
 
-# The tools are organized by programming language
+For each language, there is a folder for each tool, 
+amed after the tool in all lowercase , starting with letter or underscore(_),
+The remaining caracters are either letter, number or underscore
 
-# For each language, there is a folder for each tool, 
-# named after the tool in all lowercase , starting with letter or underscore(_),
-# The remaining caracters are either letter, number or underscore
+XXX Each testcase tool package must make each test case tool visible in 
+the __init__.py file (Just set to None if not defined).
+For Example: 
+- If nothing is defined:
+>>> StaticTestcaseTool = None
+>>> StaticMutantTestcaseTool = None
+>>> DynamicTestcaseTool = None
+>>> DynamicMutantTestcaseTool = None
 
+- If  for example the StaticTestcaseTool is defined as the class 
+<class extending BaseTestcaseTool>, in th module <Module>, replace
+ "StaticTestcaseTool = None" with:
+>>> import <Module>.<class extending BaseTestcaseTool> as StaticTestcaseTool
 
-# XXX Each testcase tool package must have the 
-# following in the __init__.py file:
-# import <Module>.<class extending BaseTestcaseTool> as TestcaseTool
+"""
 
 from __future__ import print_function
 import os, sys
