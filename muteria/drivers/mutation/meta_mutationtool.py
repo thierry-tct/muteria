@@ -65,8 +65,8 @@ class MetaMutationTool(object):
         # Set Indirect Arguments Variables
         self.checkpoints_dir = os.path.join(self.mutation_working_dir, \
                                                             "_checkpoints_")
-        self.mutant_info_file = \
-            os.path.join(self.mutation_working_dir, "mutant_info_file.json")
+        self.mutants_info_file = \
+            os.path.join(self.mutation_working_dir, "mutants_info_file.json")
         
         # Verify indirect Arguments Variables
         
@@ -84,16 +84,16 @@ class MetaMutationTool(object):
 
         ## Set checkpointer
         self.checkpointer = common_fs.CheckpointState( \
-                                                *self.get_checkpoint_files())
+                                                *self._get_checkpoint_files())
         
         # Create the different tools
         for idx in range(len(self.mutation_tool_config_list)):
             config = self.mutation_tool_config_list[idx]
             toolname = config.get_tool_name()
             toolalias = config.get_tool_config_alias()
-            tool_working_dir = self.get_mutation_tool_out_folder(toolalias)
+            tool_working_dir = self._get_mutation_tool_out_folder(toolalias)
             tool_checkpointer = common_fs.CheckpointState( \
-                            *self.get_mutation_tool_checkpoint_files(toolalias))
+                            *self._get_mutation_tool_checkpoint_files(toolalias))
             self.checkpointer.add_dep_checkpoint_state(tool_checkpointer)
             self.mutation_configured_tools[toolalias] = {
                 self.TOOL_OBJ_KEY: self._create_mutation_tool(toolname, \
@@ -226,7 +226,7 @@ class MetaMutationTool(object):
 
         mutantlist_by_tool = {}
         for meta_mutant in meta_mutantlist:
-            mtoolalias, mutant = self.reverse_meta_key(meta_mutant)
+            mtoolalias, mutant = self.reverse_meta_mutant(meta_mutant)
             if mtoolalias not in mutantlist_by_tool:
                 mutantlist_by_tool[mtoolalias] = []
             mutantlist_by_tool[mtoolalias].append(mutant)
@@ -286,7 +286,7 @@ class MetaMutationTool(object):
                             set_index(tool_matrix.get_key_colname, drop=True).\
                                             to_dict(orient="index")
             for m_key in key2nonkeydict:
-                meta_m_key = self.get_meta_key(m_key, mtoolalias)
+                meta_m_key = self.make_meta_mutant(m_key, mtoolalias)
                 result_matrix.add_row_by_key(meta_m_key, 
                                                     key2nonkeydict[m_key], 
                                                     serialize=False)
@@ -401,8 +401,10 @@ class MetaMutationTool(object):
         if checkpoint_handler.is_finished():
             return
 
+        candidate_tools_alias = self.mutation_configured_tools.keys()
+
         # Mutate
-        for mtoolalias in self.mutation_configured_tools:
+        for mtoolalias in candidate_tools_alias:
             # @Checkpoint: Check whether already executed
             if checkpoint_handler.is_to_execute( \
                                         func_name=cp_func_name, \
@@ -420,18 +422,8 @@ class MetaMutationTool(object):
                                         taskid=cp_task_id, \
                                         tool=mtoolalias)
 
-        # Compute mutant info
-        meta_mutant_info_obj = {}
-        for mtoolalias in self.mutation_configured_tools:
-            mut_tool = self.mutation_configured_tools[mtoolalias]\
-                                                            [self.TOOL_OBJ_KEY]
-            tool_mutant_info = mut_tool.get_mutant_info_object()
-            for m_key in tool_mutant_info:
-                meta_m_key = self.get_meta_key(m_key, mtoolalias)
-                assert meta_m_key not in meta_mutant_info_obj, \
-                                                "Key already existing (BUG)"
-                meta_mutant_info_obj[meta_m_key] = tool_mutant_info[m_key]
-        self.store_mutant_info_to_file(meta_mutant_info_obj)
+        # Invalidate any existing mutant info so it can be recomputed
+        self._invalidate_mutant_info()
 
         # @Checkpoint: Finished
         detail_exectime = {mt: mt.get_checkpointer().get_execution_time() \
@@ -441,51 +433,83 @@ class MetaMutationTool(object):
         if finish_destroy_checkpointer:
             checkpoint_handler.destroy()
     #~ def mutate_programs()
-    
-    def get_meta_key(self, key, toolalias):
-        return ":".join([toolalias, key])
-    #~ def get_meta_key()
 
-    def reverse_meta_key(self, meta_key):
-        parts = meta_key.split(':', 1)
-        assert len(parts) >= 2, "invalibd meta key"
-        toolalias, key = parts
-        return toolalias, key
-    #~ def reverse_meta_key()
+    def _compute_mutants_info(self, candidate_tool_aliases=None):
+        meta_mutant_info_obj = MutantsInfoObject()
+        if candidate_tool_aliases is None:
+            candidate_tool_aliases = self.mutation_configured_tools.keys()
+        for mtoolalias in candidate_tool_aliases:
+            ttool = \
+                self.mutation_configured_tools[mtoolalias][self.TOOL_OBJ_KEY]
+            tool_mutant_info = ttool.get_mutant_info_object()
+            old2new_tests = {}
+            for m_test in tool_mutant_info.get_tests_list():
+                meta_t_key = self.make_meta_mutant(m_test, mtoolalias)
+                old2new_tests[m_test] = meta_t_key
+            meta_mutant_info_obj.update_using(mtoolalias, old2new_tests, \
+                                                            tool_mutant_info)
+        return meta_mutant_info_obj
+    #~ def _compute_mutants_info()
+    
+    def make_meta_mutant(self, mutantid, toolalias):
+        return ":".join([toolalias, mutantid])
+    #~ def make_meta_mutant()
+
+    def reverse_meta_mutant(self, meta_mutant):
+        parts = meta_mutant.split(':', 1)
+        assert len(parts) >= 2, "invalibd meta mutant"
+        toolalias, mutant = parts
+        return toolalias, mutant
+    #~ def reverse_meta_mutant()
 
     def get_mutant_info_object(self):
-        return common_fs.loadJSON(self.get_mutant_info_file())
+        return MutantsInfoObject().load_from_file(\
+                                                self.get_mutant_info_file())
     #~ def def get_mutant_info_object()
 
-    def store_mutant_info_to_file(self, data_object):
-        common_fs.dumpJSON(data_object, self.get_mutant_info_file())
-    #~ def store_mutant_info_to_file()
-
     def get_mutant_info_file(self):
-        return self.mutant_info_file
+        # Compute and write the testcase info if not present
+        # only place where the meta info is written
+        if self._mutant_info_is_invalidated():
+            self._compute_mutants_info().write_to_file(\
+                                        self._unchecked_get_mutant_info_file())
+        return self._unchecked_get_mutant_info_file()
     #~ def get_mutant_info_file()
 
-    def get_mutation_tool_out_folder(self, mutation_toolname, top_outdir=None):
+    def _unchecked_get_mutant_info_file(self):
+        return self.mutants_info_file
+    #~ def _unchecked_get_mutant_info_file():
+
+    def _invalidate_mutant_info(self):
+        if os.path.isfile(self._unchecked_get_mutant_info_file()):
+            os.remove(self._unchecked_get_mutant_info_file())
+    #~ def _invalidate_mutant_info()
+
+    def _mutant_info_is_invalidated(self):
+        return not os.path.isfile(self._unchecked_get_mutant_info_file())
+    #~ def _mutant_info_is_invalidated()
+
+    def _get_mutation_tool_out_folder(self, mutation_toolname, top_outdir=None):
         if top_outdir is None:
             top_outdir = self.mutation_working_dir
         return os.path.join(top_outdir, mutation_toolname)
-    #~ def get_mutation_tool_out_folder()
+    #~ def _get_mutation_tool_out_folder()
 
-    def get_mutation_tool_checkpoint_files(self, mutation_toolname, \
+    def _get_mutation_tool_checkpoint_files(self, mutation_toolalias, \
                                                     top_checkpoint_dir=None):
         if top_checkpoint_dir is None:
             top_checkpoint_dir = self.checkpoints_dir
         return [os.path.join(top_checkpoint_dir, \
-                            mutation_toolname+"_checkpoint.state"+suffix) \
+                            mutation_toolalias+"_checkpoint.state"+suffix) \
                             for suffix in ("", ".backup")]
-    #~ def get_mutation_tool_checkpoint_files()
+    #~ def _get_mutation_tool_checkpoint_files()
         
-    def get_checkpoint_files(self):
+    def _get_checkpoint_files(self):
         top_checkpoint_dir = self.checkpoints_dir
         return [os.path.join(top_checkpoint_dir, \
                         "checkpoint.state"+suffix) \
                         for suffix in ("", ".backup")]
-    #~ def get_checkpoint_files()
+    #~ def _get_checkpoint_files()
 
     def get_checkpoint_state_object(self):
         return self.checkpointer

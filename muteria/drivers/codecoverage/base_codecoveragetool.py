@@ -129,7 +129,15 @@ class BaseCodecoverageTool(abc.ABC):
     #~def _extract_function_cov_data_of_a_test()
 
     def runtests_code_coverage (self, testcases, criterion_to_matrix,
-                                                    re_instrument_code=True):
+                            re_instrument_code=True, test_parallel_count=1):
+        """
+            (TODO: support parallelism: per test outdata)
+        """
+        # FIXME: Support parallelism, then remove the code
+        # bellow:
+        ERROR_HANDLER.assert_true(test_parallel_count <= 1, \
+                "FIXME: Must first implement support for parallel mutatio")
+        #~ FXIMEnd
 
         # @Checkpoint: create a checkpoint handler (for time)
         checkpoint_handler = CheckPointHandler(self.get_checkpointer())
@@ -281,9 +289,16 @@ class BaseCodecoverageTool(abc.ABC):
     #~ def runtests_code_coverage()
 
     def instrument_code (self, criterion_to_enabling, outputdir=None, \
-                                            code_builds_factory_override=None):
+                        code_builds_factory_override=None, parallel_count=1):
         '''
+            (TODO: support parallelism: per test outdata)
         '''
+        # FIXME: Support parallelism, then remove the code
+        # bellow:
+        ERROR_HANDLER.assert_true(parallel_count <= 1, \
+                "FIXME: Must first implement support for parallel mutatio")
+        #~ FXIMEnd
+
         # @Checkpoint: create a checkpoint handler (for time)
         checkpoint_handler = CheckPointHandler(self.get_checkpointer())
         if not checkpoint_handler.is_finished():

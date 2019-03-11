@@ -1,15 +1,20 @@
-# TODO Fix the call of sub tool by toolname
-# TODO also fix duplucation in __init__ for tool with many criteria
+#
+# [LICENCE]
+#
+"""
+TODO Fix the call of sub tool by toolname
+TODO also fix duplucation in __init__ for tool with many criteria
 
-# This module is used through MetaCodecoverageTool class
-# Which access the relevant testcase tools as specified
+This module is used through MetaCodecoverageTool class
+Which access the relevant testcase tools as specified
 
-# The tools are organized by programming language
-# For each language, there is a folder for each tool, 
-# named after the tool in lowercase
+The tools are organized by programming language
+For each language, there is a folder for each tool, 
+named after the tool in lowercase
 
-# Each codecoverage tool package have the following in the __init__.py file:
-# import <Module>.<class extending BaseCodecoverageTool> as CodecoverageTool
+Each codecoverage tool package have the following in the __init__.py file:
+>>> import <Module>.<class extending BaseCodecoverageTool> as CodecoverageTool
+"""
 
 from __future__ import print_function
 import os
@@ -21,11 +26,11 @@ import muteria.common.fs as common_fs
 import muteria.common.matrices as common_matrices
 import muteria.common.mix as common_mix
 
-from base_codecoveragetool import BaseCodecoverageTool
+from muteria.drivers import ToolsModulesLoader
 
-from ... import ToolsModulesLoader
+from muteria.drivers.checkpoint_handler import CheckPointHandler
 
-from ...checkpoint_handler import CheckPointHandler
+from muteria.drivers.codecoverage import CodecoverageType
 
 ERROR_HANDLER = common_mix.ErrorHandler
 

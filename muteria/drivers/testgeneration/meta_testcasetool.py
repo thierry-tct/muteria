@@ -415,7 +415,7 @@ class MetaTestcaseTool(object):
                     "invalid parallel test generation count: {}. {}".format( \
                                     parallel_testgen_count, "must be >= 1"))
         if test_tool_type is None:
-            candidate_tools_aliases = self.testcases_configured_tools
+            candidate_tools_aliases = self.testcases_configured_tools.keys()
         else:
             candidate_tools_aliases = []
             # validate the test_tool_types values
@@ -472,7 +472,7 @@ class MetaTestcaseTool(object):
     def _compute_testcases_info(self, candidate_tool_aliases=None):
         meta_testcase_info_obj = TestcasesInfoObject()
         if candidate_tool_aliases is None:
-            candidate_tool_aliases = self.testcases_configured_tools
+            candidate_tool_aliases = self.testcases_configured_tools.keys()
         for ttoolalias in candidate_tool_aliases:
             ttool = \
                 self.testcases_configured_tools[ttoolalias][self.TOOL_OBJ_KEY]
@@ -507,7 +507,7 @@ class MetaTestcaseTool(object):
         # only place where the meta info is written
         if self._testcase_info_is_invalidated():
             self._compute_testcases_info().write_to_file(\
-                                                    self.testcases_info_file)
+                                    self._unchecked_get_testcase_info_file())
         return self._unchecked_get_testcase_info_file()
     #~ def get_testcase_info_file()
 

@@ -131,7 +131,8 @@ class BaseTestcaseTool(abc.ABC):
         return fail_verdict
     #~ def execute_testcase()
 
-    def runtests(self, testcases, exe_path_map, env_vars, stop_on_failure=False):
+    def runtests(self, testcases, exe_path_map, env_vars, \
+                                stop_on_failure=False, parallel_count=1):
         '''
         Execute the list of test cases with the given executable and 
         say, for each test case, whether it failed.
@@ -195,7 +196,7 @@ class BaseTestcaseTool(abc.ABC):
         return test_failed_verdicts
     #~ def runtests()
 
-    def generate_tests (self, exe_path_map, outputdir=None, \
+    def generate_tests (self, exe_path_map, parallel_count=1, outputdir=None, \
                                             code_builds_factory_override=None):
         '''
         '''

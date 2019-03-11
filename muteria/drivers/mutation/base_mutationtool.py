@@ -135,13 +135,22 @@ class BaseMutationTool(abc.ABC):
         print ("!!! Must be implemented in child class !!!")
     #~ def _extract_mutantcoverage_data_of_a_test()
 
-    def _runtest_using_meta_mutant (self, testcases, result_matrix, mutantlist,
-                                    get_executable_path_map_func,
-                                    get_environment_vars_func,
-                                    extract_data_of_a_test):
+    def _runtest_using_meta_mutant (self, testcases, result_matrix, 
+                                    mutantlist, \
+                                    get_executable_path_map_func, \
+                                    get_environment_vars_func, \
+                                    extract_data_of_a_test, \
+                                    test_parallel_count=1):
         '''
             param: testcases: list of testcase ids
+            (TODO: support parallelism: per test outdata)
         '''
+        # FIXME: Support parallelism, then remove the code
+        # bellow:
+        ERROR_HANDLER.assert_true(test_parallel_count <= 1, \
+                "FIXME: Must first implement support for parallel mutatio")
+        #~ FXIMEnd
+
         # Check that the result_matrix is empty and fine
         ERROR_HANDLER.assert_true(result_matrix.is_empty(), \
                                         "the matrix must be empty", __file__)
@@ -193,10 +202,17 @@ class BaseMutationTool(abc.ABC):
     #~def _runtest_using_meta_mutant ()
 
     def runtest_mutant_coverage (self, testcases, mutant_coverage_matrix, \
-                                    mutantlist):
+                                    mutantlist, test_parallel_count=1):
         '''
             param: testcases: list of pairs of <testcase object> and <location>
+            (TODO: support parallelism: per test outdata)
         '''
+        # FIXME: Support parallelism, then remove the code
+        # bellow:
+        ERROR_HANDLER.assert_true(test_parallel_count <= 1, \
+                "FIXME: Must first implement support for parallel mutatio")
+        #~ FXIMEnd
+
         # @Checkpoint: create a checkpoint handler (for time)
         checkpoint_handler = CheckPointHandler(self.get_checkpointer())
         if checkpoint_handler.is_finished():
@@ -206,26 +222,35 @@ class BaseMutationTool(abc.ABC):
                                 mutantlist, \
                                 self._get_mutantcoverage_executable_path, \
                                 self._get_mutantcoverage_environment_vars, \
-                                self._extract_mutantcoverage_data_of_a_test)
+                                self._extract_mutantcoverage_data_of_a_test, \
+                                test_parallel_count=test_parallel_count)
 
         # @Checkpoint: Finished (for time)
         checkpoint_handler.set_finished(None)
     #~ def runtest_mutant_coverage()
 
     def runtest_weak_mutation (self, testcases, weak_mutation_matrix,
-                                     mutantlist):
+                                     mutantlist, test_parallel_count=1):
         '''
+            (TODO: support parallelism: per test outdata)
         '''
+        # FIXME: Support parallelism, then remove the code
+        # bellow:
+        ERROR_HANDLER.assert_true(test_parallel_count <= 1, \
+                "FIXME: Must first implement support for parallel mutatio")
+        #~ FXIMEnd
+
         # @Checkpoint: create a checkpoint handler (for time)
         checkpoint_handler = CheckPointHandler(self.get_checkpointer())
         if checkpoint_handler.is_finished():
             return
 
-        self._runtest_using_meta_mutant (testcases, weak_mutation_matrix,
-                                    mutantlist,
-                                    self._get_weakmutation_executable_path,
-                                    self._get_weakmutation_environment_vars,
-                                    self._extract_weakmutation_data_of_a_test)
+        self._runtest_using_meta_mutant (testcases, weak_mutation_matrix, \
+                                    mutantlist, \
+                                    self._get_weakmutation_executable_path, \
+                                    self._get_weakmutation_environment_vars, \
+                                    self._extract_weakmutation_data_of_a_test,\
+                                    test_parallel_count=test_parallel_count)
 
         # @Checkpoint: Finished (for time)
         checkpoint_handler.set_finished(None)
@@ -233,12 +258,20 @@ class BaseMutationTool(abc.ABC):
 
     def runtest_strong_mutation (self, testcases, strong_mutation_matrix,
                                      mutantlist, serialize_period=1, 
-                                     strong_kill_only_once=False):
+                                     strong_kill_only_once=False, \
+                                     test_parallel_count=1):
         '''
         Note: Here the result matrix is used as checkpoint (with frequency the 
             'serialize_period' parameter). 
             The checkpointer is mainly used for the execution time
+            (TODO: support parallelism: per test outdata)
         '''
+        # FIXME: Support parallelism, then remove the code
+        # bellow:
+        ERROR_HANDLER.assert_true(test_parallel_count <= 1, \
+                "FIXME: Must first implement support for parallel mutatio")
+        #~ FXIMEnd
+
         # @Checkpoint: create a checkpoint handler
         checkpoint_handler = CheckPointHandler(self.get_checkpointer())
         if checkpoint_handler.is_finished():
@@ -293,7 +326,7 @@ class BaseMutationTool(abc.ABC):
         checkpoint_handler.set_finished(None)
     #~ def runtest_strong_mutation()
 
-    def mutate_programs (self, outputdir=None, \
+    def mutate_programs (self, parallel_count=1, outputdir=None, \
                                             code_builds_factory_override=None):
         '''
         '''
@@ -309,7 +342,8 @@ class BaseMutationTool(abc.ABC):
         if os.path.isdir(outputdir):
             shutil.rmtree(outputdir)
         os.mkdir(outputdir)
-        self._do_mutate_programs (outputdir=outputdir, \
+        self._do_mutate_programs (parallel_count=parallel_count, \
+                                                outputdir=outputdir, \
                             code_builds_factory=code_builds_factory_override)
 
         # @Checkpoint: Finished (for time)
@@ -317,7 +351,8 @@ class BaseMutationTool(abc.ABC):
     #~ def mutate_programs()
         
     @abc.abstractmethod
-    def _do_mutate_programs (self, outputdir, code_builds_factory):
+    def _do_mutate_programs (self, parallel_count, outputdir, \
+                                                code_builds_factory):
         print ("!!! Must be implemented in child class !!!")
     #~ def _do_mutate_programs()
 
