@@ -24,7 +24,7 @@ from base_mutationtool import BaseMutationTool
 
 from ... import ToolsModulesLoader
 
-from ...checkpoint_handler import CheckpointHandlerForMeta
+from ...checkpoint_handler import CheckPointHandler
 
 ERROR_HANDLER = common_mix.ErrorHandler
 
@@ -110,7 +110,7 @@ class MetaMutationTool(object):
         # @Checkpoint: create a checkpoint handler
         cp_func_name = "runtest_generic:"+mode
         cp_task_id = 1
-        checkpoint_handler = CheckpointHandlerForMeta(self.get_checkpointer())
+        checkpoint_handler = CheckPointHandler(self.get_checkpointer())
         if checkpoint_handler.is_finished():
             return
 
@@ -222,7 +222,7 @@ class MetaMutationTool(object):
         # @Checkpoint: create a checkpoint handler
         cp_func_name = "mutate_programs"
         cp_task_id = 1
-        checkpoint_handler = CheckpointHandlerForMeta(self.get_checkpointer())
+        checkpoint_handler = CheckPointHandler(self.get_checkpointer())
         if checkpoint_handler.is_finished():
             return
 

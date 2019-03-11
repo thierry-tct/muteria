@@ -5,7 +5,7 @@ import muteria.common.mix as common_mix
 
 ERROR_HANDLER = common_mix.ErrorHandler
 
-class CheckpointHandlerForMeta(object):
+class CheckPointHandler(object):
     FUNC_NAME_KEY = "method_name"
     TASK_ID_KEY = "task_id"
     TOOLS_KEY = "tools"
@@ -22,13 +22,13 @@ class CheckpointHandlerForMeta(object):
             # verify
             if self.current_data is not None:
                 if type(self.current_data) != dict:
-                    logging.error("Invalid checkpoint data. Must be a dict")
-                    ERROR_HANDLER.error_exit_file(__file__)
+                    ERROR_HANDLER.error_exit( \
+                        "Invalid checkpoint data. Must be a dict", __file__)
                 if set(self.current_data) != {self.FUNC_NAME_KEY, \
                                         self.TASK_ID_KEY, self.TOOLS_KEY, \
                                         self.OPT_PAYLOAD_KEY}:
-                    logging.error("Problem with checkpoint data dict key")
-                    ERROR_HANDLER.error_exit_file(__file__)
+                    ERROR_HANDLER.error_exit( \
+                       "Problem with checkpoint data dict key", __file__)
 
         return self.current_data
 
@@ -64,7 +64,8 @@ class CheckpointHandlerForMeta(object):
         self.used_checkpointer.write_checkpoint(self.current_data)
 
     def set_finished(self, detailed_exectime_obj):
-        self.used_checkpointer.set_finished(detailed_exectime_obj=detailed_exectime_obj)
+        self.used_checkpointer.set_finished( \
+                                detailed_exectime_obj=detailed_exectime_obj)
 
     def get_optional_payload(self):
         if self.current_data is None:
@@ -76,5 +77,5 @@ class CheckpointHandlerForMeta(object):
 
     def destroy(self):
         self.used_checkpointer.destroy_checkpoint()
-#~ class CheckpointHandlerForMeta
+#~ class CheckPointHandler
 

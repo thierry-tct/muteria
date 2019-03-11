@@ -28,7 +28,7 @@ from muteria.drivers.testgeneration.testcases_info import TestcasesInfoObject
 
 from muteria.drivers import ToolsModulesLoader
 
-from muteria.drivers.checkpoint_handler import CheckpointHandlerForMeta
+from muteria.drivers.checkpoint_handler import CheckPointHandler
 from muteria.drivers.testgeneration import TestToolType
 
 ERROR_HANDLER = common_mix.ErrorHandler
@@ -157,13 +157,13 @@ class MetaTestcaseTool(object):
     #~ def _create_testcase_tool()
 
 
-    def execute_testcase (self, meta_testcase, exe_path, env_vars):
+    def execute_testcase (self, meta_testcase, exe_path_map, env_vars):
         '''
         Execute a test case with the given executable and 
         say whether it failed
 
         :param meta_testcase: string name of the test cases to execute
-        :param exe_path: string representing the file system path to 
+        :param exe_path_map: string representing the file system path to 
                         the executable to execute with the test
         :param env_vars: dict of environment variables to set before
                         executing the test ({<variable>: <value>})
@@ -178,10 +178,10 @@ class MetaTestcaseTool(object):
                             "Test tool {} not registered".format(ttoolalias), \
                                                                     __file__)
         ttool = self.testcases_configured_tools[ttoolalias][self.TOOL_OBJ_KEY]
-        return ttool.execute_testcase(testcase, exe_path, env_vars)
+        return ttool.execute_testcase(testcase, exe_path_map, env_vars)
     #~ def execute_testcase()
 
-    def runtests(self, meta_testcases, exe_path, env_vars, \
+    def runtests(self, meta_testcases, exe_path_map, env_vars, \
                         stop_on_failure=False, \
                         fault_test_execution_matrix_file=None, \
                         test_prioritization_module=None, \
@@ -194,7 +194,7 @@ class MetaTestcaseTool(object):
         say, for each test case, whether it failed
 
         :param meta_testcases: list of test cases to execute
-        :param exe_path: string representing the file system path to 
+        :param exe_path_map: string representing the file system path to 
                         the executable to execute with the tests
         :param env_vars: dict of environment variables to set before
                         executing each test ({<variable>: <value>})
@@ -251,7 +251,7 @@ class MetaTestcaseTool(object):
         cp_func_name = "runtests"
         cp_task_id = 1
         checkpoint_handler = \
-                CheckpointHandlerForMeta(self.get_checkpoint_state_object())
+                CheckPointHandler(self.get_checkpoint_state_object())
         if restart_checkpointer:
             checkpoint_handler.restart()
         if checkpoint_handler.is_finished():
@@ -298,7 +298,7 @@ class MetaTestcaseTool(object):
                 self.testcases_configured_tools[ttoolalias][self.TOOL_OBJ_KEY]
             test_failed_verdicts = ttool.runtests( \
                                             testcases_by_tool[ttoolalias], \
-                                            exe_path, env_vars, \
+                                            exe_path_map, env_vars, \
                                             stop_on_failure)
             for testcase in test_failed_verdicts:
                 meta_testcase = self.make_meta_testcase(testcase, ttoolalias)
@@ -366,7 +366,7 @@ class MetaTestcaseTool(object):
         return meta_test_failed_verdicts
     #~ def runtests()
 
-    def generate_tests (self, test_tool_type=None, \
+    def generate_tests (self, exe_path_map, test_tool_type=None, \
                                 test_generation_guidance_obj=None, \
                                 parallel_testgen_count=1, \
                                 restart_checkpointer=False,
@@ -377,6 +377,9 @@ class MetaTestcaseTool(object):
             Note: The caller must explicitely destroy the checkpointer
             after this call succeed, to ensure that a sceduler will not
             re-execute this 
+        :type exe_path_map:
+        :param exe_path_map:
+
         :type test_tool_type:
         :param test_tool_type:
     
@@ -429,7 +432,7 @@ class MetaTestcaseTool(object):
         if test_tool_type is not None:
             cp_func_name += ":" + test_tool_type.get_str()
         cp_task_id = 1
-        checkpoint_handler = CheckpointHandlerForMeta(\
+        checkpoint_handler = CheckPointHandler(\
                                             self.get_checkpoint_state_object())
         if restart_checkpointer:
             checkpoint_handler.restart()
@@ -446,7 +449,7 @@ class MetaTestcaseTool(object):
                 # Actual Execution
                 ttool = self.testcases_configured_tools[ttoolalias]\
                                                             [self.TOOL_OBJ_KEY]
-                ttool.generate_tests()
+                ttool.generate_tests(exe_path_map)
 
                 # @Checkpoint: Checkpointing
                 checkpoint_handler.do_checkpoint(func_name=cp_func_name, \

@@ -25,7 +25,7 @@ from base_codecoveragetool import BaseCodecoverageTool
 
 from ... import ToolsModulesLoader
 
-from ...checkpoint_handler import CheckpointHandlerForMeta
+from ...checkpoint_handler import CheckPointHandler
 
 ERROR_HANDLER = common_mix.ErrorHandler
 
@@ -191,7 +191,7 @@ class MetaCodecoverageTool(object):
         # @Checkpoint: create a checkpoint handler
         cp_func_name = "runtests_code_coverage"
         cp_task_id = 1
-        checkpoint_handler = CheckpointHandlerForMeta(self.get_checkpointer())
+        checkpoint_handler = CheckPointHandler(self.get_checkpointer())
         if checkpoint_handler.is_finished():
             return
 
@@ -245,7 +245,7 @@ class MetaCodecoverageTool(object):
         # @Checkpoint: create a checkpoint handler
         cp_func_name = "instrument_code"
         cp_task_id = 1
-        checkpoint_handler = CheckpointHandlerForMeta(self.get_checkpointer())
+        checkpoint_handler = CheckPointHandler(self.get_checkpointer())
         if checkpoint_handler.is_finished():
             return
 

@@ -113,7 +113,7 @@ class BaseCodecoverageTool(object):
                                                     re_instrument_code=True):
 
         # @Checkpoint: create a checkpoint handler (for time)
-        checkpoint_handler = CheckpointHandlerForMeta(self.get_checkpointer())
+        checkpoint_handler = CheckPointHandler(self.get_checkpointer())
         if checkpoint_handler.is_finished():
             return
 
@@ -262,7 +262,7 @@ class BaseCodecoverageTool(object):
         '''
         '''
         # @Checkpoint: create a checkpoint handler (for time)
-        checkpoint_handler = CheckpointHandlerForMeta(self.get_checkpointer())
+        checkpoint_handler = CheckPointHandler(self.get_checkpointer())
         if not checkpoint_handler.is_finished():
 
             assert len[x for x in criterion_to_enabling \
