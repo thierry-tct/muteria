@@ -1,4 +1,6 @@
-
+"""
+ TODO: fully implement this
+"""
 from __future__ import print_function
 
 import muteria.common.fs as common_fs
@@ -6,7 +8,7 @@ import muteria.common.mix as common_mix
 
 ERROR_HANDLER = common_mix.ErrorHandler
 
-class MutantsInfoObject(object):
+class CodesInfoObject(object):
     DATA_KEY = "DATA"
     SUMMARY_KEY = "SUMMARY"
     CUSTOM_KEY = "CUSTOM"
@@ -74,4 +76,4 @@ class MutantsInfoObject(object):
     def get_custom(self):
         assert False, "Must Implement"
     #~ def get_custom():
-#~ class MutantsInfoObject(object):
+#~ class CodesInfoObject(object):

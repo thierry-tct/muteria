@@ -86,7 +86,7 @@ class MetaMutationTool(object):
         self.checkpointer = common_fs.CheckpointState( \
                                                 *self._get_checkpoint_files())
         
-        # Create the different tools
+        ## Create the different tools
         for idx in range(len(self.mutation_tool_config_list)):
             config = self.mutation_tool_config_list[idx]
             toolname = config.get_tool_name()
@@ -150,7 +150,7 @@ class MetaMutationTool(object):
         :param testcases:
 
         :type result_matrix:
-        :param result_matrix:
+        :param result_matrix: Must be an empty matrix
 
         :type meta_mutantlist:
         :param meta_mutantlist:
@@ -203,7 +203,7 @@ class MetaMutationTool(object):
         # Check arguments Validity
         ERROR_HANDLER.assert_true(parallel_count > 0, \
                     "invalid parallel  execution count: {}. {}".format( \
-                                    parallel_count, "must be >= 1"))
+                                    parallel_count, "must be >= 1"), __file__)
 
         # @Checkpoint: create a checkpoint handler
         cp_func_name = "_runtest_generic:"+mode
@@ -236,6 +236,9 @@ class MetaMutationTool(object):
                                     "tool in data not registered", __file__)
         matrix_files_map = {}
         for mtoolalias in mutantlist_by_tool:
+            matrix_files_map[mtoolalias] = os.path.join(matrices_dir_tmp, \
+                                                            mtoolalias+'.csv')
+
             # @Checkpoint: Check whether already executed
             if not checkpoint_handler.is_to_execute( \
                                         func_name=cp_func_name, \
@@ -243,8 +246,6 @@ class MetaMutationTool(object):
                                         tool=mtoolalias):
                 continue
 
-            matrix_files_map[mtoolalias] = os.path.join(matrices_dir_tmp, \
-                                                            mtoolalias+'.csv')
             tool_matrix = result_matrix.get_a_deepcopy(\
                                     new_filename=matrix_files_map[mtoolalias])
             mut_tool = self.mutation_configured_tools[mtoolalias]\
@@ -274,12 +275,13 @@ class MetaMutationTool(object):
                                         filename=matrix_files_map[mtoolalias])
 
             # Check columns
-            assert tool_matrix.get_key_colname() == \
+            ERROR_HANDLER.assert_true(tool_matrix.get_key_colname() == \
                                         result_matrix.get_key_colname(), \
-                                              "mismatch on key column name"
-            assert set(tool_matrix.get_nonkey_colname_list()) == \
+                                    "mismatch on key column name", __file__)
+            ERROR_HANDLER.assert_true( \
+                            set(tool_matrix.get_nonkey_colname_list()) == \
                             set(result_matrix.get_nonkey_colname_list()), \
-                                            "mismatch on non key column names"
+                                "mismatch on non key column names", __file__)
 
             # bring in the data
             key2nonkeydict = tool_matrix.get_pandas_df().\
@@ -388,8 +390,13 @@ class MetaMutationTool(object):
         # FIXME: Support parallelism, then remove the code
         # bellow:
         ERROR_HANDLER.assert_true(parallel_mutation_count <= 1, \
-                "FIXME: Must first implement support for parallel mutatio")
+                "FIXME: Must first implement support for parallel mutation")
         #~ FXIMEnd
+
+        # Check arguments Validity
+        ERROR_HANDLER.assert_true(parallel_mutation_count > 0, \
+                    "invalid parallel  execution count: {}. {}".format( \
+                            parallel_mutation_count, "must be >= 1"), __file__)
 
         # @Checkpoint: create a checkpoint handler
         cp_func_name = "mutate_programs"

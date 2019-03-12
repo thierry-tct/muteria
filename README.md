@@ -23,4 +23,10 @@ pip install -r developer-requirements.txt
 - [ ] supported testgen executable format
 - [ ] supported test execution executable format
 - [ ] supported test level (unit, system, ...)
+- [ ] configs must support comparison as following:
+  ```python
+  def __eq__(self, other):
+      self.__dict__ == other.__dict__
+  ```
 ### Features to develop
+- [ ] Implement option to run mutant coverage and weak mutation simultaneously.
