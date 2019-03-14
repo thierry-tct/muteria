@@ -257,9 +257,10 @@ class BaseMutationTool(abc.ABC):
     #~ def runtest_weak_mutation()
 
     def runtest_strong_mutation (self, testcases, strong_mutation_matrix,
-                                     mutantlist, serialize_period=1, 
-                                     strong_kill_only_once=False, \
-                                     test_parallel_count=1):
+                                    mutantlist, serialize_period=1, 
+                                    strong_kill_only_once=False, \
+                                    mutant_test_run_optimizer=None, \
+                                    test_parallel_count=1):
         '''
         Note: Here the result matrix is used as checkpoint (with frequency the 
             'serialize_period' parameter). 
@@ -269,7 +270,7 @@ class BaseMutationTool(abc.ABC):
         # FIXME: Support parallelism, then remove the code
         # bellow:
         ERROR_HANDLER.assert_true(test_parallel_count <= 1, \
-                "FIXME: Must first implement support for parallel mutatio")
+                    "FIXME: Must first implement support for parallel mutatio")
         #~ FXIMEnd
 
         # @Checkpoint: create a checkpoint handler
@@ -278,9 +279,11 @@ class BaseMutationTool(abc.ABC):
             return
 
         failverdict_to_val_map = {
-                    True: strong_mutation_matrix.getActiveCellDefaultVal(),
-                    False: strong_mutation_matrix.getInactiveCellVal(), 
-                    self.meta_test_generation_obj.UNCERTAIN_TEST_VERDICT: \
+                    common_mix.GlobalConstants.FAIL_TEST_VERDICT: \
+                            strong_mutation_matrix.getActiveCellDefaultVal(),
+                    common_mix.GlobalConstants.PASS_TEST_VERDICT: \
+                            strong_mutation_matrix.getInactiveCellVal(), 
+                    common_mix.GlobalConstants.UNCERTAIN_TEST_VERDICT: \
                             strong_mutation_matrix.getUncertainCellDefaultVal()
         }
 
@@ -299,12 +302,24 @@ class BaseMutationTool(abc.ABC):
             # execute mutant with the given testcases
             mutant_executable_path = self._get_mutant_executable_path(mutant)
             execution_environment_vars = \
-                            self._get_mutant_environment_vars(mutant)
-            fail_verdicts = self.meta_test_generation_obj.runtests(testcases,
+                                    self._get_mutant_environment_vars(mutant)
+            # run optimizer
+            may_kill_tests, cannot_kill_tests = \
+                                mutant_test_run_optimizer.separate_tests( \
+                                                    mutant, testcases)
+            
+            fail_verdicts = self.meta_test_generation_obj.runtests( \
+                                    may_kill_tests, \
                                     exe_path=mutant_executable_path, 
                                     env_vars=execution_environment_vars,
                                     stop_on_failure=strong_kill_only_once)
-            
+
+            mutant_test_run_optimizer.update(mutant, cannot_kill_tests, \
+                                                                fail_verdicts)
+
+            fail_verdicts.update({\
+                            v: common_mix.GlobalConstants.PASS_TEST_VERDICT \
+                                                for v in cannot_kill_tests})
             # put in row format for matrix
             matrix_row_key = mutant
             matrix_row_values = {tc:failverdict_to_val_map[fail_verdicts[tc]] \

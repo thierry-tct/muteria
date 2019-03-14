@@ -28,9 +28,9 @@ package muteria.codefactory {
     class CodeBuildFactory {
         - src_dest_fmt_to_handling_function
         + format_names 
-        - _fmt_from_to_registration()
-        - _register(src_fmt, dest_fmt, handling_function)
+        - _fmt_from_to_registration(src_fmt, dest_fmt, handling_obj)
         + transform_src_into_dest (src_fmt, dest_fmt, src_files_paths, dest_paths, **kwars)
+        + override_registration (src_fmt, dest_fmt, handling_obj)
     }
     CodeBuildFactory "1" o-- "1" RepositoryManager
 }

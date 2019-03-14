@@ -25,6 +25,7 @@ import muteria.common.matrices as common_matrices
 import muteria.common.mix as common_mix
 
 from muteria.drivers import ToolsModulesLoader
+from muteria.drivers import DriversUtils
 
 from muteria.drivers.checkpoint_handler import CheckPointHandler
 
@@ -80,8 +81,9 @@ class MetaTestcaseTool(object):
         ERROR_HANDLER.assert_true(self.tests_working_dir is None, \
                                     "Must specify tests_working_dir", __file__)
         ERROR_HANDLER.assert_true(len(self.test_tool_config_list) != \
-                                        len(set(self.test_tool_config_list), \
-                        "some tool configs appear multiple times", __file__))
+                                len(set([c.get_tool_config_alias() for c in \
+                                            self.test_tool_config_list])), \
+                        "some tool configs appear multiple times", __file__)
 
         # Set Indirect Arguments Variables
         self.checkpoints_dir = os.path.join(self.tests_working_dir, \
@@ -172,7 +174,7 @@ class MetaTestcaseTool(object):
         '''
         
         # Find which test tool's the testcase is, then execute
-        ttoolalias, testcase = self.reverse_meta_testcase(meta_testcase)
+        ttoolalias, testcase = DriversUtils.reverse_meta_element(meta_testcase)
         ERROR_HANDLER.assert_true( \
                             ttoolalias in self.testcases_configured_tools, \
                             "Test tool {} not registered".format(ttoolalias), \
@@ -280,7 +282,8 @@ class MetaTestcaseTool(object):
 
         testcases_by_tool = {}
         for meta_testcase in meta_testcases:
-            ttoolalias, testcase = self.reverse_meta_testcase(meta_testcase)
+            ttoolalias, testcase = \
+                            DriversUtils.reverse_meta_element(meta_testcase)
             if ttoolalias not in testcases_by_tool:
                 testcases_by_tool[ttoolalias] = []
             testcases_by_tool[ttoolalias].append(testcase)
@@ -301,7 +304,8 @@ class MetaTestcaseTool(object):
                                             exe_path_map, env_vars, \
                                             stop_on_failure)
             for testcase in test_failed_verdicts:
-                meta_testcase = self.make_meta_testcase(testcase, ttoolalias)
+                meta_testcase =  \
+                        DriversUtils.make_meta_element(testcase, ttoolalias)
                 meta_test_failed_verdicts[meta_testcase] = \
                                                 test_failed_verdicts[testcase]
                 if test_failed_verdicts[testcase == True]:
@@ -479,24 +483,13 @@ class MetaTestcaseTool(object):
             tool_testcase_info = ttool.get_testcase_info_object()
             old2new_tests = {}
             for t_test in tool_testcase_info.get_tests_list():
-                meta_t_key = self.make_meta_testcase(t_test, ttoolalias)
+                meta_t_key = DriversUtils.make_meta_element(t_test, ttoolalias)
                 old2new_tests[t_test] = meta_t_key
             meta_testcase_info_obj.update_using(ttoolalias, old2new_tests, \
                                                             tool_testcase_info)
         return meta_testcase_info_obj
     #~ def _compute_testcases_info()
     
-    def make_meta_testcase(self, testname, toolalias):
-        return ":".join([toolalias, testname])
-    #~ def make_meta_testcase()
-
-    def reverse_meta_testcase(self, meta_testcase):
-        parts = meta_testcase.split(':', 1)
-        assert len(parts) >= 2, "invalibd meta testcase"
-        toolalias, testcase = parts
-        return toolalias, testcase
-    #~ def reverse_meta_testcase()
-
     def get_testcase_info_object(self):
         return TestcasesInfoObject().load_from_file(\
                                                 self.get_testcase_info_file())

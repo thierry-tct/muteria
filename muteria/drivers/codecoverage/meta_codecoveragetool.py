@@ -25,6 +25,7 @@ import muteria.common.matrices as common_matrices
 import muteria.common.mix as common_mix
 
 from muteria.drivers import ToolsModulesLoader
+from muteria.drivers import DriversUtils
 
 from muteria.drivers.checkpoint_handler import CheckPointHandler
 
@@ -66,7 +67,8 @@ class MetaCodecoverageTool(object):
         for criterion in self.tools_config_by_criterion_dict:
             ERROR_HANDLER.assert_true( \
                     len(self.tools_config_by_criterion_dict[criterion]) != \
-                    len(set(self.tools_config_by_criterion_dict[criterion])), \
+                    len(set([c.get_tool_config_alias() for c in \
+                        self.tools_config_by_criterion_dict[criterion]])), \
                     "some tool configs appear multiple times for {}".format( \
                                                         criterion), __file__)
         
@@ -351,7 +353,8 @@ class MetaCodecoverageTool(object):
                             set_index(tool_matrix.get_key_colname, drop=True).\
                                                 to_dict(orient="index")
                 for c_key in key2nonkeydict:
-                    meta_c_key = self.make_meta_code_element(c_key, mtoolalias)
+                    meta_c_key = \
+                            DriversUtils.make_meta_element(c_key, mtoolalias)
                     result_matrix.add_row_by_key(meta_c_key, 
                                                         key2nonkeydict[c_key], 
                                                         serialize=False)
@@ -458,17 +461,6 @@ class MetaCodecoverageTool(object):
         if finish_destroy_checkpointer:
             checkpoint_handler.destroy()
     #~ def instrument_code()
-
-    def make_meta_code_element(self, elementid, toolalias):
-        return ":".join([toolalias, elementid])
-    #~ def make_meta_code_element()
-
-    def reverse_meta_code_element(self, meta_elementid):
-        parts = meta_elementid.split(':', 1)
-        assert len(parts) >= 2, "invalibd meta mutant"
-        toolalias, elementid = parts
-        return toolalias, elementid
-    #~ def reverse_meta_code_element()
 
     def _get_codecoverage_tool_out_folder(self, ccov_toolname, top_outdir=None):
         if top_outdir is None:

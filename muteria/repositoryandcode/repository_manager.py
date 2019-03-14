@@ -85,11 +85,11 @@ class RepositoryManager(object):
         self.test_branch_name = test_branch_name
 
         if self.repository_rootdir is None:
-            logging.error("repository rootdir cannot be none")
-            ERROR_HANDLER.error_exit_file(__file__)
+            ERROR_HANDLER.error_exit(\
+                                "repository rootdir cannot be none", __file__)
         if self.repo_executable_relpath is None:
-            logging.error("repo executable relpath cannot be none")
-            ERROR_HANDLER.error_exit_file(__file__)
+            ERROR_HANDLER.error_exit(\
+                            "repo executable relpath cannot be none", __file__)
 
         # TODO: Implement a mechanism to avoid deadlock (multiple levels of
         # parallelism)
@@ -100,8 +100,9 @@ class RepositoryManager(object):
                     pre_process_callback=None, pre_callback_args=None, \
                     post_process_callback=None, post_callback_args=None):
         if self.dev_test_runner_func is None:
-            logging.error("dev_test_runner_func cannot be none when called")
-            ERROR_HANDLER.error_exit_file(__file__)
+            ERROR_HANDLER.error_exit(\
+                    "dev_test_runner_func cannot be none when called", \
+                                                                    __file__)
 
         pre_ret = True
         post_ret = None
@@ -188,8 +189,8 @@ class RepositoryManager(object):
         """
 
         if self.code_builder_func is None:
-            logging.error("code_builder_func cannot be none when called")
-            ERROR_HANDLER.error_exit_file(__file__)
+            ERROR_HANDLER.error_exit(\
+                    "code_builder_func cannot be none when called", __file__)
 
         pre_ret = True
         post_ret = None
@@ -243,9 +244,9 @@ class RepositoryManager(object):
         self.lock.acquire()
         try:
             if process_callback is None:
-                logging.error("{} {}".format("process_callback must", \
-                                    "not be None in custom_read_access call"))
-                ERROR_HANDLER.error_exit_file(__file__)
+                ERROR_HANDLER.error_exit("{} {}".format(\
+                        "process_callback must", \
+                        "not be None in custom_read_access call"), __file__)
             ret = process_callback(callback_args, \
                                         self.repository_rootdir, \
                                         self.repo_executable_relpath, \
@@ -255,7 +256,6 @@ class RepositoryManager(object):
             self.lock.release()                                
         return ret
     #~ def custom_read_access()
-
 
     def revert_repository_file (self, file_rel_path):
         repo = git_repo(self.repository_rootdir)
@@ -271,17 +271,18 @@ class RepositoryManager(object):
     #~ def revert_src_list_files()
 
     def revert_repository(self, as_initial=False):
-        repo = git_repo(self.repository_rootdir)
-        gitobj = repo.git
+        #repo = git_repo(self.repository_rootdir)
+        #gitobj = repo.git
 
         if as_initial:
             if self.delete_created_on_revert_as_initial:
                 self._delete_testing_branch(self.repository_rootdir, \
                                             self.test_branch_name)
             else:
-                logging.error("{} {}".format("revert_repository called with", \
-                            "'delete_created_on_revert_as_initial' disabled"))
-                ERROR_HANDLER.error_exit_file(__file__)
+                ERROR_HANDLER.error_exit("{} {}".format(\
+                            "revert_repository called with", \
+                            "'delete_created_on_revert_as_initial' disabled"),\
+                                                                    __file__)
         else:
             # Reset the files but do not delete created files and dir
             self.revert_src_list_files()

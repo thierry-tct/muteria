@@ -26,6 +26,7 @@ import muteria.common.matrices as common_matrices
 import muteria.common.mix as common_mix
 
 from muteria.drivers import ToolsModulesLoader
+from muteria.drivers import DriversUtils
 
 from muteria.drivers.checkpoint_handler import CheckPointHandler
 
@@ -59,8 +60,9 @@ class MetaMutationTool(object):
         ERROR_HANDLER.assert_true(self.mutation_working_dir is None, \
                                 "Must specify mutation_working_dir", __file__)
         ERROR_HANDLER.assert_true(len(self.mutation_tool_config_list) != \
-                                    len(set(self.mutation_tool_config_list), \
-                        "some tool configs appear multiple times", __file__))
+                                len(set([c.get_tool_config_alias() for c in \
+                                        self.mutation_tool_config_list])), \
+                        "some tool configs appear multiple times", __file__)
         
         # Set Indirect Arguments Variables
         self.checkpoints_dir = os.path.join(self.mutation_working_dir, \
@@ -226,7 +228,7 @@ class MetaMutationTool(object):
 
         mutantlist_by_tool = {}
         for meta_mutant in meta_mutantlist:
-            mtoolalias, mutant = self.reverse_meta_mutant(meta_mutant)
+            mtoolalias, mutant = DriversUtils.reverse_meta_element(meta_mutant)
             if mtoolalias not in mutantlist_by_tool:
                 mutantlist_by_tool[mtoolalias] = []
             mutantlist_by_tool[mtoolalias].append(mutant)
@@ -259,7 +261,9 @@ class MetaMutationTool(object):
             elif mode == "strong_mutation":
                 mut_tool.runtest_strong_mutation(testcases, tool_matrix, \
                             mutantlist_by_tool[mtoolalias], serialize_period, \
-                                                        strong_kill_only_once)
+                            strong_kill_only_once, \
+                            mutant_prioritization_module.\
+                                    get_mutant_test_run_optimizer(mtoolalias))
             else:
                 ERROR_HANDLER.error_exit("Invalid mode: {}".format(mode))
             
@@ -288,7 +292,7 @@ class MetaMutationTool(object):
                             set_index(tool_matrix.get_key_colname, drop=True).\
                                             to_dict(orient="index")
             for m_key in key2nonkeydict:
-                meta_m_key = self.make_meta_mutant(m_key, mtoolalias)
+                meta_m_key = DriversUtils.make_meta_element(m_key, mtoolalias)
                 result_matrix.add_row_by_key(meta_m_key, 
                                                     key2nonkeydict[m_key], 
                                                     serialize=False)
@@ -451,24 +455,13 @@ class MetaMutationTool(object):
             tool_mutant_info = ttool.get_mutant_info_object()
             old2new_tests = {}
             for m_test in tool_mutant_info.get_tests_list():
-                meta_t_key = self.make_meta_mutant(m_test, mtoolalias)
+                meta_t_key = DriversUtils.make_meta_element(m_test, mtoolalias)
                 old2new_tests[m_test] = meta_t_key
             meta_mutant_info_obj.update_using(mtoolalias, old2new_tests, \
                                                             tool_mutant_info)
         return meta_mutant_info_obj
     #~ def _compute_mutants_info()
     
-    def make_meta_mutant(self, mutantid, toolalias):
-        return ":".join([toolalias, mutantid])
-    #~ def make_meta_mutant()
-
-    def reverse_meta_mutant(self, meta_mutant):
-        parts = meta_mutant.split(':', 1)
-        assert len(parts) >= 2, "invalibd meta mutant"
-        toolalias, mutant = parts
-        return toolalias, mutant
-    #~ def reverse_meta_mutant()
-
     def get_mutant_info_object(self):
         return MutantsInfoObject().load_from_file(\
                                                 self.get_mutant_info_file())

@@ -2,6 +2,7 @@ import os
 import logging
 import importlib
 
+import muteria.common.fs as common_fs
 import muteria.common.mix as common_mix
 
 ERROR_HANDLER = common_mix.ErrorHandler
@@ -123,3 +124,18 @@ class RepoFileToCustomMap(dict):
     #~ def write_to_file()
         
 #~ class RepoFileToCustomMap
+
+class DriversUtils(object):
+    @classmethod
+    def make_meta_element(self, element, toolalias):
+        return ":".join([toolalias, element])
+    #~ def make_meta_element()
+
+    @classmethod
+    def reverse_meta_element(self, meta_element):
+        parts = meta_element.split(':', 1)
+        assert len(parts) >= 2, "invalibd meta mutant"
+        toolalias, element = parts
+        return toolalias, element
+    #~ def reverse_meta_element()
+#~class DriversUtils()
