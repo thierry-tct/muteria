@@ -37,20 +37,22 @@ class CodeFormats(common_mix.EnumAutoName):
 
 class BaseCodeFormatConverter(abc.ABC):
     @abc.abstractmethod
-    def convert_code(self, file_src_dest_map, src_fmt, dest_fmt, **kwargs):
+    def convert_code(self, src_fmt, dest_fmt, file_src_dest_map, \
+                                                    repository_manager):
         pass
 
-    @abc.absractmethod
+    @abc.abstractmethod
     def get_source_formats(self):
         pass
 
-    @abc.absractmethod
-    def get_destination_formats(self, src_fmt):
+    @abc.abstractmethod
+    def get_destination_formats_for(self, src_fmt):
         pass
 #~ class BaseCodeFormatConverter
 
 class IdentityCodeConverter(BaseCodeFormatConverter):
-    def convert_code(self, file_src_dest_map, src_fmt, dest_fmt, **kwargs):
+    def convert_code(self, src_fmt, dest_fmt, file_src_dest_map, \
+                                                        repository_manager):
         # make sure that different sources have different destinations
         ERROR_HANDLER.assert_true(len(file_src_dest_map) == \
                     len({file_src_dest_map[fn] for fn in file_src_dest_map}), \
@@ -65,9 +67,12 @@ class IdentityCodeConverter(BaseCodeFormatConverter):
     def get_source_formats(self):
         ERROR_HANDLER.error_exit(\
                     "get_source_formats must not be called here", __file__)
-    def get_destination_formats(self, src_fmt):
+    #~ def get_source_formats()
+
+    def get_destination_formats_for(self, src_fmt):
         ERROR_HANDLER.error_exit(\
                 "get_destination_formats must not be called here", __file__)
+    #~ def get_destination_formats()
 #~ class IdentityCodeConverter
 
 formatfrom_formatto_function_tuples = [
@@ -85,7 +90,8 @@ formatfrom_formatto_function_tuples = [
 ]
 
 class CodeBuildsFactory(object):
-    def __init__(self):
+    def __init__(self, repository_manager):
+        self.repository_manager = repository_manager
         self.src_dest_fmt_to_handling_obj = {}
 
         # Initialize 
@@ -115,11 +121,32 @@ class CodeBuildsFactory(object):
     #~ def _fmt_from_to_registration()
 
     def transform_src_into_dest (self, src_fmt, dest_fmt, \
-                                            src_dest_files_paths_map, **kwars):
-        # TODO
+                                        src_dest_files_paths_map, **kwargs):
+        # Checks
+        ERROR_HANDLER.assert_true( \
+                            src_fmt in self.src_dest_fmt_to_handling_obj, \
+                            "src_fmt {} not supported yet.".format(src_fmt), \
+                                                                    __file__)
+        ERROR_HANDLER.assert_true( \
+                    src_fmt in self.src_dest_fmt_to_handling_obj[src_fmt], \
+                    "dest_fmt {} not supported yet for src_fmt {}.".format( \
+                                                dest_fmt, src_fmt), __file__)
+        
+        # call handler
+        handler = self.src_dest_fmt_to_handling_obj[src_fmt][dest_fmt]
+        handler.convert_code(src_fmt, dest_fmt, src_dest_files_paths_map, \
+                            repository_manager=self.repository_manager)
     #~ def transform_src_into_dest ()
     
     def override_registration (self, src_fmt, dest_fmt, handling_obj):
-        # TODO: set another obj to handle src dest pair
+        """set another obj to handle src dest pair or a new one
+        """
+        # invalidate existing
+        if src_fmt in self.src_dest_fmt_to_handling_obj:
+            if dest_fmt in self.src_dest_fmt_to_handling_obj[src_fmt]:
+                del self.src_dest_fmt_to_handling_obj[src_fmt][dest_fmt]
+
+        # register
+        self._fmt_from_to_registration(src_fmt, dest_fmt, handling_obj)
     #~ def override_registration ():
 #~ class CodeBuildsFactory()

@@ -53,13 +53,17 @@
 
 from __future__ import print_function
 
+import os
+import shutil
 import logging
 import threading
 
 # https://gitpython.readthedocs.io/en/stable/
 from git import Repo as git_repo
+import git.exc as git_exc
 
 import muteria.common.mix as common_mix
+import muteria.common.fs as common_fs
 
 ERROR_HANDLER = common_mix.ErrorHandler
 
@@ -68,6 +72,7 @@ class RepositoryManager(object):
     FAIL = 1
     ERROR = -1
     DEFAULT_TESTS_BRANCH_NAME = "_tests_tmp_muteria_"
+    DEFAULT_MUTERIA_REPO_META_FOLDER = ".muteria" 
     def __init__(self, repository_rootdir, repo_executable_relpath, \
                         dev_test_runner_func, code_builder_func, \
                         source_files_list, dev_tests_list, \
@@ -94,6 +99,14 @@ class RepositoryManager(object):
         # TODO: Implement a mechanism to avoid deadlock (multiple levels of
         # parallelism)
         self.lock = threading.RLock()
+
+        self.muteria_metadir = os.path.join(self.repository_rootdir, \
+                                        self.DEFAULT_MUTERIA_REPO_META_FOLDER)
+        self.muteria_metadir_info_file = os.path.join(self.muteria_metadir, \
+                                                            "src_infos.json")
+
+        # setup the repo
+        self._setup_repository()
     #~ def __init__()
 
     def run_dev_test(self, dev_test_name, \
@@ -257,9 +270,10 @@ class RepositoryManager(object):
         return ret
     #~ def custom_read_access()
 
-    def revert_repository_file (self, file_rel_path):
-        repo = git_repo(self.repository_rootdir)
-        gitobj = repo.git
+    def revert_repository_file (self, file_rel_path, gitobj=None):
+        if gitobj is None:
+            repo = git_repo(self.repository_rootdir)
+            gitobj = repo.git
         gitobj.checkout('--', file_rel_path)
     #~ def revert_repository_file()
 
@@ -267,7 +281,7 @@ class RepositoryManager(object):
         repo = git_repo(self.repository_rootdir)
         gitobj = repo.git
         for src in self.source_files_list:
-            gitobj.checkout('--', src)
+            self.revert_repository_file(src, gitobj=gitobj)
     #~ def revert_src_list_files()
 
     def revert_repository(self, as_initial=False):
@@ -286,22 +300,132 @@ class RepositoryManager(object):
         else:
             # Reset the files but do not delete created files and dir
             self.revert_src_list_files()
+            shutil.rmtree(self.muteria_metadir)
             #gitobj.reset('--hard') 
     #~ def revert_repository()
 
-    def setup_repository(self):
-        repo = git_repo(self.repository_rootdir)
-        gitobj = repo.git
+    def _setup_repository(self):
+        # Make sure the repo dir exists
+        ERROR_HANDLER.assert_true(os.path.isdir(self.repository_rootdir), \
+                        "given repositro dir is not existing: {}". format( \
+                            self.repository_rootdir), __file__)
+        
+        # make sure the repo dir is a git repo
+        # if no, ask the user whether to initialize and initialize or abort
+        # if yes or user accepted initialize, get the git object for the repo
+        try:
+            repo = git_repo(self.repository_rootdir)
+            gitobj = repo.git
+        except git_exc.InvalidGitRepositoryError:
+            make_it_git = common_mix.confirm_execution("{} {} {} {}".format(\
+                                    "The given repository directory is not", \
+                                    "a git repository, this must be a git", \
+                                    "repository to proceed.\n Do you want to",\
+                                    "set is as git repository?"))
+            if make_it_git:
+                repo = git_repo.init(self.repository_rootdir)
+                gitobj = repo.git
+            else:
+                ERROR_HANDLER.error_exit("{} {}".format(\
+                            "Must make the repository as git repository,", \
+                            "then re-run"), __file__)
 
+        # Check whether the repo is already managed by muteria
+        ## if using branch
         if self.delete_created_on_revert_as_initial:
-            self._make_testing_branch(self.repository_rootdir, \
-                                        self.test_branch_name)
+            if self.test_branch_name not in self._get_branches_list(\
+                                                self.repository_rootdir):
+                ## Not managed, create branch
+                self._make_testing_branch(self.repository_rootdir, \
+                                            self.test_branch_name)
+
             # checkout
             gitobj.checkout(self.test_branch_name)
+        
+        # Check whether the repo is already managed by muteria
+        # There must be a directory DEFAULT_MUTERIA_REPO_META_FOLDER  
+        src_in_prev = []
+        if os.path.isdir(self.muteria_metadir):
+            ## Managed
+            prev_src_list, prev_use_branch = \
+                            common_fs.loadJSON(self.muteria_metadir_info_file)
+            ERROR_HANDLER.assert_true(prev_use_branch == \
+                        self.delete_created_on_revert_as_initial, \
+                        "{} {} {} {} {}".format(\
+                            "unmatching repo backup type.", \
+                            "previously, use branch was", \
+                            prev_use_branch, ", now it is",\
+                            self.delete_created_on_revert_as_initial), \
+                                                                    __file__)
+            prev_src_list = set(prev_src_list) - set(self.source_files_list)
+            src_in_prev = set(prev_src_list) & set(self.source_files_list)
+            remain_prev_src_set = {src for src in prev_src_list \
+                                                        if os.path.isfile(src)}
 
-            #TODO create muteria branch and the muteria metadir 
-    #~ setup repository()
+            # make sure that all prev_src are in initial state
+            untracked_files = set(gitobj.untracked_files())
+            prev_untracked = remain_prev_src_set & untracked_files
+            if len(prev_untracked) > 0:
+                bypass = common_mix.confirm_execution(\
+                            "{} {} {} {} {}".format(
+                                "the following files were previously used as",\
+                                "src files by muteria and are now untracked:",\
+                                prev_untracked, \
+                                "\nDo you want to handle it or bypass it?",\
+                                "Choose yes to bypass: "))
+                if not bypass:
+                    revert_them = common_mix.confirm_execution(\
+                            "{} {}".format(\
+                                "Do you want to automatically revert the",\
+                                "The untracked previous source and continue?"))
+                    if revert_them:
+                        for src in prev_untracked:
+                            self.revert_repository_file(src, gitobj=gitobj)
+                    else:
+                        ERROR_HANDLER.error_exit(\
+                                "Handle it manually and restart the execution")
 
+            # update the info_file
+            if set(prev_src_list) != set(self.source_files_list):
+                common_fs.dumpJSON([self.source_files_list, \
+                                    self.delete_created_on_revert_as_initial],\
+                                                self.muteria_metadir_info_file)
+        else:
+            ## Not managed
+            os.mkdir(self.muteria_metadir)
+            common_fs.dumpJSON([self.source_files_list, \
+                                    self.delete_created_on_revert_as_initial],\
+                                                self.muteria_metadir_info_file)
+
+        # Make sure all source files of interest are tracked
+        untracked_files = set(gitobj.untracked_files())
+        untracked_src_files = set(self.source_files_list) & untracked_files
+        if len(src_in_prev) > 0:
+            if common_mix.confirm_execution(\
+                            "{} {} {} {} {}".format("The following source",\
+                                        "files of interest are untracked", \
+                    "and will be reverted (previous execution unfinished):", \
+                                        untracked_src_files, \
+                                        "do you want to revert them?")):
+                for src in src_in_prev:
+                    self.revert_repository_file(src, gitobj=gitobj)
+            else:
+                ERROR_HANDLER.error_exit("{} {}".format(\
+                                    "Handle untracked source files manually", \
+                                                "then restart the execution"))
+        else:
+            if common_mix.confirm_execution(\
+                                "{} {} {} {}".format("The following source",\
+                                        "files of interest are untracked:", \
+                                        untracked_src_files, \
+                                        "do you want to track them?")):
+                gitobj.index.add(list(untracked_src_files))
+            else:
+                ERROR_HANDLER.error_exit("{} {}".format(\
+                                    "Handle untracked source files manually", \
+                                                "then restart the execution"))
+
+    #~ _setup_repository()
 
     def _make_testing_branch(self, repo_dir, branch_name):
         # create 'test' branch if it doesn't exist 

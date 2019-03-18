@@ -75,11 +75,15 @@ class ProjectConfig(object):
     # (or entry point file) in the repository
     REPO_EXECUTABLE_RELATIVE_PATH = None
 
-    # Specify the general scope of the evaluation, 
+    # optional map between each source and the corresponding intermediate
+    # file map (such as object or assembly file for c of .class file for java)
+    SOURCE_INTERMEDIATE_CODE_MAP = None
+
+    # Specify the optional general scope of the evaluation, 
     # Specific scope can be specified per tool
-    TARGET_CLASS_NAME = None
+    TARGET_CLASSES_NAMES = None
     # None value mean all functions
-    TARGET_CLASS_TARGET_FUNCTIONS = None
+    TARGET_METHODS_BY_TARGET_CLASSES = None
     # each source file element is the relative path from repos rootdir.
     # None value means all source files
     TARGET_SOURCE_FILES_LIST = None
@@ -114,7 +118,27 @@ class ProjectConfig(object):
     # It ensure on call to this functin at the time and no call while any 
     # processing in the repodir. 
     CODE_BUILDER_FUNC = None
+
+    # Optional. When not None, the CODE_BUILDER_FUNC is the name of 
+    # the function in this file to use
+    CODE_BUILDER_MODULE = None
 #~class ProjectConfig
+
+class BaseToolConfig(object):
+    def __init__(self, toolname, config_id=None):
+        self.toolname = toolname
+        self.config_id = config_id
+        if self.config_id is None:
+            self.toolalias = self.toolname
+        else:
+            self.toolalias = toolname+"_"+str(self.config_id)
+    #~ def __init__()
+
+    def get_tool_name(self):
+        return self.toolname
+    def get_tool_config_alias(self):
+        return self.toolalias
+#~ class BaseToolConfig
 
 class ToolUserCustom(dict):
     '''
@@ -151,12 +175,23 @@ class ToolUserCustom(dict):
         self.__dict__ = self
         diff = len(self.__dict__) - num_elem
         if diff != 0:
-            logging.error("{} invalid parameter was/were added".format(diff))
-            ERROR_HANDLER.error_exit_file(__file__)
+            ERROR_HANDLER.error_exit(\
+                        "{} invalid parameter was/were added".format(diff), \
+                                                                    __file__)
     #~def __init__()
 #~class ToolUserCustom
 
-class TestcaseToolsConfig(object):
+class CriteriaConfis(object):
+    # TODO
+    # TESTS
+
+    # COVERAGE
+
+    # MUTANTS
+
+#~ class CriteriaConfis()
+
+class TestcaseToolsConfig(BaseToolConfig):
     # TESTS
     DEVELOPER_TESTS_ENABLED = True
     AUTOMATIC_TESTS_ENABLED = True
@@ -179,19 +214,19 @@ class TestcaseToolsConfig(object):
     REPORT_NUMBER_OF_DUPLICATED_TESTS = True
 #~class TestcaseToolsConfig
     
-class CodecoverageToolsConfig(object):
+class CodecoverageToolsConfig(BaseToolConfig):
     # CODE COVERAGE
     STATEMENT_COVERAGE_ENABLED = True
     BRANCH_COVERAGE_ENABLED = True
     FUNCTION_COVERAGE_ENABLED = True
 
-    ONLY_RUN_FAILING_TESTS_WITH_STATEMENT_COVERAGE = False
-    ONLY_RUN_FAILING_TESTS_WITH_BRANCH_COVERAGE = False
-    ONLY_RUN_FAILING_TESTS_WITH_FUNCTION_COVERAGE = False
+    RUN_FAILING_TESTS_WITH_STATEMENT_COVERAGE = True
+    RUN_FAILING_TESTS_WITH_BRANCH_COVERAGE = True
+    RUN_FAILING_TESTS_WITH_FUNCTION_COVERAGE = True
 
-    ONLY_RUN_PASSING_TESTS_WITH_STATEMENT_COVERAGE = False
-    ONLY_RUN_PASSING_TESTS_WITH_BRANCH_COVERAGE = False
-    ONLY_RUN_PASSING_TESTS_WITH_FUNCTION_COVERAGE = False
+    RUN_PASSING_TESTS_WITH_STATEMENT_COVERAGE = True
+    RUN_PASSING_TESTS_WITH_BRANCH_COVERAGE = True
+    RUN_PASSING_TESTS_WITH_FUNCTION_COVERAGE = True
 
     COVERAGE_TEST_EXECUTION_EXTRA_TIMEOUT = 60.0 # in seconds
 
@@ -202,7 +237,7 @@ class CodecoverageToolsConfig(object):
 
 #~class CodecoverageToolsConfig
     
-class MutationToolsConfig(object):
+class MutationToolsConfig(BaseToolConfig):
     # MUTATION
     MUTANT_COVERAGE_ENABLED = True
     WEAK_MUTATION_ENABLED = True
