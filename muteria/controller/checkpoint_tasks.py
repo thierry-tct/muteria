@@ -29,29 +29,30 @@ class Tasks(common_mix.EnumAutoName):
     STARTING = 0 #enum.auto()
 
     TESTS_GENERATION = 1 #enum.auto()
-    TESTS_SELECTION_PRIORITIZATION = 2 #enum.auto()
-    PASS_FAIL_TESTS_EXECUTION = 3 #enum.auto()
+    TESTS_GENERATION_GUIDANCE = 2 #enum.auto()
+    TESTS_EXECUTION_SELECTION_PRIORITIZATION = 3 #enum.auto()
+    PASS_FAIL_TESTS_EXECUTION = 4 #enum.auto()
 
-    CODE_SCOPE_GENERATION = 4 #enum.auto()
-    CODE_SCOPE_SELECTION_PRIORITIZATION = 5 #enum.auto()
-    CODE_COVERAGE_TESTS_EXECUTION = 6 #enum.auto()
+    CODE_SCOPE_GENERATION = 5 #enum.auto()
+    CODE_SCOPE_SELECTION_PRIORITIZATION = 6 #enum.auto()
+    CODE_COVERAGE_TESTS_EXECUTION = 7 #enum.auto()
 
-    MUTANTS_GENERATION = 7 #enum.auto()
+    MUTANTS_GENERATION = 8 #enum.auto()
 
-    MUTANTS_SELECTION_PRIORITIZATION = 8 #enum.auto()
+    MUTANTS_EXECUTION_SELECTION_PRIORITIZATION = 9 #enum.auto()
 
-    MUTANT_COVERAGE_TESTS_EXECUTION = 9 #enum.auto()
-    WEAK_MUTATION_TESTS_EXECUTION = 10 #enum.auto()
-    STRONG_MUTATION_TESTS_EXECUTION = 11 #enum.auto()
+    MUTANT_COVERAGE_TESTS_EXECUTION = 10 #enum.auto()
+    WEAK_MUTATION_TESTS_EXECUTION = 11 #enum.auto()
+    STRONG_MUTATION_TESTS_EXECUTION = 12 #enum.auto()
 
-    PASS_FAIL_STATS = 12 #enum.auto()
-    CODE_COVERAGE_STATS = 13 #enum.auto()
-    MUTANT_COVERAGE_STATS = 14 #enum.auto()
-    WEAK_MUTATION_STATS = 15 #enum.auto()
-    STRONG_MUTATION_STATS = 16 #enum.auto()
-    AGGREGATED_STATS = 17 #enum.auto()
+    PASS_FAIL_STATS = 13 #enum.auto()
+    CODE_COVERAGE_STATS = 14 #enum.auto()
+    MUTANT_COVERAGE_STATS = 15 #enum.auto()
+    WEAK_MUTATION_STATS = 16 #enum.auto()
+    STRONG_MUTATION_STATS = 17 #enum.auto()
+    AGGREGATED_STATS = 18 #enum.auto()
 
-    FINISHED = 18 #enum.auto()
+    FINISHED = 19 #enum.auto()
 #~ class Tasks
 
 class Status(common_mix.EnumAutoName):
@@ -65,24 +66,26 @@ class TaskOrderingDependency(object):
     The task dependency structure is following(Teh structure neve change):
     ----------------------------------------------------------------------
         CODE_SCOPE_GENERATION --> STARTING
-        TESTS_GENERATION --> STARTING
+        TESTS_GENERATION_GUIDANCE --> STARTING
         MUTANTS_GENERATION --> STARTING
 
-        TESTS_SELECTION_PRIORITIZATION --> TESTS_GENERATION
+        TESTS_GENERATION --> TESTS_GENERATION_GUIDANCE
 
-        PASS_FAIL_TESTS_EXECUTION --> TESTS_SELECTION_PRIORITIZATION
+        TESTS_EXECUTION_SELECTION_PRIORITIZATION --> TESTS_GENERATION
 
-        MUTANTS_SELECTION_PRIORITIZATION --> MUTANTS_GENERATION 
+        PASS_FAIL_TESTS_EXECUTION --> TESTS_EXECUTION_SELECTION_PRIORITIZATION
+
+        MUTANTS_EXECUTION_SELECTION_PRIORITIZATION --> MUTANTS_GENERATION 
 
         CODE_SCOPE_SELECTION_PRIORITIZATION --> CODE_SCOPE_GENERATION
 
                                           | CODE_SCOPE_SELECTION_PRIORITIZATION
         CODE_COVERAGE_TESTS_EXECUTION --> | PASS_FAIL_TESTS_EXECUTION
 
-                                            | MUTANTS_SELECTION_PRIORITIZATION
+                                            | MUTANTS_EXECUTION_SELECTION_PRIORITIZATION
         MUTANT_COVERAGE_TESTS_EXECUTION --> | PASS_FAIL_TESTS_EXECUTION
 
-                                          | MUTANTS_SELECTION_PRIORITIZATION
+                                          | MUTANTS_EXECUTION_SELECTION_PRIORITIZATION
         WEAK_MUTATION_TESTS_EXECUTION --> | PASS_FAIL_TESTS_EXECUTION
 
                                             | CODE_COVERAGE_TESTS_EXECUTION
@@ -115,28 +118,28 @@ class TaskOrderingDependency(object):
         else:
             # Check that every task is present
             if type(json_obj) != dict:
-                logging.error("{} {}".format("Invalid object to initialize", \
-                                "TaskOrderingDependency, must be a 'dict'"))
-                ERROR_HANDLER.error_exit_file(__file__)
+                ERROR_HANDLER.error_exit("{} {}".format(\
+                        "Invalid object to initialize", \
+                        "TaskOrderingDependency, must be a 'dict'"), __file__)
             if len(json_obj) != len(Tasks):
-                logging.error("{} {}".format("Invalid object to initialize", \
-                                "TaskOrderingDependency. Size mismatch"))
-                ERROR_HANDLER.error_exit_file(__file__)
+                ERROR_HANDLER.error_exit("{} {}".format(\
+                            "Invalid object to initialize", \
+                            "TaskOrderingDependency. Size mismatch"), __file__)
             # verify
             for key_t in Tasks:
                 if key_t.get_str() not in json_obj:
-                    logging.error("{} {} {} {}".format( \
+                    ERROR_HANDLER.error_exit("{} {} {} {}".format( \
                         "Invalid object to initialize TaskOrderingDependency",\
-                        "The task", key_t.get_str(), "is absent in json_obj"))
-                    ERROR_HANDLER.error_exit_file(__file__)
+                        "The task", key_t.get_str(), "is absent in json_obj"),\
+                                                                    __file__)
                 if not Status.has_element_named(json_obj[key_t.get_str()]):
-                    logging.error("{} {} {} {}".format( \
+                    ERROR_HANDLER.error_exit("{} {} {} {}".format( \
                         "Invalid object to initialize TaskOrderingDependency",\
-                        "The task", key_t.get_str(), "has invalid status"))
-                    ERROR_HANDLER.error_exit_file(__file__)
+                        "The task", key_t.get_str(), "has invalid status"), \
+                                                                    __file__)
             # initialize
             decoded_json_obj = {}
-            for k_str, v_str in json_obj.iteritems():
+            for k_str, v_str in json_obj.items():
                 decoded_json_obj[Tasks[k_str]] = Status[v_str]
             self.initialize_data_graph(decoded_json_obj)
     #~ def __init__()
@@ -145,7 +148,7 @@ class TaskOrderingDependency(object):
         ret_obj = {}
         for key_t in Tasks:
             ret_obj[key_t.get_str()] = \
-                            self._lookup_task_cell(key_t).get_status().get_str()
+                        self._lookup_task_cell(key_t).get_status().get_str()
         return ret_obj
     #~ def get_as_json_object()
 
@@ -184,7 +187,7 @@ class TaskOrderingDependency(object):
 
         # set the root cell (The root has no uses)
         finished = self.Cell(Tasks.FINISHED)
-        finished.set_status(task_status_map(Tasks.FINISHED))
+        finished.set_status(task_status_map[Tasks.FINISHED])
 
         self.root = finished
 
@@ -192,52 +195,52 @@ class TaskOrderingDependency(object):
         ## Stats Layer
         ### Aggregate stats
         agg_stats =  self.Cell(Tasks.AGGREGATED_STATS)
-        agg_stats.set_status(task_status_map(Tasks.AGGREGATED_STATS))        
+        agg_stats.set_status(task_status_map[Tasks.AGGREGATED_STATS]) 
         finished.add_dependency(agg_stats)
 
         ### Other stats
         passfail_stats = self.Cell(Tasks.PASS_FAIL_STATS)
-        passfail_stats.set_status(task_status_map(Tasks.PASS_FAIL_STATS))
+        passfail_stats.set_status(task_status_map[Tasks.PASS_FAIL_STATS])
         agg_stats.add_dependency(passfail_stats)
 
         cc_stats = self.Cell(Tasks.CODE_COVERAGE_STATS)
-        cc_stats.set_status(task_status_map(Tasks.CODE_COVERAGE_STATS))
+        cc_stats.set_status(task_status_map[Tasks.CODE_COVERAGE_STATS])
         agg_stats.add_dependency(cc_stats)
 
         mc_stats = self.Cell(Tasks.MUTANT_COVERAGE_STATS)
-        mc_stats.set_status(task_status_map(Tasks.MUTANT_COVERAGE_STATS))
+        mc_stats.set_status(task_status_map[Tasks.MUTANT_COVERAGE_STATS])
         agg_stats.add_dependency(mc_stats)
 
         wm_stats = self.Cell(Tasks.WEAK_MUTATION_STATS)
-        wm_stats.set_status(task_status_map(Tasks.WEAK_MUTATION_STATS))
+        wm_stats.set_status(task_status_map[Tasks.WEAK_MUTATION_STATS])
         agg_stats.add_dependency(wm_stats)
 
         sm_stats = self.Cell(Tasks.STRONG_MUTATION_STATS)
-        sm_stats.set_status(task_status_map(Tasks.STRONG_MUTATION_STATS))
+        sm_stats.set_status(task_status_map[Tasks.STRONG_MUTATION_STATS])
         agg_stats.add_dependency(sm_stats)
 
         ## Matrices Layer
         sm = self.Cell(Tasks.STRONG_MUTATION_TESTS_EXECUTION)
-        sm.set_status(task_status_map(Tasks.STRONG_MUTATION_TESTS_EXECUTION))
+        sm.set_status(task_status_map[Tasks.STRONG_MUTATION_TESTS_EXECUTION])
         sm_stats.add_dependency(sm)
 
         cc = self.Cell(Tasks.CODE_COVERAGE_TESTS_EXECUTION)
-        cc.set_status(task_status_map(Tasks.CODE_COVERAGE_TESTS_EXECUTION))
+        cc.set_status(task_status_map[Tasks.CODE_COVERAGE_TESTS_EXECUTION])
         cc_stats.add_dependency(cc)
         sm.add_dependency(cc)
 
         mc = self.Cell(Tasks.MUTANT_COVERAGE_TESTS_EXECUTION)
-        mc.set_status(task_status_map(Tasks.MUTANT_COVERAGE_TESTS_EXECUTION))
+        mc.set_status(task_status_map[Tasks.MUTANT_COVERAGE_TESTS_EXECUTION])
         mc_stats.add_dependency(mc)
         sm.add_dependency(mc)
 
         wm = self.Cell(Tasks.WEAK_MUTATION_TESTS_EXECUTION)
-        wm.set_status(task_status_map(Tasks.WEAK_MUTATION_TESTS_EXECUTION))
+        wm.set_status(task_status_map[Tasks.WEAK_MUTATION_TESTS_EXECUTION])
         wm_stats.add_dependency(wm)
         sm.add_dependency(wm)
 
         passfail = self.Cell(Tasks.PASS_FAIL_TESTS_EXECUTION)
-        passfail.set_status(task_status_map(Tasks.PASS_FAIL_TESTS_EXECUTION))
+        passfail.set_status(task_status_map[Tasks.PASS_FAIL_TESTS_EXECUTION])
         passfail_stats.add_dependency(passfail)
         cc.add_dependency(passfail)
         mc.add_dependency(passfail)
@@ -245,38 +248,43 @@ class TaskOrderingDependency(object):
 
         # Artifact Selection and Prioritization
         cs_sp = self.Cell(Tasks.CODE_SCOPE_SELECTION_PRIORITIZATION)
-        cs_sp.set_status(task_status_map( \
-                                    Tasks.CODE_SCOPE_SELECTION_PRIORITIZATION))
+        cs_sp.set_status(task_status_map[ \
+                                    Tasks.CODE_SCOPE_SELECTION_PRIORITIZATION])
         cc.add_dependency(cs_sp)
 
-        t_sp = self.Cell(Tasks.TESTS_SELECTION_PRIORITIZATION)
-        t_sp.set_status(task_status_map(Tasks.TESTS_SELECTION_PRIORITIZATION))
+        t_sp = self.Cell(Tasks.TESTS_EXECUTION_SELECTION_PRIORITIZATION)
+        t_sp.set_status(task_status_map[\
+                            Tasks.TESTS_EXECUTION_SELECTION_PRIORITIZATION])
         passfail.add_dependency(t_sp)
 
-        m_sp = self.Cell(Tasks.MUTANTS_SELECTION_PRIORITIZATION)
-        m_sp.set_status(task_status_map( \
-                                    Tasks.MUTANTS_SELECTION_PRIORITIZATION))
+        m_sp = self.Cell(Tasks.MUTANTS_EXECUTION_SELECTION_PRIORITIZATION)
+        m_sp.set_status(task_status_map[ \
+                            Tasks.MUTANTS_EXECUTION_SELECTION_PRIORITIZATION])
         wm.add_dependency(m_sp)
         mc.add_dependency(m_sp)
 
         # Artifact Generation
         cs_gen = self.Cell(Tasks.CODE_SCOPE_GENERATION)
-        cs_gen.set_status(task_status_map(Tasks.CODE_SCOPE_GENERATION))
+        cs_gen.set_status(task_status_map[Tasks.CODE_SCOPE_GENERATION])
         cs_sp.add_dependency(cs_gen)
 
         t_gen = self.Cell(Tasks.TESTS_GENERATION)
-        t_gen.set_status(task_status_map(Tasks.TESTS_GENERATION))
+        t_gen.set_status(task_status_map[Tasks.TESTS_GENERATION])
         t_sp.add_dependency(t_gen)
 
+        t_gguide = self.Cell(Tasks.TESTS_GENERATION_GUIDANCE)
+        t_gguide.set_status(task_status_map[Tasks.TESTS_GENERATION_GUIDANCE])
+        t_gen.add_dependency(t_gguide)
+
         m_gen = self.Cell(Tasks.MUTANTS_GENERATION)
-        m_gen.set_status(task_status_map(Tasks.MUTANTS_GENERATION))
+        m_gen.set_status(task_status_map[Tasks.MUTANTS_GENERATION])
         m_sp.add_dependency(m_gen)
 
         # Starting
         starting = self.Cell(Tasks.STARTING)
-        starting.set_status(task_status_map(Tasks.STARTING))
+        starting.set_status(task_status_map[Tasks.STARTING])
         cs_gen.add_dependency(starting)
-        t_gen.add_dependency(starting)
+        t_gguide.add_dependency(starting)
         m_gen.add_dependency(starting)
 
         # COMPUTE THE USES AND VERIFY
@@ -286,9 +294,10 @@ class TaskOrderingDependency(object):
         ## Verify
         number_of_tasks = len(Tasks) # Number of instances in 'Tasks' class
         if len(visited) != number_of_tasks:
-            logging.error("%s %s" % ("BUG in the Task Ordering Dependency.", \
-                    "got %d but expects %d" % (len(visited), number_of_tasks)))
-            ERROR_HANDLER.error_exit()
+            ERROR_HANDLER.error_exit("%s %s" % (\
+                    "BUG in the Task Ordering Dependency. got", \
+                    "%d but expects %d" % (len(visited), number_of_tasks)),\
+                                                                    __file__)
         visited = {}
         self._recursive_verify(self.root, visited)
     #~ def initialize_data_graph()
@@ -331,8 +340,8 @@ class TaskOrderingDependency(object):
         self._recursive_get_next_todo_tasks(task_node_set, self.root)
         task_set = {x.get_task_name() for x in task_node_set}
         if len(task_set) != len(task_node_set):
-            logging.error("BUG) same task appears in multiple nodes")
-            ERROR_HANDLER.error_exit()
+            ERROR_HANDLER.error_exit("{}".format(\
+                        "(BUG) same task appears in multiple nodes"), __file__)
         return task_set
     #~ def get_next_todo_tasks()
 
@@ -350,8 +359,9 @@ class TaskOrderingDependency(object):
             self.status = status
             self.task_name = task_name
             if not Status.is_valid(self.status):
-                logging.error("Invalid value passed as status, use 'Status.'")
-                ERROR_HANDLER.error_exit_file(__file__)                
+                ERROR_HANDLER.error_exit(\
+                            "Invalid value passed as status, use 'Status.'", \
+                                                                    __file__)
 
         # setters
         def add_dependency(self, cell):
@@ -360,9 +370,9 @@ class TaskOrderingDependency(object):
             self.uses.add(cell)
         def set_status(self, status):
             if not Status.is_valid(status):
-                logging.error( \
-                    "Invalid status value passed in set_status.use 'Status.'")
-                ERROR_HANDLER.error_exit_file(__file__)                
+                ERROR_HANDLER.error_exit( \
+                    "Invalid status value passed in set_status.use 'Status.'",\
+                                                                    __file__)
             self.status = status
         def set_done(self):
             self.status = Status.DONE
@@ -406,19 +416,18 @@ class TaskOrderingDependency(object):
     def _recursive_verify(self, start_node, visited):
         # verify no loop and status soundness
         if start_node in visited:
-            logging.error("There is a loop involving task {}".format( \
-                                    start_node.get_task_name().get_str()))
-            ERROR_HANDLER.error_exit_file(__file__)
+            ERROR_HANDLER.error_exit(\
+                            "There is a loop involving task {}".format( \
+                            start_node.get_task_name().get_str()), __file__)
         for d in start_node.get_dependencies():
             if not start_node.is_untouched():
                 if not d.is_done():
-                    logging.error("{} {} {} {} {}".format( \
+                    ERROR_HANDLER.error_exit("{} {} {} {} {}".format( \
                                     "Unsoundness of status. dependency", \
                                     d.get_task_name().get_str(), \
                                     "not done while use", \
                                     start_node.get_task_name().get_str(), \
-                                    "is either executing or done"))
-                    ERROR_HANDLER.error_exit_file(__file__)
+                                    "is either executing or done"), __file__)
             self._recursive_verify(d, visited.copy())
     #~ def _recursive_verify()
 
@@ -435,9 +444,9 @@ class TaskOrderingDependency(object):
     def _lookup_task_cell(self, task_name):
         cell = self._recursive_lookup(task_name, self.root)
         if cell is None:
-            logging.error("%s %s" % \
-                ("The Task looked up does not exist in dep graph", task_name))
-            ERROR_HANDLER.error_exit()
+            ERROR_HANDLER.error_exit("%s %s" % \
+                ("The Task looked up does not exist in dep graph", task_name),\
+                                                                    __file__)
         return cell
     #~ def _lookup_task_cell()
 
@@ -449,9 +458,10 @@ class TaskOrderingDependency(object):
                 break
             self._recursive_check_deps_are_done(d)
         if problem is not None:
-            logging.error("%s %s %s %s" % ("task", start_node.get_task_name, \
-                        "is done while the dependencies are not:", problem))
-            ERROR_HANDLER.error_exit()
+            ERROR_HANDLER.error_exit("%s %s %s %s" % (\
+                        "task", start_node.get_task_name, \
+                        "is done while the dependencies are not:", problem),\
+                                                                    __file__)
     #~ def _recursive_check_deps_are_done()
 
     def _recursive_set_task_back_as_todo_untouched(self, start_node):

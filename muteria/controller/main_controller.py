@@ -124,7 +124,7 @@ class MainController (object):
         Log information showing a new run of resume of previous run
         '''
 
-    def mainrun(self):
+    def main(self):
         '''
         Entry point function
         Method that extract the cmd arguments, 

@@ -168,14 +168,17 @@ class FileDirStructureHandling(object):
             if type(file_dir_dict[fd]) not in (list, tuple):
                 self.error_module.error_exit(err_string="%s %s" % \
                         ("Each value in file_dir_dict", \
-                        "must be an ordered list of strings"))
+                        "must be an ordered list of strings"), \
+                            call_location=__file__)
             if len(file_dir_dict[fd]) < 1:
                 self.error_module.error_exit(err_string="%s %s" % \
-                        ("empty path elements for file/dir:", fd))
+                        ("empty path elements for file/dir:", fd), \
+                            call_location=__file__)
             if fd in self.file_dir_to_path_dict:
                 self.error_module.error_exit(err_string="%s %s %s" % \
                         ("file or directory already appears in", \
-                         "self.file_dir_to_path_dict:", fd))
+                         "self.file_dir_to_path_dict:", fd), \
+                            call_location=__file__)
             # Set the relative path
             self.file_dir_to_path_dict[fd] = os.path.join(*file_dir_dict[fd])
 
@@ -183,7 +186,8 @@ class FileDirStructureHandling(object):
     def resolve(self, name):
         if name not in self.file_dir_to_path_dict:
             self.error_module.error_exit(err_string="%s %s" % \
-                                        (name, "not in file_dir_to_path_dict"))
+                                    (name, "not in file_dir_to_path_dict"), \
+                                        call_location=__file__ )
         return self.file_dir_to_path_dict[name]
 
     def get_file_pathname(self, filename, rel_path=False):
@@ -200,7 +204,8 @@ class FileDirStructureHandling(object):
             retpathstring = fullpathstring
         if not os.path.isfile(fullpathstring):
             self.error_module.error_exit(err_string="%s %s" % \
-                    ("getting a file non existing", fullpathstring))
+                    ("getting a file non existing", fullpathstring), \
+                       call_location=__file__)
         return retpathstring
 
     def file_exists(self, filename):
@@ -233,7 +238,8 @@ class FileDirStructureHandling(object):
             retpathstring = fullpathstring
         if not os.path.isdir(fullpathstring):
             self.error_module.error_exit(err_string="%s %s" % \
-                    ("getting a directory non existing", fullpathstring))
+                    ("getting a directory non existing", fullpathstring), \
+                        call_location=__file__)
         return retpathstring
 
     def clean_create_and_get_dir(self, dirname, rel_path=False):
@@ -305,9 +311,9 @@ class CheckpointState(object):
 
     def set_finished(self, detailed_exectime_obj=None):
         if not self.started:
-            logging.error("%s" % \
-                            "finishing checkpointed task while not started")
-            ERROR_HANDLER.error_exit()
+            ERROR_HANDLER.error_exit("%s" % \
+                    "finishing checkpointed task while not started", __file__)
+            
         self.started = False
         self.finished = True
         self.write_checkpoint(self.EXEC_COMPLETED, \
@@ -400,15 +406,14 @@ class CheckpointState(object):
             try:
                 contain = loadJSON(self.backup_filepath)
             except ValueError:
-                logging.error("%s %s" % ("Both Checkpoint store_file and", \
-                                        "backup file are invalid"))
-                ERROR_HANDLER.error_exit()
+                ERROR_HANDLER.error_exit("%s %s" % ("Both Checkpoint store_file and", \
+                                        "backup file are invalid"), __file__)
             if not common_mix.confirm_execution("%s %s" % ( \
                         "The checkpoint store_file is invalid but backup", \
                         "is valid. Do you want to use backup?")):
-                logging.error("%s %s" % ("Execution terminated due to", \
-                                            "invalid Checkpoint store_file"))
-                ERROR_HANDLER.error_exit()
+                ERROR_HANDLER.error_exit("%s %s" % (\
+                                    "Execution terminated due to", \
+                                    "invalid Checkpoint store_file"), __file__)
         
         # Check consistency or update obj
         if contain is not None:
@@ -417,10 +422,9 @@ class CheckpointState(object):
                 if key not in contain:
                     file_used = self.backup_filepath if trybackup \
                                                     else self.store_filepath
-                    logging.error("%s (%s). %s %s" % \
+                    ERROR_HANDLER.error_exit("%s (%s). %s %s" % \
                                 ("Invalid checkpoint file", file_used, \
-                                    "do not contain the data for", key))
-                    ERROR_HANDLER.error_exit()
+                                "do not contain the data for", key), __file__)
         return contain
     #~ def _get_from_file()
 

@@ -1,13 +1,19 @@
-""" This module defines the files and directory as organized in the 
-    output directory
-"""
 
 from __future__ import print_function
 
-# Directories
-## CONSTANTS
+import os
+import logging
+import muteria.common.mix as common_mix
+import muteria.common.fs as common_fs
+
+ERROR_HANDLER = common_mix.ErrorHandler
+
+# -----------------------------------------------
+# Special
 TOP_OUTPUT_DIR_KEY = "main_controller_top_output"
 
+# Directories
+## CONSTANTS
 MUTATION_WORKDIR = "mutation_workdir"
 CODECOVERAGE_WORKDIR = "codecoverage_workdir"
 TESTSCASES_WORKDIR = "testscases_workdir"
@@ -46,6 +52,7 @@ TMP_FUNCTION_COVERAGE_MATRIX = "tmp_FUNCTION.csv"
 TMP_SM_MATRIX = "tmp_SM.csv"
 TMP_WM_MATRIX = "tmp_WM.csv"
 TMP_MCOV_MATRIX = "tmp_MCOV.csv"
+# ---------------------------------------------------------
 
 def get_outputdir_structure_by_filesdirs():
     '''
@@ -99,5 +106,14 @@ def get_outputdir_structure_by_filesdirs():
                                                                     + tm_file
 
     return TopExecutionDir
-
 #~ def get_outputdir_structure_by_filesdirs():
+
+
+class Explorer(common_fs.FileDirStructureHandling):
+    def __init__(self, outdir):
+        common_fs.FileDirStructureHandling.__init__(self, \
+            top_dir=os.path.abspath(outdir), \
+            top_dir_key=TOP_OUTPUT_DIR_KEY, \
+            file_dir_dict=get_outputdir_structure_by_filesdirs())
+    #~ def __init__()
+#~ class Explorer

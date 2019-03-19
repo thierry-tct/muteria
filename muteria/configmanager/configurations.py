@@ -12,6 +12,7 @@
     TODO: Implement loading the values of the parameters from files... and 
             Checking
 """
+#TODO: Implement test tool ordering (who use whose tests)
 
 from __future__ import print_function
 
@@ -29,8 +30,10 @@ CLEAN_REVERT_REPOS_MODE = 2
 RESTORE_REPOS_MODE = 3
 
 class ExecutionConfig(object):
-    PROGRAMMING_LANGUAGE = None
 
+    #######################################################
+    #######             Execution Parameters         ######
+    #######################################################
     # Criteria to Include in the analysis
     # The corresponding configs of codecoverage (`CodecoverageToolsConfig`)
     # and mutation (`MutationToolsConfig`) are considered if and only if 
@@ -46,9 +49,10 @@ class ExecutionConfig(object):
     RESTART_CURRENT_EXECUTING_META_TASKS = False
     # Specify a Step to go back to
     RE_EXECUTE_FROM_CHECKPOINT_META_TASKS = [] # Make interaction easy
-#~class ExecutionConfig
 
-class ReportingConfig(object):
+    #######################################################
+    #######             Reporting Parameters         ######
+    #######################################################
     GENERATE_HTML_REPORT = True
 
     OUTPUT_CRITERIA_SCORES = True
@@ -63,9 +67,13 @@ class ReportingConfig(object):
 
     # When iteratively try to cover some element, show 
     OUTPUT_STATS_HISTORY = True
-#~class ReportingConfig
 
-class ProjectConfig(object):
+    #######################################################
+    #######        Project Config Parameters         ######
+    #######################################################
+    # Project programming language
+    PROGRAMMING_LANGUAGE = None
+
     # Output dir pathname
     OUTPUT_ROOT_DIR = None
     # Repository dir pathname
@@ -102,6 +110,10 @@ class ProjectConfig(object):
     #   -1 on error
     CUSTOM_DEV_TEST_RUNNER = None
 
+    # Optional. When not None, the CUSTOM_DEV_TEST_RUNNER is the name of 
+    # the function in this file to use
+    CUSTOM_DEV_TEST_RUNNER_MODULE = None
+
     # Function that build the code to execute 
     # (for compiled languages such as C)
     # The function has 5 parameters: 
@@ -122,10 +134,16 @@ class ProjectConfig(object):
     # Optional. When not None, the CODE_BUILDER_FUNC is the name of 
     # the function in this file to use
     CODE_BUILDER_MODULE = None
-#~class ProjectConfig
 
-class BaseToolConfig(object):
-    def __init__(self, toolname, config_id=None):
+    #######################################################
+    #######             Extra parameters             ######
+    #######################################################
+    LLVM_TO_NATIVE_LINKING_FLAGS = None
+#~ class ExecutionConfig
+
+class BaseToolConfig(dict):
+    def __init__(self, tooltype, toolname, config_id=None):
+        self.tooltype = tooltype
         self.toolname = toolname
         self.config_id = config_id
         if self.config_id is None:
@@ -134,10 +152,15 @@ class BaseToolConfig(object):
             self.toolalias = toolname+"_"+str(self.config_id)
     #~ def __init__()
 
+    def __eq__(self, value):
+        return (self.__dict__ == value.__dict__)
+
     def get_tool_name(self):
         return self.toolname
     def get_tool_config_alias(self):
         return self.toolalias
+    def get_tool_type(self):
+        return self.tooltype
 #~ class BaseToolConfig
 
 class ToolUserCustom(dict):
@@ -181,23 +204,21 @@ class ToolUserCustom(dict):
     #~def __init__()
 #~class ToolUserCustom
 
-class CriteriaConfis(object):
-    # TODO
-    # TESTS
-
-    # COVERAGE
-
-    # MUTANTS
-
-#~ class CriteriaConfis()
 
 class TestcaseToolsConfig(BaseToolConfig):
     # TESTS
+    # Tests already existing before execution starts
     DEVELOPER_TESTS_ENABLED = True
-    AUTOMATIC_TESTS_ENABLED = True
+    # Test created during execution
+    GENERATED_TESTS_ENABLED = True
 
+    # use test case oracle as oracle
     TESTS_ORACLE_TESTS = True
-    TESTS_ORACLE_OTHER_VERSION = True
+    # Use output of the specified version as oracle, 
+    # Pass filepath to repo patch 
+    TESTS_ORACLE_OTHER_VERSION = None
+    # file path to an executable to use as oracle
+    TESTS_ORACLE_OTHER_EXECUTABLE = None
 
     STOP_TESTS_EXECUTION_ON_FAILURE = False # Will not get full matrix
 
@@ -206,8 +227,9 @@ class TestcaseToolsConfig(BaseToolConfig):
     TEST_GENERATION_TIMEOUT = 7200.0 # in seconds
     ONE_TEST_EXECUTION_TIMEOUT = 900.0 # in seconds (Handle inifnite loops)
 
-    TESTS_GENERATION_TOOLS = []
-    DEVELOPER_TESTS_TOOLS = []
+    TESTS_GENERATION_TOOLS = [
+
+    ]
 
     # Reporting
     REPORT_NUMBER_OF_TESTS_GENERATED = True
