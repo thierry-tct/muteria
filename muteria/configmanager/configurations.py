@@ -20,6 +20,8 @@ import logging
 
 import muteria.common.mix as common_mix 
 
+from muteria.drivers.testgeneration import TestToolType
+
 ERROR_HANDLER = common_mix.ErrorHandler
 
 # TODO Find way to make the classes so that new elements cannot be added on the fly
@@ -136,16 +138,122 @@ class ExecutionConfig(object):
     CODE_BUILDER_MODULE = None
 
     #######################################################
+    #######             Tools parameters             ######
+    #######################################################
+    # ===================== TESTCASES =====================#
+    # Tests already existing before execution starts
+    DEVELOPER_TESTS_ENABLED = True
+    # Test created during execution
+    GENERATED_TESTS_ENABLED = True
+
+    STOP_TESTS_EXECUTION_ON_FAILURE = False # Will not get full matrix
+
+    DISCARD_FLAKY_TESTS = True
+
+    # Test tool types in order of execution (Test generation). 
+    # elements in same tuple have parallel execution. elements at tuple i
+    # generate tests after element at i-1 and may use results of test from i-1.
+    TEST_TOOL_TYPES_SCHEDULING = [
+        (TestToolType.USE_ONLY_CODE,), 
+        (TestToolType.USE_ONLY_MUTANT_CODE,), 
+        (TestToolType.USE_CODE_AND_TESTS, \
+                                        TestToolType.USE_MUTANT_CODE_AND_TESTS)
+    ]
+
+    # Test generation tool. Example:
+    # >>> TestcaseToolConfig(tooltype=TestToolType.USE_ONLY_CODE,
+    #                        toolname='klee', config_id=0)
+    TESTS_GENERATION_TOOLS = [
+
+    ]
+
+    # Reporting
+    REPORT_NUMBER_OF_TESTS_GENERATED = True
+    REPORT_NUMBER_OF_DUPLICATED_TESTS = True
+
+    ## --- Modifiable (Testcase) ---##
+    # use test case oracle as oracle
+    TESTS_ORACLE_TESTS = True
+    # Use output of the specified version as oracle, 
+    # Pass filepath to repo patch 
+    TESTS_ORACLE_OTHER_VERSION = None
+    # file path to an executable to use as oracle
+    TESTS_ORACLE_OTHER_EXECUTABLE = None
+
+    TEST_GENERATION_TIMEOUT = 7200.0 # in seconds
+    ONE_TEST_EXECUTION_TIMEOUT = 900.0 # in seconds (Handle inifnite loops)
+    # ========================================================#
+
+    # ===================== CODE COVERAGE =====================#
+    STATEMENT_COVERAGE_ENABLED = True
+    BRANCH_COVERAGE_ENABLED = True
+    FUNCTION_COVERAGE_ENABLED = True
+
+    RUN_FAILING_TESTS_WITH_STATEMENT_COVERAGE = True
+    RUN_FAILING_TESTS_WITH_BRANCH_COVERAGE = True
+    RUN_FAILING_TESTS_WITH_FUNCTION_COVERAGE = True
+
+    RUN_PASSING_TESTS_WITH_STATEMENT_COVERAGE = True
+    RUN_PASSING_TESTS_WITH_BRANCH_COVERAGE = True
+    RUN_PASSING_TESTS_WITH_FUNCTION_COVERAGE = True
+
+    ## Tools
+    STATEMENT_COVERAGE_TOOLS = []
+    BRANCH_COVERAGE_TOOLS = []
+    FUNCTION_COVERAGE_TOOLS = []
+
+    ## --- Modifiable (Code) ---##
+    COVERAGE_TEST_EXECUTION_EXTRA_TIMEOUT = 60.0 # in seconds
+    # ========================================================#
+
+    # ======================= MUTATION =======================#
+    MUTANT_COVERAGE_ENABLED = True
+    WEAK_MUTATION_ENABLED = True
+    STRONG_MUTATION_ENABLED = True
+
+    STRONG_MUTANTION_ORACLE_TESTS = True
+    STRONG_MUTANTION_ORACLE_ORIGINAL = True
+    STRONG_MUTANTION_ORACLE_OTHER_VERSION = True
+
+    MUTATION_RESTRICTION_ENABLED = True  # Enable restricting mutation(scope)
+    MUTANT_SELECTION_ENABLED = True
+    ONLY_EXECUTE_SELECTED_MUTANTS = True
+
+    TRIVIAL_COMPILER_EQUIVALENCE_ENABLED = True
+
+    OPTIMIZE_STRONG_MUTATION_WITH_WEAK_MUTATION = True
+    OPTIMIZE_STRONG_MUTATION_WITH_MUTANT_COVERAGE = False
+    OPTIMIZE_STRONG_MUTATION_WITH_STATEMENT_COVERAGE = False
+    OPTIMIZE_STRONG_MUTATION_WITH_FUNCTION_COVERAGE = False
+
+    STOP_MUTANT_EXECUTION_AT_FIRST_KILL = False # Will not get full matrix.
+
+    ONLY_RUN_FAILING_TESTS_WITH_MUTATION = False
+    ONLY_RUN_PASSING_TESTS_WITH_MUTATION = False
+
+    ## Tools
+    MUTATION_TOOLS = []
+
+    ## --- Modifiable (Mutation) ---##
+    ## grace time given to the mutant to complete after the original
+    ## execution time has passed
+    STRONG_MUTANT_TEST_EXECUTION_EXTRA_TIMEOUT = 60.0 # in seconds
+    WEAK_COVERAGE_MUTANT_TEST_EXECUTION_EXTRA_TIMEOUT = 600.0 # in seconds
+    # ========================================================#
+
+    #######################################################
     #######             Extra parameters             ######
     #######################################################
     LLVM_TO_NATIVE_LINKING_FLAGS = None
 #~ class ExecutionConfig
 
 class BaseToolConfig(dict):
-    def __init__(self, tooltype, toolname, config_id=None):
+    def __init__(self, tooltype, toolname, config_id=None, \
+                                                        tool_user_custom=None):
         self.tooltype = tooltype
         self.toolname = toolname
         self.config_id = config_id
+        self.tool_user_custom=tool_user_custom
         if self.config_id is None:
             self.toolalias = self.toolname
         else:
@@ -206,12 +314,6 @@ class ToolUserCustom(dict):
 
 
 class TestcaseToolsConfig(BaseToolConfig):
-    # TESTS
-    # Tests already existing before execution starts
-    DEVELOPER_TESTS_ENABLED = True
-    # Test created during execution
-    GENERATED_TESTS_ENABLED = True
-
     # use test case oracle as oracle
     TESTS_ORACLE_TESTS = True
     # Use output of the specified version as oracle, 
@@ -220,92 +322,17 @@ class TestcaseToolsConfig(BaseToolConfig):
     # file path to an executable to use as oracle
     TESTS_ORACLE_OTHER_EXECUTABLE = None
 
-    STOP_TESTS_EXECUTION_ON_FAILURE = False # Will not get full matrix
-
-    DISCARD_FLAKY_TESTS = True
-
     TEST_GENERATION_TIMEOUT = 7200.0 # in seconds
     ONE_TEST_EXECUTION_TIMEOUT = 900.0 # in seconds (Handle inifnite loops)
-
-    TESTS_GENERATION_TOOLS = [
-
-    ]
-
-    # Reporting
-    REPORT_NUMBER_OF_TESTS_GENERATED = True
-    REPORT_NUMBER_OF_DUPLICATED_TESTS = True
 #~class TestcaseToolsConfig
     
 class CodecoverageToolsConfig(BaseToolConfig):
-    # CODE COVERAGE
-    STATEMENT_COVERAGE_ENABLED = True
-    BRANCH_COVERAGE_ENABLED = True
-    FUNCTION_COVERAGE_ENABLED = True
-
-    RUN_FAILING_TESTS_WITH_STATEMENT_COVERAGE = True
-    RUN_FAILING_TESTS_WITH_BRANCH_COVERAGE = True
-    RUN_FAILING_TESTS_WITH_FUNCTION_COVERAGE = True
-
-    RUN_PASSING_TESTS_WITH_STATEMENT_COVERAGE = True
-    RUN_PASSING_TESTS_WITH_BRANCH_COVERAGE = True
-    RUN_PASSING_TESTS_WITH_FUNCTION_COVERAGE = True
-
     COVERAGE_TEST_EXECUTION_EXTRA_TIMEOUT = 60.0 # in seconds
-
-    ## Tools
-    STATEMENT_COVERAGE_TOOL = None
-    BRANCH_COVERAGE_TOOL = None
-    FUNCTION_COVERAGE_TOOL = None
-
 #~class CodecoverageToolsConfig
     
 class MutationToolsConfig(BaseToolConfig):
-    # MUTATION
-    MUTANT_COVERAGE_ENABLED = True
-    WEAK_MUTATION_ENABLED = True
-    STRONG_MUTATION_ENABLED = True
-
-    STRONG_MUTANTION_ORACLE_TESTS = True
-    STRONG_MUTANTION_ORACLE_ORIGINAL = True
-    STRONG_MUTANTION_ORACLE_OTHER_VERSION = True
-
-    MUTATION_RESTRICTION_ENABLED = True  # Enable restricting mutation(scope)
-    MUTANT_SELECTION_ENABLED = True
-    ONLY_EXECUTE_SELECTED_MUTANTS = True
-
-    TRIVIAL_COMPILER_EQUIVALENCE_ENABLED = True
-
-    OPTIMIZE_STRONG_MUTATION_WITH_WEAK_MUTATION = True
-    OPTIMIZE_STRONG_MUTATION_WITH_MUTANT_COVERAGE = False
-    OPTIMIZE_STRONG_MUTATION_WITH_STATEMENT_COVERAGE = False
-    OPTIMIZE_STRONG_MUTATION_WITH_FUNCTION_COVERAGE = False
-
-    STOP_MUTANT_EXECUTION_AT_FIRST_KILL = False # Will not get full matrix.
-
-    ONLY_RUN_FAILING_TESTS_WITH_MUTATION = False
-    ONLY_RUN_PASSING_TESTS_WITH_MUTATION = False
-
     ## grace time given to the mutant to complete after the original
     ## execution time has passed
     STRONG_MUTANT_TEST_EXECUTION_EXTRA_TIMEOUT = 60.0 # in seconds
     WEAK_COVERAGE_MUTANT_TEST_EXECUTION_EXTRA_TIMEOUT = 600.0 # in seconds
-
-    ## Tools
-    MUTATION_TOOLS = []
 #~class MutationToolsConfig
-    
-
-
-
-#class ControlArgsBase(object):
-#    clean_start = False
-#    re_execute_from_task = None
-#
-#
-#class RunControlArgs(ExecutionConfig):
-#
-#class NavigateControlArgs(ExecutionConfig):
-#
-#class ReposReverseControlArgs(ExecutionConfig):
-#    clean_revert = False
-    

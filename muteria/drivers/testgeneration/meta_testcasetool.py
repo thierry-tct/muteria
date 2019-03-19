@@ -370,7 +370,7 @@ class MetaTestcaseTool(object):
         return meta_test_failed_verdicts
     #~ def runtests()
 
-    def generate_tests (self, exe_path_map, test_tool_type=None, \
+    def generate_tests (self, exe_path_map, test_tool_type_list=None, \
                                 test_generation_guidance_obj=None, \
                                 parallel_testgen_count=1, \
                                 restart_checkpointer=False,
@@ -384,8 +384,8 @@ class MetaTestcaseTool(object):
         :type exe_path_map:
         :param exe_path_map:
 
-        :type test_tool_type:
-        :param test_tool_type:
+        :type test_tool_type_list:
+        :param test_tool_type_list:
     
         :type \test_generation_guidance_obj:
         :param \test_generation_guidance_obj:
@@ -418,23 +418,29 @@ class MetaTestcaseTool(object):
         ERROR_HANDLER.assert_true(parallel_testgen_count > 0, \
                     "invalid parallel test generation count: {}. {}".format( \
                                     parallel_testgen_count, "must be >= 1"))
-        if test_tool_type is None:
+        if test_tool_type_list is None:
             candidate_tools_aliases = self.testcases_configured_tools.keys()
         else:
+            ERROR_HANDLER.assert_true(len(test_tool_type_list) > 0,\
+                                "Invalid test_tool_type_list passed (empty)", \
+                                                                    __file__)
             candidate_tools_aliases = []
-            # validate the test_tool_types values
-            ERROR_HANDLER.assert_true(TestToolType.is_valid(test_tool_type), \
+            for test_tool_type in test_tool_type_list:
+                # validate the test_tool_types values
+                ERROR_HANDLER.assert_true(\
+                                    TestToolType.is_valid(test_tool_type), \
                         "Invalid test tool type passed to test generation", \
                                                                     __file__)
-            for ttoolalias in self.testcases_configured_tools:
-                if self.testcases_configured_tools[ttoolalias]\
-                                    [self.TOOL_TYPE_KEY] == test_tool_type:
-                    candidate_tools_aliases.append(ttoolalias) 
+                for ttoolalias in self.testcases_configured_tools:
+                    if self.testcases_configured_tools[ttoolalias]\
+                                        [self.TOOL_TYPE_KEY] == test_tool_type:
+                        candidate_tools_aliases.append(ttoolalias) 
 
         # @Checkpoint: create a checkpoint handler
         cp_func_name = "generate_tests"
-        if test_tool_type is not None:
-            cp_func_name += ":" + test_tool_type.get_str()
+        if test_tool_type_list is not None:
+            for test_tool_type in sorted(test_tool_type_list):
+                cp_func_name += ":" + test_tool_type.get_str()
         cp_task_id = 1
         checkpoint_handler = CheckPointHandler(\
                                             self.get_checkpoint_state_object())

@@ -10,4 +10,6 @@ import glob
 import muteria.common.mix as common_mix
 import muteria.common.fs as common_fs
 
-# TODO
+class Executor(object):
+    # TODO
+#~ class Executor

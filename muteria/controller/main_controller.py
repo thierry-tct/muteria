@@ -32,16 +32,10 @@ import muteria.common.fs as common_fs
 import muteria.common.matrices as common_matrices
 
 from muteria.configmanager.configurations import ExecutionConfig
-from muteria.configmanager.configurations import ReportingConfig
-from muteria.configmanager.configurations import MutationToolsConfig
-from muteria.configmanager.configurations import TestcaseToolsConfig
-from muteria.configmanager.configurations import CodecoverageToolsConfig
-from muteria.configmanager.configurations import ProjectConfig
-from muteria.configmanager.configurations import ToolUserCustom
 
 # from this package
-import logging_setup
-import output_structure
+import muteria.controller.logging_setup as logging_setup
+import muteria.controller.explorer as explorer
 
 
 class MainController (object):
