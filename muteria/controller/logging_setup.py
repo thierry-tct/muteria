@@ -17,6 +17,10 @@ import logging
 # private static variable of this module
 _SETUP_DONE = False
 
+def is_setup():
+    return _SETUP_DONE
+#def is_setup()
+
 def setup(logfile=None, logconsole=False, file_level=logging.INFO, 
             console_level=logging.INFO, file_max_bytes=20000, 
             n_file_backups=1, root_name=''):

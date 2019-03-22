@@ -73,9 +73,9 @@ class RepositoryManager(object):
     ERROR = -1
     DEFAULT_TESTS_BRANCH_NAME = "_tests_tmp_muteria_"
     DEFAULT_MUTERIA_REPO_META_FOLDER = ".muteria" 
-    def __init__(self, repository_rootdir, repo_executable_relpath, \
-                        dev_test_runner_func, code_builder_func, \
-                        source_files_list, dev_tests_list, \
+    def __init__(self, repository_rootdir, repo_executable_relpath=None, \
+                        dev_test_runner_func=None, code_builder_func=None, \
+                        source_files_list=None, dev_tests_list=None, \
                         delete_created_on_revert_as_initial=False, \
                         test_branch_name=DEFAULT_TESTS_BRANCH_NAME):
         self.repository_rootdir = repository_rootdir
@@ -91,10 +91,10 @@ class RepositoryManager(object):
 
         if self.repository_rootdir is None:
             ERROR_HANDLER.error_exit(\
-                                "repository rootdir cannot be none", __file__)
-        if self.repo_executable_relpath is None:
-            ERROR_HANDLER.error_exit(\
-                            "repo executable relpath cannot be none", __file__)
+                                "repository rootdir cannot be None", __file__)
+        #if self.repo_executable_relpath is None:
+        #    ERROR_HANDLER.error_exit(\
+        #                    "repo executable relpath cannot be None", __file__)
 
         # TODO: Implement a mechanism to avoid deadlock (multiple levels of
         # parallelism)
@@ -307,7 +307,7 @@ class RepositoryManager(object):
     def _setup_repository(self):
         # Make sure the repo dir exists
         ERROR_HANDLER.assert_true(os.path.isdir(self.repository_rootdir), \
-                        "given repositro dir is not existing: {}". format( \
+                        "given repository dir is not existing: {}". format( \
                             self.repository_rootdir), __file__)
         
         # make sure the repo dir is a git repo

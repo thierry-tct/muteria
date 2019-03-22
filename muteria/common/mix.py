@@ -45,7 +45,7 @@ class ErrorHandler(object):
 
     @classmethod
     def set_corresponding_repos_manager(cls, repos_dir_manager):
-        cls.assert_true (cls.repos_dir_manager is not None, \
+        cls.assert_true (cls.repos_dir_manager is None, \
                             err_string="the repo dir manager is already set", \
                             call_location=__file__)
         cls.repos_dir_manager = repos_dir_manager

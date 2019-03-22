@@ -8,7 +8,7 @@ TODO:
     0. write the out directory structure component properly 
         (This is shared between the 3 modes: RUN, REVERT and NAVIGATE)
 
-    Pipiline:
+    Pipeline:
     1. load the default configuration.
     2. parse the command lines, then load the users config, then update the
         default configs.
@@ -28,15 +28,20 @@ import copy
 import importlib
 import logging
 
+import muteria.common.mix as common_mix
 import muteria.common.fs as common_fs
 import muteria.common.matrices as common_matrices
 
-from muteria.configmanager.configurations import ExecutionConfig
+import muteria.configmanager.configurations as configurations
+from muteria.configmanager.helper import ConfigurationHelper
+from muteria.repositoryandcode.repository_manager import RepositoryManager
 
 # from this package
 import muteria.controller.logging_setup as logging_setup
 import muteria.controller.explorer as explorer
+import muteria.controller.executor as executor
 
+ERROR_HANDLER = common_mix.ErrorHandler
 
 class MainController (object):
     '''
@@ -53,94 +58,88 @@ class MainController (object):
     :param output_pathdir: Path to the directory where the execution take place
                             and the resulting data are stored.
     '''
-    def __init__(self, execution_config=None, reporting_config=None, \
-                    tools_config=None, project_config=None, \
-                    output_pathdir=None):
-        self.execution_config = execution_config
-        self.reporting_config = reporting_config
-        self.tools_config = tools_config
-        self.project_config = project_config
-        self.output_pathdir = output_pathdir
-
-        for v, T, e in [ \
-                 (self.execution_config, ExecutionConfig, 'execution_config'), 
-                 (self.reporting_config, ReportingConfig, 'reporting_config'), 
-                 (self.tools_config, TestcaseToolsConfig, \
-                                                    'testcasetools_config'), 
-                 (self.tools_config, CodecoverageToolsConfig, \
-                                                'codecoveragetools_config'), 
-                 (self.tools_config, MutationToolsConfig, \
-                                                    'mutationtools_config'), 
-                 (self.project_config, ProjectConfig, 'project_config')]: 
-            assert type(v) == T, "%s %s" % ("Invalid", e)
-
-
-        #self.alerter = Alerter ... # error_exit, warning, ...
-
-        out_struct = output_structure.get_outputdir_structure_by_filesdirs()
-        self.top_execution_struct_handle = \
-                        common_fs.FileDirStructureHandling(\
-                                        output_pathdir, \
-                                        output_structure.TOP_OUTPUT_DIR_KEY, \
-                                        out_struct)
-
+    def __init__(self): 
         # Set the logger temporarily (before the log file can be dispo)
         logging_setup.console_tmp_log_setup()
-        self.logger_is_set = False
+    #~ def __init__()
 
-        self.task_scheduler = ... #TODO TaskScheduler(self.execution_config, self.project_config) # extend the checkpointing class
+    def internal_infos(self, config):
+        # TODO
+        ERROR_HANDLER.error_exit("FIXME: TODO: Implement the internal")
+    #~ def internal_infos()
 
-    def navigate(self):
+    def view(self, top_timeline_explorer, config):
         '''
         Method used to navigate in the output dir and make simple queries
         '''
+        # TODO
+        ERROR_HANDLER.error_exit("FIXME: TODO: Implement the View")
+    #~ def view()
 
-    def clean_revert_repos(self):
-        '''
-        Restore the project repo dir to the initial state,
-        This restore possibly changed files or folders and remove 
-        possibly added ones. (delete created branch)
-        '''
-
-    def restore_repos_files(self):
+    def restore_repos_files(self, final_config):
         '''
         Restore the project repo dir's files that could have been changed.
         This do not remove the possibly added files or folders
         '''
+        repo_rt_dir = final_config.REPOSITORY_ROOT_DIR.get_val()
+        as_initial = final_config.restore.AS_INITIAL.get_val()
 
-    def extract_cmd_arguments(self):
-        '''
-        Extract the command line argument, return the execution configs
-        '''
+        repo_mgr = RepositoryManager(repository_rootdir=repo_rt_dir)
+        # XXX The repository manager automatically revert any problem
+        repo_mgr.revert_repository(as_initial=as_initial)
+    #~ def restore_repos_files()
 
-    def log_run_summary(self):
-        '''
-        Log information showing a new run of resume of previous run
-        '''
+    #def log_run_summary(self):
+    #    '''
+    #    Log information showing a new run of resume of previous run
+    #    '''
 
-    def main(self):
-        '''
-        Entry point function
-        Method that extract the cmd arguments, 
-        run all the tasks set in the configuration
-        '''
-        # XXX Parse the arguments and return the configs 
+    def cmd_main(self):
+        # XXX Parse the arguments and get the raw configs
+        cmd_raw_conf = ConfigurationHelper.get_cmd_raw_conf()
         
-        # If clean ore restore repos
-        # Else If navigate
-        # Else 
-        #       If cleanstart, ask and clean
-        #       Else 
-        #               Check consistency with previous of configs
-        #       continue running
+        # Call raw_config_main with the created raw config
+        self.raw_config_main(raw_config=cmd_raw_conf)
+    #~ def cmd_main()
 
-        # Check or create out dir as well as controller dirs, time and log dir
+    def raw_config_main(self, raw_config):
+        """
+        TODO: Deal with config change at different runs
+                Notify the user that the config changed and show the diff
+        TODO: add option to load the config from prev if not specified()
+        """
+        # Create config from raw config
+        final_conf = ConfigurationHelper.get_finalconf_from_rawconf(\
+                                                        raw_conf=raw_config)
 
-        # Setup the logger
-        if not self.logger_is_set:
-            logging_setup.setup(logfile=self.top_execution_struct_handle\
-                                .get_file_pathname(output_structure.LOG_FILE))
-            self.logger_is_set = True
+        # Call main with the result of raw config
+        self.main(final_config=final_conf)
+    #~ def raw_config_main()
 
-        # XXX Actual Execution
+    def main(self, final_config):
+        '''
+        Entry point function using the final configuration object
+        '''
+        # XXX Create TopExplorer
+        top_timeline_explorer = explorer.TopExplorer(\
+                                        final_config.OUTPUT_ROOT_DIR.get_val())
 
+        # XXX Actual Execution based on the mode
+        mode = final_config.RUN_MODE.get_val()
+
+        if mode == configurations.SessionMode.EXECUTE_MODE:
+            # Executor
+            exec_obj = executor.Executor(final_config, top_timeline_explorer)
+            exec_obj.main()
+        elif mode == configurations.SessionMode.RESTORE_REPOS_MODE:
+            # Create repository_manager
+            self.restore_repos_files(final_config)        
+        elif mode == configurations.SessionMode.VIEW_MODE:
+            # View
+            self.view(top_timeline_explorer, final_config)
+        elif mode == configurations.SessionMode.INTERNAL_MODE:
+            # Internal Helpers
+            self.internal_infos(final_config)
+        logging.info("All Done!")
+    #~ def main()
+#~ class MainController

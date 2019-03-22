@@ -26,12 +26,43 @@ ERROR_HANDLER = common_mix.ErrorHandler
 
 # TODO Find way to make the classes so that new elements cannot be added on the fly
 
-RUN_MODE = 0
-NAVIGATE_MODE = 1
-CLEAN_REVERT_REPOS_MODE = 2
-RESTORE_REPOS_MODE = 3
+class SessionMode(common_mix.EnumAutoName):
+    EXECUTE_MODE = 0
+    VIEW_MODE = 1
+    INTERNAL_MODE = 2
+    RESTORE_REPOS_MODE = 3
+#~ class SessionMode
 
-class ExecutionConfig(object):
+class ConfigElement(object):
+    def __init__(self, val=None, desc=None, val_range=None, conf_class=None):
+        self.val = val
+        self.desc = desc
+        self.val_range = val_range
+        self.conf_class = conf_class
+    #~ def __self__()
+
+    def set_val(self, new_val):
+        self.val = new_val
+    def get_val(self):
+        return self.val
+    
+    def set_desc(self, new_desc):
+        self.desc = new_desc
+    def get_desc(self):
+        return self.desc
+
+    def set_val_range(self, new_val_range):
+        self.val_range = new_val_range
+    def get_val_range(self):
+        return self.val_range
+
+    def set_conf_class(self, new_conf_class):
+        self.conf_class = new_conf_class
+    def get_conf_class(self):
+        return self.conf_class
+#~ class ConfigElement()
+
+class CompleteConfiguration(object):
 
     #######################################################
     #######             Execution Parameters         ######
@@ -44,7 +75,7 @@ class ExecutionConfig(object):
     INCLUDE_MUTATION = True
 
     # PARALELISM
-    SINGLE_REPO_PARALLELISM = 1 # Max number of paralle exec in a repo dir
+    SINGLE_REPO_PARALLELISM = 1 # Max number of parallel exec in a repo dir
 
     # MICRO CONTROLS
     EXECUTE_ONLY_CURENT_CHECKPOINT_META_TASK = False # for Debugging
@@ -245,7 +276,7 @@ class ExecutionConfig(object):
     #######             Extra parameters             ######
     #######################################################
     LLVM_TO_NATIVE_LINKING_FLAGS = None
-#~ class ExecutionConfig
+#~ class CompleteConfiguration
 
 class BaseToolConfig(dict):
     def __init__(self, tooltype, toolname, config_id=None, \

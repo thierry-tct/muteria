@@ -3,8 +3,6 @@ import muteria.common.fs as common_fs
 
 ERROR_HANDLER = common_mix.ErrorHandler
 
-from meta_testcasetool import MetaTestcaseTool
-
 class TestToolType(common_mix.EnumAutoName):
     USE_ONLY_CODE = "StaticTestcaseTool"
     USE_ONLY_MUTANT_CODE = "StaticMutantTestcaseTool"
