@@ -89,6 +89,9 @@ class RepositoryManager(object):
                                         delete_created_on_revert_as_initial
         self.test_branch_name = test_branch_name
 
+        if self.source_files_list is None:
+            self.source_files_list = []
+
         if self.repository_rootdir is None:
             ERROR_HANDLER.error_exit(\
                                 "repository rootdir cannot be None", __file__)
@@ -105,7 +108,7 @@ class RepositoryManager(object):
         self.muteria_metadir_info_file = os.path.join(self.muteria_metadir, \
                                                             "src_infos.json")
 
-        # setup the repo
+        # setup the repo (Should remain as last intruction of initialization)
         self._setup_repository()
     #~ def __init__()
 
@@ -342,7 +345,7 @@ class RepositoryManager(object):
             # checkout
             gitobj.checkout(self.test_branch_name)
         
-        # Check whether the repo is already managed by muteria
+        # Actual Check whether the repo is already managed by muteria
         # There must be a directory DEFAULT_MUTERIA_REPO_META_FOLDER  
         src_in_prev = []
         if os.path.isdir(self.muteria_metadir):
@@ -376,7 +379,7 @@ class RepositoryManager(object):
                 if not bypass:
                     revert_them = common_mix.confirm_execution(\
                             "{} {}".format(\
-                                "Do you want to automatically revert the",\
+                                "Do you want to automatically restore the",\
                                 "The untracked previous source and continue?"))
                     if revert_them:
                         for src in prev_untracked:

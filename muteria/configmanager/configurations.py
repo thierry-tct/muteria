@@ -71,8 +71,11 @@ class CompleteConfiguration(object):
     # The corresponding configs of codecoverage (`CodecoverageToolsConfig`)
     # and mutation (`MutationToolsConfig`) are considered if and only if 
     # the corresponding include is enabled
-    INCLUDE_CODECOVERAGE = True
-    INCLUDE_MUTATION = True
+    
+    # List of enabled criteria 
+    # (must have tool specified is specifically enabled)
+    # None mean all criteria with tool specified
+    ENABLED_CRITERIA = None 
 
     # PARALELISM
     SINGLE_REPO_PARALLELISM = 1 # Max number of parallel exec in a repo dir
@@ -82,6 +85,9 @@ class CompleteConfiguration(object):
     RESTART_CURRENT_EXECUTING_META_TASKS = False
     # Specify a Step to go back to
     RE_EXECUTE_FROM_CHECKPOINT_META_TASKS = [] # Make interaction easy
+
+    # Output dir pathname
+    OUTPUT_ROOT_DIR = None
 
     #######################################################
     #######             Reporting Parameters         ######
@@ -107,8 +113,6 @@ class CompleteConfiguration(object):
     # Project programming language
     PROGRAMMING_LANGUAGE = None
 
-    # Output dir pathname
-    OUTPUT_ROOT_DIR = None
     # Repository dir pathname
     REPOSITORY_ROOT_DIR = None
     
@@ -194,7 +198,7 @@ class CompleteConfiguration(object):
     # Test generation tool. Example:
     # >>> TestcaseToolConfig(tooltype=TestToolType.USE_ONLY_CODE,
     #                        toolname='klee', config_id=0)
-    TESTS_GENERATION_TOOLS = [
+    TESTCASE_TOOLS_CONFIGS = [
 
     ]
 

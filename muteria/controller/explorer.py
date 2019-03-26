@@ -15,8 +15,7 @@ TOP_OUTPUT_DIR_KEY = "main_controller_top_output"
 
 # Directories
 ## CONSTANTS
-MUTATION_WORKDIR = "mutation_workdir"
-CODECOVERAGE_WORKDIR = "codecoverage_workdir"
+CRITERIA_WORKDIR = "criteria_workdir"
 TESTSCASES_WORKDIR = "testscases_workdir"
 RESULTS_DATA_DIR = "RESULTS_DATA"
 RESULTS_MATRICES_DIR = "matrices"
@@ -65,8 +64,7 @@ def get_outputdir_structure_by_filesdirs():
     '''
     # Dirs
     TopExecutionDir = {
-        MUTATION_WORKDIR: [MUTATION_WORKDIR],
-        CODECOVERAGE_WORKDIR: [CODECOVERAGE_WORKDIR],
+        CRITERIA_WORKDIR: [CRITERIA_WORKDIR],
         TESTSCASES_WORKDIR: [TESTSCASES_WORKDIR],
         RESULTS_DATA_DIR: [RESULTS_DATA_DIR],
         RESULTS_MATRICES_DIR: [RESULTS_DATA_DIR, RESULTS_MATRICES_DIR],

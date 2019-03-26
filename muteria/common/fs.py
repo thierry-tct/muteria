@@ -294,6 +294,7 @@ class CheckpointState(object):
 
     def add_dep_checkpoint_state(self, dep_cp):
         self.dep_checkpoint_states.add(dep_cp)
+    #~ def add_dep_checkpoint_state()
 
     def destroy_checkpoint(self):
         for dep_cp in self.dep_checkpoint_states:

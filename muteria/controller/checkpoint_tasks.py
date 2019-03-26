@@ -28,8 +28,8 @@ ERROR_HANDLER = common_mix.ErrorHandler
 class Tasks(common_mix.EnumAutoName):
     STARTING = 0 #enum.auto()
 
-    TESTS_GENERATION = 1 #enum.auto()
-    TESTS_GENERATION_GUIDANCE = 2 #enum.auto()
+    TESTS_GENERATION_GUIDANCE = 1 #enum.auto()
+    TESTS_GENERATION = 2 #enum.auto()
     TESTS_EXECUTION_SELECTION_PRIORITIZATION = 3 #enum.auto()
     PASS_FAIL_TESTS_EXECUTION = 4 #enum.auto()
 

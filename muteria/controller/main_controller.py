@@ -76,19 +76,6 @@ class MainController (object):
         ERROR_HANDLER.error_exit("FIXME: TODO: Implement the View")
     #~ def view()
 
-    def restore_repos_files(self, final_config):
-        '''
-        Restore the project repo dir's files that could have been changed.
-        This do not remove the possibly added files or folders
-        '''
-        repo_rt_dir = final_config.REPOSITORY_ROOT_DIR.get_val()
-        as_initial = final_config.restore.AS_INITIAL.get_val()
-
-        repo_mgr = RepositoryManager(repository_rootdir=repo_rt_dir)
-        # XXX The repository manager automatically revert any problem
-        repo_mgr.revert_repository(as_initial=as_initial)
-    #~ def restore_repos_files()
-
     #def log_run_summary(self):
     #    '''
     #    Log information showing a new run of resume of previous run
@@ -129,11 +116,15 @@ class MainController (object):
 
         if mode == configurations.SessionMode.EXECUTE_MODE:
             # Executor
+            # XXX Main Execution
             exec_obj = executor.Executor(final_config, top_timeline_explorer)
             exec_obj.main()
         elif mode == configurations.SessionMode.RESTORE_REPOS_MODE:
-            # Create repository_manager
-            self.restore_repos_files(final_config)        
+            # Restore the project repo dir's files that could have been changed.
+            # This do not remove the possibly added files or folders
+            as_initial = final_config.restore.AS_INITIAL.get_val()
+            repo_mgr = executor. _repo_manager()
+            repo_mgr.revert_repository(as_initial=as_initial)
         elif mode == configurations.SessionMode.VIEW_MODE:
             # View
             self.view(top_timeline_explorer, final_config)
