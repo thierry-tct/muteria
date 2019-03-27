@@ -36,10 +36,8 @@ class CheckpointData(dict):
     def update_all(self, tasks_obj, test_types, test_types_pos, \
                                 criteria_set, criteria_set_pos, complementing):
         self.update_tasks_obj(tasks_obj)
-        self.update_test_types(test_types)
-        self.update_test_types_pos(test_types_pos)
-        self.update_criteria_set(criteria_set)
-        self.update_criteria_set_pos(criteria_set_pos)
+        self.update_test_types(test_types_pos, test_types)
+        self.update_criteria_set(criteria_set_pos, criteria_set)
         self.update_complementing(complementing)
     #~ def update_all()
 
@@ -64,6 +62,15 @@ class CheckpointData(dict):
         return False
     #~ def test_tool_types_is_executed()
 
+    def switchto_new_test_tool_types(self, seq_id, test_tool_types):
+        if seq_id > self.test_types_pos:
+            self.tasks_obj.set_task_back_as_todo_untouched(\
+                            checkpoint_tasks.Tasks.TESTS_GENERATION_GUIDANCE)
+            self.update_complementing(True)
+            self.update_test_types(seq_id, test_tool_types)
+            self.update_criteria_set(None, None)
+    #~ def switchto_new_test_tool_types()
+
     def criteria_set_is_executed(self, seq_id, criteria_set):
         if self.criteria_set_pos > seq_id:
             return True
@@ -72,6 +79,11 @@ class CheckpointData(dict):
             ERROR_HANDLER.error_exit("cp criteria_set changed", __file__)
         return False
     #~ def criteria_set_is_executed()
+
+    def switchto_new_criteria_set(self, seq_id, criteria_set):
+        if seq_id > self.criteria_set_pos:
+            self.update_criteria_set(seq_id, criteria_set)
+    #~ def switchto_new_criteria_set()
 
     def update_tasks_obj(self, tasks_obj):
         self.tasks_obj = tasks_obj
@@ -185,12 +197,7 @@ class Executor(object):
                 continue
             
             # If we have a new seq_id, it is another test type loop
-            if seq_id > self.cp_data.test_types_pos:
-                self.cp_data.tasks_obj.set_task_back_as_todo_untouched(\
-                            checkpoint_tasks.Tasks.TESTS_GENERATION_GUIDANCE)
-                self.cp_data.update_complementing(True)
-                self.cp_data.update_test_types(seq_id, test_tool_types)
-                self.cp_data.update_criteria_set(None, None)
+            self.cp_data.switchto_new_test_tool_types(seq_id, test_tool_types)
 
             # Actual Execution in the temporary dir (until before finish)
             while True:
@@ -203,7 +210,9 @@ class Executor(object):
                     break
 
                 # 2. execute the tasks
-                self._execute_tasks(task_set, self.config)
+                # (TODO: parallelism)
+                for task in task_set:
+                    self._execute_task(task)
 
         ERROR_HANDLER.assert_true(task_set is not None, \
                 "There must be task set (empty list or FINISHED)", __file__)
@@ -225,46 +234,59 @@ class Executor(object):
         return self.repo_mgr
     #~ def get_repo_manager()
 
-    def _task_is_criteria_order_sensitive(self, task):
-        # TODO: Fill in sensitive tasks (criteria test execution...)
-        if task in []:
-            return True
-        return False
-    #~ def _task_is_criteria_order_sensitive()
+    def _execute_task(self, task):
+        """ TODO: 
+                1. implement the todos here
+        """
+        
+        # @Checkpointing: see whether the task is untouch to clear tmp
+        task_untouched = self.cp_data.tasks_obj.task_is_untouched(task)
 
-    def _execute_tasks(self, task_set, config):
-        # (TODO: parallelism)
-        for task in task_set:
-            if self._task_is_criteria_order_sensitive(task):
-                criteria_set_sequence = \
-                                self.config.CRITERIA_SEQUENCE.get_val()
-            else:
-                criteria_set_sequence = [None]
-            
-            # @Checkpointing: see whether the task is untouch to clear tmp
-            task_untouched = self.cp_data.tasks_obj.task_is_untouched(task)
+        # Execute base on the task: ---------------------------------------
+        if task == checkpoint_tasks.Tasks.STARTING:
+            pass
+        elif task == checkpoint_tasks.Tasks.FINISHED:
+            pass
 
-            for pos, criteria_set in enumerate(criteria_set_sequence):
-                # @Checkpoint: skip done
-                if pos < #TODO: get from the checkpoint
-                # execute task and return its checkpointer or None
+        elif task == checkpoint_tasks.Tasks.TESTS_GENERATION_GUIDANCE:
+            pass #TODO
+        elif task == checkpoint_tasks.Tasks.TESTS_GENERATION:
+            pass #TODO
+        elif task == checkpoint_tasks.Tasks.\
+                                TESTS_EXECUTION_SELECTION_PRIORITIZATION:
+            pass #TODO
+        elif task == checkpoint_tasks.Tasks.PASS_FAIL_TESTS_EXECUTION:
+            pass #TODO
 
-            # @Checkpoint: set task as done
-            cp_task_obj.set_task_completed(task)
+        elif task == checkpoint_tasks.Tasks.CRITERIA_GENERATION_GUIDANCE:
+            pass #TODO
+        elif task == checkpoint_tasks.Tasks.CRITERIA_GENERATION:
+            pass #TODO
+        elif task == checkpoint_tasks.Tasks.\
+                            CRITERIA_EXECUTION_SELECTION_PRIORITIZATION:
+            pass #TODO
+        elif task == checkpoint_tasks.Tasks.CRITERIA_TESTS_EXECUTION:
+            criteria_set_sequence = self.config.CRITERIA_SEQUENCE.get_val()
+            for cs_pos, criteria_set in enumerate(criteria_set_sequence):
+                pass #TODO
 
-            # @Checkpoint: write checkpoint
-            checkpointer.write_checkpoint({ \
-                self.TASK_KEY: cp_task_obj.get_as_json_object(), \
-                self.TEST_TOOL_TYPES_KEY: [seq_id, test_tool_types], \
-                self.CRITERIA_KEY: None})
+        elif task == checkpoint_tasks.Tasks.PASS_FAIL_STATS:
+            pass #TODO
+        elif task == checkpoint_tasks.Tasks.CRITERIA_STATS:
+            pass #TODO
+        elif task == checkpoint_tasks.Tasks.AGGREGATED_STATS:
+            pass #TODO
+        #-------------------------------------------------------------------
 
-            if task_cp is not None:
-                # TODO update task checkpointer (destroy)
+        # @Checkpoint: set task as done
+        self.cp_data.tasks_obj.set_task_completed(task)
 
-        # merge the results into previous ones (if applicable)
+        # @Checkpoint: write checkpoint
+        self.checkpointer.write_checkpoint(\
+                                        json_obj=self.cp_data.get_json_obj())
 
-        # TODO
-    #~ def _execute_tasks()
+        # TODO: merge the results into previous ones (if applicable)
+    #~ def _execute_task()
 
     @classmethod
     def create_repo_manager(cls, config):

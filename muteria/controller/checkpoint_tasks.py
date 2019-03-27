@@ -33,26 +33,16 @@ class Tasks(common_mix.EnumAutoName):
     TESTS_EXECUTION_SELECTION_PRIORITIZATION = 3 #enum.auto()
     PASS_FAIL_TESTS_EXECUTION = 4 #enum.auto()
 
-    CODE_SCOPE_GENERATION = 5 #enum.auto()
-    CODE_SCOPE_SELECTION_PRIORITIZATION = 6 #enum.auto()
-    CODE_COVERAGE_TESTS_EXECUTION = 7 #enum.auto()
+    CRITERIA_GENERATION_GUIDANCE = 5 #enum.auto()
+    CRITERIA_GENERATION = 6 #enum.auto()
+    CRITERIA_EXECUTION_SELECTION_PRIORITIZATION = 7 #enum.auto()
+    CRITERIA_TESTS_EXECUTION = 8 #enum.auto()
 
-    MUTANTS_GENERATION = 8 #enum.auto()
+    PASS_FAIL_STATS = 9 #enum.auto()
+    CRITERIA_STATS = 10 #enum.auto()
+    AGGREGATED_STATS = 11 #enum.auto()
 
-    MUTANTS_EXECUTION_SELECTION_PRIORITIZATION = 9 #enum.auto()
-
-    MUTANT_COVERAGE_TESTS_EXECUTION = 10 #enum.auto()
-    WEAK_MUTATION_TESTS_EXECUTION = 11 #enum.auto()
-    STRONG_MUTATION_TESTS_EXECUTION = 12 #enum.auto()
-
-    PASS_FAIL_STATS = 13 #enum.auto()
-    CODE_COVERAGE_STATS = 14 #enum.auto()
-    MUTANT_COVERAGE_STATS = 15 #enum.auto()
-    WEAK_MUTATION_STATS = 16 #enum.auto()
-    STRONG_MUTATION_STATS = 17 #enum.auto()
-    AGGREGATED_STATS = 18 #enum.auto()
-
-    FINISHED = 19 #enum.auto()
+    FINISHED = 12 #enum.auto()
 #~ class Tasks
 
 class Status(common_mix.EnumAutoName):
@@ -65,9 +55,8 @@ class TaskOrderingDependency(object):
     '''
     The task dependency structure is following(Teh structure neve change):
     ----------------------------------------------------------------------
-        CODE_SCOPE_GENERATION --> STARTING
         TESTS_GENERATION_GUIDANCE --> STARTING
-        MUTANTS_GENERATION --> STARTING
+        CRITERIA_GENERATION_GUIDANCE --> STARTING
 
         TESTS_GENERATION --> TESTS_GENERATION_GUIDANCE
 
@@ -75,38 +64,19 @@ class TaskOrderingDependency(object):
 
         PASS_FAIL_TESTS_EXECUTION --> TESTS_EXECUTION_SELECTION_PRIORITIZATION
 
-        MUTANTS_EXECUTION_SELECTION_PRIORITIZATION --> MUTANTS_GENERATION 
+        CRITERIA_GENERATION --> CRITERIA_GENERATION_GUIDANCE
 
-        CODE_SCOPE_SELECTION_PRIORITIZATION --> CODE_SCOPE_GENERATION
+        CRITERIA_EXECUTION_SELECTION_PRIORITIZATION --> CRITERIA_GENERATION 
 
-                                          | CODE_SCOPE_SELECTION_PRIORITIZATION
-        CODE_COVERAGE_TESTS_EXECUTION --> | PASS_FAIL_TESTS_EXECUTION
-
-                                            | MUTANTS_EXECUTION_SELECTION_PRIORITIZATION
-        MUTANT_COVERAGE_TESTS_EXECUTION --> | PASS_FAIL_TESTS_EXECUTION
-
-                                          | MUTANTS_EXECUTION_SELECTION_PRIORITIZATION
-        WEAK_MUTATION_TESTS_EXECUTION --> | PASS_FAIL_TESTS_EXECUTION
-
-                                            | CODE_COVERAGE_TESTS_EXECUTION
-        STRONG_MUTATION_TESTS_EXECUTION --> | WEAK_MUTATION_TESTS_EXECUTION
-                                            | MUTANT_COVERAGE_TESTS_EXECUTION
+                                     | CRITERIA_EXECUTION_SELECTION_PRIORITIZATION
+        CRITERIA_TESTS_EXECUTION --> | PASS_FAIL_TESTS_EXECUTION
 
         PASS_FAIL_STATS --> PASS_FAIL_TESTS_EXECUTION
 
-        CODE_COVERAGE_STATS --> CODE_COVERAGE_TESTS_EXECUTION
+        CRITERIA_STATS --> CRITERIA_TESTS_EXECUTION
 
-        MUTANT_COVERAGE_STATS --> MUTANT_COVERAGE_TESTS_EXECUTION
-
-        WEAK_MUTATION_STATS --> WEAK_MUTATION_TESTS_EXECUTION
-
-        STRONG_MUTATION_STATS --> STRONG_MUTATION_TESTS_EXECUTION
-        
                              | PASS_FAIL_STATS
-                             | CODE_COVERAGE_STATS
-        AGGREGATED_STATS --> | MUTANT_COVERAGE_STATS
-                             | WEAK_MUTATION_STATS
-                             | STRONG_MUTATION_STATS
+        AGGREGATED_STATS --> | CRITERIA_STATS
 
         FINISHED --> AGGREGATED_STATS
     ------------------------------------------------------------------------
@@ -203,70 +173,35 @@ class TaskOrderingDependency(object):
         passfail_stats.set_status(task_status_map[Tasks.PASS_FAIL_STATS])
         agg_stats.add_dependency(passfail_stats)
 
-        cc_stats = self.Cell(Tasks.CODE_COVERAGE_STATS)
-        cc_stats.set_status(task_status_map[Tasks.CODE_COVERAGE_STATS])
-        agg_stats.add_dependency(cc_stats)
-
-        mc_stats = self.Cell(Tasks.MUTANT_COVERAGE_STATS)
-        mc_stats.set_status(task_status_map[Tasks.MUTANT_COVERAGE_STATS])
-        agg_stats.add_dependency(mc_stats)
-
-        wm_stats = self.Cell(Tasks.WEAK_MUTATION_STATS)
-        wm_stats.set_status(task_status_map[Tasks.WEAK_MUTATION_STATS])
-        agg_stats.add_dependency(wm_stats)
-
-        sm_stats = self.Cell(Tasks.STRONG_MUTATION_STATS)
-        sm_stats.set_status(task_status_map[Tasks.STRONG_MUTATION_STATS])
-        agg_stats.add_dependency(sm_stats)
+        crit_stats = self.Cell(Tasks.CRITERIA_STATS)
+        crit_stats.set_status(task_status_map[Tasks.CRITERIA_STATS])
+        agg_stats.add_dependency(crit_stats)
 
         ## Matrices Layer
-        sm = self.Cell(Tasks.STRONG_MUTATION_TESTS_EXECUTION)
-        sm.set_status(task_status_map[Tasks.STRONG_MUTATION_TESTS_EXECUTION])
-        sm_stats.add_dependency(sm)
-
-        cc = self.Cell(Tasks.CODE_COVERAGE_TESTS_EXECUTION)
-        cc.set_status(task_status_map[Tasks.CODE_COVERAGE_TESTS_EXECUTION])
-        cc_stats.add_dependency(cc)
-        sm.add_dependency(cc)
-
-        mc = self.Cell(Tasks.MUTANT_COVERAGE_TESTS_EXECUTION)
-        mc.set_status(task_status_map[Tasks.MUTANT_COVERAGE_TESTS_EXECUTION])
-        mc_stats.add_dependency(mc)
-        sm.add_dependency(mc)
-
-        wm = self.Cell(Tasks.WEAK_MUTATION_TESTS_EXECUTION)
-        wm.set_status(task_status_map[Tasks.WEAK_MUTATION_TESTS_EXECUTION])
-        wm_stats.add_dependency(wm)
-        sm.add_dependency(wm)
+        crit = self.Cell(Tasks.CRITERIA_TESTS_EXECUTION)
+        crit.set_status(task_status_map[Tasks.CRITERIA_TESTS_EXECUTION])
+        crit_stats.add_dependency(crit)
 
         passfail = self.Cell(Tasks.PASS_FAIL_TESTS_EXECUTION)
         passfail.set_status(task_status_map[Tasks.PASS_FAIL_TESTS_EXECUTION])
         passfail_stats.add_dependency(passfail)
-        cc.add_dependency(passfail)
-        mc.add_dependency(passfail)
-        wm.add_dependency(passfail)
+        crit.add_dependency(passfail)
 
-        # Artifact Selection and Prioritization
-        cs_sp = self.Cell(Tasks.CODE_SCOPE_SELECTION_PRIORITIZATION)
-        cs_sp.set_status(task_status_map[ \
-                                    Tasks.CODE_SCOPE_SELECTION_PRIORITIZATION])
-        cc.add_dependency(cs_sp)
+        # Artifact Execution Selection and Prioritization
+        ce_sp = self.Cell(Tasks.CRITERIA_EXECUTION_SELECTION_PRIORITIZATION)
+        ce_sp.set_status(task_status_map[ \
+                            Tasks.CRITERIA_EXECUTION_SELECTION_PRIORITIZATION])
+        crit.add_dependency(ce_sp)
 
         t_sp = self.Cell(Tasks.TESTS_EXECUTION_SELECTION_PRIORITIZATION)
         t_sp.set_status(task_status_map[\
                             Tasks.TESTS_EXECUTION_SELECTION_PRIORITIZATION])
         passfail.add_dependency(t_sp)
 
-        m_sp = self.Cell(Tasks.MUTANTS_EXECUTION_SELECTION_PRIORITIZATION)
-        m_sp.set_status(task_status_map[ \
-                            Tasks.MUTANTS_EXECUTION_SELECTION_PRIORITIZATION])
-        wm.add_dependency(m_sp)
-        mc.add_dependency(m_sp)
-
         # Artifact Generation
-        cs_gen = self.Cell(Tasks.CODE_SCOPE_GENERATION)
-        cs_gen.set_status(task_status_map[Tasks.CODE_SCOPE_GENERATION])
-        cs_sp.add_dependency(cs_gen)
+        crit_gen = self.Cell(Tasks.CRITERIA_GENERATION)
+        crit_gen.set_status(task_status_map[Tasks.CRITERIA_GENERATION])
+        ce_sp.add_dependency(crit_gen)
 
         t_gen = self.Cell(Tasks.TESTS_GENERATION)
         t_gen.set_status(task_status_map[Tasks.TESTS_GENERATION])
@@ -276,16 +211,15 @@ class TaskOrderingDependency(object):
         t_gguide.set_status(task_status_map[Tasks.TESTS_GENERATION_GUIDANCE])
         t_gen.add_dependency(t_gguide)
 
-        m_gen = self.Cell(Tasks.MUTANTS_GENERATION)
-        m_gen.set_status(task_status_map[Tasks.MUTANTS_GENERATION])
-        m_sp.add_dependency(m_gen)
+        c_gguide = self.Cell(Tasks.CRITERIA_GENERATION_GUIDANCE)
+        c_gguide.set_status(task_status_map[Tasks.CRITERIA_GENERATION_GUIDANCE])
+        crit_gen.add_dependency(c_gguide)
 
         # Starting
         starting = self.Cell(Tasks.STARTING)
         starting.set_status(task_status_map[Tasks.STARTING])
-        cs_gen.add_dependency(starting)
+        c_gguide.add_dependency(starting)
         t_gguide.add_dependency(starting)
-        m_gen.add_dependency(starting)
 
         # COMPUTE THE USES AND VERIFY
         visited = {}
