@@ -33,6 +33,14 @@ class SessionMode(common_mix.EnumAutoName):
     RESTORE_REPOS_MODE = 3
 #~ class SessionMode
 
+class ConfigClasses(common_mix.EnumAutoName):
+    CONTROLLER_CONF = "CONTROLLER_CONF"
+    PROJECT_CONF = "PROJECT_CONF"
+    TESTCASES_CONF = "TESTCASES_CONF"
+    CRITERIA_CONF = "CRITERIA_CONF"
+    OTHER_CONF = "OTHER_CONF"
+#~ class ConfigClasses
+
 class ConfigElement(object):
     def __init__(self, val=None, desc=None, val_range=None, conf_class=None):
         self.val = val

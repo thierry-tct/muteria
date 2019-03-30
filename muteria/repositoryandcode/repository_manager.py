@@ -273,6 +273,10 @@ class RepositoryManager(object):
         return ret
     #~ def custom_read_access()
 
+    def get_exe_path_map(self):
+        # TODO
+        ERROR_HANDLER.error_exit("To Implement", __file__)
+
     def revert_repository_file (self, file_rel_path, gitobj=None):
         if gitobj is None:
             repo = git_repo(self.repository_rootdir)

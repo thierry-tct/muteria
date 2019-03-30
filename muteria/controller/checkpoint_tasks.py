@@ -279,6 +279,11 @@ class TaskOrderingDependency(object):
         return task_set
     #~ def get_next_todo_tasks()
 
+    def set_task_back_as_todo_executing(self, task_name):
+        t = self._lookup_task_cell(task_name)
+        self._recursive_set_task_back_as_todo_executing(t)  
+    #~ def set_task_back_as_todo_executing()
+
     def set_task_back_as_todo_untouched(self, task_name):
         t = self._lookup_task_cell(task_name)
         self._recursive_set_task_back_as_todo_untouched(t)  
@@ -397,6 +402,13 @@ class TaskOrderingDependency(object):
                         "is done while the dependencies are not:", problem),\
                                                                     __file__)
     #~ def _recursive_check_deps_are_done()
+
+    def _recursive_set_task_back_as_todo_executing(self, start_node):
+        if not start_node.is_executing():
+            start_node.set_executing()
+            for u in start_node.get_uses():
+                self._recursive_set_task_back_as_todo_executing(u)
+    #~ def _recursive_set_task_back_as_todo_executing
 
     def _recursive_set_task_back_as_todo_untouched(self, start_node):
         if not start_node.is_untouched():

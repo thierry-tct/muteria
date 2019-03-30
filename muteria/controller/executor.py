@@ -26,19 +26,16 @@ ERROR_HANDLER = common_mix.ErrorHandler
 
 class CheckpointData(dict):
     """
-    :param complementing: (bool) decides whether the current run is to 
-        merge with existing or override it.
     """
     def __init__(self):
         pass
     #~ def __init__()
 
     def update_all(self, tasks_obj, test_types, test_types_pos, \
-                                criteria_set, criteria_set_pos, complementing):
+                                criteria_set, criteria_set_pos):
         self.update_tasks_obj(tasks_obj)
         self.update_test_types(test_types_pos, test_types)
         self.update_criteria_set(criteria_set_pos, criteria_set)
-        self.update_complementing(complementing)
     #~ def update_all()
 
     def get_json_obj(self):
@@ -64,9 +61,8 @@ class CheckpointData(dict):
 
     def switchto_new_test_tool_types(self, seq_id, test_tool_types):
         if seq_id > self.test_types_pos:
-            self.tasks_obj.set_task_back_as_todo_untouched(\
+            self.tasks_obj.set_task_back_as_todo_executing(\
                             checkpoint_tasks.Tasks.TESTS_GENERATION_GUIDANCE)
-            self.update_complementing(True)
             self.update_test_types(seq_id, test_tool_types)
             self.update_criteria_set(None, None)
     #~ def switchto_new_test_tool_types()
@@ -98,10 +94,6 @@ class CheckpointData(dict):
         self.criteria_set = criteria_set
         self.criteria_set_pos = criteria_set_pos
     #~ def update_criteria_set()
-
-    def update_complementing(self, complementing):
-        self.complementing = complementing
-    #~ def update_complementing()
 #~ class CheckpointData
 
 class Executor(object):
@@ -183,8 +175,7 @@ class Executor(object):
                         test_types=test_tool_type_sequence[0],\
                         test_types_pos=0,\
                         criteria_set=None,\
-                        criteria_set_pos=None,\
-                        complementing=False)
+                        criteria_set_pos=None)
             self.checkpointer.write_checkpoint(self.cp_data.get_json_obj())
 
         task_set = None
@@ -251,12 +242,48 @@ class Executor(object):
         elif task == checkpoint_tasks.Tasks.TESTS_GENERATION_GUIDANCE:
             pass #TODO
         elif task == checkpoint_tasks.Tasks.TESTS_GENERATION:
-            pass #TODO
+            # @Checkpointing
+            if task_untouched:
+                self.meta_testcase_tool.clear_working_dir() 
+                self.cp_data.tasks_obj.set_task_executing(task)
+                self.checkpointer.write_checkpoint(self.cp_data.get_json_obj)
+
+            # Generate the tests
+            self.meta_testcase_tool.generate_tests(\
+                                test_tool_type_list=self.cp_data.test_types)
+
+            # @Checkpointing
+            self.cp_data.tasks_obj.set_task_completed(task)
+            self.checkpointer.write_checkpoint(self.cp_data.get_json_obj)
+            # Destroy meta test checkpointer
+            self.meta_testcase_tool.get_checkpoint_state_object()\
+                                                        .destroy_checkpoint()
+
         elif task == checkpoint_tasks.Tasks.\
-                                TESTS_EXECUTION_SELECTION_PRIORITIZATION:
-            pass #TODO
+                                    TESTS_EXECUTION_SELECTION_PRIORITIZATION:
+            pass #TODO: get test list and checkpoint(may remove irrelevant tests)
         elif task == checkpoint_tasks.Tasks.PASS_FAIL_TESTS_EXECUTION:
-            pass #TODO
+            matrix_file = self.head_explorer.get_path_filename(\
+                                    outdir_struct.TMP_TEST_PASS_FAIL_MATRIX)
+            # @Checkpointing
+            if task_untouched:
+                self.head_explorer.remove_file_and_get(matrix_file)
+                self.cp_data.tasks_obj.set_task_executing(task)
+                self.checkpointer.write_checkpoint(self.cp_data.get_json_obj)
+
+            # Execute tests
+            self.meta_testcase_tool.runtests(\
+                        fault_test_execution_matrix_file=matrix_file, \
+                        test_prioritization_module=\
+                                        self.meta_testexec_optimization_tool)
+
+
+            # @Checkpointing
+            self.cp_data.tasks_obj.set_task_completed(task)
+            self.checkpointer.write_checkpoint(self.cp_data.get_json_obj)
+            # Destroy meta test checkpointer
+            self.meta_testcase_tool.get_checkpoint_state_object()\
+                                                        .destroy_checkpoint()
 
         elif task == checkpoint_tasks.Tasks.CRITERIA_GENERATION_GUIDANCE:
             pass #TODO

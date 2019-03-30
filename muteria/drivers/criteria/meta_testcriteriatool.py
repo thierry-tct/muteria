@@ -31,6 +31,7 @@ from muteria.drivers.checkpoint_handler import CheckPointHandler
 
 from muteria.drivers.codecoverage.codes_info import CodesInfoObject
 
+from muteria.drivers.criteria import CriteriaToolType
 from muteria.drivers.codecoverage import CodecoverageType
 
 ERROR_HANDLER = common_mix.ErrorHandler
@@ -45,6 +46,39 @@ class MetaCriteriaTool(object):
 
     TOOL_OBJ_KEY = "tool_obj"
     TOOL_WORKDIR_KEY = "tool_working_dir"
+
+    @classmethod
+    def get_toolnames_by_types_by_criteria_by_language(cls):
+        modules_dict = ToolsModulesLoader.get_tools_modules( \
+                                            ToolsModulesLoader.TESTCASES_TOOLS)
+        res = {}
+        for language in modules_dict:
+            res[language] = {}
+            for toolname in modules_dict[language]:
+                for tooltype in CodecoverageType:
+                    tooltype_name = tooltype.get_field_value()
+                    try:
+                        # the tooltype is returned by config.get_tool_type()
+                        CriteriaTool = getattr(\
+                                            modules_dict[language][toolname],\
+                                                                tooltype_name)
+                        if CriteriaTool is None:
+                            continue
+                        for criterion in CriteriaTool.get_supported_criteria():
+                            if criterion not in res[language]:
+                                res[language][criterion] = {}
+                            if tooltype_name not in res[language][criterion]:
+                                res[language][criterion][tooltype_name] = []
+                            res[language][criterion][tooltype_name].append(\
+                                                                    toolname)
+                    except AttributeError:
+                        ERROR_HANDLER.error_exit("{} {} {} {}".format( \
+                                "(REPORT BUG) The criteria tool of type", \
+                                tooltype_name,\
+                                "is not present for criteria tool", toolname),\
+                                                                    __file__)
+        return res
+    #~ def get_toolnames_by_types_by_criteria_by_language()
 
     def __init__(self, language, meta_test_generation_obj, \
                         codecoverage_working_dir, \

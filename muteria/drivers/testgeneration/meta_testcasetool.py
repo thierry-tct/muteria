@@ -47,6 +47,34 @@ class MetaTestcaseTool(object):
     # The Fault execution matrix has a unique key represented by this string
     FAULT_MATRIX_KEY = "fault_revealed"
 
+    @classmethod
+    def get_toolnames_by_types_by_language(cls):
+        modules_dict = ToolsModulesLoader.get_tools_modules( \
+                                            ToolsModulesLoader.TESTCASES_TOOLS)
+        res = {}
+        for language in modules_dict:
+            res[language] = {}
+            for toolname in modules_dict[language]:
+                for tooltype in TestToolType:
+                    tooltype_name = tooltype.get_field_value()
+                    try:
+                        # the tooltype is returned by config.get_tool_type()
+                        TestcaseTool = getattr(\
+                                            modules_dict[language][toolname],\
+                                                                tooltype_name)
+                        if TestcaseTool is not None:
+                            if tooltype_name not in res[language]:
+                                res[language][tooltype_name] = []
+                            res[language][tooltype_name].append(toolname)
+                    except AttributeError:
+                        ERROR_HANDLER.error_exit("{} {} {} {}".format( \
+                                "(REPORT BUG) The test case tool of type", \
+                                tooltype_name,\
+                                "is not present for test tool", toolname), \
+                                                                    __file__)
+        return res
+    #~ def get_toolnames_by_types_by_language()
+
     def __init__(self, language, tests_working_dir, code_builds_factory,
                                                     test_tool_config_list):
 
@@ -158,6 +186,10 @@ class MetaTestcaseTool(object):
         return testcase_tool
     #~ def _create_testcase_tool()
 
+    def clear_working_dir(self):
+        # TODO
+        ERROR_HANDLER.error_exit("To be implemented")
+    #~ def clear_working_dir()    
 
     def execute_testcase (self, meta_testcase, exe_path_map, env_vars):
         '''
@@ -183,7 +215,7 @@ class MetaTestcaseTool(object):
         return ttool.execute_testcase(testcase, exe_path_map, env_vars)
     #~ def execute_testcase()
 
-    def runtests(self, meta_testcases, exe_path_map, env_vars, \
+    def runtests(self, meta_testcases=None, exe_path_map=None, env_vars=None, \
                         stop_on_failure=False, \
                         fault_test_execution_matrix_file=None, \
                         test_prioritization_module=None, \
@@ -370,7 +402,7 @@ class MetaTestcaseTool(object):
         return meta_test_failed_verdicts
     #~ def runtests()
 
-    def generate_tests (self, exe_path_map, test_tool_type_list=None, \
+    def generate_tests (self, exe_path_map=None, test_tool_type_list=None, \
                                 test_generation_guidance_obj=None, \
                                 parallel_testgen_count=1, \
                                 restart_checkpointer=False,
@@ -415,6 +447,10 @@ class MetaTestcaseTool(object):
         #~ FXIMEnd
 
         # Check arguments Validity
+        if exe_path_map is None:
+            exe_path_map = self.code_builds_factor.repository_manager\
+                                                            .get_exe_path_map()
+
         ERROR_HANDLER.assert_true(parallel_testgen_count > 0, \
                     "invalid parallel test generation count: {}. {}".format( \
                                     parallel_testgen_count, "must be >= 1"))
