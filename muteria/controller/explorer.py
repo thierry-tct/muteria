@@ -7,6 +7,8 @@ import shutil
 import muteria.common.mix as common_mix
 import muteria.common.fs as common_fs
 
+from muteria.drivers.criteria import TestCriteria
+
 ERROR_HANDLER = common_mix.ErrorHandler
 
 # -----------------------------------------------
@@ -36,22 +38,21 @@ EXECUTION_TIMES = "execution_times"
 MAIN_LOG_FILE = "ctrl_log.log"
 
 TEST_PASS_FAIL_MATRIX = "PASSFAIL.csv"
-STMT_COVERAGE_MATRIX = "STMT.csv"
-BRANCH_COVERAGE_MATRIX = "BRANCH.csv"
-FUNCTION_COVERAGE_MATRIX = "FUNCTION.csv"
-SM_MATRIX = "SM.csv"
-WM_MATRIX = "WM.csv"
-MCOV_MATRIX = "MCOV.csv"
+CRITERIA_MATRIX = []
+for criterion in TestCriteria:
+    CRITERIA_MATRIX[criterion] = criterion.get_str()+".csv"
 
 STATS_MAIN_FILE_MD = "main_stats.md"
 
 TMP_TEST_PASS_FAIL_MATRIX = "tmp_PASSFAIL.csv"
-TMP_STMT_COVERAGE_MATRIX = "tmp_STMT.csv"
-TMP_BRANCH_COVERAGE_MATRIX = "tmp_BRANCH.csv"
-TMP_FUNCTION_COVERAGE_MATRIX = "tmp_FUNCTION.csv"
-TMP_SM_MATRIX = "tmp_SM.csv"
-TMP_WM_MATRIX = "tmp_WM.csv"
-TMP_MCOV_MATRIX = "tmp_MCOV.csv"
+PARTIAL_TMP_TEST_PASS_FAIL_MATRIX = "partial_tmp_PASSFAIL.csv"
+TMP_CRITERIA_MATRIX = {}
+for criterion in TestCriteria:
+    TMP_CRITERIA_MATRIX[criterion] = "tmp_"+criterion+".csv"
+PARTIAL_TMP_CRITERIA_MATRIX = {}
+for criterion in TestCriteria:
+    PARTIAL_TMP_CRITERIA_MATRIX[criterion] = "partial_tmp_"+criterion+".csv"
+TMP_SELECTED_TESTS_LIST = "tmp_selected_test.json"
 # ---------------------------------------------------------
 
 def get_outputdir_structure_by_filesdirs():
@@ -89,21 +90,30 @@ def get_outputdir_structure_by_filesdirs():
     TopExecutionDir[MAIN_LOG_FILE] = TopExecutionDir[CTRL_LOGS_DIR] \
                                         + [MAIN_LOG_FILE]
 
-    for m_file in [TEST_PASS_FAIL_MATRIX, STMT_COVERAGE_MATRIX, 
-                    BRANCH_COVERAGE_MATRIX, FUNCTION_COVERAGE_MATRIX, 
-                    SM_MATRIX, WM_MATRIX, MCOV_MATRIX]:
-        TopExecutionDir[m_file] = TopExecutionDir[RESULTS_MATRICES_DIR] \
-                                                                    + m_file
+    TopExecutionDir[TEST_PASS_FAIL_MATRIX] = \
+                TopExecutionDir[RESULTS_MATRICES_DIR] + [TEST_PASS_FAIL_MATRIX]
+    TopExecutionDir[TMP_TEST_PASS_FAIL_MATRIX] = \
+                                    TopExecutionDir[RESULTS_MATRICES_DIR] \
+                                                + [TMP_TEST_PASS_FAIL_MATRIX]
+    TopExecutionDir[PARTIAL_TMP_TEST_PASS_FAIL_MATRIX] = \
+                                    TopExecutionDir[RESULTS_MATRICES_DIR] \
+                                        + [PARTIAL_TMP_TEST_PASS_FAIL_MATRIX]
+    for criterion in TestCriteria:
+        TopExecutionDir[CRITERIA_MATRIX[criterion]] = \
+                                    TopExecutionDir[RESULTS_MATRICES_DIR] \
+                                                + [CRITERIA_MATRIX[criterion]]
+        TopExecutionDir[TMP_CRITERIA_MATRIX[criterion]] = \
+                                    TopExecutionDir[EXECUTION_TMP_DIR] \
+                                            + [TMP_CRITERIA_MATRIX[criterion]]
+        TopExecutionDir[PARTIAL_TMP_CRITERIA_MATRIX[criterion]] = \
+                                    TopExecutionDir[EXECUTION_TMP_DIR] \
+                                    + [PARTIAL_TMP_CRITERIA_MATRIX[criterion]]
+    TopExecutionDir[TMP_SELECTED_TESTS_LIST] = \
+                TopExecutionDir[EXECUTION_TMP_DIR] + [TMP_SELECTED_TESTS_LIST]
 
     TopExecutionDir[STATS_MAIN_FILE_MD] = TopExecutionDir[RESULTS_STATS_DIR] \
                                                     + STATS_MAIN_FILE_MD
                                                     
-    for tm_file in [TMP_TEST_PASS_FAIL_MATRIX, TMP_STMT_COVERAGE_MATRIX, 
-                    TMP_BRANCH_COVERAGE_MATRIX, TMP_FUNCTION_COVERAGE_MATRIX,
-                    TMP_SM_MATRIX, TMP_WM_MATRIX, TMP_MCOV_MATRIX]:
-        TopExecutionDir[tm_file] = TopExecutionDir[EXECUTION_TMP_DIR] \
-                                                                    + tm_file
-
     return TopExecutionDir
 #~ def get_outputdir_structure_by_filesdirs():
 

@@ -240,7 +240,7 @@ class Executor(object):
             pass
 
         elif task == checkpoint_tasks.Tasks.TESTS_GENERATION_GUIDANCE:
-            pass #TODO
+            pass #TODO: Generate focus criteria and tests and store in json file
         elif task == checkpoint_tasks.Tasks.TESTS_GENERATION:
             # @Checkpointing
             if task_untouched:
@@ -261,7 +261,25 @@ class Executor(object):
 
         elif task == checkpoint_tasks.Tasks.\
                                     TESTS_EXECUTION_SELECTION_PRIORITIZATION:
-            pass #TODO: get test list and checkpoint(may remove irrelevant tests)
+            out_file = self.head_explorer.get_file_pathname(\
+                                        outdir_struct.TMP_SELECTED_TESTS_LIST)
+            # @Checkpointing
+            if task_untouched:
+                self.head_explorer.remove_file_and_get(out_file)
+                self.cp_data.tasks_obj.set_task_executing(task)
+                self.checkpointer.write_checkpoint(self.cp_data.get_json_obj)
+
+            # TODO: use the actual selector. For now just use all tests
+            selected_tests = self.meta_testcase_tool.\
+                                    get_testcase_info_object().get_tests_list()
+            common_fs.dumpJSON(selected_tests, out_file)
+
+            # @Checkpointing
+            self.cp_data.tasks_obj.set_task_completed(task)
+            self.checkpointer.write_checkpoint(self.cp_data.get_json_obj)
+            # Destroy meta test checkpointer
+            #self.meta_testexec_optimization_tool.get_checkpoint_state_object()\
+            #                                            .destroy_checkpoint()
         elif task == checkpoint_tasks.Tasks.PASS_FAIL_TESTS_EXECUTION:
             matrix_file = self.head_explorer.get_path_filename(\
                                     outdir_struct.TMP_TEST_PASS_FAIL_MATRIX)
@@ -272,7 +290,11 @@ class Executor(object):
                 self.checkpointer.write_checkpoint(self.cp_data.get_json_obj)
 
             # Execute tests
-            self.meta_testcase_tool.runtests(\
+            test_list_file = self.head_explorer.get_file_pathname(\
+                                        outdir_struct.TMP_SELECTED_TESTS_LIST)
+            meta_testcases = common_fs.loadJSON(test_list_file)
+            self.meta_testcase_tool.runtests(meta_testcases=meta_testcases, \
+                        stop_on_failure=self.config.STOP_ON_TEST_FAILURE, \
                         fault_test_execution_matrix_file=matrix_file, \
                         test_prioritization_module=\
                                         self.meta_testexec_optimization_tool)
@@ -286,7 +308,7 @@ class Executor(object):
                                                         .destroy_checkpoint()
 
         elif task == checkpoint_tasks.Tasks.CRITERIA_GENERATION_GUIDANCE:
-            pass #TODO
+            pass #TODO (Maybe could be used someday. for now, just skip it)
         elif task == checkpoint_tasks.Tasks.CRITERIA_GENERATION:
             pass #TODO
         elif task == checkpoint_tasks.Tasks.\
@@ -305,11 +327,12 @@ class Executor(object):
             pass #TODO
         #-------------------------------------------------------------------
 
-        # @Checkpoint: set task as done
-        self.cp_data.tasks_obj.set_task_completed(task)
+        if not self.cp_data.tasks_obj.task_is_complete(task):
+            # @Checkpoint: set task as done
+            self.cp_data.tasks_obj.set_task_completed(task)
 
-        # @Checkpoint: write checkpoint
-        self.checkpointer.write_checkpoint(\
+            # @Checkpoint: write checkpoint
+            self.checkpointer.write_checkpoint(\
                                         json_obj=self.cp_data.get_json_obj())
 
         # TODO: merge the results into previous ones (if applicable)
