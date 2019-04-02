@@ -2,15 +2,15 @@
 # [LICENCE]
 #
 """
-This module is used through MetaCodecoverageTool class
+This module is used through MetaCriteriaTool class
 Which access the relevant testcase tools as specified
 
 The tools are organized by programming language
 For each language, there is a folder for each tool, 
 named after the tool in lowercase
 
-Each codecoverage tool package have the following in the __init__.py file:
->>> import <Module>.<class extending BaseCodecoverageTool> as CodecoverageTool
+Each criteria tool package have the following in the __init__.py file:
+>>> import <Module>.<class extending BaseCriteriaTool> as CriteriaTool
 """
 
 from __future__ import print_function
@@ -29,21 +29,15 @@ from muteria.drivers import DriversUtils
 
 from muteria.drivers.checkpoint_handler import CheckPointHandler
 
-from muteria.drivers.codecoverage.codes_info import CodesInfoObject
+from muteria.drivers.criteria.criterion_info import CriterionElementInfoObject
 
-from muteria.drivers.criteria import CriteriaToolType
-from muteria.drivers.codecoverage import CodecoverageType
+from muteria.drivers.criteria import CriteriaToolType, TestCriteria
 
 ERROR_HANDLER = common_mix.ErrorHandler
 
 class MetaCriteriaTool(object):
     '''
     '''
-
-    STATEMENT_DEFAULT = True
-    BRANCH_DEFAULT = True
-    FUNCTION_DEFAULT = True
-
     TOOL_OBJ_KEY = "tool_obj"
     TOOL_WORKDIR_KEY = "tool_working_dir"
 
@@ -55,7 +49,7 @@ class MetaCriteriaTool(object):
         for language in modules_dict:
             res[language] = {}
             for toolname in modules_dict[language]:
-                for tooltype in CodecoverageType:
+                for tooltype in CriteriaToolType:
                     tooltype_name = tooltype.get_field_value()
                     try:
                         # the tooltype is returned by config.get_tool_type()
@@ -70,7 +64,7 @@ class MetaCriteriaTool(object):
                             if tooltype_name not in res[language][criterion]:
                                 res[language][criterion][tooltype_name] = []
                             res[language][criterion][tooltype_name].append(\
-                                                                    toolname)
+                                        (toolname, CriteriaTool.installed()))
                     except AttributeError:
                         ERROR_HANDLER.error_exit("{} {} {} {}".format( \
                                 "(REPORT BUG) The criteria tool of type", \
@@ -81,23 +75,23 @@ class MetaCriteriaTool(object):
     #~ def get_toolnames_by_types_by_criteria_by_language()
 
     def __init__(self, language, meta_test_generation_obj, \
-                        codecoverage_working_dir, \
+                        criteria_working_dir, \
                         code_builds_factory, \
                         tools_config_by_criterion_dict):
         # Set Constants
-        self.modules_dict = ToolsModulesLoader.get_tools_modules(
-                                    ToolsModulesLoader.CODE_COVERAGE_TOOLS)
+        self.modules_dict = ToolsModulesLoader.get_tools_modules(\
+                                            ToolsModulesLoader.CRITERIA_TOOLS)
         
         # Set Direct Arguments Variables
         self.language = language
         self.meta_test_generation_obj = meta_test_generation_obj
-        self.codecoverage_working_dir = codecoverage_working_dir
+        self.criteria_working_dir = criteria_working_dir
         self.code_builds_factory = code_builds_factory
         self.tools_config_by_criterion_dict = tools_config_by_criterion_dict
         
         # Verify Direct Arguments Variables
-        ERROR_HANDLER.assert_true(self.codecoverage_working_dir is None, \
-                            "Must specify codecoverage_working_dir", __file__)
+        ERROR_HANDLER.assert_true(self.criteria_working_dir is None, \
+                            "Must specify criteria_working_dir", __file__)
         for criterion in self.tools_config_by_criterion_dict:
             ERROR_HANDLER.assert_true( \
                     len(self.tools_config_by_criterion_dict[criterion]) != \
@@ -107,21 +101,21 @@ class MetaCriteriaTool(object):
                                                         criterion), __file__)
         
         # Set Indirect Arguments Variables
-        self.checkpoints_dir = os.path.join(self.codecoverage_working_dir, \
+        self.checkpoints_dir = os.path.join(self.criteria_working_dir, \
                                                             "_checkpoints_")
         self.code_info_file = \
-            os.path.join(self.codecoverage_working_dir, "code_info_file.json")
+            os.path.join(self.criteria_working_dir, "criteria_info_file.json")
 
         # Verify indirect Arguments Variables
 
         # Initialize Other Fields
-        self.codecoverage_configured_tools = {}
+        self.criteria_configured_tools = {}
         self.checkpointer = None
         
         # Make Initialization Computation
         ## Create dirs
-        if not os.path.isdir(self.codecoverage_working_dir):
-            os.mkdir(self.codecoverage_working_dir)
+        if not os.path.isdir(self.criteria_working_dir):
+            self.clear_working_dir()
 
         if not os.path.isdir(self.checkpoints_dir):
             os.mkdir(self.checkpoints_dir)
@@ -146,15 +140,15 @@ class MetaCriteriaTool(object):
                                 "config for alias", toolalias), __file__)
                 else:
                     tmp_alias2conf[toolalias] = config
-                    tool_working_dir = self._get_codecoverage_tool_out_folder(\
+                    tool_working_dir = self._get_criteria_tool_out_folder(\
                                                                     toolalias)
                     tool_checkpointer = common_fs.CheckpointState( \
-                            *self._get_codecoverage_tool_checkpoint_files( \
+                            *self._get_criteria_tool_checkpoint_files( \
                                                                     toolalias))
                     self.checkpointer.add_dep_checkpoint_state( \
                                                             tool_checkpointer)
-                    self.codecoverage_configured_tools[toolalias] = {
-                        self.TOOL_OBJ_KEY: self._create_codecoverage_tool( \
+                    self.criteria_configured_tools[toolalias] = {
+                        self.TOOL_OBJ_KEY: self._create_criteria_tool( \
                                                     toolname, \
                                                     tool_working_dir, config, \
                                                     tool_checkpointer),
@@ -166,14 +160,14 @@ class MetaCriteriaTool(object):
             for toolalias in self.tools_config_by_criterion_dict[criterion]\
                                                     .get_tool_config_alias():
                 if criterion not in \
-                                self.codecoverage_configured_tools[toolalias].\
+                                self.criteria_configured_tools[toolalias].\
                                                     get_supported_criteria():
                     ERROR_HANDLER.error_exit( \
                             "tool {} specified for unsupported criterion {}".\
                                         format(toolalias, criterion), __file__)
     #~ def __init__()
 
-    def _create_codecoverage_tool(self, toolname, tool_working_dir, \
+    def _create_criteria_tool(self, toolname, tool_working_dir, \
                                                     config, tool_checkpointer):
         '''
 
@@ -183,30 +177,36 @@ class MetaCriteriaTool(object):
             "Invalid toolname given: {}".format(toolname), __file__)
         try:
             # the tooltype is returned by config.get_tool_type()
-            CodecoverageTool = getattr( \
+            CriteriaTool = getattr( \
                                 self.modules_dict[self.language][toolname],\
                                     config.get_tool_type().get_field_value())
         except AttributeError:
             ERROR_HANDLER.error_exit("{} {} {} {}".format( \
-                                "(REPORT BUG) The Codecoverage tool of type", \
+                                "(REPORT BUG) The Criteria tool of type", \
                                 config.get_tool_type().get_field_value(),\
                                 "is not present for test tool", toolname), \
                                                                     __file__)
 
-        ERROR_HANDLER.assert_true(CodecoverageTool is not None, \
+        ERROR_HANDLER.assert_true(CriteriaTool is not None, \
                                 "The {} language's tool {} {} {}.".format( \
                                 self.language, toolname, \
-                            "does not implement the codecoverage tool type", \
+                            "does not implement the criteria tool type", \
                                 config.get_tool_type().get_str()), __file__)
-        ccov_tool = CodecoverageTool(self.meta_test_generation_obj, \
-                                        tool_working_dir, \
-                                        self.code_builds_factory, \
-                                            config, tool_checkpointer)
-        return ccov_tool
-    #~ def _create_codecoverage_tool()
+        crit_tool = CriteriaTool(self.meta_test_generation_obj, \
+                                                tool_working_dir, \
+                                                self.code_builds_factory, \
+                                                    config, tool_checkpointer)
+        return crit_tool
+    #~ def _create_criteria_tool()
+
+    def clear_working_dir(self):
+        if os.path.isdir(self.criteria_working_dir):
+            shutil.rmtree(self.criteria_working_dir)
+        os.mkdir(self.criteria_working_dir)
+    #~ def clear_working_dir()    
 
     def _get_tool2criteria_values(self, criteria_passed_values):
-        '''
+        ''' TODO: check this to only care about passed criteria and update users
         Take values by criteria and return values by tools. This map the
         criteria to the correspondng tools to have each tool linked to its
         representing criteria which are further linked to the object values.
@@ -215,7 +215,7 @@ class MetaCriteriaTool(object):
                 value by criterion (value for each criterion)
         :return: return the object values by tools
         '''
-        none_activated_default = {c: None for c in list(CodecoverageType)}
+        none_activated_default = {c: None for c in list(TestCriteria)}
         tool2criteria_values = {}
         for criterion in criteria_passed_values:
             for config in self.tools_config_by_criterion_dict[criterion]:
@@ -296,10 +296,10 @@ class MetaCriteriaTool(object):
                                     or function_matrix is not None, \
                                         "no criterion is enabled", __file__)
         criteria_passed_values = {}
-        criteria_passed_values[CodecoverageType.STATEMENT_KEY] = \
+        criteria_passed_values[TestCriteria.STATEMENT_COVERAGE] = \
                                                             statement_matrix
-        criteria_passed_values[CodecoverageType.BRANCH_KEY] = branch_matrix
-        criteria_passed_values[CodecoverageType.FUNCTION_KEY] = function_matrix
+        criteria_passed_values[TestCriteria.BRANCH_COVERAGE] = branch_matrix
+        criteria_passed_values[TestCriteria.FUNCTION_COVERAGE] = function_matrix
 
         ERROR_HANDLER.assert_true(len(set(criteria_passed_values) - \
                             set(self.tools_config_by_criterion_dict)) == 0, \
@@ -309,7 +309,7 @@ class MetaCriteriaTool(object):
         tool2criteria_values = self._get_tool2criteria_values( \
                                                         criteria_passed_values)
 
-        matrices_dir_tmp = os.path.join(self.codecoverage_working_dir, \
+        matrices_dir_tmp = os.path.join(self.criteria_working_dir, \
                                                             "codecov_dir.tmp")
         if os.path.isdir(matrices_dir_tmp):
             if restart_checkpointer:
@@ -344,7 +344,7 @@ class MetaCriteriaTool(object):
                                         common_matrices.ExecutionMatrix( \
                                         filename=criteria2matrix[criterion])
                 # Actual execution
-                ctool = self.codecoverage_configured_tools[ctoolalias][\
+                ctool = self.criteria_configured_tools[ctoolalias][\
                                                             self.TOOL_OBJ_KEY]
                 ctool.runtests_code_coverage(testcases, \
                         criterion_to_matrix=criteria2matrix,\
@@ -422,9 +422,9 @@ class MetaCriteriaTool(object):
 
     def instrument_code (self, outputdir=None, \
                     code_builds_factory_override=None, \
-                    statement_enabled=MetaCodecoverageTool.STATEMENT_DEFAULT, \
-                    branch_enabled=MetaCodecoverageTool.BRANCH_DEFAULT, \
-                    function_enabled=MetaCodecoverageTool.FUNCTION_DEFAULT, \
+                    statement_enabled=MetaCriteriaTool.STATEMENT_DEFAULT, \
+                    branch_enabled=MetaCriteriaTool.BRANCH_DEFAULT, \
+                    function_enabled=MetaCriteriaTool.FUNCTION_DEFAULT, \
                     parallel_count=1, \
                     restart_checkpointer=False, \
                     finish_destroy_checkpointer=True):
@@ -455,10 +455,10 @@ class MetaCriteriaTool(object):
                         function_enabled, "no criterion is enabled", __file__)
 
         criteria_passed_values = {}
-        criteria_passed_values[CodecoverageType.STATEMENT_KEY] = \
+        criteria_passed_values[TestCriteria.STATEMENT_COVERAGE] = \
                                                             statement_enabled
-        criteria_passed_values[CodecoverageType.BRANCH_KEY] = branch_enabled
-        criteria_passed_values[CodecoverageType.FUNCTION_KEY] = \
+        criteria_passed_values[TestCriteria.BRANCH_COVERAGE] = branch_enabled
+        criteria_passed_values[TestCriteria.FUNCTION_COVERAGE] = \
                                                             function_enabled
 
         ERROR_HANDLER.assert_true(len(set(criteria_passed_values) - \
@@ -475,7 +475,7 @@ class MetaCriteriaTool(object):
                                         taskid=cp_task_id, \
                                         tool=ctoolalias):
                 # Actual execution
-                ctool = self.codecoverage_configured_tools[ctoolalias][\
+                ctool = self.criteria_configured_tools[ctoolalias][\
                                                             self.TOOL_OBJ_KEY]
                 ctool.instrument_code(outputdir, code_builds_factory_override,\
                         criterion_to_enabling=tool2criteria_values[ctoolalias])
@@ -496,20 +496,20 @@ class MetaCriteriaTool(object):
             checkpoint_handler.destroy()
     #~ def instrument_code()
 
-    def _get_codecoverage_tool_out_folder(self, ccov_toolname, top_outdir=None):
+    def _get_criteria_tool_out_folder(self, ccov_toolname, top_outdir=None):
         if top_outdir is None:
-            top_outdir = self.codecoverage_working_dir
+            top_outdir = self.criteria_working_dir
         return os.path.join(top_outdir, ccov_toolname)
-    #~def _get_codecoverage_tool_out_folder()
+    #~def _get_criteria_tool_out_folder()
 
-    def _get_codecoverage_tool_checkpoint_files(self, codecoverage_toolname, \
+    def _get_criteria_tool_checkpoint_files(self, criteria_toolname, \
                                                     top_checkpoint_dir=None):
         if top_checkpoint_dir is None:
             top_checkpoint_dir = self.checkpoints_dir
         return [os.path.join(top_checkpoint_dir, \
-                        codecoverage_toolname+"_checkpoint.state"+suffix) \
+                        criteria_toolname+"_checkpoint.state"+suffix) \
                         for suffix in ("", ".backup")]
-    #~def _get_codecoverage_tool_checkpoint_files()
+    #~def _get_criteria_tool_checkpoint_files()
         
     def _get_checkpoint_files(self):
         top_checkpoint_dir = self.checkpoints_dir

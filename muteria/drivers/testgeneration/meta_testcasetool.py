@@ -17,6 +17,7 @@ from __future__ import print_function
 import os
 import sys
 import glob
+import shutil
 import copy
 import logging
 
@@ -65,7 +66,8 @@ class MetaTestcaseTool(object):
                         if TestcaseTool is not None:
                             if tooltype_name not in res[language]:
                                 res[language][tooltype_name] = []
-                            res[language][tooltype_name].append(toolname)
+                            res[language][tooltype_name].append(\
+                                        (toolname, TestcaseTool.installed()))
                     except AttributeError:
                         ERROR_HANDLER.error_exit("{} {} {} {}".format( \
                                 "(REPORT BUG) The test case tool of type", \
@@ -128,7 +130,7 @@ class MetaTestcaseTool(object):
         # Make Initialization Computation ()
         ## Create dirs
         if not os.path.isdir(self.tests_working_dir):
-            os.mkdir(self.tests_working_dir)
+            self.clear_working_dir()
 
         if not os.path.isdir(self.checkpoints_dir):
             os.mkdir(self.checkpoints_dir)
@@ -187,8 +189,9 @@ class MetaTestcaseTool(object):
     #~ def _create_testcase_tool()
 
     def clear_working_dir(self):
-        # TODO
-        ERROR_HANDLER.error_exit("To be implemented")
+        if os.path.isdir(self.tests_working_dir):
+            shutil.rmtree(self.tests_working_dir)
+        os.mkdir(self.tests_working_dir)
     #~ def clear_working_dir()    
 
     def execute_testcase (self, meta_testcase, exe_path_map, env_vars):

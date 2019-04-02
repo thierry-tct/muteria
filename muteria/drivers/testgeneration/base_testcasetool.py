@@ -48,6 +48,17 @@ ERROR_HANDLER = common_mix.ErrorHandler
 class BaseTestcaseTool(abc.ABC):
     '''
     '''
+    @abc.abstractclassmethod
+    @classmethod
+    def installed(cls):
+        """ Check that the tool is installed
+            :return: bool reprenting whether the tool is installed or not 
+                    (executable accessible on the path)
+                    - True: the tool is installed and works
+                    - False: the tool is not installed or do not work
+        """
+        print ("!!! Must be implemented in child class !!!")
+
 
     UNCERTAIN_TEST_VERDICT = common_mix.GlobalConstants.UNCERTAIN_TEST_VERDICT
     PASS_TEST_VERDICT = common_mix.GlobalConstants.PASS_TEST_VERDICT

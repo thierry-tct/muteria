@@ -8,7 +8,7 @@ import muteria.common.mix as common_mix
 
 ERROR_HANDLER = common_mix.ErrorHandler
 
-class CodesInfoObject(object):
+class CriterionElementInfoObject(object):
     DATA_KEY = "DATA"
     SUMMARY_KEY = "SUMMARY"
     CUSTOM_KEY = "CUSTOM"
@@ -76,4 +76,4 @@ class CodesInfoObject(object):
     def get_custom(self):
         assert False, "Must Implement"
     #~ def get_custom():
-#~ class CodesInfoObject(object):
+#~ class CriterionElementInfoObject(object):

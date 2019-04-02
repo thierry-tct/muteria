@@ -8,15 +8,13 @@ import muteria.common.mix as common_mix
 ERROR_HANDLER = common_mix.ErrorHandler
 
 class ToolsModulesLoader(object):
-    MUTATION_TOOLS = "MUTATION"
     TESTCASES_TOOLS = "TESTCASES"
-    CODE_COVERAGE_TOOLS = "CODE_COVERAGE"
+    CRITERIA_TOOLS = "CRITERIA"
 
     # map of directory modules by categories 
     TOOL_CATEGORIES_DIRS = {
-        MUTATION_TOOLS: "mutation",
         TESTCASES_TOOLS: "testgeneration",
-        CODE_COVERAGE_TOOLS: "codecoverage"
+        CRITERIA_TOOLS: "criteria",
     }
 
     # directory in each category's module that contain language folders, 
