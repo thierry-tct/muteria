@@ -14,7 +14,7 @@ app = Flask(__name__)
 
 @app.route("/")
 def homepage():
-   pass #TODO
+   return render_template("dashboard.html")
 
 @app.route('/createproject/<projectname>')
 def create_project():
