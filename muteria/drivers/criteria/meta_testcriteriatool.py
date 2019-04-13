@@ -205,57 +205,63 @@ class MetaCriteriaTool(object):
         os.mkdir(self.criteria_working_dir)
     #~ def clear_working_dir()    
 
-    def _get_tool2criteria_values(self, criteria_passed_values):
-        ''' TODO: check this to only care about passed criteria and update users
-        Take values by criteria and return values by tools. This map the
-        criteria to the correspondng tools to have each tool linked to its
-        representing criteria which are further linked to the object values.
-
-        :param criteria_passed_values: dict representing a certain object 
-                value by criterion (value for each criterion)
-        :return: return the object values by tools
+    def _get_tool2criteria(self, criteria_passed):
+        ''' TODO: update users of this function
+            Take a list of criteria and group by tools
+        :param criteria_passed: list representing a criteria considered 
+        :return: return the criteria by tools
         '''
-        none_activated_default = {c: None for c in list(TestCriteria)}
-        tool2criteria_values = {}
-        for criterion in criteria_passed_values:
+        tool2criteria = {}
+        for criterion in criteria_passed:
             for config in self.tools_config_by_criterion_dict[criterion]:
                 ctoolalias = config.get_tool_config_alias()
-                if ctoolalias not in tool2criteria_values:
-                    tool2criteria_values[ctoolalias] = \
-                                                none_activated_default.copy()
-                tool2criteria_values[ctoolalias][criterion] = \
-                                            criteria_passed_values[criterion]
-        return tool2criteria_values
-    #~ def _get_tool2criteria_values()
+                if ctoolalias not in tool2criteria:
+                    tool2criteria[ctoolalias] = []
+                tool2criteria[ctoolalias].append(criterion)
+        return tool2criteria
+    #~ def _get_tool2criteria()
                                             
-    def runtests_code_coverage (self, testcases, re_instrument_code=True, \
-                                        statement_matrix=None, \
-                                        branch_matrix=None, \
-                                        function_matrix=None, \
-                                        parallel_count=1, \
-                                        parallel_mutant_test_scheduler=None, \
-                                        restart_checkpointer=False, \
-                                        finish_destroy_checkpointer=True):
-        '''
+    def runtests_criteria_coverage (self, testcases, criterion_to_matrix, \
+                                    criteria_element_list_by_criteria=None, \
+                                    re_instrument_code=False, \
+                                    cover_criteria_elements_once=False,
+                                    prioritization_module_by_criteria=None,
+                                    parallel_count=1, \
+                                    parallel_criteria_test_scheduler=None,\
+                                    restart_checkpointer=False, \
+                                    finish_destroy_checkpointer=True):
+        ''' #TODO: incorporate criteria_element_list_by_criteria, cover_criteria_elements_once 
         Executes the instrumented executable code with testscases and
         returns the different code coverage matrices.
 
         :param testcases: list of testcases to execute
+
+        :param criterion_to_matrix: dict of <criterion, Matrix file 
+                        where to store coverage>. 
+        
+        :param criteria_element_list_by_criteria: dictionary representing the
+                        list of criteria elements (stmts, branches, mutants)
+                        to consider in the test execution matices. 
+                        Key is the criterion and the value the list of elements
+
         :param re_instrument_code: Decide whether to instrument code before 
                         running the tests. (Example when instrumentation was 
                         not specifically called. This is True by default)
-        :param statement_matrix: Matrix object where to store statement 
-                        coverage. If None, statement coverage is disabled
-        :param branch_matrix: Matrix object where to store branch 
-                        coverage. If None, branch coverage is disabled
-        :param function_matrix: Matrix object where to store function 
-                        coverage. If None, function coverage is disabled
+
+        :param cover_criteria_elements_once: Specify whether to cover criteria
+                        elements once is enough, meaning that we stop 
+                        analysing a criterion element once a test covers it.
+                        The remaining test covering verdict will be UNKNOWN. 
+
+        :param prioritization_module_by_criteria: dict of prioritization module
+                        by criteria. None means no prioritization used.
 
         :type \parallel_count:
         :param \parallel_count:
 
-        :type \parallel_mutant_test_scheduler:
-        :param \parallel_mutant_test_scheduler:
+        :type \parallel_criteria_test_scheduler:
+        :param \parallel_criteria_test_scheduler: scheduler that organize 
+                        parallelism across criteria tools.
                         (TODO: Implement support)
 
         :type \restart_checkpointer:
@@ -271,7 +277,7 @@ class MetaCriteriaTool(object):
         ERROR_HANDLER.assert_true(parallel_count <= 1, \
                     "Must implement parallel execution support here", \
                                                                     __file__)
-        ERROR_HANDLER.assert_true(parallel_mutant_test_scheduler is None, \
+        ERROR_HANDLER.assert_true(parallel_criteria_test_scheduler is None, \
             "Must implement parallel codes tests execution support here", \
                                                                     __file__)
         #~FIXMEnd
@@ -282,7 +288,7 @@ class MetaCriteriaTool(object):
                                     parallel_count, "must be >= 1"))
 
         # @Checkpoint: create a checkpoint handler
-        cp_func_name = "runtests_code_coverage"
+        cp_func_name = "runtests_criteria_coverage"
         cp_task_id = 1
         checkpoint_handler = CheckPointHandler( \
                                             self.get_checkpoint_state_object())
@@ -291,23 +297,15 @@ class MetaCriteriaTool(object):
         if checkpoint_handler.is_finished():
             return
 
-        ERROR_HANDLER.assert_true(statement_matrix is not None \
-                                    or branch_matrix is not None \
-                                    or function_matrix is not None, \
+        ERROR_HANDLER.assert_true(len(criterion_to_matrix) > 0, \
                                         "no criterion is enabled", __file__)
-        criteria_passed_values = {}
-        criteria_passed_values[TestCriteria.STATEMENT_COVERAGE] = \
-                                                            statement_matrix
-        criteria_passed_values[TestCriteria.BRANCH_COVERAGE] = branch_matrix
-        criteria_passed_values[TestCriteria.FUNCTION_COVERAGE] = function_matrix
 
-        ERROR_HANDLER.assert_true(len(set(criteria_passed_values) - \
+        ERROR_HANDLER.assert_true(len(set(criterion_to_matrix) - \
                             set(self.tools_config_by_criterion_dict)) == 0, \
                     "Passed matrices output are more than tool specified", \
                                                                     __file__)
 
-        tool2criteria_values = self._get_tool2criteria_values( \
-                                                        criteria_passed_values)
+        tool2criteria = self._get_tool2criteria(criterion_to_matrix.keys())
 
         matrices_dir_tmp = os.path.join(self.criteria_working_dir, \
                                                             "codecov_dir.tmp")
@@ -318,37 +316,63 @@ class MetaCriteriaTool(object):
         else:
             os.mkdir(matrices_dir_tmp)
 
-        crit2tool2matrixfile = {cv: {} for cv in criteria_passed_values \
-                                    if criteria_passed_values[cv is not None]}
-        for ctoolalias in tool2criteria_values:
-            criteria2matrix = {}
-            for criterion in tool2criteria_values[ctoolalias]:
-                if tool2criteria_values[ctoolalias][criterion] is not None:
-                    criteria2matrix[criterion] = \
-                                crit2tool2matrixfile[criterion][ctoolalias] = \
-                                            os.path.join(matrices_dir_tmp, \
-                                                criterion.get_field_value()\
-                                                    +'-'+ctoolalias+'.csv')
-                else:
-                    criteria2matrix[criterion] = \
-                            crit2tool2matrixfile[criterion][ctoolalias] = None
+        # get criteria elements by tools
+        criteria_elem_list_by_tool = {}
+        for criterion in criteria_element_list_by_criteria:
+            if criteria_element_list_by_criteria[criterion] is None:
+                for t_conf in self.tools_config_by_criterion_dict[criterion]:
+                    toolalias = t_conf.get_tool_config_alias()
+                    if toolalias not in criteria_elem_list_by_tool:
+                        criteria_elem_list_by_tool[toolalias] = {}
+                    criteria_elem_list_by_tool[toolalias][criterion] = None
+                continue
+
+            criteria_elem_list_by_tool[criterion] = {}
+            for crit_elem in criteria_element_list_by_criteria[criterion]:
+                toolalias, elem = DriversUtils.reverse_meta_element(crit_elem)
+                if toolalias not in criteria_elem_list_by_tool:
+                    criteria_elem_list_by_tool[toolalias] = {}
+                if criterion not in criteria_elem_list_by_tool[toolalias]:
+                    criteria_elem_list_by_tool[toolalias][criterion] = []
+                criteria_elem_list_by_tool[toolalias][criterion].append(elem)
+
+            ERROR_HANDLER.assert_true(len(set(criteria_elem_list_by_tool) - \
+                                set(self.criteria_configured_tools)) == 0, \
+                                "some tool in data not registered", __file__)
+
+        crit2tool2matrixfile = {cv: {} for cv in criterion_to_matrix}
+        for ctoolalias in tool2criteria:
+            _criteria2matrix = {}
+            for criterion in tool2criteria[ctoolalias]:
+                _criteria2matrix[criterion] = os.path.join(matrices_dir_tmp, \
+                                                criterion.get_field_value() 
+                                                                + '-' 
+                                                                + ctoolalias 
+                                                                + '.csv')
+                crit2tool2matrixfile[criterion][ctoolalias] = \
+                                                    _criteria2matrix[criterion]
 
             # @Checkpoint: Check whether already executed
             if checkpoint_handler.is_to_execute( \
                                         func_name=cp_func_name, \
                                         taskid=cp_task_id, \
                                         tool=ctoolalias):
-                for criterion in criteria2matrix:
-                    if criteria2matrix[criterion] is not None:
-                        criteria2matrix[criterion] = \
+                for criterion in _criteria2matrix:
+                    _criteria2matrix[criterion] = \
                                         common_matrices.ExecutionMatrix( \
-                                        filename=criteria2matrix[criterion])
+                                        filename=_criteria2matrix[criterion])
                 # Actual execution
                 ctool = self.criteria_configured_tools[ctoolalias][\
                                                             self.TOOL_OBJ_KEY]
-                ctool.runtests_code_coverage(testcases, \
-                        criterion_to_matrix=criteria2matrix,\
-                        re_instrument_code=re_instrument_code)
+                ctool.runtests_criteria_coverage(testcases, \
+                                criterion_to_matrix=_criteria2matrix, \
+                                criteria_element_list_by_criteria=\
+                                        criteria_elem_list_by_tool[toolalias],\
+                                re_instrument_code=re_instrument_code, \
+                                cover_criteria_elements_once=\
+                                                cover_criteria_elements_once, \
+                                prioritization_module_by_criteria=\
+                                            prioritization_module_by_criteria)
 
                 # Checkpointing
                 checkpoint_handler.do_checkpoint( \
@@ -359,16 +383,13 @@ class MetaCriteriaTool(object):
         # Aggregate the matrices
         ## Create reult matrices
         result_matrices = {}
-        for criterion in criteria_passed_values:
-            if criteria_passed_values[criterion] is not None:
-                result_matrices[criterion] = common_matrices.ExecutionMatrix( \
-                                    filename=criteria_passed_values[criterion])
+        for criterion in criterion_to_matrix:
+            result_matrices[criterion] = common_matrices.ExecutionMatrix( \
+                                filename=criterion_to_matrix[criterion], \
+                                non_key_col_list=testcases)
         ## Actual aggregate
         for criterion in result_matrices:
             result_matrix = result_matrices[criterion]
-            ERROR_HANDLER.assert_true( \
-                            crit2tool2matrixfile[criterion] is not None, \
-                        "Criterion was not considered before (BUG)", __file__)
             for mtoolalias in crit2tool2matrixfile[criterion]:
                 tool_matrix = common_matrices.ExecutionMatrix(\
                         filename=crit2tool2matrixfile[criterion][mtoolalias])
@@ -384,7 +405,7 @@ class MetaCriteriaTool(object):
 
                 # bring in the data
                 key2nonkeydict = tool_matrix.get_pandas_df().\
-                            set_index(tool_matrix.get_key_colname, drop=True).\
+                        set_index(tool_matrix.get_key_colname(), drop=True).\
                                                 to_dict(orient="index")
                 for c_key in key2nonkeydict:
                     meta_c_key = \
@@ -412,19 +433,17 @@ class MetaCriteriaTool(object):
 
         # @Checkpoint: Finished
         detailed_exectime = {ct: ct.get_checkpointer().get_execution_time() \
-                                                for ct in tool2criteria_values}
+                                                for ct in tool2criteria}
         checkpoint_handler.set_finished(\
                                     detailed_exectime_obj=detailed_exectime)
 
         if finish_destroy_checkpointer:
             checkpoint_handler.destroy()
-    #~ def runtests_code_coverage()
+    #~ def runtests_criteria_coverage()
 
     def instrument_code (self, outputdir=None, \
                     code_builds_factory_override=None, \
-                    statement_enabled=MetaCriteriaTool.STATEMENT_DEFAULT, \
-                    branch_enabled=MetaCriteriaTool.BRANCH_DEFAULT, \
-                    function_enabled=MetaCriteriaTool.FUNCTION_DEFAULT, \
+                    criteria_enabled_list=None, \
                     parallel_count=1, \
                     restart_checkpointer=False, \
                     finish_destroy_checkpointer=True):
@@ -451,24 +470,20 @@ class MetaCriteriaTool(object):
         if checkpoint_handler.is_finished():
             return
 
-        ERROR_HANDLER.assert_true(statement_enabled or branch_enabled or \
-                        function_enabled, "no criterion is enabled", __file__)
+        if criteria_enabled_list is None:
+            criteria_enabled_list = self.tools_config_by_criterion_dict.keys()
+        else:
+            ERROR_HANDLER.assert_true(len(criteria_enabled_list) > 0, \
+                                        "no criterion is enabled", __file__)
 
-        criteria_passed_values = {}
-        criteria_passed_values[TestCriteria.STATEMENT_COVERAGE] = \
-                                                            statement_enabled
-        criteria_passed_values[TestCriteria.BRANCH_COVERAGE] = branch_enabled
-        criteria_passed_values[TestCriteria.FUNCTION_COVERAGE] = \
-                                                            function_enabled
-
-        ERROR_HANDLER.assert_true(len(set(criteria_passed_values) - \
+            ERROR_HANDLER.assert_true(len(set(criteria_enabled_list) - \
                             set(self.tools_config_by_criterion_dict)) == 0, \
-                "Passed matrice output are more than toll specified", __file__)
+                        "Passed matrice output are more than toll specified", \
+                                                                    __file__)
 
-        tool2criteria_values = self._get_tool2criteria_values( \
-                                                        criteria_passed_values)
+        tool2criteria = self._get_tool2criteria(criteria_enabled_list)
 
-        for ctoolalias in tool2criteria_values:
+        for ctoolalias in tool2criteria:
             # @Checkpoint: Check whether already executed
             if checkpoint_handler.is_to_execute( \
                                         func_name=cp_func_name, \
@@ -478,7 +493,7 @@ class MetaCriteriaTool(object):
                 ctool = self.criteria_configured_tools[ctoolalias][\
                                                             self.TOOL_OBJ_KEY]
                 ctool.instrument_code(outputdir, code_builds_factory_override,\
-                        criterion_to_enabling=tool2criteria_values[ctoolalias])
+                                enabled_criterion=tool2criteria[ctoolalias])
 
                 # @Checkpoint: Checkpointing
                 checkpoint_handler.do_checkpoint( \
@@ -488,7 +503,7 @@ class MetaCriteriaTool(object):
 
         # @Checkpoint: Finished
         detailed_exectime = {ct: ct.get_checkpointer().get_execution_time() \
-                                                for ct in tool2criteria_values}
+                                                for ct in tool2criteria}
         checkpoint_handler.set_finished( \
                                     detailed_exectime_obj=detailed_exectime)
 

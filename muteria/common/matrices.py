@@ -85,6 +85,9 @@ class RawExecutionMatrix(object):
             assert not self.is_uncertain_cell_func(v)
 
         if self.filename is None or not os.path.isfile(self.filename):
+            assert self.non_key_col_list is not None, \
+                                    "Must specify 'non_key_col_list' when " + \
+                                        "filename inexistant"
             ordered_cols = [self.key_column_name] + self.non_key_col_list
             self.dataframe = \
                     pd.DataFrame({c:[] for c in ordered_cols})[ordered_cols]

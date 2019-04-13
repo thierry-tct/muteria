@@ -28,5 +28,19 @@ pip install -r developer-requirements.txt
   def __eq__(self, other):
       self.__dict__ == other.__dict__
   ```
-### Features to develop
-- [ ] Implement option to run mutant coverage and weak mutation simultaneously.
+### Features 
+1. parallelism
+- [ ] Implement option to run mutant coverage and weak mutation simultaneously
+2. Web Interface and Server
+- [ ]
+3. Command Line Interface
+- [ ]
+4. Library API interface
+-[ ]
+5. Reporting
+- [ ]
+6. Checkpointing and Logging
+- [ ]
+7. Multiple projects
+- [ ] 
+  

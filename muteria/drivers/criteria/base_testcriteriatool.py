@@ -139,7 +139,7 @@ class BaseCodecoverageTool(abc.ABC):
         print ("!!! Must be implemented in child class !!!")
     #~def _extract_function_cov_data_of_a_test()
 
-    def runtests_code_coverage (self, testcases, criterion_to_matrix,
+    def runtests_criteria_coverage (self, testcases, criterion_to_matrix,
                             re_instrument_code=True, test_parallel_count=1):
         """
             (TODO: support parallelism: per test outdata)
@@ -188,7 +188,7 @@ class BaseCodecoverageTool(abc.ABC):
         # Intrument the codes and get instrumented executables
         if re_instrument_code:
             criterion2executable_path = self.instrument_code( \
-                                criterion_to_enabling=criterion_to_enabling)
+                                enabled_criteria=criterion_to_enabling)
         else:
             criterion2executable_path = \
                 self.get_instrumented_executable_paths(criterion_to_enabling)
@@ -297,9 +297,9 @@ class BaseCodecoverageTool(abc.ABC):
 
         # @Checkpoint: Finished (for time)
         checkpoint_handler.set_finished(None)
-    #~ def runtests_code_coverage()
+    #~ def runtests_criteria_coverage()
 
-    def instrument_code (self, criterion_to_enabling, outputdir=None, \
+    def instrument_code (self, enabled_criterion, outputdir=None, \
                         code_builds_factory_override=None, parallel_count=1):
         '''
             (TODO: support parallelism: per test outdata)
