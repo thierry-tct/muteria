@@ -432,7 +432,9 @@ class MetaCriteriaTool(object):
             shutil.rmtree(matrices_dir_tmp)
 
         # @Checkpoint: Finished
-        detailed_exectime = {ct: ct.get_checkpointer().get_execution_time() \
+        detailed_exectime = {ct: (\
+                        ct.get_checkpointer().get_execution_time(),\
+                        ct.get_checkpointer().get_detailed_execution_time())\
                                                 for ct in tool2criteria}
         checkpoint_handler.set_finished(\
                                     detailed_exectime_obj=detailed_exectime)
@@ -441,9 +443,9 @@ class MetaCriteriaTool(object):
             checkpoint_handler.destroy()
     #~ def runtests_criteria_coverage()
 
-    def instrument_code (self, outputdir=None, \
-                    code_builds_factory_override=None, \
-                    criteria_enabled_list=None, \
+    def instrument_code (self, criteria_enabled_list=None, \
+                    #outputdir_override=None, \
+                    #code_builds_factory_override=None, \
                     parallel_count=1, \
                     restart_checkpointer=False, \
                     finish_destroy_checkpointer=True):
@@ -492,7 +494,9 @@ class MetaCriteriaTool(object):
                 # Actual execution
                 ctool = self.criteria_configured_tools[ctoolalias][\
                                                             self.TOOL_OBJ_KEY]
-                ctool.instrument_code(outputdir, code_builds_factory_override,\
+                ctool.instrument_code(\
+                                #outputdir_override, \
+                                #code_builds_factory_override,\
                                 enabled_criterion=tool2criteria[ctoolalias])
 
                 # @Checkpoint: Checkpointing
@@ -502,7 +506,9 @@ class MetaCriteriaTool(object):
                                         tool=ctoolalias)
 
         # @Checkpoint: Finished
-        detailed_exectime = {ct: ct.get_checkpointer().get_execution_time() \
+        detailed_exectime = {ct: (\
+                        ct.get_checkpointer().get_execution_time(),\
+                        ct.get_checkpointer().get_detailed_execution_time())\
                                                 for ct in tool2criteria}
         checkpoint_handler.set_finished( \
                                     detailed_exectime_obj=detailed_exectime)

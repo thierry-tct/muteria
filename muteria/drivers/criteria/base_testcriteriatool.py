@@ -83,7 +83,7 @@ class BaseCodecoverageTool(abc.ABC):
         return self.checkpointer is not None
     #~ def has_checkpointer()
 
-    @abc.abstractmethod
+    @abc.abstractclassmethod
     @classmethod
     def get_supported_criteria(cls):
         #return [CodecoverageType.STATEMENT_KEY, CodecoverageType.BRANCH_KEY, \
@@ -139,8 +139,12 @@ class BaseCodecoverageTool(abc.ABC):
         print ("!!! Must be implemented in child class !!!")
     #~def _extract_function_cov_data_of_a_test()
 
-    def runtests_criteria_coverage (self, testcases, criterion_to_matrix,
-                            re_instrument_code=True, test_parallel_count=1):
+    def runtests_criteria_coverage (self, testcases, criterion_to_matrix, \
+                                    criteria_element_list_by_criteria, \
+                                    re_instrument_code=True, \
+                                    cover_criteria_elements_once=False, \
+                                    prioritization_module_by_criteria=None, \
+                                    test_parallel_count=1):
         """
             (TODO: support parallelism: per test outdata)
         """

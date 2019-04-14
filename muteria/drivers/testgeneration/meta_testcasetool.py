@@ -394,7 +394,9 @@ class MetaTestcaseTool(object):
                                                 cells_dict, serialize=True)
 
         # @Checkpoint: Finished
-        detailed_exectime = {tt: tt.get_checkpointer().get_execution_time() \
+        detailed_exectime = {tt: (\
+                        tt.get_checkpointer().get_execution_time(),\
+                        tt.get_checkpointer().get_detailed_execution_time())\
                                             for tt in testcases_by_tool.keys()}
         checkpoint_handler.set_finished( \
                                     detailed_exectime_obj=detailed_exectime)
@@ -451,7 +453,7 @@ class MetaTestcaseTool(object):
 
         # Check arguments Validity
         if exe_path_map is None:
-            exe_path_map = self.code_builds_factor.repository_manager\
+            exe_path_map = self.code_builds_factory.repository_manager\
                                                             .get_exe_path_map()
 
         ERROR_HANDLER.assert_true(parallel_testgen_count > 0, \
@@ -509,7 +511,9 @@ class MetaTestcaseTool(object):
         self._invalidate_testcase_info()
 
         # @Checkpoint: Finished
-        detailed_exectime = {tt: tt.get_checkpointer().get_execution_time() \
+        detailed_exectime = {tt: (\
+                        tt.get_checkpointer().get_execution_time(),\
+                        tt.get_checkpointer().get_detailed_execution_time())\
                                     for tt in candidate_tools_aliases}
         checkpoint_handler.set_finished( \
                                     detailed_exectime_obj=detailed_exectime)
