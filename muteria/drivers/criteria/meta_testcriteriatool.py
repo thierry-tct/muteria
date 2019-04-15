@@ -29,7 +29,7 @@ from muteria.drivers import DriversUtils
 
 from muteria.drivers.checkpoint_handler import CheckPointHandler
 
-from muteria.drivers.criteria.criterion_info import CriterionElementInfoObject
+from muteria.drivers.criteria.criteria_info import CriteriaToInfoObject
 
 from muteria.drivers.criteria import CriteriaToolType, TestCriteria
 
@@ -103,8 +103,12 @@ class MetaCriteriaTool(object):
         # Set Indirect Arguments Variables
         self.checkpoints_dir = os.path.join(self.criteria_working_dir, \
                                                             "_checkpoints_")
-        self.code_info_file = \
-            os.path.join(self.criteria_working_dir, "criteria_info_file.json")
+        self.criteria_info_file_by_criteria = {}
+        for criterion in self.tools_config_by_criterion_dict:
+            self.criteria_info_file_by_criteria[criterion] = os.path.join(\
+                                        self.criteria_working_dir, \
+                                        criterion.get_str()+"_info_file.json")
+
 
         # Verify indirect Arguments Variables
 
@@ -444,13 +448,36 @@ class MetaCriteriaTool(object):
     #~ def runtests_criteria_coverage()
 
     def instrument_code (self, criteria_enabled_list=None, \
+                    exe_path_map=None, \
                     #outputdir_override=None, \
                     #code_builds_factory_override=None, \
                     parallel_count=1, \
                     restart_checkpointer=False, \
                     finish_destroy_checkpointer=True):
-        '''
-        '''
+        """ Instrument the code for the criteria measurements. 
+
+        :type criteria_enabled_list: dict or None
+        :param criteria_enabled_list: When None, use all supported criteria
+                    else use the specified criteria
+    
+        :type \exe_path_map: dict or None
+        :param \exe_path_map: When None, use all exe, else instrument 
+                    files as dict key and write the instrumented output
+                    in directory as value. 
+    
+        :type \parallel_count:
+        :param \parallel_count:
+    
+        :type \restart_checkpointer:
+        :param \restart_checkpointer:
+    
+        :type \finish_destroy_checkpointer:
+        :param \finish_destroy_checkpointer:
+    
+        :raises:
+    
+        :rtype:
+        """
         # FIXME: Support parallelism, then remove the code
         # bellow:
         ERROR_HANDLER.assert_true(parallel_count <= 1, \
@@ -497,13 +524,19 @@ class MetaCriteriaTool(object):
                 ctool.instrument_code(\
                                 #outputdir_override, \
                                 #code_builds_factory_override,\
-                                enabled_criterion=tool2criteria[ctoolalias])
+                                enabled_criteria=tool2criteria[ctoolalias],\
+                                exe_path_map=exe_path_map)
 
                 # @Checkpoint: Checkpointing
                 checkpoint_handler.do_checkpoint( \
                                         func_name=cp_func_name, \
                                         taskid=cp_task_id, \
                                         tool=ctoolalias)
+
+        # Invalidate any existing mutant info so it can be recomputed
+        self._invalidate_criteria_info(
+                                enabled_criteria=tool2criteria[ctoolalias])
+                                
 
         # @Checkpoint: Finished
         detailed_exectime = {ct: (\
@@ -516,6 +549,80 @@ class MetaCriteriaTool(object):
         if finish_destroy_checkpointer:
             checkpoint_handler.destroy()
     #~ def instrument_code()
+
+    def _compute_criterion_info(self, criterion, candidate_tool_aliases=None):
+        if criterion not in CriteriaToInfoObject:
+            return None
+
+        meta_criterion_info_obj = CriteriaToInfoObject[criterion]()
+        if candidate_tool_aliases is None:
+            candidate_tool_aliases = []
+            for _, config in list(self.tools_config_by_criterion_dict.items()):
+                candidate_tool_aliases.append(config.get_tool_config_alias())
+        for ctoolalias in candidate_tool_aliases:
+            ctool = self.criteria_configured_tools[ctoolalias]\
+                                                            [self.TOOL_OBJ_KEY]
+            tool_element_info = ctool.get_criterion_info_object(criterion)
+            old2new_tests = {}
+            for c_elem in tool_element_info.get_elements_list():
+                meta_c_key = DriversUtils.make_meta_element(c_elem, ctoolalias)
+                old2new_tests[c_elem] = meta_c_key
+            meta_criterion_info_obj.update_using(ctoolalias, old2new_tests, \
+                                                            tool_element_info)
+        return meta_criterion_info_obj
+    #~ def _compute_criterion_info()
+    
+    def get_criterion_info_object(self, criterion):
+        if criterion not in CriteriaToInfoObject:
+            return None
+            
+        return CriteriaToInfoObject[criterion]().load_from_file(\
+                                    self.get_criterion_info_file(criterion))
+    #~ def def get_criterion_info_object()
+
+    def get_criterion_info_file(self, criterion):
+        if criterion not in CriteriaToInfoObject:
+            return None
+            
+        # Compute and write the testcase info if not present
+        # only place where the meta info is written
+        info_file = self._unchecked_get_criterion_info_file(criterion)
+        if self._criterion_info_is_invalidated(criterion):
+            self._compute_criterion_info(criterion).write_to_file(info_file)
+        return info_file
+    #~ def get_criterion_info_file()
+
+    def _unchecked_get_criterion_info_file(self, criterion):
+        if criterion not in CriteriaToInfoObject:
+            return None
+            
+        return self.criteria_info_file_by_criteria[criterion] 
+    #~ def _unchecked_get_criteria_info_file():
+
+    def _invalidate_criterion_info(self, criterion):
+        if criterion in CriteriaToInfoObject:
+            info_file = self._unchecked_get_criterion_info_file(criterion)
+            if os.path.isfile(info_file):
+                os.remove(info_file)
+    #~ def _invalidate_criterion_info()
+
+    def _invalidate_criteria_info(self, enabled_criteria=None):
+        if enabled_criteria is None:
+            enabled_criteria = self.tools_config_by_criterion_dict.keys()
+        for criterion in enabled_criteria:
+            if criterion in CriteriaToInfoObject:
+                self._invalidate_criterion_info(criterion)
+    #~ def _invalidate_criteria_info()
+
+    def _criterion_info_is_invalidated(self, criterion):
+        ERROR_HANDLER.assert_true(criterion in CriteriaToInfoObject,
+                            "The criterion {} {}".format(criterion.get_str(), \
+                            "must have info Class registered for this"), \
+                                                                    __file__)
+            
+        return not os.path.isfile(\
+                            self._unchecked_get_criterion_info_file(criterion))
+    #~ def _criterion_info_is_invalidated()
 
     def _get_criteria_tool_out_folder(self, ccov_toolname, top_outdir=None):
         if top_outdir is None:
