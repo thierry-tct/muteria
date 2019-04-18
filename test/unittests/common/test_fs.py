@@ -191,10 +191,14 @@ class Test_Compress_Decompress(unittest.TestCase):
         
 if __name__ == "__main__":
     #unittest.main()
-    verbosity=2 # TODO: Check why verbosity has no effect here
-    testsuite_json_csv = unittest.TestLoader().loadTestsFromTestCase(Test_JSON_CSV)
-    testsuite_compress_decompress = unittest.TestLoader().loadTestsFromTestCase(Test_Compress_Decompress)
+    verbosity = 2 # TODO: Check why verbosity has no effect here
+    testsuite_json_csv = \
+                    unittest.TestLoader().loadTestsFromTestCase(Test_JSON_CSV)
+    testsuite_compress_decompress = \
+                                unittest.TestLoader().loadTestsFromTestCase(\
+                                                    Test_Compress_Decompress)
 
     unittest.TextTestRunner(verbosity=verbosity).run(testsuite_json_csv)
-    unittest.TextTestRunner(verbosity=verbosity).run(testsuite_compress_decompress)
+    unittest.TextTestRunner(verbosity=verbosity).run(\
+                                                testsuite_compress_decompress)
 

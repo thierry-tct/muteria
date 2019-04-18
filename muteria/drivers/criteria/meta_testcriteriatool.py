@@ -522,8 +522,6 @@ class MetaCriteriaTool(object):
                 ctool = self.criteria_configured_tools[ctoolalias][\
                                                             self.TOOL_OBJ_KEY]
                 ctool.instrument_code(\
-                                #outputdir_override, \
-                                #code_builds_factory_override,\
                                 enabled_criteria=tool2criteria[ctoolalias],\
                                 exe_path_map=exe_path_map)
 

@@ -50,7 +50,7 @@ class BaseTestcaseTool(abc.ABC):
     '''
     @abc.abstractclassmethod
     @classmethod
-    def installed(cls):
+    def installed(cls, custom_binary_dir=None):
         """ Check that the tool is installed
             :return: bool reprenting whether the tool is installed or not 
                     (executable accessible on the path)
@@ -192,7 +192,7 @@ class BaseTestcaseTool(abc.ABC):
             if stop_on_failure and test_failed:
                 break
         # Restore back the exes
-        self._restore_default_executable(exe_path_map,env_vars)
+        self._restore_default_executable(exe_path_map, env_vars)
 
         if stop_on_failure:
             # Make sure the non executed test has the uncertain value (None)
