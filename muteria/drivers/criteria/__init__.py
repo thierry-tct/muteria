@@ -21,3 +21,18 @@ class TestCriteria(common_mix.EnumAutoName):
     WEAK_MUTATION = "weak_mutation"
     STRONG_MUTATION = "strong_mutation"
 #~ class TestCriteria
+
+CRITERIA_SEQUENCE = [
+    {
+        TestCriteria.STATEMENT_COVERAGE, TestCriteria.BRANCH_COVERAGE, TestCriteria.FUNCTION_COVERAGE,
+    },
+    {
+        TestCriteria.MUTANT_COVERAGE,
+    },
+    {
+        TestCriteria.WEAK_MUTATION,
+    },
+    {
+        TestCriteria.STRONG_MUTATION,
+    },
+]

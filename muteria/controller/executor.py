@@ -18,6 +18,8 @@ from muteria.repositoryandcode.code_builds_factory import CodeBuildsFactory
 from muteria.drivers.testgeneration.meta_testcasetool import MetaTestcaseTool
 from muteria.drivers.criteria.meta_testcriteriatool import MetaCriteriaTool
 
+from muteria.statistics.main import StatsComputer
+
 import muteria.controller.explorer as outdir_struct
 import muteria.controller.logging_setup as logging_setup
 import muteria.controller.checkpoint_tasks as checkpoint_tasks
@@ -134,7 +136,8 @@ class Executor(object):
         self.meta_testcase_tool = self._create_meta_test_tool(self.config)
 
         # Meta criteria
-        self.meta_criteria_tool = self._create_meta_criteria_tool(self.config)
+        self.meta_criteria_tool = self._create_meta_criteria_tool(self.config,\
+                                                    self.meta_testcase_tool)
 
         # Test generation guidance
         self.meta_testgen_guidance_tool = self._create_meta_testgen_guidance(\
@@ -246,7 +249,7 @@ class Executor(object):
             if task_untouched:
                 self.meta_testcase_tool.clear_working_dir() 
                 self.cp_data.tasks_obj.set_task_executing(task)
-                self.checkpointer.write_checkpoint(self.cp_data.get_json_obj)
+                self.checkpointer.write_checkpoint(self.cp_data.get_json_obj())
 
             # Generate the tests
             self.meta_testcase_tool.generate_tests(\
@@ -254,7 +257,7 @@ class Executor(object):
 
             # @Checkpointing
             self.cp_data.tasks_obj.set_task_completed(task)
-            self.checkpointer.write_checkpoint(self.cp_data.get_json_obj)
+            self.checkpointer.write_checkpoint(self.cp_data.get_json_obj())
             # Destroy meta test checkpointer
             self.meta_testcase_tool.get_checkpoint_state_object()\
                                                         .destroy_checkpoint()
@@ -267,7 +270,7 @@ class Executor(object):
             if task_untouched:
                 self.head_explorer.remove_file_and_get(out_file)
                 self.cp_data.tasks_obj.set_task_executing(task)
-                self.checkpointer.write_checkpoint(self.cp_data.get_json_obj)
+                self.checkpointer.write_checkpoint(self.cp_data.get_json_obj())
 
             # TODO: use the actual selector. For now just use all tests
             selected_tests = self.meta_testcase_tool.\
@@ -276,7 +279,7 @@ class Executor(object):
 
             # @Checkpointing
             self.cp_data.tasks_obj.set_task_completed(task)
-            self.checkpointer.write_checkpoint(self.cp_data.get_json_obj)
+            self.checkpointer.write_checkpoint(self.cp_data.get_json_obj())
             # Destroy meta test checkpointer
             #self.meta_testexec_optimization_tool.get_checkpoint_state_object()\
             #                                            .destroy_checkpoint()
@@ -286,8 +289,10 @@ class Executor(object):
             # @Checkpointing
             if task_untouched:
                 self.head_explorer.remove_file_and_get(matrix_file)
+                self.meta_testcase_tool.get_checkpoint_state_object()\
+                                                        .restart_task()
                 self.cp_data.tasks_obj.set_task_executing(task)
-                self.checkpointer.write_checkpoint(self.cp_data.get_json_obj)
+                self.checkpointer.write_checkpoint(self.cp_data.get_json_obj())
 
             # Execute tests
             test_list_file = self.head_explorer.get_file_pathname(\
@@ -297,12 +302,12 @@ class Executor(object):
                         stop_on_failure=self.config.STOP_ON_TEST_FAILURE, \
                         fault_test_execution_matrix_file=matrix_file, \
                         test_prioritization_module=\
-                                        self.meta_testexec_optimization_tool)
-
+                                        self.meta_testexec_optimization_tool, \
+                        finish_destroy_checkpointer=False)
 
             # @Checkpointing
             self.cp_data.tasks_obj.set_task_completed(task)
-            self.checkpointer.write_checkpoint(self.cp_data.get_json_obj)
+            self.checkpointer.write_checkpoint(self.cp_data.get_json_obj())
             # Destroy meta test checkpointer
             self.meta_testcase_tool.get_checkpoint_state_object()\
                                                         .destroy_checkpoint()
@@ -310,21 +315,93 @@ class Executor(object):
         elif task == checkpoint_tasks.Tasks.CRITERIA_GENERATION_GUIDANCE:
             pass #TODO (Maybe could be used someday. for now, just skip it)
         elif task == checkpoint_tasks.Tasks.CRITERIA_GENERATION:
-            pass #TODO
+            # @Checkpointing
+            if task_untouched:
+                self.meta_criteria_tool.get_checkpoint_state_object()\
+                                                        .restart_task()
+                self.cp_data.tasks_obj.set_task_executing(task)
+                self.checkpointer.write_checkpoint(self.cp_data.get_json_obj())
+
+            self.meta_criteria_tool.instrument_code(criteria_enabled_list=\
+                                        self.config.CRITERIA_LIST.get_val(), \
+                                        finish_destroy_checkpointer=False)
+
+            # @Checkpointing
+            self.cp_data.tasks_obj.set_task_completed(task)
+            self.checkpointer.write_checkpoint(self.cp_data.get_json_obj())
+            # Destroy meta test checkpointer
+            self.meta_criteria_tool.get_checkpoint_state_object()\
+                                                        .destroy_checkpoint()
         elif task == checkpoint_tasks.Tasks.\
-                            CRITERIA_EXECUTION_SELECTION_PRIORITIZATION:
-            pass #TODO
+                                CRITERIA_EXECUTION_SELECTION_PRIORITIZATION:
+            pass #TODO (Maybe could be used someday. for now, just skip it)
         elif task == checkpoint_tasks.Tasks.CRITERIA_TESTS_EXECUTION:
+            matrix_files = {}
+            for criterion in self.config.CRITERIA_LIST.get_val():
+                matrix_files[criterion] = \
+                                self.head_explorer.get_path_filename(\
+                                outdir_struct.TMP_CRITERIA_MATRIX[criterion])
+            # @Checkpointing
+            if task_untouched:
+                for criterion, matrix_file in list(matrix_files.items()):
+                    self.head_explorer.remove_file_and_get(matrix_file)
+                self.meta_criteria_tool.get_checkpoint_state_object()\
+                                                        .restart_task()
+                self.cp_data.tasks_obj.set_task_executing(task)
+                self.checkpointer.write_checkpoint(self.cp_data.get_json_obj())
+
             criteria_set_sequence = self.config.CRITERIA_SEQUENCE.get_val()
             for cs_pos, criteria_set in enumerate(criteria_set_sequence):
-                pass #TODO
+                # Was it already checkpointed w.r.t criteria set seq
+                if self.cp_data.criteria_set_is_executed(cs_pos, criteria_set):
+                    continue
+                
+                # If we have a new criteria set id
+                self.cp_data.switchto_new_criteria_set(cs_pos, criteria_set)
+
+                # get matrices by criteria
+                test_list_file = self.head_explorer.get_file_pathname(\
+                                        outdir_struct.TMP_SELECTED_TESTS_LIST)
+                meta_testcases = common_fs.loadJSON(test_list_file)
+                criterion_to_matrix = {\
+                                    c: matrix_files[c] for c in criteria_set}
+
+                # execute
+                self.meta_criteria_tool.runtests_criteria_coverage( \
+                            testcases=meta_testcases, \
+                            criterion_to_matrix=criterion_to_matrix, \
+                            cover_criteria_elements_once=\
+                                    self.config.COVER_CRITERIA_ELEMENT_ONCE,
+                            finish_destroy_checkpointer=True)
+
+                # @Checkpointing
+                self.checkpointer.write_checkpoint(self.cp_data.get_json_obj())
+
+            # @Checkpointing
+            self.cp_data.tasks_obj.set_task_completed(task)
+            self.checkpointer.write_checkpoint(self.cp_data.get_json_obj())
 
         elif task == checkpoint_tasks.Tasks.PASS_FAIL_STATS:
-            pass #TODO
+            tmp_matrix_file = self.head_explorer.get_path_filename(\
+                                    outdir_struct.TMP_TEST_PASS_FAIL_MATRIX)
+            matrix_file = self.head_explorer.get_path_filename(\
+                                    outdir_struct.TEST_PASS_FAIL_MATRIX)
+            # Merge TMP pass fail and potentially existing pass fail
+            StatsComputer.merge_lmatrix_into_right(\
+                                                tmp_matrix_file, matrix_file)
         elif task == checkpoint_tasks.Tasks.CRITERIA_STATS:
-            pass #TODO
+            # Merge TMP criteria and potentially existing criteria
+            for criterion in self.config.CRITERIA_LIST.get_val():
+                tmp_matrix_file = self.head_explorer.get_path_filename(\
+                                outdir_struct.TMP_CRITERIA_MATRIX[criterion])
+                matrix_file = self.head_explorer.get_path_filename(\
+                                outdir_struct.CRITERIA_MATRIX[criterion])
+                StatsComputer.merge_lmatrix_into_right(tmp_matrix_file, \
+                                                                matrix_file)
         elif task == checkpoint_tasks.Tasks.AGGREGATED_STATS:
-            pass #TODO
+            # Compute the final stats (MS, ...)
+            StatsComputer.compute_stats(self.config.REPORTING_CONFIG, \
+                                                            self.head_explorer)
         #-------------------------------------------------------------------
 
         if not self.cp_data.tasks_obj.task_is_complete(task):
@@ -334,8 +411,6 @@ class Executor(object):
             # @Checkpoint: write checkpoint
             self.checkpointer.write_checkpoint(\
                                         json_obj=self.cp_data.get_json_obj())
-
-        # TODO: merge the results into previous ones (if applicable)
     #~ def _execute_task()
 
     @classmethod
@@ -365,14 +440,15 @@ class Executor(object):
         return meta_test_tool
     #~ def _create_meta_test_tool()
 
-    def _create_meta_criteria_tool(self, config):
+    def _create_meta_criteria_tool(self, config, testcase_tool):
         meta_criteria_tool = MetaCriteriaTool(\
                         language=config.PROGRAMMING_LANGUAGE.get_val(),\
+                        meta_test_generation_obj=testcase_tool,\
                         criteria_working_dir=\
                                         self.head_explorer.get_dir_pathname(\
                                             outdir_struct.CRITERIA_WORKDIR),\
                         code_builds_factory=self.cb_factory,
-                        tool_config_list_by_criteria=\
+                        tools_config_by_criterion_dict=\
                                     config.CRITERIA_TOOLS_CONFIGS_BY_CRITERIA,)
         return meta_criteria_tool
     #~ def _create_meta_criteria_tool()
