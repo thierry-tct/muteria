@@ -7,6 +7,8 @@ import muteria.common.mix as common_mix
 ERROR_HANDLER = common_mix.ErrorHandler
 
 class TestcasesInfoObject(object):
+    """ This class represent the test case informations data structure
+    """
     DATA_KEY = "DATA"
     SUMMARY_KEY = "SUMMARY"
     CUSTOM_KEY = "CUSTOM"
@@ -27,8 +29,11 @@ class TestcasesInfoObject(object):
     #~ def write_to_file()
 
     def add_test (self, test_name, **kwargs):
-        assert False, "Must Implement"
-    #~def add_test ():
+        ERROR_HANDLER.assert_true(not self.has_test(test_name), \
+                            "Test is already present in this: {}".format(\
+                                                    test_name), __file__)
+        self.data[self.DATA_KEY][test_name] = kwargs
+    #~def add_test ()
 
     def has_test(self, test_name):
         return test_name in self.data[self.DATA_KEY]
@@ -50,15 +55,20 @@ class TestcasesInfoObject(object):
                             "Test is already present in this: {}".format(\
                                                     new_test_name), __file__)
             self.data[self.DATA_KEY][new_test_name] = \
-                                old_test_info_obj[self.DATA_KEY][old_test_name]
+                        old_test_info_obj.data[self.DATA_KEY][old_test_name]
+
         # Update Summary
-        # TODO
+        if self.data[self.SUMMARY_KEY] is None:
+            self.data[self.SUMMARY_KEY] = {}
+        self.data[self.SUMMARY_KEY][toolname] = \
+                        old_test_info_obj.data[self.SUMMARY_KEY]
 
         # Update Custom
-        # TODO
+        if self.data[self.CUSTOM_KEY] is None:
+            self.data[self.CUSTOM_KEY] = {}
+        self.data[self.CUSTOM_KEY][toolname] = \
+                        old_test_info_obj.data[self.CUSTOM_KEY]
     #~ def update_using()
-
-    # TODO: Getter for each test's info field
 
     def remove_test(self, test_name):
         ERROR_HANDLER.assert_true(self.has_test(test_name), \
@@ -68,10 +78,10 @@ class TestcasesInfoObject(object):
     #~ def remove_test()
 
     def get_summary(self):
-        assert False, "Must Implement"
+        return self.data[self.SUMMARY_KEY]
     #~ def get_summary():
 
     def get_custom(self):
-        assert False, "Must Implement"
+        return self.data[self.CUSTOM_KEY]
     #~ def get_custom():
 #~ class TestcasesInfoObject(object):

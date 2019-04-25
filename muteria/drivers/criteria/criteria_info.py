@@ -30,124 +30,77 @@ class CriterionElementInfoObject(object):
         common_fs.dumpJSON(self.data, file_path, pretty=True)
     #~ def write_to_file()
 
-    def add_mutant (self, mutant_name, **kwargs):
-        assert False, "Must Implement"
-    #~def add_mutant ():
-
-    def has_mutant(self, mutant_name):
-        return mutant_name in self.data[self.DATA_KEY]
-    #~ def has_mutant():
-
-    def get_mutants_list(self):
-        return self.data[self.DATA_KEY].keys()
-    #~ def get_mutants_list()
-
-    def update_using(self, toolname, old2new_mutants, old_mutant_info_obj):
-        # Update mutants
-        for old_mutant_name, new_mutant_name in list(old2new_mutants.items()):
-            ERROR_HANDLER.assert_true(\
-                        old_mutant_info_obj.has_mutant(old_mutant_name), \
-                        "Test not present in old_mutant_info_obj: {}".format(\
-                                                    old_mutant_name), __file__)
-            
-            ERROR_HANDLER.assert_true(not self.has_mutant(new_mutant_name), \
+    def add_element (self, element_name, **kwargs):
+        ERROR_HANDLER.assert_true(not self.has_element(element_name), \
                             "Test is already present in this: {}".format(\
-                                                    new_mutant_name), __file__)
-            self.data[self.DATA_KEY][new_mutant_name] = \
-                            old_mutant_info_obj[self.DATA_KEY][old_mutant_name]
+                                                    element_name), __file__)
+        self.data[self.DATA_KEY][element_name] = kwargs
+    #~def add_element ():
+
+    def has_element(self, element_name):
+        return element_name in self.data[self.DATA_KEY]
+    #~ def has_element():
+
+    def get_elements_list(self):
+        return self.data[self.DATA_KEY].keys()
+    #~ def get_elements_list()
+
+    def update_using(self, toolname, old2new_elements, old_element_info_obj):
+        # Update elements
+        for old_elem_name, new_elem_name in list(old2new_elements.items()):
+            ERROR_HANDLER.assert_true(\
+                        old_element_info_obj.has_element(old_elem_name), \
+                        "Test not present in old_element_info_obj: {}".format(\
+                                                    old_elem_name), __file__)
+            
+            ERROR_HANDLER.assert_true(not self.has_element(new_elem_name), \
+                            "Test is already present in this: {}".format(\
+                                                    new_elem_name), __file__)
+            self.data[self.DATA_KEY][new_elem_name] = \
+                        old_element_info_obj.data[self.DATA_KEY][old_elem_name]
         # Update Summary
-        # TODO
+        if self.data[self.SUMMARY_KEY] is None:
+            self.data[self.SUMMARY_KEY] = {}
+        self.data[self.SUMMARY_KEY][toolname] = \
+                        old_element_info_obj.data[self.SUMMARY_KEY]
 
         # Update Custom
-        # TODO
+        if self.data[self.CUSTOM_KEY] is None:
+            self.data[self.CUSTOM_KEY] = {}
+        self.data[self.CUSTOM_KEY][toolname] = \
+                        old_element_info_obj.data[self.CUSTOM_KEY]
     #~ def update_using()
 
-    # TODO: Getter for each mutant's info field
-
-    def remove_mutant(self, mutant_name):
-        ERROR_HANDLER.assert_true(self.has_mutant(mutant_name), \
-                    "Removing an unexisting mutant: {}".format(mutant_name), \
+    def remove_element(self, element_name):
+        ERROR_HANDLER.assert_true(self.has_element(element_name), \
+                    "Removing an unexisting element: {}".format(element_name),\
                                                                     __file__)
-        del self.data[self.DATA_KEY][mutant_name]
-    #~ def remove_mutant()
+        del self.data[self.DATA_KEY][element_name]
+    #~ def remove_element()
 
     def get_summary(self):
-        assert False, "Must Implement"
+        return self.data[self.SUMMARY_KEY]
     #~ def get_summary():
 
     def get_custom(self):
-        assert False, "Must Implement"
+        return self.data[self.CUSTOM_KEY]
     #~ def get_custom():
 #~ class CriterionElementInfoObject(object):
 
-class MutantsInfoObject(object):
-    DATA_KEY = "DATA"
-    SUMMARY_KEY = "SUMMARY"
-    CUSTOM_KEY = "CUSTOM"
+class MutantsInfoObject(CriterionElementInfoObject):
     def __init__(self):
-        self.data = {
-            self.DATA_KEY: {},
-            self.SUMMARY_KEY: None,
-            self.CUSTOM_KEY: None,
-        }
+        CriterionElementInfoObject.__init__(self)
     #~ def __init__()
 
-    def load_from_file(self, file_path):
-        self.data = common_fs.loadJSON(file_path)
-    #~ def load_from_file()
+    def add_element (self, element_name, mutant_type=None, 
+                            mutant_locs=None, mutant_function=None, **kwargs):
+        CriterionElementInfoObject.add_element(self, element_name, \
+                                        mutant_type=mutant_type, \
+                                        mutant_srclocs=mutant_locs, \
+                                        mutant_function_name=mutant_function, \
+                                        **kwargs)
+    #~def add_element ():
 
-    def write_to_file(self, file_path):
-        common_fs.dumpJSON(self.data, file_path, pretty=True)
-    #~ def write_to_file()
-
-    def add_mutant (self, mutant_name, **kwargs):
-        assert False, "Must Implement"
-    #~def add_mutant ():
-
-    def has_mutant(self, mutant_name):
-        return mutant_name in self.data[self.DATA_KEY]
-    #~ def has_mutant():
-
-    def get_mutants_list(self):
-        return self.data[self.DATA_KEY].keys()
-    #~ def get_mutants_list()
-
-    def update_using(self, toolname, old2new_mutants, old_mutant_info_obj):
-        # Update mutants
-        for old_mutant_name, new_mutant_name in list(old2new_mutants.items()):
-            ERROR_HANDLER.assert_true(\
-                        old_mutant_info_obj.has_mutant(old_mutant_name), \
-                        "Test not present in old_mutant_info_obj: {}".format(\
-                                                    old_mutant_name), __file__)
-            
-            ERROR_HANDLER.assert_true(not self.has_mutant(new_mutant_name), \
-                            "Test is already present in this: {}".format(\
-                                                    new_mutant_name), __file__)
-            self.data[self.DATA_KEY][new_mutant_name] = \
-                            old_mutant_info_obj[self.DATA_KEY][old_mutant_name]
-        # Update Summary
-        # TODO
-
-        # Update Custom
-        # TODO
-    #~ def update_using()
-
-    # TODO: Getter for each mutant's info field
-
-    def remove_mutant(self, mutant_name):
-        ERROR_HANDLER.assert_true(self.has_mutant(mutant_name), \
-                    "Removing an unexisting mutant: {}".format(mutant_name), \
-                                                                    __file__)
-        del self.data[self.DATA_KEY][mutant_name]
-    #~ def remove_mutant()
-
-    def get_summary(self):
-        assert False, "Must Implement"
-    #~ def get_summary():
-
-    def get_custom(self):
-        assert False, "Must Implement"
-    #~ def get_custom():
 #~ class MutantsInfoObject(object):
 
 """

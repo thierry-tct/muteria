@@ -7,7 +7,10 @@ import itertools
 import copy
 import pandas as pd
 
+import muteria.common.mix as common_mix
 import muteria.common.fs as common_fs
+
+ERROR_HANDLER = common_mix.ErrorHandler
 
 DEFAULT_KEY_COLUMN_NAME="MUTERIA_MATRIX_KEY_COL"
 class RawExecutionMatrix(object):
@@ -132,11 +135,12 @@ class RawExecutionMatrix(object):
 
     def add_row_by_key(self, key, values, serialize=True):
         assert key not in self.keys_set, "adding an existing key: "+str(key)
-        if type(values) == list:
+        self.keys_set.add(key)
+        if type(values) in (list, tuple):
             self.dataframe.loc[len(self.dataframe)] = [key] + values
         elif type(values) == dict:
             assert self.key_column_name not in values, \
-                                                "key column name in values"
+                                                    "key column name in values"
             tmpdict = {self.key_column_name: key}
             tmpdict.update(values)
             self.dataframe.append(tmpdict, ignore_index=True)
@@ -208,6 +212,72 @@ class RawExecutionMatrix(object):
 
         return result
 
+    def _get_key_values_dict(self, keys):
+        tmp_df = self.extract_by_rowkey(keys)
+        tmp_df.set_index(self.get_key_colname())
+        k_v_dict = tmp_df.to_dict('index')
+        return k_v_dict
+
+    def _update_cells(self, key, values):
+        # locate key index
+        key_pos = self.dataframe\
+                        .index[self.dataframe[self.get_key_colname()] == key]\
+                        .tolist()
+        ERROR_HANDLER.assert_true(len(key_pos) == 1)
+        key_pos = key_pos[0]
+        for col, cval in list(values.items()):
+            self.dataframe.at[key_pos, col] = cval
+
+    def update_with_other_matrix(self, other_matrix, 
+                                override_existing=False, allow_missing=False, \
+                                serialize=False):
+        #other_matrix_df = other_matrix.get_pandas_df()
+        # Check values overlap
+        row_existing = set(self.get_keys()) & set(other_matrix.get_keys())
+        col_existing = set(self.get_nonkey_colname_list()) & \
+                            set(other_matrix.get_nonkey_colname_list())
+        if len(row_existing) > 0 and len(col_existing) > 0:
+            ERROR_HANDLER.assert_true(override_existing, \
+                            "Override_existing not set but there is overlap", \
+                                                                    __file__)            
+
+        # Check missing
+        if len(row_existing) < len(other_matrix.get_keys()):
+            #- Some rows will be added
+            if len(col_existing) != len(self.get_nonkey_colname_list()) or \
+                            len(col_existing) != \
+                                len(other_matrix.get_nonkey_colname_list()):
+                ERROR_HANDLER.assert_true(allow_missing, \
+                                "allow_missing disable but there are missing",\
+                                                                    __file__)
+
+        # Actual update
+        ## 1. Create columns that are not in others
+        col_to_add = set(other_matrix.get_nonkey_colname_list()) - \
+                                            set(self.get_nonkey_colname_list())
+        for col in col_to_add:
+            self.non_key_col_list.append(col)
+            self.dataframe[col] = [self.getUncertainCellDefaultVal()] * \
+                                                            len(self.get_keys)
+        
+        ## 2. Update or insert rows
+        extra_cols = set(self.get_keys()) - set(other_matrix.get_keys())
+        missing_extracol_vals = {e_c: self.getUncertainCellDefaultVal() \
+                                                        for e_c in extra_cols}
+        ### Insert
+        new_rows = set(other_matrix.get_keys()) - set(self.get_keys())
+        k_v_dict = other_matrix._get_key_value_dict(new_rows)
+        for key, values in list(k_v_dict.items()):
+            values.update(missing_extracol_vals)
+            self.add_row_by_key(key, values, serialize=False)
+        ### Update
+        k_v_dict = other_matrix._get_key_value_dict(row_existing)
+        for key, values in list(k_v_dict.items()):
+            for col in values:
+                self._update_cells(key, values)
+
+        if serialize:
+            self.serialize()
 
 class ExecutionMatrix(RawExecutionMatrix):
     '''

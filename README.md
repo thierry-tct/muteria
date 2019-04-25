@@ -23,6 +23,7 @@ pip install -r developer-requirements.txt
 - [ ] supported testgen executable format
 - [ ] supported test execution executable format
 - [ ] supported test level (unit, system, ...)
+- [ ] Equivalent test criteria element detection (with discard option)
 - [ ] configs must support comparison as following:
   ```python
   def __eq__(self, other):

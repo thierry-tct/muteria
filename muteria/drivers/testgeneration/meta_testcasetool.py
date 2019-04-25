@@ -410,7 +410,7 @@ class MetaTestcaseTool(object):
     def generate_tests (self, exe_path_map=None, test_tool_type_list=None, \
                                 test_generation_guidance_obj=None, \
                                 parallel_testgen_count=1, \
-                                restart_checkpointer=False,
+                                restart_checkpointer=False, \
                                 finish_destroy_checkpointer=True):
         """ This method should be used to generate the tests and must 
             always have a single instance running (it has single checkpoint
