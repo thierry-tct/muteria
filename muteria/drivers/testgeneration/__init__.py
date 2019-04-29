@@ -11,3 +11,8 @@ class TestToolType(common_mix.EnumAutoName):
         return self.get_field_value()
     #~ def get_tool_type_classname():
 #~ class TestToolType
+
+TEST_TOOL_TYPES_SCHEDULING = [
+    (TestToolType.USE_ONLY_CODE,), 
+    (TestToolType.USE_CODE_AND_TESTS,),
+]

@@ -83,7 +83,7 @@ class CompleteConfiguration(object):
     # List of enabled criteria 
     # (must have tool specified is specifically enabled)
     # None mean all criteria with tool specified
-    ENABLED_CRITERIA = None 
+    ENABLED_CRITERIA = [] 
 
     # PARALELISM
     SINGLE_REPO_PARALLELISM = 1 # Max number of parallel exec in a repo dir
@@ -198,9 +198,7 @@ class CompleteConfiguration(object):
     # generate tests after element at i-1 and may use results of test from i-1.
     TEST_TOOL_TYPES_SCHEDULING = [
         (TestToolType.USE_ONLY_CODE,), 
-        (TestToolType.USE_ONLY_MUTANT_CODE,), 
-        (TestToolType.USE_CODE_AND_TESTS, \
-                                        TestToolType.USE_MUTANT_CODE_AND_TESTS)
+        (TestToolType.USE_CODE_AND_TESTS,),
     ]
 
     # Test generation tool. Example:
@@ -291,7 +289,7 @@ class CompleteConfiguration(object):
 #~ class CompleteConfiguration
 
 class BaseToolConfig(dict):
-    def __init__(self, tooltype, toolname, config_id=None, \
+    def __init__(self, tooltype=None, toolname=None, config_id=None, \
                                                         tool_user_custom=None):
         self.tooltype = tooltype
         self.toolname = toolname
