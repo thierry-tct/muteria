@@ -225,61 +225,51 @@ class CompleteConfiguration(object):
     ONE_TEST_EXECUTION_TIMEOUT = 900.0 # in seconds (Handle inifnite loops)
     # ========================================================#
 
-    # ===================== CODE COVERAGE =====================#
-    STATEMENT_COVERAGE_ENABLED = True
-    BRANCH_COVERAGE_ENABLED = True
-    FUNCTION_COVERAGE_ENABLED = True
+    # ===================== CRITERIA COVERAGE =====================#
 
-    RUN_FAILING_TESTS_WITH_STATEMENT_COVERAGE = True
-    RUN_FAILING_TESTS_WITH_BRANCH_COVERAGE = True
-    RUN_FAILING_TESTS_WITH_FUNCTION_COVERAGE = True
+    # criteria tool. Example:
+    # >>> CriteriaToolConfig(tooltype=CriteriaToolType.USE_ONLY_CODE,
+    #                        toolname='gcov', config_id=0)
+    CRITERIA_TOOLS_CONFIGS = [
 
-    RUN_PASSING_TESTS_WITH_STATEMENT_COVERAGE = True
-    RUN_PASSING_TESTS_WITH_BRANCH_COVERAGE = True
-    RUN_PASSING_TESTS_WITH_FUNCTION_COVERAGE = True
+    ]
 
-    ## Tools
-    STATEMENT_COVERAGE_TOOLS = []
-    BRANCH_COVERAGE_TOOLS = []
-    FUNCTION_COVERAGE_TOOLS = []
+    # List of criteria to run with failing tests
+    RUN_FAILING_TESTS_WITH_CRITERIA = [
+
+    ]
+
+    # List of criteria to run with passing tests
+    RUN_PASSING_TESTS_WITH_CRITERIA = [
+
+    ]
+
+    CRITERIA_RESTRICTION_ENABLED = True  # Enable restricting mutation(scope)
+
+    # criterion: selection tools. Example: SM and TCE of E-SELECTIVE
+    CRITERIA_ELEM_SELECTIONS = {
+
+    }
+
+    ONLY_EXECUTE_SELECTED_CRITERIA_ELEM = True
+
+
+    # Criterion: guider dict. ex: {STRONG_MUTATION: Surviving}
+    CRITERIA_TESTGEN_GUIDANCE = {
+
+    }
+
+    # Criterion: optimizers dict. ex: {STRONG_MUTATION: SM_WM_OPTIMIZER}
+    CRITERIA_EXECUTION_OPTIMIZERS = {
+
+    }
+
+    # Will not get full matrix. the non executed will be uncertain
+    STOP_CRITERION_EXECUTION_AT_FIRST_COVERING = False 
 
     ## --- Modifiable (Code) ---##
-    COVERAGE_TEST_EXECUTION_EXTRA_TIMEOUT = 60.0 # in seconds
-    # ========================================================#
-
-    # ======================= MUTATION =======================#
-    MUTANT_COVERAGE_ENABLED = True
-    WEAK_MUTATION_ENABLED = True
-    STRONG_MUTATION_ENABLED = True
-
-    STRONG_MUTANTION_ORACLE_TESTS = True
-    STRONG_MUTANTION_ORACLE_ORIGINAL = True
-    STRONG_MUTANTION_ORACLE_OTHER_VERSION = True
-
-    MUTATION_RESTRICTION_ENABLED = True  # Enable restricting mutation(scope)
-    MUTANT_SELECTION_ENABLED = True
-    ONLY_EXECUTE_SELECTED_MUTANTS = True
-
-    TRIVIAL_COMPILER_EQUIVALENCE_ENABLED = True
-
-    OPTIMIZE_STRONG_MUTATION_WITH_WEAK_MUTATION = True
-    OPTIMIZE_STRONG_MUTATION_WITH_MUTANT_COVERAGE = False
-    OPTIMIZE_STRONG_MUTATION_WITH_STATEMENT_COVERAGE = False
-    OPTIMIZE_STRONG_MUTATION_WITH_FUNCTION_COVERAGE = False
-
-    STOP_MUTANT_EXECUTION_AT_FIRST_KILL = False # Will not get full matrix.
-
-    ONLY_RUN_FAILING_TESTS_WITH_MUTATION = False
-    ONLY_RUN_PASSING_TESTS_WITH_MUTATION = False
-
-    ## Tools
-    MUTATION_TOOLS = []
-
-    ## --- Modifiable (Mutation) ---##
-    ## grace time given to the mutant to complete after the original
-    ## execution time has passed
-    STRONG_MUTANT_TEST_EXECUTION_EXTRA_TIMEOUT = 60.0 # in seconds
-    WEAK_COVERAGE_MUTANT_TEST_EXECUTION_EXTRA_TIMEOUT = 600.0 # in seconds
+    SEPARATED_TEST_EXECUTION_EXTRA_TIMEOUT = 60.0 # in seconds
+    META_TEST_EXECUTION_EXTRA_TIMEOUT = 600.0 # in seconds
     # ========================================================#
 
     #######################################################
@@ -290,10 +280,11 @@ class CompleteConfiguration(object):
 
 class BaseToolConfig(dict):
     def __init__(self, tooltype=None, toolname=None, config_id=None, \
-                                                        tool_user_custom=None):
+                                    criteria_on=None, tool_user_custom=None):
         self.tooltype = tooltype
         self.toolname = toolname
         self.config_id = config_id
+        self.criteria_on = criteria_on
         self.tool_user_custom=tool_user_custom
         if self.config_id is None:
             self.toolalias = self.toolname
@@ -310,6 +301,10 @@ class BaseToolConfig(dict):
         return self.toolalias
     def get_tool_type(self):
         return self.tooltype
+    def get_tool_criteria_on(self):
+        return self.criteria_on
+    def get_tool_user_custom(self):
+        return self.tool_user_custom
 #~ class BaseToolConfig
 
 class ToolUserCustom(dict):
@@ -351,6 +346,9 @@ class ToolUserCustom(dict):
                         "{} invalid parameter was/were added".format(diff), \
                                                                     __file__)
     #~def __init__()
+
+    def __eq__(self, value):
+        return (self.__dict__ == value.__dict__)
 #~class ToolUserCustom
 
 
@@ -367,13 +365,8 @@ class TestcaseToolsConfig(BaseToolConfig):
     ONE_TEST_EXECUTION_TIMEOUT = 900.0 # in seconds (Handle inifnite loops)
 #~class TestcaseToolsConfig
     
-class CodecoverageToolsConfig(BaseToolConfig):
-    COVERAGE_TEST_EXECUTION_EXTRA_TIMEOUT = 60.0 # in seconds
-#~class CodecoverageToolsConfig
+class CriteriaToolsConfig(BaseToolConfig):
+    SEPARATED_TEST_EXECUTION_EXTRA_TIMEOUT = 60.0 # in seconds
+    META_TEST_EXECUTION_EXTRA_TIMEOUT = 600.0 # in seconds
+#~class CriteriaToolsConfig
     
-class MutationToolsConfig(BaseToolConfig):
-    ## grace time given to the mutant to complete after the original
-    ## execution time has passed
-    STRONG_MUTANT_TEST_EXECUTION_EXTRA_TIMEOUT = 60.0 # in seconds
-    WEAK_COVERAGE_MUTANT_TEST_EXECUTION_EXTRA_TIMEOUT = 600.0 # in seconds
-#~class MutationToolsConfig

@@ -36,3 +36,9 @@ CRITERIA_SEQUENCE = [
         TestCriteria.STRONG_MUTATION,
     },
 ]
+"""
+"""
+
+CRITERIA_TOOL_TYPES_SCHEDULING = [(CriteriaToolType.USE_ONLY_CODE,)]
+"""
+"""

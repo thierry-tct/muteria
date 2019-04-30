@@ -17,6 +17,7 @@ import importlib
 import muteria.common.mix as common_mix
 
 import muteria.drivers.criteria as criteria
+import muteria.drivers.testgeneration as testgeneration
 
 import muteria.configmanager.configurations as configurations
 from muteria.configmanager.configurations import CompleteConfiguration
@@ -208,29 +209,65 @@ class ConfigurationHelper(object):
         return cc
     #~ def _make_conf_class_from_dict()
 
+    @staticmethod
+    def _make_tool_conf_from_raw(raw_dict_conf, tool_type_enum, 
+                                default_tool_type, target_tool_class):
+        tuc = 'tool_user_custom'
+        ttype = 'tooltype'
+        c_on = 'criteria_on'
+
+        if raw_dict_conf[ttype]:
+            ERROR_HANDLER.assert_true(\
+                        hasattr(tool_type_enum, raw_dict_conf[ttype]), \
+                    "Invalid test tool type: "+raw_dict_conf[ttype], __file__)
+            raw_dict_conf[ttype] = getattr(tool_type_enum, raw_dict_conf[ttype])
+        else:
+            raw_dict_conf[ttype] = default_tool_type
+
+        if raw_dict_conf[c_on]:
+            raw_dict_conf[c_on] = [getattr(criteria.TestCriteria, c) \
+                                                for c in raw_dict_conf[c_on]]
+        else:
+            raw_dict_conf[c_on] = None
+
+        if raw_dict_conf[tuc]:
+            raw_dict_conf[tuc] = \
+                            configurations.ToolUserCustom(**raw_dict_conf[tuc])
+        else:
+            raw_dict_conf[tuc] = None
+        
+        return target_tool_class(**raw_dict_conf)
+    #def _make_tool_conf_from_raw()
+
     @classmethod
     def get_finalconf_from_rawconf(cls, raw_conf):
         """ Transform a raw conf into final conf
+            TODO: Verify config consistency
         """
         conf = cls._make_conf_class_from_dict(raw_conf)
         
         conf.ENABLED_CRITERIA = [getattr(criteria.TestCriteria, c) \
                                                 for c in conf.ENABLED_CRITERIA]
         
-        tmp = conf.TESTCASE_TOOLS_CONFIGS
-        conf.TESTCASE_TOOLS_CONFIGS = []
-        tuc = 'tool_user_custom'
-        for tc in tmp:
-            if tc[tuc]:
-                tc[tuc] = configurations.ToolUserCustom(**tc[tuc])
-            else:
-                tc[tuc] = None
-            conf.TESTCASE_TOOLS_CONFIGS.append(\
-                                    configurations.TestcaseToolsConfig(**tc))
+        tmp = []
+        for tc in conf.TESTCASE_TOOLS_CONFIGS:
+            tc = cls._make_tool_conf_from_raw(tc, testgeneration.TestToolType,\
+                            testgeneration.TEST_TOOL_TYPES_SCHEDULING[0][0],\
+                            configurations.TestcaseToolsConfig)
+            tmp.append(tc)
+        conf.TESTCASE_TOOLS_CONFIGS = tmp
+
+        tmp = []
+        for cc in conf.CRITERIA_TOOLS_CONFIGS:
+            cc = cls._make_tool_conf_from_raw(cc, criteria.CriteriaToolType,\
+                            criteria.CRITERIA_TOOL_TYPES_SCHEDULING[0][0],\
+                            configurations.CriteriaToolsConfig)
+            # TODO: Criteria enabled verification
+            tmp.append(cc)
+        conf.CRITERIA_TOOLS_CONFIGS = tmp
 
         # NEXT here
-        #TODO: Create what need to be created (like tool confs)
-        ERROR_HANDLER.error_exit("FIXME: TODO: Implement the internal")
+        #TODO: Add optimizers ....
     #~ def get_finalconf_of_rawconf()
 
 #~ class ConfigurationHelper()
