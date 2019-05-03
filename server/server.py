@@ -10,6 +10,8 @@ from flask import Flask, render_template, request, session, url_for
 from werkzeug import secure_filename
 from werkzeug.datastructures import MultiDict, ImmutableMultiDict
 
+import argparse
+
 app = Flask(__name__)
 
 @app.route("/")
@@ -49,4 +51,14 @@ def execution_report():
    return render_template("report.html",result = result)
 
 if __name__ == '__main__':
-   app.run(debug = True)
+   parser = argparse.ArgumentParser()
+   parser.add_argument('-h', '--host', default='127.0.0.1', \
+                        help="host to use (set to 0.0.0.0 for public access)")
+   parser.add_argument('-p', '--port', type=int, default=5000, \
+                                                            help="port to use")
+   parser.add_argument('-d', '--debug', action="store_true", \
+                                       help="enable debug mode for the server")
+   args = parser.parse_args()
+
+   # Start the app
+   app.run(host=args.host, port=args.port, debug=args.debug)

@@ -1,6 +1,7 @@
 import os
 import logging
 import importlib
+import subprocess
 
 import muteria.common.fs as common_fs
 import muteria.common.mix as common_mix
@@ -125,15 +126,34 @@ class RepoFileToCustomMap(dict):
 
 class DriversUtils(object):
     @classmethod
-    def make_meta_element(self, element, toolalias):
+    def make_meta_element(cls, element, toolalias):
         return ":".join([toolalias, element])
     #~ def make_meta_element()
 
     @classmethod
-    def reverse_meta_element(self, meta_element):
+    def reverse_meta_element(cls, meta_element):
         parts = meta_element.split(':', 1)
         assert len(parts) >= 2, "invalibd meta mutant"
         toolalias, element = parts
         return toolalias, element
     #~ def reverse_meta_element()
+
+    @classmethod
+    def check_tool(cls, prog, args_list=[], expected_exit_codes=[0]):
+        try:
+            p = subprocess.Popen([prog]+args_list, close_fds=True, \
+                                            stderr=subprocess.DEVNULL,\
+                                            stdout=subprocess.DEVNULL)
+            retcode = p.wait()
+            if retcode not in expected_exit_codes:
+                ERROR_HANDLER.error_exit("Program {} {}.".format(prog,\
+                                            'check is problematic'), __file__)
+        except OSError as e:
+            if e.errno == os.errno.ENOENT:
+                logging.info("{} not installed".format(prog))
+                return False
+            else:
+                ERROR_HANDLER.error_exit("Something went wrong", __file__)
+        return True
+    #~ def check_tool()
 #~class DriversUtils()

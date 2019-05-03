@@ -81,14 +81,6 @@ class MainController (object):
     #    Log information showing a new run of resume of previous run
     #    '''
 
-    def cmd_main(self):
-        # XXX Parse the arguments and get the raw configs
-        cmd_raw_conf = ConfigurationHelper.get_cmd_raw_conf()
-        
-        # Call raw_config_main with the created raw config
-        self.raw_config_main(raw_config=cmd_raw_conf)
-    #~ def cmd_main()
-
     def raw_config_main(self, raw_config):
         """
         TODO: Deal with config change at different runs

@@ -5,7 +5,7 @@
 
 curdir="$(dirname $(readlink -f $0))"
 
-srcdir="$curdir/muteria"
+srcdir="$curdir/magma"
 tests="$curdir/test"
 
 srcdir_py_files=$(find $srcdir -type f -name "*.py")

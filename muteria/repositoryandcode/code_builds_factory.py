@@ -38,7 +38,7 @@ class CodeFormats(common_mix.EnumAutoName):
 class BaseCodeFormatConverter(abc.ABC):
     @abc.abstractmethod
     def convert_code(self, src_fmt, dest_fmt, file_src_dest_map, \
-                                                    repository_manager):
+                                                repository_manager, **kwargs):
         pass
 
     @abc.abstractmethod
@@ -52,7 +52,7 @@ class BaseCodeFormatConverter(abc.ABC):
 
 class IdentityCodeConverter(BaseCodeFormatConverter):
     def convert_code(self, src_fmt, dest_fmt, file_src_dest_map, \
-                                                        repository_manager):
+                                                repository_manager, **kwargs):
         # make sure that different sources have different destinations
         ERROR_HANDLER.assert_true(len(file_src_dest_map) == \
                     len({file_src_dest_map[fn] for fn in file_src_dest_map}), \
@@ -62,6 +62,7 @@ class IdentityCodeConverter(BaseCodeFormatConverter):
         for src, dest in list(file_src_dest_map.items()):
             if os.path.abspath(src) != os.path.abspath(dest):
                 shutil.copy2(src, dest)
+        return True
     #~ def identity_function()
 
     def get_source_formats(self):
@@ -75,7 +76,7 @@ class IdentityCodeConverter(BaseCodeFormatConverter):
     #~ def get_destination_formats()
 #~ class IdentityCodeConverter
 
-formatfrom_formatto_function_tuples = [
+formatfrom_function_tuples = [
     # From C and CPP source
     (CodeFormats.C_SOURCE, ct_modules.c_cpp.FromC()),
     (CodeFormats.C_PREPROCESSED_SOURCE, ct_modules.c_cpp.FromC()),
@@ -95,14 +96,14 @@ class CodeBuildsFactory(object):
         self.src_dest_fmt_to_handling_obj = {}
 
         # Initialize 
-        for src_fmt, obj_cls in formatfrom_formatto_function_tuples:
+        for src_fmt, obj_cls in formatfrom_function_tuples:
             if isinstance(obj_cls, IdentityCodeConverter):
                 self._fmt_from_to_registration(src_fmt, src_fmt, obj_cls)
             else:
                 ERROR_HANDLER.assert_true(\
                                 src_fmt in obj_cls.get_source_formats, \
                                 "{} {} {} {}".format( \
-                            "Error in 'formatfrom_formatto_function_tuples'",
+                            "Error in 'formatfrom_function_tuples'",
                             "src_fmt", src_fmt, "not in corresponding obj..."),
                                                                     __file__)
                 for dest_fmt in obj_cls.get_destination_formats_for(src_fmt):
@@ -134,8 +135,10 @@ class CodeBuildsFactory(object):
         
         # call handler
         handler = self.src_dest_fmt_to_handling_obj[src_fmt][dest_fmt]
-        handler.convert_code(src_fmt, dest_fmt, src_dest_files_paths_map, \
+        ret = handler.convert_code(src_fmt, dest_fmt, \
+                            src_dest_files_paths_map, \
                             repository_manager=self.repository_manager)
+        return ret
     #~ def transform_src_into_dest ()
     
     def override_registration (self, src_fmt, dest_fmt, handling_obj):
@@ -148,5 +151,5 @@ class CodeBuildsFactory(object):
 
         # register
         self._fmt_from_to_registration(src_fmt, dest_fmt, handling_obj)
-    #~ def override_registration ():
+    #~ def override_registration ()
 #~ class CodeBuildsFactory()

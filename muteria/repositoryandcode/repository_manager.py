@@ -27,7 +27,7 @@
         call the call back. it is then passed to the 
         callback without any change.
     :param str repository_rootdir: full path to the repository root
-    :param str repo_executable_relpath: relative path to the executable
+    :param str repo_executables_relpaths: relative path to the executable
         w.r.t the repository root dir
     :param list source_files_list: list of source files we care about.
         each item of the list is a relative path to a source file w.r.t. 
@@ -40,7 +40,7 @@
         the returned value of the callback function.
     >>> def post_process_callback(op_retval, callback_args,\
                                     repository_rootdir, \
-                                    repo_executable_relpath, \
+                                    repo_executables_relpaths, \
                                     source_files_list, \
                                     dev_tests_list)
     
@@ -73,29 +73,31 @@ class RepositoryManager(object):
     ERROR = -1
     DEFAULT_TESTS_BRANCH_NAME = "_tests_tmp_muteria_"
     DEFAULT_MUTERIA_REPO_META_FOLDER = ".muteria" 
-    def __init__(self, repository_rootdir, repo_executable_relpath=None, \
+    def __init__(self, repository_rootdir, repo_executables_relpaths=None, \
                         dev_test_runner_func=None, code_builder_func=None, \
-                        source_files_list=None, dev_tests_list=None, \
+                        source_files_to_objects=None, dev_tests_list=None, \
                         delete_created_on_revert_as_initial=False, \
                         test_branch_name=DEFAULT_TESTS_BRANCH_NAME):
         self.repository_rootdir = repository_rootdir
-        self.repo_executable_relpath = repo_executable_relpath
+        self.repo_executables_relpaths = repo_executables_relpaths
         self.dev_test_runner_func = dev_test_runner_func
         self.code_builder_func = code_builder_func
-        self.source_files_list = source_files_list
+        self.source_files_to_objects = source_files_to_objects
         self.dev_tests_list = dev_tests_list
 
         self.delete_created_on_revert_as_initial = \
                                         delete_created_on_revert_as_initial
         self.test_branch_name = test_branch_name
 
-        if self.source_files_list is None:
-            self.source_files_list = []
+        if self.source_files_to_objects is None:
+            self.source_files_to_objects = {}
+
+        self.source_files_list = source_files_to_objects.keys()
 
         if self.repository_rootdir is None:
             ERROR_HANDLER.error_exit(\
                                 "repository rootdir cannot be None", __file__)
-        #if self.repo_executable_relpath is None:
+        #if self.repo_executables_relpaths is None:
         #    ERROR_HANDLER.error_exit(\
         #                    "repo executable relpath cannot be None", __file__)
 
@@ -112,9 +114,17 @@ class RepositoryManager(object):
         self._setup_repository()
     #~ def __init__()
 
-    def run_dev_test(self, dev_test_name, \
-                    pre_process_callback=None, pre_callback_args=None, \
-                    post_process_callback=None, post_callback_args=None):
+    def _set_callback_basics(self, callback_object):
+        if callback_object is not None:
+            callback_object.set_repository_rootdir(self.repository_rootdir)
+            callback_object.set_repo_executables_relpaths(\
+                                             self.repo_executables_relpaths)
+            callback_object.set_source_files_to_objects(\
+                                                self.source_files_to_objects)
+            callback_object.set_dev_tests_list(self.dev_tests_list)
+    #~ def _set_callback_basics()
+
+    def run_dev_test(self, dev_test_name, callback_object=None):
         if self.dev_test_runner_func is None:
             ERROR_HANDLER.error_exit(\
                     "dev_test_runner_func cannot be none when called", \
@@ -123,33 +133,26 @@ class RepositoryManager(object):
         pre_ret = True
         post_ret = None
 
+        self._set_callback_basics(callback_object)
+
         self.lock.acquire()
         try:
-            if pre_process_callback is not None:
-                pre_ret = pre_process_callback(pre_callback_args,\
-                                        self.repository_rootdir, \
-                                        self.repo_executable_relpath, \
-                                        self.source_files_list, \
-                                        self.dev_tests_list)
+            if callback_object is not None:
+                pre_ret = callback_object.pre_command()
             if pre_ret:
                 ret = self.dev_test_runner_func(dev_test_name, \
                                             self.repository_rootdir, \
-                                            self.repo_executable_relpath)
-                if post_process_callback is not None:
-                    post_ret = post_process_callback(ret, post_callback_args,\
-                                            self.repository_rootdir, \
-                                            self.repo_executable_relpath, \
-                                            self.source_files_list, \
-                                            self.dev_tests_list)
+                                            self.repo_executables_relpaths)
+                if callback_object is not None:
+                    callback_object.set_op_retval(ret)
+                    post_ret = callback_object.post_command()
         finally:
             self.lock.release()                                
         return (pre_ret, post_ret)
     #~ def run_dev_test()
 
     def build_code(self, compiler=None, flags=None, clean_tmp=False, \
-                        reconfigure=False, \
-                        pre_process_callback=None, pre_callback_args=None, \
-                        post_process_callback=None, post_callback_args=None):
+                        reconfigure=False, callback_object=None):
         """ Build the code in repository dir to obtain the executable
         
         :type compiler: str
@@ -211,31 +214,28 @@ class RepositoryManager(object):
         pre_ret = True
         post_ret = None
 
+        self._set_callback_basics(callback_object)
+
         self.lock.acquire()
         try:
-            if pre_process_callback is not None:
-                pre_ret = pre_process_callback(pre_callback_args,\
-                                        self.repository_rootdir, \
-                                        self.repo_executable_relpath, \
-                                        self.source_files_list, \
-                                        self.dev_tests_list)
+            if callback_object is not None:
+                pre_ret = callback_object.pre_command()
             if pre_ret:
                 ret = self.code_builder_func(self.repository_rootdir, \
-                                        self.repo_executable_relpath, \
+                                        self.repo_executables_relpaths, \
                                         compiler, flags, clean_tmp, \
                                         reconfigure)
-                if post_process_callback is not None:
-                    post_ret = post_process_callback(ret, post_callback_args, \
-                                            self.repository_rootdir, \
-                                            self.repo_executable_relpath, \
-                                            self.source_files_list, \
-                                            self.dev_tests_list)
+                if callback_object is not None:
+                    callback_object.set_op_retval(ret)
+                    post_ret = callback_object.post_command()
+                else:
+                    post_ret = ret
         finally:
             self.lock.release()                                
         return (pre_ret, post_ret)
     #~ def build_code()
 
-    def custom_read_access(self, process_callback, callback_args=None):
+    def custom_read_access(self, callback_object):
         """ Execute the read only callback function and 
             return its returned value
         :type process_callback: function
@@ -257,25 +257,41 @@ class RepositoryManager(object):
         :rtype: any
         """
 
+        self._set_callback_basics(callback_object)
+
         self.lock.acquire()
         try:
-            if process_callback is None:
+            if callback_object is None:
                 ERROR_HANDLER.error_exit("{} {}".format(\
-                        "process_callback must", \
+                        "callback object must", \
                         "not be None in custom_read_access call"), __file__)
-            ret = process_callback(callback_args, \
-                                        self.repository_rootdir, \
-                                        self.repo_executable_relpath, \
-                                        self.source_files_list, \
-                                        self.dev_tests_list)
+            post_ret = None
+            pre_ret = callback_object.pre_command()
+            if pre_ret:
+                callback_object.set_op_retval(pre_ret)
+                post_ret = callback_object.post_command()
         finally:
             self.lock.release()                                
-        return ret
+        return (pre_ret, post_ret)
     #~ def custom_read_access()
 
+    def repo_abs_path(self, relpath):
+        return os.path.join(self.repository_rootdir, relpath)
+    #~ def repo_abs_path()
+
+    def get_relative_exe_path_map(self):
+        exes = list(self.repo_executables_relpaths)
+        src_obj_map = dict(self.source_files_to_objects)
+        return exes, src_obj_map
+    #~ def get_relative_exe_path_map()
+
     def get_exe_path_map(self):
-        # TODO
-        ERROR_HANDLER.error_exit("To Implement", __file__)
+        exes = [self.repo_abs_path(e) for e in self.repo_executables_relpaths]
+        src_obj_map = {}
+        for src, dest in list(self.source_files_to_objects.items()):
+            src_obj_map[self.repo_abs_path(src)] = self.repo_abs_path(dest)
+        return exes, src_obj_map
+    #~ def get_exe_path_map()
 
     def revert_repository_file (self, file_rel_path, gitobj=None):
         if gitobj is None:

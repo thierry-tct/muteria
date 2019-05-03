@@ -67,7 +67,6 @@ class BaseCriteriaTool(abc.ABC):
         ## Create dirs
         if not os.path.isdir(self.criteria_working_dir):
             os.mkdir(self.criteria_working_dir)
-
     #~ def __init__()
 
     def get_checkpointer(self):
@@ -131,8 +130,8 @@ class BaseCriteriaTool(abc.ABC):
                 # extract coverage
                 coverage_tmp_data_per_criterion = \
                                 self._extract_coverage_data_of_a_test(\
-                                                test_verdict, \
-                                                result_dir_tmp, cg_criteria)
+                                                cg_criteria, test_verdict, \
+                                                    result_dir_tmp)
                 # update data
                 for criterion in cg_criteria:
                     if len(criterion2coverage_per_test[criterion]) == 0:
@@ -147,7 +146,8 @@ class BaseCriteriaTool(abc.ABC):
                                         "cov num type must be int", __file__)
                         ERROR_HANDLER.assert_true(v_elem >= 0, \
                                         "invalid cov num(negative)", __file__)
-                        v_elem[testcase] = coverage_tmp_data_per_criterion\
+                        res = criterion2coverage_per_test[criterion][elem]
+                        res[testcase] = coverage_tmp_data_per_criterion\
                                                             [criterion][elem]
 
                 # remove dir created for temporal storage
@@ -571,5 +571,5 @@ class BaseCriteriaTool(abc.ABC):
                                         code_builds_factory, \
                                         enabled_criteria, parallel_count=1):
         print ("!!! Must be implemented in child class !!!")
-    #~ def do_instrument()
+    #~ def _do_instrument_code()
 #~ class BaseCriteriaTool

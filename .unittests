@@ -17,6 +17,8 @@ cd $TOP_DIR
 
 if [ $# = 1 ]
 then
+    # example of test name: 
+    # test.unittests.common.test_fs
     python -m unittest $1 -v
 else
     [ $# = 0 ] || error_exit "expect no argument for unittests"
