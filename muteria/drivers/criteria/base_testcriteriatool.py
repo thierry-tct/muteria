@@ -36,7 +36,7 @@ class BaseCriteriaTool(abc.ABC):
     @classmethod
     def get_supported_criteria(cls):
         return cls._get_meta_instrumentation_criteria() + \
-                                cls._get_separated_instrumentation_criteria
+                                cls._get_separated_instrumentation_criteria()
     #~ def get_supported_criteria()
 
     def __init__(self, meta_test_generation_obj, criteria_working_dir, 
@@ -155,6 +155,7 @@ class BaseCriteriaTool(abc.ABC):
 
         # Write the execution data into the matrices
         # Since for ExecutionMatrix, active is not 0 thus this is direct.
+        testcases_set = set(testcases)
         for criterion in criterion2coverage_per_test:
             if os.path.isfile(criterion_to_matrix[criterion]):
                 os.remove(criterion_to_matrix[criterion])
@@ -163,6 +164,8 @@ class BaseCriteriaTool(abc.ABC):
                                     non_key_col_list=testcases)
             for key, value in list(\
                             criterion2coverage_per_test[criterion].items()):
+                missing_tests = {t:0 for t in testcases_set - set(value)}
+                value.update(missing_tests)
                 matrix.add_row_by_key(key, value, serialize=False)
             # Serialize to disk
             criterion_to_matrix[criterion].serialize()
@@ -484,8 +487,9 @@ class BaseCriteriaTool(abc.ABC):
             checkpoint_handler.set_finished(None)
     #~ def instrument_code()
         
-    @abc.abstractclassmethod
+    #@abc.abstractclassmethod
     @classmethod
+    @abc.abstractclassmethod
     def installed(cls, custom_binary_dir=None):
         """ Check that the tool is installed
             :return: bool reprenting whether the tool is installed or not 
@@ -493,10 +497,11 @@ class BaseCriteriaTool(abc.ABC):
                     - True: the tool is installed and works
                     - False: the tool is not installed or do not work
         """
+        print ("!!! Must be implemented in child class !!!")
     #~ def installed()
 
-    @abc.abstractclassmethod
     @classmethod
+    @abc.abstractclassmethod
     def _get_meta_instrumentation_criteria(cls):
         """ Criteria where all elements are instrumented in same file
             :return: list of citeria
@@ -509,8 +514,8 @@ class BaseCriteriaTool(abc.ABC):
         print ("!!! Must be implemented in child class !!!")
     #~ def _get_meta_instrumentation_criteria()
 
-    @abc.abstractclassmethod
     @classmethod
+    @abc.abstractclassmethod
     def _get_separated_instrumentation_criteria(cls):
         """ Criteria where all elements are instrumented in different files
             :return: list of citeria

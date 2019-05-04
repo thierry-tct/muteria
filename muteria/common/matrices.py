@@ -78,19 +78,24 @@ class RawExecutionMatrix(object):
         self.is_uncertain_cell_func = is_uncertain_cell_func
 
         # Verify 
-        assert self.is_active_cell_func(self.active_cell_default_val)
-        assert self.is_inactive_cell_func(self.inactive_cell_vals)
-        assert self.is_uncertain_cell_func(self.uncertain_cell_default_val)
+        ERROR_HANDLER.assert_true(self.is_active_cell_func(\
+                                self.active_cell_default_val[0]), "", __file__)
+        ERROR_HANDLER.assert_true(self.is_inactive_cell_func(\
+                                    self.inactive_cell_vals[0]), "", __file__) 
+        ERROR_HANDLER.assert_true(self.is_uncertain_cell_func(\
+                            self.uncertain_cell_default_val[0]), "", __file__)
         # Verify inactive
         for v in self.inactive_cell_vals:
-            assert not self.is_active_cell_func(v)
+            ERROR_HANDLER.assert_true(not self.is_active_cell_func(v), \
+                                                                "", __file__)
         for v in self.inactive_cell_vals:
-            assert not self.is_uncertain_cell_func(v)
+            ERROR_HANDLER.assert_true(not self.is_uncertain_cell_func(v), \
+                                                                "", __file__)
 
         if self.filename is None or not os.path.isfile(self.filename):
-            assert self.non_key_col_list is not None, \
+            ERROR_HANDLER.assert_true(self.non_key_col_list is not None, \
                                     "Must specify 'non_key_col_list' when " + \
-                                        "filename inexistant"
+                                        "filename inexistant", __file__)
             ordered_cols = [self.key_column_name] + self.non_key_col_list
             self.dataframe = \
                     pd.DataFrame({c:[] for c in ordered_cols})[ordered_cols]
@@ -98,15 +103,19 @@ class RawExecutionMatrix(object):
                                            .astype({self.key_column_name: str})
         else:
             self.dataframe = common_fs.loadCSV(self.filename)
-            assert len(self.dataframe.columns) >= 2, \
-                    "expect at least 2 columns in dataframe: key, values..."
-            assert self.key_column_name == list(self.dataframe)[0], \
-                    "key_column name missing or not first column in dataframe"
+            ERROR_HANDLER.assert_true(len(self.dataframe.columns) >= 2, \
+                    "expect at least 2 columns in dataframe: key, values...",\
+                                                                    __file__)
+            ERROR_HANDLER.assert_true(self.key_column_name == \
+                                    list(self.dataframe)[0], "key_column"\
+                            " name missing or not first column in dataframe",\
+                                                                    __file__)
             if self.non_key_col_list is None:
                 self.non_key_col_list = list(self.dataframe)[1:]
             else:
-                assert self.non_key_col_list == list(self.dataframe)[1:], \
-                                                            "non key mismatch"
+                ERROR_HANDLER.assert_true(self.non_key_col_list == \
+                                list(self.dataframe)[1:], "non key mismatch",\
+                                                                    __file__)
 
         self.keys_set = set(self.get_keys())
 
@@ -134,18 +143,19 @@ class RawExecutionMatrix(object):
     #def raw_delete_row(self):
 
     def add_row_by_key(self, key, values, serialize=True):
-        assert key not in self.keys_set, "adding an existing key: "+str(key)
+        ERROR_HANDLER.assert_true(key not in self.keys_set, \
+                                "adding an existing key: "+str(key), __file__)
         self.keys_set.add(key)
         if type(values) in (list, tuple):
             self.dataframe.loc[len(self.dataframe)] = [key] + values
         elif type(values) == dict:
-            assert self.key_column_name not in values, \
-                                                    "key column name in values"
+            ERROR_HANDLER.assert_true(self.key_column_name not in values, \
+                                        "key column name in values", __file__)
             tmpdict = {self.key_column_name: key}
             tmpdict.update(values)
             self.dataframe.append(tmpdict, ignore_index=True)
         else:
-            assert False, "Invald input: 'values'" 
+            ERROR_HANDLER.error_exit("Invald input: 'values'", __file__)
 
         if serialize:
             self.serialize()

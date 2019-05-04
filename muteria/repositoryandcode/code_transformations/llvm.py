@@ -8,13 +8,13 @@ import shutil
 
 import muteria.common.mix as common_mix
 
-import muteria.repositoryandcode.code_builds_factory as cbf
+import muteria.repositoryandcode.codes_convert_support as ccs
 
 ERROR_HANDLER = common_mix.ErrorHandler
 
 __all__ = ['FromLLVMBitcode']
 
-class FromLLVMBitcode(cbf.BaseCodeFormatConverter):
+class FromLLVMBitcode(ccs.BaseCodeFormatConverter):
     def __init__(self):
         pass
     #~ def __init__()

@@ -9,6 +9,14 @@ import muteria.common.mix as common_mix
 ERROR_HANDLER = common_mix.ErrorHandler
 
 class ToolsModulesLoader(object):
+    """ Load tools drivers
+        Example:
+        >>> import muteria.drivers as md
+        >>> md.ToolsModulesLoader.get_tools_modules(\
+        ...                            md.ToolsModulesLoader.CRITERIA_TOOLS)
+        >>> {}
+    """
+
     TESTCASES_TOOLS = "TESTCASES"
     CRITERIA_TOOLS = "CRITERIA"
 
@@ -33,29 +41,43 @@ class ToolsModulesLoader(object):
 
         modules = {}
         
+        to_skip = ('__pycache__',)
+
         drivers_pkg_init_py = os.path.abspath(__file__)
         drivers_pkg_path = os.path.dirname(drivers_pkg_init_py)
         pkg_path = os.path.join(drivers_pkg_path, \
                                     cls.TOOL_CATEGORIES_DIRS[tool_category], \
                                     cls.COMMON_TOOLS_BY_LANGUAGE_DIR)
-        language_list = [lang.lower() for lang in os.listdir(pkg_path) \
-                                                        if os.path.isdir(lang)]
+        language_list = []
+        for lang in os.listdir(pkg_path):
+            if os.path.isdir(os.path.join(pkg_path, lang)) and \
+                                                        lang not in to_skip:
+                language_list.append(lang.lower())
+
         for language in language_list:
             if '.' in language:
-                logging.error("%s (%s). %s" % ("Malformed language name", \
-                        language, \
-                        "Language (package) name must not contain dot('.')"))
-                ERROR_HANDLER.error_exit()
+                ERROR_HANDLER.error_exit("%s (%s). %s" % \
+                                    ("Malformed language name", language, \
+                        "Language (package) name must not contain dot('.')"), \
+                                                                    __file__)
             language_pkg_path = os.path.join(pkg_path, language)
-            toolname_list = [fd for fd in os.listdir(language_pkg_path) \
-                                                        if os.path.isdir(fd)]
+            toolname_list = []
+            for fd in os.listdir(language_pkg_path):
+                if os.path.isdir(os.path.join(language_pkg_path, fd)) and \
+                                                            fd not in to_skip:
+                    toolname_list.append(fd)
+
             for toolname in toolname_list:
                 if '.' in toolname:
-                    logging.error("%s (%s). %s" % ("Malformed tool name", \
-                        toolname, \
-                        "Toolname (package) name must not contain dot('.')"))
-                    ERROR_HANDLER.error_exit()
-                load_string = ".".join([language, toolname])
+                    ERROR_HANDLER.error_exit("%s (%s). %s" % \
+                                    ("Malformed tool name", toolname, \
+                        "Toolname (package) name must not contain dot('.')"),\
+                                                                    __file__)
+                    
+                load_string = ".".join(['muteria', 'drivers', \
+                                    cls.TOOL_CATEGORIES_DIRS[tool_category],\
+                                    cls.COMMON_TOOLS_BY_LANGUAGE_DIR,\
+                                                        language, toolname])
 
                 # import the mutation tool 
                 tool_pkg = importlib.import_module(load_string)
@@ -141,13 +163,14 @@ class DriversUtils(object):
     @classmethod
     def check_tool(cls, prog, args_list=[], expected_exit_codes=[0]):
         try:
-            p = subprocess.Popen([prog]+args_list, close_fds=True, \
+            p = subprocess.Popen([prog]+args_list, \
+                                             #close_fds=True, \
                                             stderr=subprocess.DEVNULL,\
                                             stdout=subprocess.DEVNULL)
             retcode = p.wait()
             if retcode not in expected_exit_codes:
                 ERROR_HANDLER.error_exit("Program {} {}.".format(prog,\
-                                            'check is problematic'), __file__)
+                                        ': check is problematic'), __file__)
         except OSError as e:
             if e.errno == os.errno.ENOENT:
                 logging.info("{} not installed".format(prog))

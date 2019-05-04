@@ -50,6 +50,16 @@ class MetaTestcaseTool(object):
 
     @classmethod
     def get_toolnames_by_types_by_language(cls):
+        """ get imformation about the plugged-in testcase tool drivers.
+            :return: a dict having the form:
+                    {
+                        language: {
+                            TestToolType: [
+                                (toolname, is_installed?)
+                            ]
+                        }
+                    }
+        """
         modules_dict = ToolsModulesLoader.get_tools_modules( \
                                             ToolsModulesLoader.TESTCASES_TOOLS)
         res = {}

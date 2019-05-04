@@ -3,6 +3,7 @@ from __future__ import print_function
 
 import os
 import sys
+import re
 import shutil
 import shlex
 import logging
@@ -11,7 +12,7 @@ import subprocess
 import muteria.common.mix as common_mix
 import muteria.common.fs as common_fs
 
-from muteria.repositoryandcode.code_builds_factory import CodeFormats
+from muteria.repositoryandcode.codes_convert_support import CodeFormats
 from muteria.repositoryandcode.callback_object import DefaultCallbackObject
 
 from muteria.drivers.criteria.base_testcriteriatool import BaseCriteriaTool
@@ -143,9 +144,9 @@ class CriteriaToolGCov(BaseCriteriaTool):
         prog = 'gcov'
 
         cov2flags = {
-                    #TestCriteria.STATEMENT_COVERAGE: ('a',),
-                    TestCriteria.BRANCH_COVERAGE: ('-b', '-c'),
-                    TestCriteria.FUNCTION_COVERAGE: ('-f',),
+                    TestCriteria.STATEMENT_COVERAGE: [],
+                    TestCriteria.BRANCH_COVERAGE: ['-b', '-c'],
+                    TestCriteria.FUNCTION_COVERAGE: ['-f'],
                 }
 
         args_list = []
@@ -183,18 +184,63 @@ class CriteriaToolGCov(BaseCriteriaTool):
         '''
         gcov_list = common_fs.loadJSON(os.path.join(result_dir_tmp,\
                                                 self.gcov_files_list_filename))
-        func_cov = None 
+        
+        res = {c: {} for c in enabled_criteria}
+
+        func_cov = None
         branch_cov = None
-        statement_cov = None
+        statement_cov = {}
         if TestCriteria.FUNCTION_COVERAGE in enabled_criteria:
-            func_cov = {}
+            func_cov = res[TestCriteria.FUNCTION_COVERAGE]
         if TestCriteria.BRANCH_COVERAGE in enabled_criteria:
-            branch_cov = {}
+            branch_cov = res[TestCriteria.BRANCH_COVERAGE]
         if TestCriteria.STATEMENT_COVERAGE in enabled_criteria:
-            statement_cov = {}
+            statement_cov = res[TestCriteria.STATEMENT_COVERAGE]
+
         for gcov_file in gcov_list:
-            #TODO parse gcov, extract coverage and update the corresponding 
-            # dicts
+            with open(gcov_file) as fp:
+                last_line = None
+                src_file = None
+                for raw_line in fp:
+                    line = raw_line.strip()
+                    col_split = [v.strip() for v in line.split(':')]
+
+                    if len(col_split) > 2 and col_split[1] == '0':
+                        # preamble
+                        if col_split[2] == "Source":
+                            src_file = col_split[3]
+                    elif line.startswith("function "):
+                        # match function
+                        parts = line.split()
+                        ident = DriversUtils.make_meta_element(parts[1], \
+                                                                    src_file)
+                        func_cov[ident] = int(parts[3])
+                    elif line.startswith("branch "):
+                        # match branch
+                        parts = line.split()
+                        ident = DriversUtils.make_meta_element(parts[1], \
+                                                                    last_line)
+                        branch_cov[ident] = int(parts[3])
+
+                    elif len(col_split) > 2 and \
+                                            re.match(r"^\d+$", col_split[1]):
+                        # match line
+                        if col_split[0] == '-':
+                            continue
+                        last_line = DriversUtils.make_meta_element(\
+                                                        col_split[1], src_file)
+                        if col_split[0] in ('#####', '====='):
+                            exec_count = 0
+                        else:
+                            exec_count = \
+                                    int(re.findall(r'^\d+', col_split[0])[0])
+                        statement_cov[last_line] = exec_count
+
+        # delete gcov files
+        for gcov_f in self._get_gcov_list():
+            os.remove(gcov_f)
+
+        return res
     #~ def _extract_coverage_data_of_a_test()
 
     def _do_instrument_code (self, outputdir, exe_path_map, \

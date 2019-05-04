@@ -53,14 +53,20 @@ class ErrorHandler(object):
 
     @classmethod
     def error_exit(cls, err_string=None, call_location=None, error_code=1, \
-                                                            ask_revert=True):
+                                        ask_revert=True, from_assert=False):
         if call_location is not None:
             logging.error("# Error happened in location {}".format(\
                                                             call_location))
-        logging.error("#Error happened in function %s" % inspect.stack()[1][3])
+        if from_assert:
+            last_function = inspect.stack()[2][3]
+        else:
+            last_function = inspect.stack()[1][3]
+        logging.error("# Error happened in function %s" % last_function)
+                                                        
         if err_string:
-            logging.error(err_string)
-        if ask_revert and not cls.error_exit_revert_repo_called:
+            logging.error(" (msg) "+err_string)
+        if ask_revert and cls.repos_dir_manager is not None and \
+                                         not cls.error_exit_revert_repo_called:
             if confirm_execution("Do you want to revert repository files?"):
                 logging.info("@ post error: Reverting repository files")
                 cls.error_exit_revert_repo_called = True
@@ -80,7 +86,8 @@ class ErrorHandler(object):
         '''
         if not condition:
             cls.error_exit(err_string=err_string, \
-                            call_location=call_location, ask_revert=ask_revert)
+                            call_location=call_location, \
+                            ask_revert=ask_revert, from_assert=True)
     #~ def error_exit_file()
 #~ class ErrorHandler
 
@@ -133,7 +140,7 @@ class EnumAutoName(enum.Enum):
             >>> my.FIELD1.get_field_value()
             'abc'
         """
-        return self.name
+        return self.value
     #~ def get_field_value():
 
     @classmethod

@@ -48,8 +48,8 @@ ERROR_HANDLER = common_mix.ErrorHandler
 class BaseTestcaseTool(abc.ABC):
     '''
     '''
-    @abc.abstractclassmethod
     @classmethod
+    @abc.abstractclassmethod
     def installed(cls, custom_binary_dir=None):
         """ Check that the tool is installed
             :return: bool reprenting whether the tool is installed or not 

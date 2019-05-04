@@ -43,8 +43,20 @@ class MetaCriteriaTool(object):
 
     @classmethod
     def get_toolnames_by_types_by_criteria_by_language(cls):
+        """ get imformation about the plugged-in criteria tool drivers.
+            :return: a dict having the form:
+                    {
+                        language: {
+                            criterion: {
+                                CriteriaToolType: [
+                                    (toolname, is_installed?)
+                                ]
+                            }
+                        }
+                    }
+        """
         modules_dict = ToolsModulesLoader.get_tools_modules( \
-                                            ToolsModulesLoader.TESTCASES_TOOLS)
+                                            ToolsModulesLoader.CRITERIA_TOOLS)
         res = {}
         for language in modules_dict:
             res[language] = {}

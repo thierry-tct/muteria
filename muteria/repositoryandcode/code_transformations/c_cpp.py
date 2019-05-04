@@ -8,23 +8,23 @@ import shutil
 
 import muteria.common.mix as common_mix
 
-import muteria.repositoryandcode.code_builds_factory as cbf
+import muteria.repositoryandcode.codes_convert_support as ccs
 
 ERROR_HANDLER = common_mix.ErrorHandler
 
 __all__ = ['FromC', 'FromCpp']
 
-class FromC(cbf.BaseCodeFormatConverter):
+class FromC(ccs.BaseCodeFormatConverter):
     def __init__(self):
         self.src_formats = [
-            cbf.CodeFormats.C_SOURCE,
-            cbf.CodeFormats.C_PREPROCESSED_SOURCE
+            ccs.CodeFormats.C_SOURCE,
+            ccs.CodeFormats.C_PREPROCESSED_SOURCE
         ]
         self.dest_formats = [
-            cbf.CodeFormats.C_PREPROCESSED_SOURCE,
-            cbf.CodeFormats.LLVM_BITCODE,
-            cbf.CodeFormats.OBJECT_FILE,
-            cbf.CodeFormats.NATIVE_CODE,
+            ccs.CodeFormats.C_PREPROCESSED_SOURCE,
+            ccs.CodeFormats.LLVM_BITCODE,
+            ccs.CodeFormats.OBJECT_FILE,
+            ccs.CodeFormats.NATIVE_CODE,
         ]
     #~ def __init__()
 
@@ -51,17 +51,17 @@ class FromC(cbf.BaseCodeFormatConverter):
             return None
         #~ def _copy_files()
 
-        if (dest_fmt == cbf.CodeFormats.C_PREPROCESSED_SOURCE):
-            if (src_fmt == cbf.CodeFormats.C_SOURCE):
+        if (dest_fmt == ccs.CodeFormats.C_PREPROCESSED_SOURCE):
+            if (src_fmt == ccs.CodeFormats.C_SOURCE):
                 ERROR_HANDLER.error_exit("Must Implement1", __file__)
             else:
                 for src, dest in list(file_src_dest_map.items()):
                     shutil.copy2(src, dest)
-        if (dest_fmt == cbf.CodeFormats.LLVM_BITCODE):
+        if (dest_fmt == ccs.CodeFormats.LLVM_BITCODE):
             ERROR_HANDLER.error_exit("Must Implement2", __file__)
-        if (dest_fmt == cbf.CodeFormats.OBJECT_FILE):
+        if (dest_fmt == ccs.CodeFormats.OBJECT_FILE):
             ERROR_HANDLER.error_exit("Must Implement3", __file__)
-        if (dest_fmt == cbf.CodeFormats.NATIVE_CODE):
+        if (dest_fmt == ccs.CodeFormats.NATIVE_CODE):
             pre_ret, post_ret = repository_manager.build_code(\
                                             post_process_callback=_copy_files,\
                                                                     **kwargs)
@@ -81,17 +81,17 @@ class FromC(cbf.BaseCodeFormatConverter):
     #~ def get_destination_formats()
 #~ class FromC
 
-class FromCpp(cbf.BaseCodeFormatConverter):
+class FromCpp(ccs.BaseCodeFormatConverter):
     def __init__(self):
         self.src_formats = [
-            cbf.CodeFormats.CPP_SOURCE,
-            cbf.CodeFormats.CPP_PREPROCESSED_SOURCE
+            ccs.CodeFormats.CPP_SOURCE,
+            ccs.CodeFormats.CPP_PREPROCESSED_SOURCE
         ]
         self.dest_formats = [
-            cbf.CodeFormats.CPP_PREPROCESSED_SOURCE,
-            cbf.CodeFormats.LLVM_BITCODE,
-            cbf.CodeFormats.OBJECT_FILE,
-            cbf.CodeFormats.NATIVE_CODE,
+            ccs.CodeFormats.CPP_PREPROCESSED_SOURCE,
+            ccs.CodeFormats.LLVM_BITCODE,
+            ccs.CodeFormats.OBJECT_FILE,
+            ccs.CodeFormats.NATIVE_CODE,
         ]
     #~ def __init__()
 

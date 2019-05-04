@@ -1,4 +1,7 @@
 
-import muteria.drivers.criteria.tools_by_languages.c.gcov.gcov as gcov
+from muteria.drivers.criteria.tools_by_languages.c.gcov.gcov \
+                                                        import CriteriaToolGCov 
 
-CriteriaTool = gcov.CriteriaToolGCov
+#from .gcov import CriteriaToolGCov
+
+StaticCriteriaTool = CriteriaToolGCov
