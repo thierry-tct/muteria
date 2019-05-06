@@ -7,6 +7,7 @@ import json
 import pandas as pd
 
 import unittest
+import doctest
 
 import muteria.common.fs as common_fs
 
@@ -189,6 +190,12 @@ class Test_Compress_Decompress(unittest.TestCase):
             if os.path.isfile(f):
                 os.remove(f)
         
+def load_tests(loader, tests, ignore):
+    """ Doc tests discovery (doctest discovered by unittest)
+    """
+    tests.addTests(doctest.DocTestSuite(common_fs))
+    return tests
+
 if __name__ == "__main__":
     #unittest.main()
     verbosity = 2 # TODO: Check why verbosity has no effect here

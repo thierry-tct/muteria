@@ -97,6 +97,20 @@
     
     <div class="col-sm-9">
       <form class="form-horizontal" action="/action_page.php">
+        <div class="panel">
+          <div class="panel-body">
+            <div class="col-sm-1">
+              <button type="button" class="btn btn-default"><span class="fas fa-save"></span> Save</button>
+            </div>
+            <div class="col-sm-1">
+              <button type="button" class="btn btn-default"><span class="fas fa-paper-plane"></span> Run</button>
+            </div>
+            <div class="col-sm-1">
+              <button type="button" class="btn btn-default"><span class="fas fa-times"></span> Stop</button>
+            </div>
+          </div>
+        </div>
+
         <div class="panel panel-default">
           <div class="panel-heading" data-toggle="collapse" data-target="#general_conf">
             <span style="font-weight: bold;">General Configurations</span>
@@ -114,20 +128,6 @@
                   <option>javascript</option>
                   <option>python</option>
                 </select>
-              </div>
-            </div>
-            <div class="form-group">
-              <label class="control-label col-sm-2">Repository Location:</label>
-              <div class="col-sm-8">
-                <input class="form-control" id="inputdefault" type="text" placeholder="path to repository directory on server">
-                <!--<p class="form-control-static">/path/to/repodir/on/server</p>-->
-              </div>
-              <div></div>
-              <div class="col-sm-1">
-                <button type="button" class="btn btn-default">Upload Zip</button>
-              </div>
-              <div class="col-sm-1">
-                <button type="button" class="btn btn-default">Browse</button>
               </div>
             </div>
             <div class="form-group">
@@ -157,8 +157,20 @@
             <span style="font-weight: bold;">Repository Configurations</span>
           </div>
           <div id="repository_conf" class="well collapse panel-body">
-            <h4>Dashboard</h4>
-            <p>Some text..</p>
+            <div class="form-group">
+              <label class="control-label col-sm-2">Repository Location:</label>
+              <div class="col-sm-8">
+                <input class="form-control" id="inputdefault" type="text" placeholder="path to repository directory on server">
+                <!--<p class="form-control-static">/path/to/repodir/on/server</p>-->
+              </div>
+              <div></div>
+              <div class="col-sm-1">
+                <button type="button" class="btn btn-default">Upload Zip</button>
+              </div>
+              <div class="col-sm-1">
+                <button type="button" class="btn btn-default">Browse</button>
+              </div>
+            </div>
           </div>
         </div>
         <div class="panel panel-default">

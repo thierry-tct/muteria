@@ -65,16 +65,18 @@ class ErrorHandler(object):
                                                         
         if err_string:
             logging.error(" (msg) "+err_string)
-        if ask_revert and cls.repos_dir_manager is not None and \
-                                         not cls.error_exit_revert_repo_called:
-            if confirm_execution("Do you want to revert repository files?"):
+        if ask_revert and cls.repos_dir_manager is not None:
+            if cls.error_exit_revert_repo_called:
+                logging.error("@ post error: Failed to revert repository."
+                                "DO IT MANUALLY!!")
+            elif confirm_execution("Do you want to revert repository files?"):
                 logging.info("@ post error: Reverting repository files")
                 cls.error_exit_revert_repo_called = True
                 cls.repos_dir_manager.revert_repository(as_initial=False)
         else:
             logging.info("@ post error: Manually revert the repository files")
-        print("# Exiting with code %d" % error_code)
-        exit(error_code)
+        logging.info("# Exiting with code %d" % error_code)
+        sys.exit(error_code)
     #~ def error_exit()
 
     @classmethod
@@ -122,7 +124,7 @@ class EnumAutoName(enum.Enum):
             ...     FIELD1 = "abc"
             ...     FIELD2 = 3
             ...
-            >>> my = MyEnum()
+            >>> my = MyEnum
             >>> my.FIELD1.get_str()
             'FIELD1'
         """
@@ -136,7 +138,7 @@ class EnumAutoName(enum.Enum):
             ...     FIELD1 = "abc"
             ...     FIELD2 = 3
             ...
-            >>> my = MyEnum()
+            >>> my = MyEnum
             >>> my.FIELD1.get_field_value()
             'abc'
         """
