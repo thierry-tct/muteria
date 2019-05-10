@@ -420,7 +420,7 @@ class MetaCriteriaTool(object):
                                 "mismatch on non key column names", __file__)
 
                 # bring in the data
-                key2nonkeydict = tool_matrix.get_pandas_df().\
+                key2nonkeydict = tool_matrix.to_pandas_df().\
                         set_index(tool_matrix.get_key_colname(), drop=True).\
                                                 to_dict(orient="index")
                 for c_key in key2nonkeydict:
