@@ -9,6 +9,8 @@ import abc
 
 import muteria.common.mix as common_mix
 
+from muteria.repositoryandcode.callback_object import DefaultCallbackObject
+
 ERROR_HANDLER = common_mix.ErrorHandler
 
 class CodeFormats(common_mix.EnumAutoName):
@@ -47,6 +49,18 @@ class BaseCodeFormatConverter(abc.ABC):
 #~ class BaseCodeFormatConverter
 
 class IdentityCodeConverter(BaseCodeFormatConverter):
+
+    class CopyCallbackObject(DefaultCallbackObject):
+        def after_command(self):
+            file_src_dest_map = self.post_callback_args
+            for src, dest in list(file_src_dest_map.items()):
+                abs_src = os.path.join(self.repository_rootdir, src)
+                if os.path.abspath(abs_src) != os.path.abspath(dest):
+                    shutil.copy2(src, dest)
+            return DefaultCallbackObject.after_command(self)
+        #~ def after_command()
+    #~ class CopyCallbackObject
+
     def convert_code(self, src_fmt, dest_fmt, file_src_dest_map, \
                                                 repository_manager, **kwargs):
         # make sure that different sources have different destinations
@@ -54,10 +68,10 @@ class IdentityCodeConverter(BaseCodeFormatConverter):
                     len({file_src_dest_map[fn] for fn in file_src_dest_map}), \
                         "Must specify one destination for each file", __file__)
         # copy the sources into the destinations
-        file_src_dest_map = dict()
-        for src, dest in list(file_src_dest_map.items()):
-            if os.path.abspath(src) != os.path.abspath(dest):
-                shutil.copy2(src, dest)
+        copy_callback_obj = self.CopyCallbackObject()
+        copy_callback_obj.set_post_callback_args(file_src_dest_map)
+        b_ret, a_ret = repository_manager.custom_read_access(copy_callback_obj)
+        ERROR_HANDLER.assert_true(b_ret & a_ret, "code copy failed", __file__)
         return True
     #~ def identity_function()
 

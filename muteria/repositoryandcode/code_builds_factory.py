@@ -26,6 +26,9 @@ formatfrom_function_tuples = [
 
     # From Javascript source
     (ccs.CodeFormats.JAVASCRIPT_SOURCE, ccs.IdentityCodeConverter()),
+
+    # From Python source
+    (ccs.CodeFormats.PYTHON_SOURCE, ccs.IdentityCodeConverter()),
 ]
 
 class CodeBuildsFactory(object):

@@ -132,23 +132,24 @@ class RepositoryManager(object):
 
         pre_ret = True
         post_ret = None
+        ret = None
 
         self._set_callback_basics(callback_object)
 
         self.lock.acquire()
         try:
             if callback_object is not None:
-                pre_ret = callback_object.pre_command()
+                pre_ret = callback_object.before_command()
             if pre_ret:
                 ret = self.dev_test_runner_func(dev_test_name, \
                                             self.repository_rootdir, \
                                             self.repo_executables_relpaths)
                 if callback_object is not None:
                     callback_object.set_op_retval(ret)
-                    post_ret = callback_object.post_command()
+                    post_ret = callback_object.after_command()
         finally:
             self.lock.release()                                
-        return (pre_ret, post_ret)
+        return (pre_ret, ret, post_ret)
     #~ def run_dev_test()
 
     def build_code(self, compiler=None, flags=None, clean_tmp=False, \
@@ -213,13 +214,14 @@ class RepositoryManager(object):
 
         pre_ret = True
         post_ret = None
+        ret = None
 
         self._set_callback_basics(callback_object)
 
         self.lock.acquire()
         try:
             if callback_object is not None:
-                pre_ret = callback_object.pre_command()
+                pre_ret = callback_object.before_command()
             if pre_ret:
                 ret = self.code_builder_func(self.repository_rootdir, \
                                         self.repo_executables_relpaths, \
@@ -227,12 +229,12 @@ class RepositoryManager(object):
                                         reconfigure)
                 if callback_object is not None:
                     callback_object.set_op_retval(ret)
-                    post_ret = callback_object.post_command()
+                    post_ret = callback_object.after_command()
                 else:
                     post_ret = ret
         finally:
             self.lock.release()                                
-        return (pre_ret, post_ret)
+        return (pre_ret, ret, post_ret)
     #~ def build_code()
 
     def custom_read_access(self, callback_object):
@@ -266,10 +268,10 @@ class RepositoryManager(object):
                         "callback object must", \
                         "not be None in custom_read_access call"), __file__)
             post_ret = None
-            pre_ret = callback_object.pre_command()
+            pre_ret = callback_object.before_command()
             if pre_ret:
                 callback_object.set_op_retval(pre_ret)
-                post_ret = callback_object.post_command()
+                post_ret = callback_object.after_command()
         finally:
             self.lock.release()                                
         return (pre_ret, post_ret)

@@ -48,7 +48,7 @@ class BaseCallbackObject(abc.ABC):
     #~ def set_dev_tests_list()
 
     @abc.abstractmethod
-    def pre_command(self):
+    def before_command(self):
         """ This method is executed BEFORE the execution of the the 
             corrresponding command.
             :return: (bool) True on success and False on failure
@@ -56,7 +56,7 @@ class BaseCallbackObject(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def post_command(self):
+    def after_command(self):
         """ This method is executed AFTER the execution of the the 
             corrresponding command. The execution of the command return 
             the boolean value that is then set in 'self.op_retval' 
@@ -69,10 +69,10 @@ class BaseCallbackObject(abc.ABC):
 class DefaultCallbackObject(BaseCallbackObject):
     """ Use this class object it no call back is needed
     """
-    def pre_command(self):
+    def before_command(self):
         return True
-    #~ def pre_command()
+    #~ def before_command()
 
-    def post_command(self):
+    def after_command(self):
         return self.op_retval
-    #~ def post_command()
+    #~ def after_command()

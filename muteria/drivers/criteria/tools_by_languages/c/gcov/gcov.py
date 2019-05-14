@@ -57,7 +57,7 @@ class CriteriaToolGCov(BaseCriteriaTool):
     #~ def _get_gcda_list()
 
     class InstrumentCallbackObject(DefaultCallbackObject):
-        def post_command(self):
+        def after_command(self):
             gc_files_dir = self.post_callback_args
             for _, obj in list(self.source_files_to_objects.items()):
                 rel_raw_filename, _ = os.path.splitext(obj)
@@ -67,8 +67,8 @@ class CriteriaToolGCov(BaseCriteriaTool):
                     os.makedirs(relloc)
                 shutil.copy2(os.path.join(self.repository_rootdir, gcno_file),\
                                     os.path.join(gc_files_dir, gcno_file))
-            return DefaultCallbackObject.post_command(self)
-        #~ def post_command()
+            return DefaultCallbackObject.after_command(self)
+        #~ def after_command()
     #~ class InstrumentCallbackObject
 
     @classmethod
