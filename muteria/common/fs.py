@@ -275,6 +275,11 @@ class CheckpointState(object):
     CHECKPOINT_DATA_KEY = "CHECKPOINT_DATA"
 
     '''
+        The different states are:
+            - Destroyed
+            - starting
+            - Executing
+            - Finished (Completed)
     '''
     def __init__(self, store_filepath, backup_filepath):
         self.store_filepath = store_filepath
@@ -284,13 +289,21 @@ class CheckpointState(object):
         self.dep_checkpoint_states = set()
         self.started = False
         self.finished = False
+
+        # time when the current execution started
         self.starttime = None
-        self.aggregated_time = None
+        
+        # aggregated time loaded from last ckeckpoint (offset by starttime)
+        self.prev_aggregated_time = None
 
         raw_obj = self._get_from_file()
         self._update_this_object(raw_obj)
     #~ def __init__()
 
+    def get_dep_checkpoint_states(self):
+        return self.dep_checkpoint_states
+    #~ def get_dep_checkpoint_states()
+    
     def add_dep_checkpoint_state(self, dep_cp):
         self.dep_checkpoint_states.add(dep_cp)
     #~ def add_dep_checkpoint_state()
@@ -299,14 +312,14 @@ class CheckpointState(object):
         for dep_cp in self.dep_checkpoint_states:
             dep_cp.destroy_checkpoint()
         if os.path.isfile(self.backup_filepath):
-            os.remove(self.store_filepath)
+            os.remove(self.backup_filepath)
         if os.path.isfile(self.store_filepath):
             #shutil.copy2(self.store_filepath, self.backup_filepath)
             os.remove(self.store_filepath)
         self.started = False
         self.finished = False
         self.starttime = None
-        self.aggregated_time = None
+        self.prev_aggregated_time = None
     #~ def destroy_checkpoint()
 
     def set_finished(self, detailed_exectime_obj=None):
@@ -318,7 +331,12 @@ class CheckpointState(object):
         self.finished = True
         self.write_checkpoint(self.EXEC_COMPLETED, \
                                 detailed_exectime_obj=detailed_exectime_obj)
-        # put last because used in write_checkpoint
+        
+        # Freeze time.
+        # put this last because used in write_checkpoint
+        ## update prev_aggregated_time
+        self.prev_aggregated_time += (time.time() - self.starttime)
+        ## invalidate startime
         self.starttime = None 
     #~ def set_finished()
 
@@ -340,7 +358,7 @@ class CheckpointState(object):
             dep_cp.restart_task()
         self.started = True
         self.finished = False
-        self.aggregated_time = 0.0
+        self.prev_aggregated_time = 0.0
         self.starttime = time.time()
         self.write_checkpoint(self.EXEC_STARTING)
     #~ def restart_task()
@@ -351,18 +369,19 @@ class CheckpointState(object):
         Return None as checkpoint data if start (was not yet started)
                 If ret_detailed_exectime_obj is enable, return 
                 detailed_exectime_obj as second returned value
+        Note: In case of continue from a checkpoint checkpoint,
+                the object already in sync with files here (see __init__)
         '''
+        res = None
         raw_obj = self._get_from_file()
-        # case of resume execution
-        if self.starttime is None:
-            self.starttime = time.time()
         if raw_obj is None:
             self.restart_task()
-        res = raw_obj[self.CHECKPOINT_DATA_KEY]
-        if res in [self.EXEC_STARTING, self.EXEC_COMPLETED]:
-            res = None
-        if ret_detailed_exectime_obj:
-            res = (res, raw_obj[self.DETAILED_TIME_KEY])
+        else:
+            res = raw_obj[self.CHECKPOINT_DATA_KEY]
+            if res in [self.EXEC_STARTING, self.EXEC_COMPLETED]:
+                res = None
+            if ret_detailed_exectime_obj:
+                res = (res, raw_obj[self.DETAILED_TIME_KEY])
         return res 
     #~ def load_checkpoint_or_start()
 
@@ -372,23 +391,32 @@ class CheckpointState(object):
             shutil.copy2(self.store_filepath, self.backup_filepath)
         else:
             remove_back = True
+        cur_agg_time = \
+                    self.prev_aggregated_time + (time.time() - self.starttime)
         raw_obj = { \
-                    self.AGG_TIME_KEY: self.aggregated_time, \
+                    self.AGG_TIME_KEY: cur_agg_time, \
                     self.DETAILED_TIME_KEY: detailed_exectime_obj, \
                     self.CHECKPOINT_DATA_KEY: json_obj, \
         }
         dumpJSON(raw_obj, self.store_filepath, pretty=True)
-        if remove_back:
+        if remove_back and os.path.isfile(self.backup_filepath):
             os.remove(self.backup_filepath)
     #~ def write_checkpoint()
 
     def get_execution_time(self):
+        ERROR_HANDLER.assert_true(not self.is_destroyed(), \
+                                "Trying to get time for destroyed checkpoint",
+                                                                    __file__)
         if self.starttime is None:
-            return self.aggregated_time
-        return self.aggregated_time + (time.time() - self.starttime)
+            return self.prev_aggregated_time
+        return self.prev_aggregated_time + (time.time() - self.starttime)
     #~ def get_execution_time()
 
     def get_detailed_execution_time(self):
+        ERROR_HANDLER.assert_true(not self.is_destroyed(), \
+                        "Trying to get detailed time for destroyed checkpoint",
+                                                                    __file__)
+
         raw_obj = self._get_from_file()
         return raw_obj[self.DETAILED_TIME_KEY]
     #~ def get_detailed_execution_time()
@@ -406,7 +434,8 @@ class CheckpointState(object):
             try:
                 contain = loadJSON(self.backup_filepath)
             except ValueError:
-                ERROR_HANDLER.error_exit("%s %s" % ("Both Checkpoint store_file and", \
+                ERROR_HANDLER.error_exit("%s %s" % (\
+                                        "Both Checkpoint store_file and", \
                                         "backup file are invalid"), __file__)
             if not common_mix.confirm_execution("%s %s" % ( \
                         "The checkpoint store_file is invalid but backup", \
@@ -430,19 +459,28 @@ class CheckpointState(object):
 
     def _update_this_object(self, raw_obj):
         if raw_obj is None:
+            # Case of Destroyed state
             self.started = False
             self.finished = False
             self.starttime = None
-            self.aggregated_time = 0.0
+            self.prev_aggregated_time = None
         else:
             agg_time = raw_obj[self.AGG_TIME_KEY]
             checkpoint_data = raw_obj[self.CHECKPOINT_DATA_KEY]
             if checkpoint_data == self.EXEC_STARTING:
+                # Starting State
                 self.started = True
                 self.finished = False
+                self.starttime = time.time()
             elif checkpoint_data == self.EXEC_COMPLETED:
+                # Finished state
                 self.started = False
                 self.finished = True
-            self.aggregated_time = float(agg_time)
+                self.starttime = None
+            else:
+                self.started = True
+                self.finished = False
+                self.starttime = time.time()
+            self.prev_aggregated_time = float(agg_time)
     #~ def _update_this_object() 
 #~ class CheckpointState
