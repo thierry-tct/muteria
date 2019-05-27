@@ -184,6 +184,8 @@ class FileDirStructureHandling(object):
 
 
     def resolve(self, name):
+        """
+        """
         if name not in self.file_dir_to_path_dict:
             self.error_module.error_exit(err_string="%s %s" % \
                                     (name, "not in file_dir_to_path_dict"), \
@@ -221,10 +223,7 @@ class FileDirStructureHandling(object):
         return fullpathstring
 
     def get_dir_pathname(self, dirname, rel_path=False):
-        if rel_path:
-            return self.resolve(dirname)
-        return os.path.normpath( \
-                            os.path.join(self.top_dir, self.resolve(dirname)))
+        return self.get_file_pathname(dirname, rel_path)
 
     def dir_exists(self, dirname):
         fullpathstring = self.get_dir_pathname(dirname, rel_path=False)

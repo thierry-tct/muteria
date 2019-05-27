@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Muteria Dashboard - {% block title %}{% endblock %}</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css"> -->
+  <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script> -->
+  <!-- <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script> -->
+  <link rel='stylesheet' href='https://use.fontawesome.com/releases/v5.7.0/css/all.css' 
+    integrity='sha384-lZN37f5QGtY3VHgisS14W3ExzMWZxybE1SJSEsQp9S+oqd12jhcu+A56Ebc1zFSJ' 
+    crossorigin='anonymous'>
+  <link rel="stylesheet" href={{ url_for('static', filename='css/bootstrap.min.css') }}>
+  <script src={{ url_for('static', filename='js/jquery.min.js') }}></script>
+  <script src={{ url_for('static', filename='js/bootstrap.min.js') }}></script>
+  <style>
+    /* Set height of the grid so .sidenav can be 100% (adjust as needed) */
+    .row.content {height: 550px}
+    
+    /* Set gray background color and 100% height */
+    .sidenav {
+      background-color: #f1f1f1;
+      height: 100%;
+    }
+        
+    /* On small screens, set height to 'auto' for the grid */
+    @media screen and (max-width: 767px) {
+      .row.content {height: auto;} 
+    }
+
+    body { 
+      margin-top: 70px; 
+      padding-bottom: 70px; 
+    }
+  </style>
+</head>
+
+<body>
+
+<nav class="navbar navbar-inverse navbar-fixed-top">
+  <div class="container-fluid">
+    <div class="navbar-header col-sm-2">
+      <a class="navbar-brand" href="#">Muteria</a>
+    </div>
+    <ul class="nav navbar-nav">
+     <li></li> 
+    </ul>
+    <form class="navbar-form navbar-center" action="/action_page.php">
+      <select class="form-control" id="exampleFormControlSelect1">
+        <option>--select project --</option>
+        <option>1</option>
+        <option>2</option>
+        <option>Very_long_project_name</option>
+        <option>4</option>
+        <option>5</option>
+      </select>
+      <div class="form-group my-2 my-lg-0">
+        <input type="text" class="form-control" placeholder="Search">
+      </div> 
+      <button type="submit" class="btn btn-default">Submit</button>
+      <button type="button" class="btn btn-info"><span class="fas fa-plus"></span> New Project</button>
+    </form>
+  </div>
+</nav>
+
+<nav class="navbar navbar-inverse visible-xs">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>                        
+      </button>
+    </div>
+    <div class="collapse navbar-collapse" id="myNavbar">
+      <ul class="nav navbar-nav">
+        <li class="active"><a href="#"><span class="fas fa-cog"></span> Configuration</a></li>
+        <li><a href="#"><span class="fas fa-eye"></span> Execution Status</a></li>
+        <li><a href="#"><span class="fas fa-chart-line"></span> Reporting</a></li>
+        <li><a href="#"><span class="fas fa-info-circle"></span> Info</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<div class="container-fluid">
+  <div class="row content">
+    <div class="col-sm-2 sidenav hidden-xs">
+      <ul class="nav nav-pills nav-stacked">
+        <li class="active"><a href="{{ url_for('execution_configurations', projectname="x") }}"><span class="fas fa-cog"></span> Configuration</a></li>
+        <li><a href="{{ url_for('execution_progress', projectname="x") }}"><span class="fas fa-eye"></span> Execution Status</a></li>
+        <li><a href="{{ url_for('execution_report', projectname="x") }}"><span class="fas fa-chart-line"></span> Reporting</a></li>
+        <li><a href="{{ url_for('execution_info', projectname="x") }}"><span class="fas fa-info-circle"></span> Info</a></li>
+      </ul><br>
+    </div>
+    <br>
+    <div class="col-sm-9">
+      <section class="content">
+        <header>
+          {% block header %}{% endblock %}
+        </header>
+        <!--
+        {% for message in get_flashed_messages() %}
+          <div class="flash">{{ message }}</div>
+        {% endfor %}
+        -->
+        {% block content %}{% endblock %}
+      </section>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

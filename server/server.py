@@ -16,7 +16,7 @@ app = Flask(__name__)
 
 @app.route("/")
 def homepage():
-   return render_template("dashboard.html")
+   return render_template("home.html")
 
 @app.route('/createproject/<projectname>')
 def create_project():
@@ -42,13 +42,21 @@ def save_config():
 def execute_with_saved_conf():
    return render_template("progress.html",result = result)
 
+@app.route('/configurations/<projectname>', methods = ['POST', 'GET'])
+def execution_configurations(projectname):
+   return render_template("configurations.html")
+
 @app.route('/progress/<projectname>', methods = ['POST', 'GET'])
-def execution_progress():
+def execution_progress(projectname):
    return render_template("progress.html",result = result)
 
 @app.route('/report/<projectname>', methods = ['POST', 'GET'])
-def execution_report():
+def execution_report(projectname):
    return render_template("report.html",result = result)
+
+@app.route('/info/<projectname>', methods = ['POST', 'GET'])
+def execution_info(projectname):
+   return render_template("info.html",result = result)
 
 if __name__ == '__main__':
    parser = argparse.ArgumentParser()
