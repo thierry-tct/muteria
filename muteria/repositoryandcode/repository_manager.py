@@ -92,7 +92,7 @@ class RepositoryManager(object):
         if self.source_files_to_objects is None:
             self.source_files_to_objects = {}
 
-        self.source_files_list = source_files_to_objects.keys()
+        self.source_files_list = list(self.source_files_to_objects.keys())
 
         if self.repository_rootdir is None:
             ERROR_HANDLER.error_exit(\
@@ -423,7 +423,7 @@ class RepositoryManager(object):
                                                 self.muteria_metadir_info_file)
 
         # Make sure all source files of interest are tracked
-        untracked_files = set(gitobj.untracked_files())
+        untracked_files = set(repo.untracked_files)
         untracked_src_files = set(self.source_files_list) & untracked_files
         if len(src_in_prev) > 0:
             if common_mix.confirm_execution(\
@@ -438,7 +438,7 @@ class RepositoryManager(object):
                 ERROR_HANDLER.error_exit("{} {}".format(\
                                     "Handle untracked source files manually", \
                                                 "then restart the execution"))
-        else:
+        elif len(untracked_src_files) > 0:
             if common_mix.confirm_execution(\
                                 "{} {} {} {}".format("The following source",\
                                         "files of interest are untracked:", \

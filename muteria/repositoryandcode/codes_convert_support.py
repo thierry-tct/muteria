@@ -63,6 +63,9 @@ class IdentityCodeConverter(BaseCodeFormatConverter):
 
     def convert_code(self, src_fmt, dest_fmt, file_src_dest_map, \
                                                 repository_manager, **kwargs):
+        # make sure formats are samel
+        ERROR_HANDLER.assert_true(src_fmt == dest_fmt, \
+                                                "different formats", __file__)
         # make sure that different sources have different destinations
         ERROR_HANDLER.assert_true(len(file_src_dest_map) == \
                     len({file_src_dest_map[fn] for fn in file_src_dest_map}), \
@@ -70,6 +73,7 @@ class IdentityCodeConverter(BaseCodeFormatConverter):
         # copy the sources into the destinations
         copy_callback_obj = self.CopyCallbackObject()
         copy_callback_obj.set_post_callback_args(file_src_dest_map)
+
         b_ret, a_ret = repository_manager.custom_read_access(copy_callback_obj)
         ERROR_HANDLER.assert_true(b_ret & a_ret, "code copy failed", __file__)
         return True

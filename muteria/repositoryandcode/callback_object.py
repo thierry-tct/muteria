@@ -39,9 +39,9 @@ class BaseCallbackObject(abc.ABC):
         self.repo_executables_relpaths = repo_executables_relpaths
     #~ def set_repo_executables_relpaths()
 
-    def set_source_files_to_obj(self, source_files_to_objects):
+    def set_source_files_to_objects(self, source_files_to_objects):
         self.source_files_to_objects = source_files_to_objects
-    #~ def set_source_files_to_obj()
+    #~ def set_source_files_to_objects()
 
     def set_dev_tests_list(self, dev_tests_list):
         self.dev_tests_list = dev_tests_list
@@ -70,9 +70,14 @@ class DefaultCallbackObject(BaseCallbackObject):
     """ Use this class object it no call back is needed
     """
     def before_command(self):
+        """ Return True for success
+        """
         return True
     #~ def before_command()
 
     def after_command(self):
+        """ Returns the same code as the executed command
+        """
         return self.op_retval
     #~ def after_command()
+#~ class DefaultCallbackObject

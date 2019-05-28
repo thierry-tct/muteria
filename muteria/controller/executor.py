@@ -417,13 +417,13 @@ class Executor(object):
     def create_repo_manager(cls, config):
         repo_mgr = RepositoryManager(\
                     repository_rootdir=config.REPOSITORY_ROOT_DIR.get_val(),\
-                    repo_executable_relpath=\
+                    repo_executables_relpaths=\
                             config.REPO_EXECUTABLE_RELATIVE_PATH.get_val(),\
                     dev_test_runner_func=\
                             config.CUSTOM_DEV_TEST_RUNNER_FUNCTION.get_val(),\
                     code_builder_func=config.CODE_BUILD_FUNCTION.get_val(),\
-                    source_files_list=\
-                                config.TARGET_SOURCE_FILES_LIST.get_val(),\
+                    source_files_to_objects=\
+                                config.TARGET_SOURCE_FILES_TO_OBJS.get_val(),\
                     dev_tests_list=config.DEVELOPER_TESTS_LIST.get_val(),\
                     )
         return repo_mgr
