@@ -42,7 +42,7 @@ class CodeBuildsFactory(object):
                 self._fmt_from_to_registration(src_fmt, src_fmt, obj_cls)
             else:
                 ERROR_HANDLER.assert_true(\
-                                src_fmt in obj_cls.get_source_formats, \
+                                src_fmt in obj_cls.get_source_formats(), \
                                 "{} {} {} {}".format( \
                             "Error in 'formatfrom_function_tuples'",
                             "src_fmt", src_fmt, "not in corresponding obj..."),
@@ -70,7 +70,7 @@ class CodeBuildsFactory(object):
                             "src_fmt {} not supported yet.".format(src_fmt), \
                                                                     __file__)
         ERROR_HANDLER.assert_true( \
-                    src_fmt in self.src_dest_fmt_to_handling_obj[src_fmt], \
+                    dest_fmt in self.src_dest_fmt_to_handling_obj[src_fmt], \
                     "dest_fmt {} not supported yet for src_fmt {}.".format( \
                                                 dest_fmt, src_fmt), __file__)
         
@@ -78,7 +78,8 @@ class CodeBuildsFactory(object):
         handler = self.src_dest_fmt_to_handling_obj[src_fmt][dest_fmt]
         ret = handler.convert_code(src_fmt, dest_fmt, \
                             src_dest_files_paths_map, \
-                            repository_manager=self.repository_manager)
+                            repository_manager=self.repository_manager, \
+                            **kwargs)
         return ret
     #~ def transform_src_into_dest ()
     

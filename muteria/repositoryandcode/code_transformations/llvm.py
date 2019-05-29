@@ -16,7 +16,14 @@ __all__ = ['FromLLVMBitcode']
 
 class FromLLVMBitcode(ccs.BaseCodeFormatConverter):
     def __init__(self):
-        pass
+        self.src_formats = [
+            ccs.CodeFormats.LLVM_BITCODE,
+        ]
+        self.dest_formats = [
+            ccs.CodeFormats.LLVM_BITCODE,
+            ccs.CodeFormats.OBJECT_FILE,
+            ccs.CodeFormats.NATIVE_CODE,
+        ]
     #~ def __init__()
 
     def convert_code(self, src_fmt, dest_fmt, file_src_dest_map, \
@@ -25,10 +32,10 @@ class FromLLVMBitcode(ccs.BaseCodeFormatConverter):
     #~ def identity_function()
 
     def get_source_formats(self):
-        ERROR_HANDLER.error_exit("Must Implement", __file__)
+        return self.src_formats
     #~ def get_source_formats()
 
     def get_destination_formats_for(self, src_fmt):
-        ERROR_HANDLER.error_exit("Must Implement", __file__)
+        return self.dest_formats
     #~ def get_destination_formats()
 #~ class FromLLVMBitcode()
