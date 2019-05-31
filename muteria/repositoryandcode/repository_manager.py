@@ -362,14 +362,14 @@ class RepositoryManager(object):
                                                 self.repository_rootdir):
                 ## Not managed, create branch
                 self._make_testing_branch(self.repository_rootdir, \
-                                            self.test_branch_name)
+                                                        self.test_branch_name)
 
             # checkout
             gitobj.checkout(self.test_branch_name)
         
         # Actual Check whether the repo is already managed by muteria
         # There must be a directory DEFAULT_MUTERIA_REPO_META_FOLDER  
-        src_in_prev = []
+        src_in_prev = set()
         if os.path.isdir(self.muteria_metadir):
             ## Managed
             prev_src_list, prev_use_branch = \
@@ -382,20 +382,19 @@ class RepositoryManager(object):
                             prev_use_branch, ", now it is",\
                             self.delete_created_on_revert_as_initial), \
                                                                     __file__)
-            prev_src_list = set(prev_src_list) - set(self.source_files_list)
             src_in_prev = set(prev_src_list) & set(self.source_files_list)
+            prev_src_list = set(prev_src_list) - set(self.source_files_list)
             remain_prev_src_set = {src for src in prev_src_list \
-                                                        if os.path.isfile(src)}
-
+                                    if os.path.isfile(self.repo_abs_path(src))}
             # make sure that all prev_src are in initial state
-            untracked_files = set(gitobj.untracked_files())
-            prev_untracked = remain_prev_src_set & untracked_files
-            if len(prev_untracked) > 0:
+            untracked_diff_files = self._get_untracked_and_diffed(repo)
+            prev_untracked_diff = remain_prev_src_set & untracked_diff_files
+            if len(prev_untracked_diff) > 0:
                 bypass = common_mix.confirm_execution(\
                             "{} {} {} {} {}".format(
                                 "the following files were previously used as",\
                                 "src files by muteria and are now untracked:",\
-                                prev_untracked, \
+                                prev_untracked_diff, \
                                 "\nDo you want to handle it or bypass it?",\
                                 "Choose yes to bypass: "))
                 if not bypass:
@@ -404,7 +403,7 @@ class RepositoryManager(object):
                                 "Do you want to automatically restore the",\
                                 "The untracked previous source and continue?"))
                     if revert_them:
-                        for src in prev_untracked:
+                        for src in prev_untracked_diff:
                             self.revert_repository_file(src, gitobj=gitobj)
                     else:
                         ERROR_HANDLER.error_exit(\
@@ -423,14 +422,14 @@ class RepositoryManager(object):
                                                 self.muteria_metadir_info_file)
 
         # Make sure all source files of interest are tracked
-        untracked_files = set(repo.untracked_files)
-        untracked_src_files = set(self.source_files_list) & untracked_files
-        if len(src_in_prev) > 0:
+        untracked_diff_files = self._get_untracked_and_diffed(repo)
+        untracked_diff_src_in_prev = untracked_diff_files & src_in_prev
+        if len(untracked_diff_src_in_prev) > 0:
             if common_mix.confirm_execution(\
                             "{} {} {} {} {}".format("The following source",\
                                         "files of interest are untracked", \
                     "and will be reverted (previous execution unfinished):", \
-                                        untracked_src_files, \
+                                        src_in_prev, \
                                         "do you want to revert them?")):
                 for src in src_in_prev:
                     self.revert_repository_file(src, gitobj=gitobj)
@@ -438,19 +437,37 @@ class RepositoryManager(object):
                 ERROR_HANDLER.error_exit("{} {}".format(\
                                     "Handle untracked source files manually", \
                                                 "then restart the execution"))
-        elif len(untracked_src_files) > 0:
+
+        untracked_diff_files = self._get_untracked_and_diffed(repo)
+        untracked_diff_src_files = set(self.source_files_list) & \
+                                                        untracked_diff_files
+        if len(untracked_diff_src_files) > 0:
             if common_mix.confirm_execution(\
                                 "{} {} {} {}".format("The following source",\
                                         "files of interest are untracked:", \
-                                        untracked_src_files, \
+                                        untracked_diff_src_files, \
                                         "do you want to track them?")):
-                gitobj.index.add(list(untracked_src_files))
+                repo.index.add(list(untracked_diff_src_files))
             else:
                 ERROR_HANDLER.error_exit("{} {}".format(\
                                     "Handle untracked source files manually", \
                                                 "then restart the execution"))
 
     #~ _setup_repository()
+
+    def _get_untracked_and_diffed(self, repo_):
+        res = set(repo_.untracked_files) | set(self._get_diffed(repo_))
+        return res
+    #~ def _get_untracked_and_diffed()
+
+    def _get_diffed (self, repo_):
+        res = {}
+        d_ind = repo_.index.diff(None)
+        for change_type in d_ind.change_type:
+            for d in d_ind.iter_change_type(change_type):
+                res[d.b_path] = d.change_type
+        return res
+    #~ def _get_diffed ()
 
     def _make_testing_branch(self, repo_dir, branch_name):
         # create 'test' branch if it doesn't exist 
