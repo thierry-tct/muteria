@@ -33,6 +33,8 @@ from muteria.drivers.checkpoint_handler import CheckPointHandler
 from muteria.drivers.testgeneration.testcases_info import TestcasesInfoObject
 from muteria.drivers.testgeneration import TestToolType
 
+from muteria.drivers.testgeneration.custom_dev_testcase import CustomTestcases
+
 ERROR_HANDLER = common_mix.ErrorHandler
 
 class MetaTestcaseTool(object):
@@ -84,6 +86,13 @@ class MetaTestcaseTool(object):
                                 tooltype_name,\
                                 "is not present for test tool", toolname), \
                                                                     __file__)
+        
+        # Add custom dev test
+        for language in res:
+            tooltype = TestToolType.USE_ONLY_CODE
+            res[language][tooltype.get_tool_type_classname()] = \
+                                    (CustomTestcases.CUSTOM_TEST_TOOLNAME, \
+                                                CustomTestcases.installed())
         return res
     #~ def get_toolnames_by_types_by_language()
 
@@ -172,25 +181,31 @@ class MetaTestcaseTool(object):
         '''
             
         '''
-        ERROR_HANDLER.assert_true( \
-            toolname in self.modules_dict[self.language],
-            "Invalid toolname given: {}".format(toolname), __file__)
-        try:
-            # the tooltype is returned by config.get_tool_type()
-            TestcaseTool = getattr(self.modules_dict[self.language][toolname],\
-                                    config.get_tool_type().get_field_value())
-        except AttributeError:
-            ERROR_HANDLER.error_exit("{} {} {} {}".format( \
-                                "(REPORT BUG) The test case tool of type", \
-                                config.get_tool_type().get_field_value(),\
-                                "is not present for test tool", toolname), \
+        # Check for custom testcase
+        if toolname == CustomTestcases.CUSTOM_TEST_TOOLNAME:
+            TestcaseTool = CustomTestcases
+        else:
+            ERROR_HANDLER.assert_true( \
+                toolname in self.modules_dict[self.language],
+                "Invalid toolname given: {}".format(toolname), __file__)
+            try:
+                # the tooltype is returned by config.get_tool_type()
+                TestcaseTool = getattr(\
+                                self.modules_dict[self.language][toolname],\
+                                config.get_tool_type().get_field_value())
+            except AttributeError:
+                ERROR_HANDLER.error_exit("{} {} {} {}".format( \
+                                    "(REPORT BUG) The test case tool of type",\
+                                    config.get_tool_type().get_field_value(),\
+                                    "is not present for test tool", toolname),\
                                                                     __file__)
 
-        ERROR_HANDLER.assert_true(TestcaseTool is not None, \
-                                "The {} language's tool {} {} {}.".format( \
-                                self.language, toolname, \
-                                "does not implement the test tool type", \
-                                config.get_tool_type().get_str()), __file__)
+            ERROR_HANDLER.assert_true(TestcaseTool is not None, \
+                                    "The {} language's tool {} {} {}.".format(\
+                                    self.language, toolname, \
+                                    "does not implement the test tool type", \
+                                        config.get_tool_type().get_str()), \
+                                                                    __file__)
 
         testcase_tool = TestcaseTool(tool_working_dir, \
                                         self.code_builds_factory, config, \

@@ -89,6 +89,10 @@ class RepositoryManager(object):
                                         delete_created_on_revert_as_initial
         self.test_branch_name = test_branch_name
 
+        if self.repo_executables_relpaths is None:
+            self.repo_executables_relpaths = []
+        if self.dev_tests_list is None:
+            self.dev_tests_list = []
         if self.source_files_to_objects is None:
             self.source_files_to_objects = {}
 
@@ -113,6 +117,19 @@ class RepositoryManager(object):
         # setup the repo (Should remain as last intruction of initialization)
         self._setup_repository()
     #~ def __init__()
+
+    def get_dev_tests_list(self):
+        return self.dev_tests_list
+    #~ def get_dev_tests_list()
+
+    def has_dev_tests(self):
+        return (self.dev_test_runner_func is not None and \
+                                            self.dev_tests_list is not None)
+    #~ def has_dev_tests()
+
+    def should_build(self):
+        return (self.code_builder_func is not None)
+    #~ def should_build()
 
     def _set_callback_basics(self, callback_object):
         if callback_object is not None:
@@ -230,8 +247,6 @@ class RepositoryManager(object):
                 if callback_object is not None:
                     callback_object.set_op_retval(ret)
                     post_ret = callback_object.after_command()
-                else:
-                    post_ret = ret
         finally:
             self.lock.release()                                
         return (pre_ret, ret, post_ret)
@@ -295,38 +310,54 @@ class RepositoryManager(object):
         return exes, src_obj_map
     #~ def get_exe_path_map()
 
-    def revert_repository_file (self, file_rel_path, gitobj=None):
+    def _unlocked_revert_repository_file (self, file_rel_path, gitobj=None):
         if gitobj is None:
             repo = git_repo(self.repository_rootdir)
             gitobj = repo.git
         gitobj.checkout('--', file_rel_path)
+    #~ def _unlocked_revert_repository_file()
+
+    def revert_repository_file (self, file_rel_path, gitobj=None):
+        self.lock.acquire()
+        try:
+            self._unlocked_revert_repository_file(file_rel_path, gitobj)
+        finally:
+            self.lock.release()                                
     #~ def revert_repository_file()
 
     def revert_src_list_files (self):
-        repo = git_repo(self.repository_rootdir)
-        gitobj = repo.git
-        for src in self.source_files_list:
-            self.revert_repository_file(src, gitobj=gitobj)
+        self.lock.acquire()
+        try:
+            repo = git_repo(self.repository_rootdir)
+            gitobj = repo.git
+            for src in self.source_files_list:
+                self._unlocked_revert_repository_file(src, gitobj=gitobj)
+        finally:
+            self.lock.release()                                
     #~ def revert_src_list_files()
 
     def revert_repository(self, as_initial=False):
         #repo = git_repo(self.repository_rootdir)
         #gitobj = repo.git
-
-        if as_initial:
-            if self.delete_created_on_revert_as_initial:
-                self._delete_testing_branch(self.repository_rootdir, \
-                                            self.test_branch_name)
-            else:
-                ERROR_HANDLER.error_exit("{} {}".format(\
+        self.lock.acquire()
+        try:
+            if as_initial:
+                if self.delete_created_on_revert_as_initial:
+                    self._delete_testing_branch(self.repository_rootdir, \
+                                                self.test_branch_name)
+                else:
+                    self.lock.release()                                
+                    ERROR_HANDLER.error_exit("{} {}".format(\
                             "revert_repository called with", \
                             "'delete_created_on_revert_as_initial' disabled"),\
                                                                     __file__)
-        else:
-            # Reset the files but do not delete created files and dir
-            self.revert_src_list_files()
-            shutil.rmtree(self.muteria_metadir)
-            #gitobj.reset('--hard') 
+            else:
+                # Reset the files but do not delete created files and dir
+                self.revert_src_list_files()
+                shutil.rmtree(self.muteria_metadir)
+                #gitobj.reset('--hard') 
+        finally:
+            self.lock.release()                                
     #~ def revert_repository()
 
     def _setup_repository(self):

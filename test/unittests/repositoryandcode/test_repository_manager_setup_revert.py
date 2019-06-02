@@ -15,7 +15,7 @@ import muteria.repositoryandcode.repository_manager as rm
 
 TMP_DIR_SUFFIX = '.muteria.test.tmp'
 
-class Test_RepositoryManager(unittest.TestCase):
+class Test_RepositoryManager_SetupRepo(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls._worktmpdir = tempfile.mkdtemp(suffix=TMP_DIR_SUFFIX)
@@ -160,10 +160,46 @@ class Test_RepositoryManager(unittest.TestCase):
                 rep_mgr = rm.RepositoryManager(self._repodir, \
                                         source_files_to_objects={'src2': None})
 
+    # revert
+    @patch.object(sys, 'exit', side_effect=AssertionError)
+    @patch.object(rm.common_mix.logging, 'error', return_value=None)
+    @patch.object(rm.common_mix.logging, 'info', return_value=None)
+    def test_revert_repo(self, li, le,sys_exit):
+        # Different src with prev untracked and no bypass and no revert
+        with patch.object(rm.common_mix, 'confirm_execution', \
+                                                    side_effect=[True, True]):
+            rep_mgr = rm.RepositoryManager(self._repodir, \
+                        source_files_to_objects={'src1': None, 'src2': None})
+        with self.assertRaises(AssertionError):
+            rep_mgr.revert_repository(as_initial=True)
+        self.tearDown()
+        self.setUp()
+        
+        with patch.object(rm.common_mix, 'confirm_execution', \
+                                                    side_effect=[True, True]):
+            rep_mgr = rm.RepositoryManager(self._repodir, \
+                        source_files_to_objects={'src1': None, 'src2': None})
+        self.write_file(self._src1, "xxx")
+        self.assertTrue(self.file_contains(self._src1, 'xxx'))
+        rep_mgr.revert_repository()
+        self.assertTrue(self.file_contains(self._src1, 'src1'))
+        self.tearDown()
+        self.setUp()
+        
+        with patch.object(rm.common_mix, 'confirm_execution', \
+                                                    side_effect=[True, True]):
+            rep_mgr = rm.RepositoryManager(self._repodir, \
+                        source_files_to_objects={'src1': None, 'src2': None})
+        self.write_file(self._src1, "xxx")
+        self.assertTrue(self.file_contains(self._src1, 'xxx'))
+        rep_mgr.revert_src_list_files()
+        self.assertTrue(self.file_contains(self._src1, 'src1'))
+
+# TODO: test for using branch (to revert as_initial)
 
 if __name__ == "__main__":
     verbosity = 2 # TODO: Check why verbosity has no effect here
     testsuite_rep_mgr = unittest.TestLoader().loadTestsFromTestCase(\
-                                                        Test_RepositoryManager)
+                                            Test_RepositoryManager_SetupRepo)
 
     unittest.TextTestRunner(verbosity=verbosity).run(testsuite_rep_mgr)

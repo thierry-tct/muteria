@@ -67,7 +67,7 @@ class BaseCallbackObject(abc.ABC):
 #~ class BaseCallbackObject
 
 class DefaultCallbackObject(BaseCallbackObject):
-    """ Use this class object it no call back is needed
+    """ Use this class object if no call back is needed
     """
     def before_command(self):
         """ Return True for success
@@ -76,8 +76,8 @@ class DefaultCallbackObject(BaseCallbackObject):
     #~ def before_command()
 
     def after_command(self):
-        """ Returns the same code as the executed command
+        """ Return True for success
         """
-        return self.op_retval
+        return True
     #~ def after_command()
 #~ class DefaultCallbackObject

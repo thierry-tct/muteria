@@ -487,6 +487,10 @@ class BaseCriteriaTool(abc.ABC):
             checkpoint_handler.set_finished(None)
     #~ def instrument_code()
         
+    #######################################################################
+    ##################### Methods to implement ############################
+    #######################################################################
+
     #@abc.abstractclassmethod
     @classmethod
     @abc.abstractclassmethod
