@@ -41,11 +41,17 @@ class Test_Confirm_Execution(unittest.TestCase):
 
 class Test_Error_Handler(unittest.TestCase):
     def tearDown(self):
-        importlib.reload(common_mix)
+        if sys.version_info.major < 3:
+            reload(common_mix)
+        else:
+            importlib.reload(common_mix)
         
 
     def test_set_repo_mgr(self):
-        importlib.reload(common_mix)
+        if sys.version_info.major < 3:
+            reload(common_mix)
+        else:
+            importlib.reload(common_mix)
         rep_mgr = "MGR" #  just use a string for simplicity
         with patch.object(common_mix.ErrorHandler, 'error_exit') as mf_ee:
             mf_ee.side_effect = AssertionError

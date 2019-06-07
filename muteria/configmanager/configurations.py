@@ -16,6 +16,7 @@
 
 from __future__ import print_function
 
+import os
 import logging
 
 import muteria.common.mix as common_mix 
@@ -369,4 +370,75 @@ class CriteriaToolsConfig(BaseToolConfig):
     SEPARATED_TEST_EXECUTION_EXTRA_TIMEOUT = 60.0 # in seconds
     META_TEST_EXECUTION_EXTRA_TIMEOUT = 600.0 # in seconds
 #~class CriteriaToolsConfig
+
+
+
+#-------------------------------------------------#
+# DEFAULT CONF TEMPLATE CREATION HELPERS          #
+# Use these to generate/update default raw config #
+#-------------------------------------------------#
+
+def get_full_rawconf_template():
+    """ Computes the defaul raw configuration template as string list
+    """
+    thisfile = os.path.abspath(__file__)
+    with open(thisfile) as f:
+        # read all content of the class CompleteConfiguration into list
+        row_list = []
+        active = False
+        for line in f:
+            stripped_line = line.strip()
+            if not active:
+                if stripped_line == "class CompleteConfiguration(object):":
+                    active = True
+            else:
+                if stripped_line == "#~ class CompleteConfiguration":
+                    active = False
+                else:
+                    row_list.append(stripped_line)
+
+    # Check that it was fine
+    if len(row_list) < 1:
+        ERROR_HANDLER.error_exit(\
+                    'complete configuration class was not found', __file__)
+    ERROR_HANDLER.assert_true(not active, \
+                    "did not find end of configuration class", __file__)
+    return row_list
+#~ def get_full_rawconf-template()
+
+def save_common_default_template(filename=None):
+    """ Write the default raw configuration template
+    """
+    if filename is None:
+        filename = os.path.join(os.path.dirname(os.path.abspath(__file__)),\
+                                            "defaults", "common_defaults.py")
+    row_list = get_full_rawconf_template()
+    # save into out file
+    if os.path.isfile(filename):
+        if not common_mix.confirm_execution(\
+                        "The filename to save configuration template "
+                        "exists. Do you want to override it?"):
+            return 
     
+
+    header = "\"\"\" Defaults parameters that are common to all languages\n" +\
+            "\"\"\"\n"
+    header += "from __future__ import print_function\n\n"
+    header += "{} {}\n".format("from muteria.configmanager.configurations", \
+                                "import TestcaseToolsConfig")
+    header += "{} {}\n".format("from muteria.configmanager.configurations", \
+                                "import CriteriaToolsConfig")
+    header += "{} {}\n".format("from muteria.configmanager.configurations", \
+                                "import ToolUserCustom")
+
+    header += "\n{} {}\n".format("from muteria.drivers.criteria", \
+                                "import TestCriteria")
+    header += "{} {}\n".format("from muteria.drivers.criteria", \
+                                "import CriteriaToolType")
+    header += "\n{} {}\n".format("from muteria.drivers.testgeneration", \
+                                "import TestToolType")
+    with open(filename, 'w') as f:
+        f.write(header+'\n')
+        for row in row_list:
+            f.write(row+'\n')
+#~ def save_default_rawconf_template_as()
