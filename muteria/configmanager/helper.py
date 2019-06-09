@@ -42,6 +42,8 @@ class ConfigurationHelper(object):
                     module_str=".".join([config_default, 'common_defaults']),\
                     info="common config module", \
                     must_exist=True)
+        ERROR_HANDLER.assert_true(com_default_conf is not None, \
+                                                'invalid for comm', __file__)
         
         # Get language specific default conf
         lang_default_conf = cls._load_raw_conf_from_file(\
@@ -52,7 +54,11 @@ class ConfigurationHelper(object):
         # create an object that is an update of common_default_conf by 
         # lang_default_conf
         com_conf_dict = cls._get_object_params_vals_as_dict(com_default_conf)
-        lang_conf_dict = cls._get_object_params_vals_as_dict(lang_default_conf)
+        if lang_default_conf is None:
+            lang_conf_dict = {}
+        else:
+            lang_conf_dict = \
+                        cls._get_object_params_vals_as_dict(lang_default_conf)
 
         ## Make sure default has all parameters
         c_tmp = cls._get_object_params_vals_as_dict(CompleteConfiguration)
@@ -111,7 +117,10 @@ class ConfigurationHelper(object):
         if path:
             ERROR_HANDLER.assert_true(sys.path[0] == path, "BUG", __file__)
             sys.path.pop(0)
-        fconf_dict = cls._get_object_params_vals_as_dict(fconf)
+        if fconf is None:
+            fconf_dict = {}
+        else:
+            fconf_dict = cls._get_object_params_vals_as_dict(fconf)
 
         # update
         res = cls._get_update_left_with_right_raw_conf(raw_conf, fconf_dict,\
