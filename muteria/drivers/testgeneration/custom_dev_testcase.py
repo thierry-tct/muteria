@@ -15,7 +15,7 @@ from muteria.drivers.testgeneration.testcases_info import TestcasesInfoObject
 ERROR_HANDLER = common_mix.ErrorHandler
 
 class CustomTestcases(BaseTestcaseTool):
-    CUSTOM_TEST_TOOLNAME = "custom_devtest"
+    CUSTOM_TEST_TOOLNAME = "custom_devtests"
 
     @classmethod
     def installed(cls, custom_binary_dir=None):

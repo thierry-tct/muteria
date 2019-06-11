@@ -115,7 +115,7 @@ class MainController (object):
             # Restore the project repo dir's files that could have been changed.
             # This do not remove the possibly added files or folders
             as_initial = final_config.restore.AS_INITIAL.get_val()
-            repo_mgr = executor._repo_manager()
+            repo_mgr = executor.Executor.create_repo_manager(final_config)
             repo_mgr.revert_repository(as_initial=as_initial)
         elif mode == configurations.SessionMode.VIEW_MODE:
             # View

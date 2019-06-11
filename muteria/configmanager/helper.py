@@ -109,10 +109,15 @@ class ConfigurationHelper(object):
         """
         load config from file and update raw conf with its contents
         """
-        path, filename = os.path.split(os.path.normpath(raw_conf_filename))
+        path, filename = os.path.split(os.path.normpath(\
+                                        os.path.abspath(raw_conf_filename)))
         if path:
             sys.path.insert(0, path)
-        fconf = cls._load_raw_conf_from_file(filename, info="conf file", \
+        ERROR_HANDLER.assert_true(filename.endswith('.py'), "{}{}{}".format(\
+                                    "invalid conf file (", filename, \
+                                    "). must be python source file"), __file__)
+        mod_name = filename[:-len('.py')]
+        fconf = cls._load_raw_conf_from_file(mod_name, info="conf file", \
                                                             must_exist=True)
         if path:
             ERROR_HANDLER.assert_true(sys.path[0] == path, "BUG", __file__)
@@ -145,10 +150,16 @@ class ConfigurationHelper(object):
 
     @classmethod
     def _make_conf_class_from_dict(cls, dict_obj):
-        cc = CompleteConfiguration()
-        ERROR_HANDLER.assert_true(set(dict_obj) == set(\
-                                    cls._get_object_params_vals_as_dict(cc)), \
-                                                "config missmatch", __file__)
+        cc = CompleteConfiguration
+
+        if set(dict_obj) != set(cls._get_object_params_vals_as_dict(cc)):
+            in_obj_only = set(dict_obj) - \
+                                set(cls._get_object_params_vals_as_dict(cc))
+            final_templ_only = set(cls._get_object_params_vals_as_dict(cc)) - \
+                                                                set(dict_obj)
+            ERROR_HANDLER.error_exit("config missmatch: {} {}. {} {}".format(\
+                            "in_obj_only", in_obj_only,
+                            "final template only", final_templ_only), __file__)
         for k, v in list(dict_obj.items()):
             setattr(cc, k, v)
         return cc
@@ -161,28 +172,33 @@ class ConfigurationHelper(object):
         ttype = 'tooltype'
         c_on = 'criteria_on'
 
-        if raw_dict_conf[ttype]:
-            ERROR_HANDLER.assert_true(\
-                        hasattr(tool_type_enum, raw_dict_conf[ttype]), \
-                    "Invalid test tool type: "+raw_dict_conf[ttype], __file__)
-            raw_dict_conf[ttype] = getattr(tool_type_enum, raw_dict_conf[ttype])
-        else:
-            raw_dict_conf[ttype] = default_tool_type
+        if ttype in raw_dict_conf:
+            if raw_dict_conf[ttype]:
+                ERROR_HANDLER.assert_true(\
+                            hasattr(tool_type_enum, raw_dict_conf[ttype]), \
+                        "Invalid test tool type: "+raw_dict_conf[ttype], \
+                                                                    __file__)
+                raw_dict_conf[ttype] = \
+                                getattr(tool_type_enum, raw_dict_conf[ttype])
+            else:
+                raw_dict_conf[ttype] = default_tool_type
 
-        if raw_dict_conf[c_on]:
-            raw_dict_conf[c_on] = [getattr(criteria.TestCriteria, c) \
+        if c_on in raw_dict_conf:
+            if raw_dict_conf[c_on]:
+                raw_dict_conf[c_on] = [getattr(criteria.TestCriteria, c) \
                                                 for c in raw_dict_conf[c_on]]
-        else:
-            raw_dict_conf[c_on] = None
+            else:
+                raw_dict_conf[c_on] = None
 
-        if raw_dict_conf[tuc]:
-            raw_dict_conf[tuc] = \
+        if tuc in raw_dict_conf:
+            if raw_dict_conf[tuc]:
+                raw_dict_conf[tuc] = \
                             configurations.ToolUserCustom(**raw_dict_conf[tuc])
-        else:
-            raw_dict_conf[tuc] = None
+            else:
+                raw_dict_conf[tuc] = None
         
         return target_tool_class(**raw_dict_conf)
-    #def _make_tool_conf_from_raw()
+    #~ def _make_tool_conf_from_raw()
 
     
     @classmethod
@@ -214,12 +230,18 @@ class ConfigurationHelper(object):
         """
         conf = cls._make_conf_class_from_dict(raw_conf)
         
-        conf.ENABLED_CRITERIA = [getattr(criteria.TestCriteria, c) \
-                                                for c in conf.ENABLED_CRITERIA]
+        tmp = []
+        for c in conf.ENABLED_CRITERIA:
+            if not isinstance(c, criteria.TestCriteria):
+                c = getattr(criteria.TestCriteria, c) 
+            tmp.append(c)
+        conf.ENABLED_CRITERIA = tmp
         
         tmp = []
         for tc in conf.TESTCASE_TOOLS_CONFIGS:
-            tc = cls._make_tool_conf_from_raw(tc, testgeneration.TestToolType,\
+            if not isinstance(tc, testgeneration.TestToolType):
+                tc = cls._make_tool_conf_from_raw(tc, \
+                            testgeneration.TestToolType,\
                             testgeneration.TEST_TOOL_TYPES_SCHEDULING[0][0],\
                             configurations.TestcaseToolsConfig)
             tmp.append(tc)
@@ -227,7 +249,9 @@ class ConfigurationHelper(object):
 
         tmp = []
         for cc in conf.CRITERIA_TOOLS_CONFIGS:
-            cc = cls._make_tool_conf_from_raw(cc, criteria.CriteriaToolType,\
+            if not isinstance(cc, configurations.CriteriaToolsConfig):
+                cc = cls._make_tool_conf_from_raw(cc, \
+                            criteria.CriteriaToolType,\
                             criteria.CRITERIA_TOOL_TYPES_SCHEDULING[0][0],\
                             configurations.CriteriaToolsConfig)
             # TODO: Criteria enabled verification
@@ -236,6 +260,8 @@ class ConfigurationHelper(object):
 
         # NEXT here
         #TODO: Add optimizers ....
+
+        return conf
     #~ def get_finalconf_of_rawconf()
 
 #~ class ConfigurationHelper()
