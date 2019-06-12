@@ -80,7 +80,13 @@ class CompleteConfiguration(object):
     # The corresponding configs of codecoverage (`CodecoverageToolsConfig`)
     # and mutation (`MutationToolsConfig`) are considered if and only if 
     # the corresponding include is enabled
-    
+
+    # Decide whether to start over, deleting previous, for execution mode
+    EXECUTION_CLEANSTART=False
+
+    # Value of type SessionMode (Mandatory)
+    RUN_MODE = None
+
     # List of enabled criteria 
     # (must have tool specified is specifically enabled)
     # None mean all criteria with tool specified
@@ -95,7 +101,7 @@ class CompleteConfiguration(object):
     # Specify a Step to go back to
     RE_EXECUTE_FROM_CHECKPOINT_META_TASKS = [] # Make interaction easy
 
-    # Output dir pathname
+    # Output dir pathname (Mandatory)
     OUTPUT_ROOT_DIR = None
 
     #######################################################
@@ -119,10 +125,10 @@ class CompleteConfiguration(object):
     #######################################################
     #######        Project Config Parameters         ######
     #######################################################
-    # Project programming language
+    # Project programming language (Mandatory)
     PROGRAMMING_LANGUAGE = None
 
-    # Repository dir pathname
+    # Repository dir pathname (Mandatory)
     REPOSITORY_ROOT_DIR = None
     
     # string representing the relative path to the executable
@@ -424,6 +430,9 @@ def save_common_default_template(filename=None):
     header = "\"\"\" Defaults parameters that are common to all languages\n" +\
             "\"\"\"\n"
     header += "from __future__ import print_function\n\n"
+    header += "{} {}\n".format("from muteria.configmanager.configurations", \
+                                "import SessionMode")
+
     header += "{} {}\n".format("from muteria.configmanager.configurations", \
                                 "import TestcaseToolsConfig")
     header += "{} {}\n".format("from muteria.configmanager.configurations", \

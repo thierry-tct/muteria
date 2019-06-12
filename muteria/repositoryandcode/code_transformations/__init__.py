@@ -13,6 +13,10 @@ def _make_available():
     # make this pkg visible
     sys.path.insert(0, pkg_path)
     for m in os.listdir(pkg_path):
+        # Consider only '.py' files
+        if not m.endswith('.py'):
+            continue
+            
         m_path = os.path.join(os.path.join(pkg_path, m))
         if os.path.isfile(m_path) and m != init_file:
             mod_name = os.path.splitext(m)[0]

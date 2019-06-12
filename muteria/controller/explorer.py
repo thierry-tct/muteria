@@ -38,7 +38,7 @@ EXECUTION_TIMES = "execution_times"
 MAIN_LOG_FILE = "ctrl_log.log"
 
 TEST_PASS_FAIL_MATRIX = "PASSFAIL.csv"
-CRITERIA_MATRIX = []
+CRITERIA_MATRIX = {}
 for criterion in TestCriteria:
     CRITERIA_MATRIX[criterion] = criterion.get_str()+".csv"
 
@@ -48,10 +48,11 @@ TMP_TEST_PASS_FAIL_MATRIX = "tmp_PASSFAIL.csv"
 PARTIAL_TMP_TEST_PASS_FAIL_MATRIX = "partial_tmp_PASSFAIL.csv"
 TMP_CRITERIA_MATRIX = {}
 for criterion in TestCriteria:
-    TMP_CRITERIA_MATRIX[criterion] = "tmp_"+criterion+".csv"
+    TMP_CRITERIA_MATRIX[criterion] = "tmp_"+criterion.get_str()+".csv"
 PARTIAL_TMP_CRITERIA_MATRIX = {}
 for criterion in TestCriteria:
-    PARTIAL_TMP_CRITERIA_MATRIX[criterion] = "partial_tmp_"+criterion+".csv"
+    PARTIAL_TMP_CRITERIA_MATRIX[criterion] = \
+                                    "partial_tmp_"+criterion.get_str()+".csv"
 TMP_SELECTED_TESTS_LIST = "tmp_selected_test.json"
 # ---------------------------------------------------------
 
@@ -112,7 +113,7 @@ def get_outputdir_structure_by_filesdirs():
                 TopExecutionDir[EXECUTION_TMP_DIR] + [TMP_SELECTED_TESTS_LIST]
 
     TopExecutionDir[STATS_MAIN_FILE_MD] = TopExecutionDir[RESULTS_STATS_DIR] \
-                                                    + STATS_MAIN_FILE_MD
+                                                    + [STATS_MAIN_FILE_MD]
                                                     
     return TopExecutionDir
 #~ def get_outputdir_structure_by_filesdirs():

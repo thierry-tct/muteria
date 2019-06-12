@@ -1,5 +1,7 @@
 import os
 
+from muteria.configmanager.configurations import SessionMode
+
 this_dir = os.path.dirname(os.path.abspath(__file__))
 
 devtestlist = ['test_lib.py']
@@ -9,4 +11,6 @@ def dev_test_runner(test_name):
         return True
 
 PROGRAMMING_LANGUAGE='pythOn'
-REPOSITORY_ROOTDIR=os.path.join(os.path.dirname(this_dir), 'repo')
+REPOSITORY_ROOT_DIR=os.path.join(os.path.dirname(this_dir), 'repo')
+OUTPUT_ROOT_DIR=os.path.join(os.path.dirname(this_dir), 'ctrl', "output")
+RUN_MODE=SessionMode.EXECUTE_MODE

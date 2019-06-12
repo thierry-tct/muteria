@@ -21,6 +21,7 @@ import muteria.drivers.testgeneration as testgeneration
 
 import muteria.configmanager.configurations as configurations
 from muteria.configmanager.configurations import CompleteConfiguration
+from muteria.configmanager.configurations import ConfigElement
 
 ERROR_HANDLER = common_mix.ErrorHandler
 
@@ -150,13 +151,15 @@ class ConfigurationHelper(object):
 
     @classmethod
     def _make_conf_class_from_dict(cls, dict_obj):
-        cc = CompleteConfiguration
+        cc = CompleteConfiguration()
 
-        if set(dict_obj) != set(cls._get_object_params_vals_as_dict(cc)):
+        if set(dict_obj) != set(cls._get_object_params_vals_as_dict(\
+                                                    CompleteConfiguration)):
             in_obj_only = set(dict_obj) - \
-                                set(cls._get_object_params_vals_as_dict(cc))
-            final_templ_only = set(cls._get_object_params_vals_as_dict(cc)) - \
-                                                                set(dict_obj)
+                                set(cls._get_object_params_vals_as_dict(\
+                                                        CompleteConfiguration))
+            final_templ_only = set(cls._get_object_params_vals_as_dict(\
+                                        CompleteConfiguration)) - set(dict_obj)
             ERROR_HANDLER.error_exit("config missmatch: {} {}. {} {}".format(\
                             "in_obj_only", in_obj_only,
                             "final template only", final_templ_only), __file__)
@@ -260,6 +263,10 @@ class ConfigurationHelper(object):
 
         # NEXT here
         #TODO: Add optimizers ....
+
+        # make configelement for each
+        for k in raw_conf:
+            setattr(conf, k, ConfigElement(val=getattr(conf, k)))
 
         return conf
     #~ def get_finalconf_of_rawconf()

@@ -105,7 +105,7 @@ class Executor(object):
 
         self.head_explorer = self.top_timeline_explorer.get_latest_explorer()
         self._initialize_output_structure(cleanstart=\
-                                self.config.EXECUTION_CLEANSTART._get_val())
+                                self.config.EXECUTION_CLEANSTART.get_val())
         if not logging_setup.is_setup():
             logging_setup.setup(logfile=self.head_explorer.get_file_pathname(\
                                                 outdir_struct.MAIN_LOG_FILE))

@@ -2,6 +2,7 @@
 """
 from __future__ import print_function
 
+from muteria.configmanager.configurations import SessionMode
 from muteria.configmanager.configurations import TestcaseToolsConfig
 from muteria.configmanager.configurations import CriteriaToolsConfig
 from muteria.configmanager.configurations import ToolUserCustom
@@ -20,6 +21,12 @@ from muteria.drivers.testgeneration import TestToolType
 # and mutation (`MutationToolsConfig`) are considered if and only if
 # the corresponding include is enabled
 
+# Decide whether to start over, deleting previous, for execution mode
+EXECUTION_CLEANSTART=False
+
+# Value of type SessionMode (Mandatory)
+RUN_MODE = None
+
 # List of enabled criteria
 # (must have tool specified is specifically enabled)
 # None mean all criteria with tool specified
@@ -34,7 +41,7 @@ RESTART_CURRENT_EXECUTING_META_TASKS = False
 # Specify a Step to go back to
 RE_EXECUTE_FROM_CHECKPOINT_META_TASKS = [] # Make interaction easy
 
-# Output dir pathname
+# Output dir pathname (Mandatory)
 OUTPUT_ROOT_DIR = None
 
 #######################################################
@@ -58,10 +65,10 @@ OUTPUT_STATS_HISTORY = True
 #######################################################
 #######        Project Config Parameters         ######
 #######################################################
-# Project programming language
+# Project programming language (Mandatory)
 PROGRAMMING_LANGUAGE = None
 
-# Repository dir pathname
+# Repository dir pathname (Mandatory)
 REPOSITORY_ROOT_DIR = None
 
 # string representing the relative path to the executable
