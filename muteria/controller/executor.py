@@ -124,7 +124,8 @@ class Executor(object):
         """ Executor entry point
         """
         # Initialize output structure
-        self._initialize_output_structure(cleanstart=self.config.CLEANSTART)
+        self._initialize_output_structure(\
+                        cleanstart=self.config.EXECUTION_CLEANSTART.get_val())
 
         # Make checkpointer
         self.checkpointer = \
@@ -421,9 +422,9 @@ class Executor(object):
                             config.REPO_EXECUTABLE_RELATIVE_PATH.get_val(),\
                     dev_test_runner_func=\
                             config.CUSTOM_DEV_TEST_RUNNER_FUNCTION.get_val(),\
-                    code_builder_func=config.CODE_BUILD_FUNCTION.get_val(),\
+                    code_builder_func=config.CODE_BUILDER_FUNCTION.get_val(),\
                     source_files_to_objects=\
-                                config.TARGET_SOURCE_FILES_TO_OBJS.get_val(),\
+                        config.TARGET_SOURCE_INTERMEDIATE_CODE_MAP.get_val(),\
                     dev_tests_list=config.DEVELOPER_TESTS_LIST.get_val(),\
                     )
         return repo_mgr
@@ -436,7 +437,8 @@ class Executor(object):
                         tests_working_dir=self.head_explorer.get_dir_pathname(\
                                             outdir_struct.TESTSCASES_WORKDIR),\
                         code_builds_factory=self.cb_factory,
-                        test_tool_config_list=config.TESTCASE_TOOLS_CONFIGS,)
+                        test_tool_config_list=\
+                                    config.TESTCASE_TOOLS_CONFIGS.get_val(),)
         return meta_test_tool
     #~ def _create_meta_test_tool()
 

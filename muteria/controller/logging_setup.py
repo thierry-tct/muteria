@@ -13,6 +13,7 @@
 from __future__ import print_function
 
 import logging
+import logging.handlers
 
 # private static variable of this module
 _SETUP_DONE = False

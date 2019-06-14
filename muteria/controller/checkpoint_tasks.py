@@ -243,6 +243,7 @@ class TaskOrderingDependency(object):
         self._recursive_check_deps_are_done(t)
         # set it to complete
         t.set_done()
+        logging.info("checkpoint_task:COMPLETED:"+task_name.get_str())
     #~ def set_task_completed()
 
     def set_task_executing (self, task_name):
@@ -252,6 +253,7 @@ class TaskOrderingDependency(object):
         self._recursive_check_deps_are_done(t)
         # set it to complete
         t.set_executing()
+        logging.info("checkpoint_task:EXECUTING:"+task_name.get_str())
     #~ def set_task_executing()
 
     def task_is_complete(self, task_name):
@@ -276,6 +278,8 @@ class TaskOrderingDependency(object):
         if len(task_set) != len(task_node_set):
             ERROR_HANDLER.error_exit("{}".format(\
                         "(BUG) same task appears in multiple nodes"), __file__)
+        logging.info("checkpoint_task:NEXT_TODO:"+\
+                                        str([t.get_str() for t in task_set]))
         return task_set
     #~ def get_next_todo_tasks()
 

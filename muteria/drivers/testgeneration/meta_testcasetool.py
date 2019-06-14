@@ -127,7 +127,7 @@ class MetaTestcaseTool(object):
         self.test_tool_config_list = test_tool_config_list
 
         # Verify Direct Arguments Variables
-        ERROR_HANDLER.assert_true(self.tests_working_dir is None, \
+        ERROR_HANDLER.assert_true(self.tests_working_dir is not None, \
                                     "Must specify tests_working_dir", __file__)
         ERROR_HANDLER.assert_true(len(self.test_tool_config_list) != \
                                 len(set([c.get_tool_config_alias() for c in \

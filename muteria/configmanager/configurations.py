@@ -137,7 +137,7 @@ class CompleteConfiguration(object):
 
     # optional map between each source and the corresponding intermediate
     # file map (such as object or assembly file for c of .class file for java)
-    SOURCE_INTERMEDIATE_CODE_MAP = None
+    TARGET_SOURCE_INTERMEDIATE_CODE_MAP = None
 
     # Specify the optional general scope of the evaluation, 
     # Specific scope can be specified per tool
@@ -146,7 +146,8 @@ class CompleteConfiguration(object):
     TARGET_METHODS_BY_TARGET_CLASSES = None
     # each source file element is the relative path from repos rootdir.
     # None value means all source files
-    TARGET_SOURCE_FILES_LIST = None
+    ##TARGET_SOURCE_FILES_LIST = None
+
     # each test file element is the relative path from repos rootdir.
     # None value means all dev tests
     DEVELOPER_TESTS_LIST = None
@@ -154,13 +155,13 @@ class CompleteConfiguration(object):
     # Function that takes 3 arguments:
     #   <test_name: str>
     #   <repos directory rootdir: str>
-    #   <Executable relative path: str>
+    #   <Executable relative path map: dict>
     # and run with the executable as in repository
     # The function return:
     #   0 on passing test
     #   1 on failing test
     #   -1 on error
-    CUSTOM_DEV_TEST_RUNNER = None
+    CUSTOM_DEV_TEST_RUNNER_FUNCTION = None
 
     # Optional. When not None, the CUSTOM_DEV_TEST_RUNNER is the name of 
     # the function in this file to use
@@ -181,7 +182,7 @@ class CompleteConfiguration(object):
     # A code builder class is defined and make use of this function 
     # It ensure on call to this functin at the time and no call while any 
     # processing in the repodir. 
-    CODE_BUILDER_FUNC = None
+    CODE_BUILDER_FUNCTION = None
 
     # Optional. When not None, the CODE_BUILDER_FUNC is the name of 
     # the function in this file to use
@@ -414,6 +415,8 @@ def get_full_rawconf_template():
 
 def save_common_default_template(filename=None):
     """ Write the default raw configuration template
+        >>> import muteria.configmanager.configurations as mcc
+        >>> mcc.save_common_default_template()
     """
     if filename is None:
         filename = os.path.join(os.path.dirname(os.path.abspath(__file__)),\

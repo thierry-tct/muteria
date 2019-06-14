@@ -102,7 +102,7 @@ class MetaCriteriaTool(object):
         self.tools_config_by_criterion_dict = tools_config_by_criterion_dict
         
         # Verify Direct Arguments Variables
-        ERROR_HANDLER.assert_true(self.criteria_working_dir is None, \
+        ERROR_HANDLER.assert_true(self.criteria_working_dir is not None, \
                             "Must specify criteria_working_dir", __file__)
         for criterion in self.tools_config_by_criterion_dict:
             ERROR_HANDLER.assert_true( \
