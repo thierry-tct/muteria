@@ -24,5 +24,6 @@ class StatsComputer(object):
 
     @staticmethod
     def compute_stats(config, explorer):
-        ERROR_HANDLER.error_exit("TODO")
+        #ERROR_HANDLER.error_exit("TODO")
+        pass
 #~ class DataHandling

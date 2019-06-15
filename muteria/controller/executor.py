@@ -15,6 +15,7 @@ import muteria.common.fs as common_fs
 from muteria.repositoryandcode.repository_manager import RepositoryManager
 from muteria.repositoryandcode.code_builds_factory import CodeBuildsFactory
 
+from muteria.drivers import DriversUtils
 from muteria.drivers.testgeneration import TestToolType
 from muteria.drivers.testgeneration.meta_testcasetool import MetaTestcaseTool
 import muteria.drivers.criteria as criteria_pkg
@@ -46,6 +47,9 @@ class CheckpointData(dict):
         retval = dict(self.__dict__)
         retval['tasks_obj'] = retval['tasks_obj'].get_as_json_object()
         retval['test_types'] = [tt.get_str() for tt in retval['test_types']]
+        if self.criteria_set is not None:
+            retval['criteria_set'] = \
+                                [c.get_str() for c in retval['criteria_set']]
         return retval
     #~ def get_json_obj()
 
@@ -54,6 +58,9 @@ class CheckpointData(dict):
         self.tasks_obj = checkpoint_tasks.TaskOrderingDependency(\
                                                     json_obj=self.tasks_obj)
         self.test_types = tuple([TestToolType[tt] for tt in self.test_types])
+        if self.criteria_set is not None:
+            self.criteria_set = set(\
+                    [criteria_pkg.TestCriteria[c] for c in self.criteria_set])
     #~ def update_from_json_obj()
 
     def test_tool_types_is_executed(self, seq_id, test_tool_types):
@@ -196,6 +203,10 @@ class Executor(object):
             if self.cp_data.test_tool_types_is_executed(\
                                                     seq_id, test_tool_types):
                 continue
+
+            if len(self.meta_testcase_tool.get_candidate_tools_aliases(\
+                                    test_tool_type_list=test_tool_types)) == 0:
+                continue
             
             # If we have a new seq_id, it is another test type loop
             self.cp_data.switchto_new_test_tool_types(seq_id, test_tool_types)
@@ -280,9 +291,18 @@ class Executor(object):
                 self.cp_data.tasks_obj.set_task_executing(task)
                 self.checkpointer.write_checkpoint(self.cp_data.get_json_obj())
 
-            # TODO: use the actual selector. For now just use all tests
-            selected_tests = self.meta_testcase_tool.\
+            all_tests = self.meta_testcase_tool.\
                                     get_testcase_info_object().get_tests_list()
+            candidate_aliases = \
+                        self.meta_testcase_tool.get_candidate_tools_aliases(\
+                                test_tool_type_list=self.cp_data.test_types)
+            selected_tests = []
+            for meta_test in all_tests:
+                toolalias, _ = DriversUtils.reverse_meta_element(meta_test)
+                if toolalias in candidate_aliases:
+                    selected_tests.append(meta_test)
+
+            # TODO: use the actual selector. For now just use all tests
             common_fs.dumpJSON(list(selected_tests), out_file)
 
             # @Checkpointing
@@ -376,6 +396,8 @@ class Executor(object):
                 criteria_set_sequence = criteria_pkg.CRITERIA_SEQUENCE
             for cs_pos, criteria_set in enumerate(criteria_set_sequence):
                 criteria_set &= set(matrix_files)
+                if len(criteria_set) == 0:
+                    continue
 
                 # Was it already checkpointed w.r.t criteria set seq
                 if self.cp_data.criteria_set_is_executed(cs_pos, criteria_set):
@@ -396,7 +418,7 @@ class Executor(object):
                             testcases=meta_testcases, \
                             criterion_to_matrix=criterion_to_matrix, \
                             cover_criteria_elements_once=\
-                                    self.config.COVER_CRITERIA_ELEMENTS_ONCE,
+                            self.config.COVER_CRITERIA_ELEMENTS_ONCE.get_val(),
                             finish_destroy_checkpointer=True)
 
                 # @Checkpointing
@@ -425,16 +447,15 @@ class Executor(object):
 
             # Merge TMP criteria and potentially existing criteria
             for criterion in self.config.ENABLED_CRITERIA.get_val():
-                tmp_matrix_file = self.head_explorer.get_path_filename(\
+                tmp_matrix_file = self.head_explorer.get_file_pathname(\
                                 outdir_struct.TMP_CRITERIA_MATRIX[criterion])
-                matrix_file = self.head_explorer.get_path_filename(\
+                matrix_file = self.head_explorer.get_file_pathname(\
                                 outdir_struct.CRITERIA_MATRIX[criterion])
                 StatsComputer.merge_lmatrix_into_right(tmp_matrix_file, \
                                                                 matrix_file)
         elif task == checkpoint_tasks.Tasks.AGGREGATED_STATS:
             # Compute the final stats (MS, ...)
-            StatsComputer.compute_stats(self.config.REPORTING_CONFIG, \
-                                                            self.head_explorer)
+            StatsComputer.compute_stats(self.config, self.head_explorer)
         #-------------------------------------------------------------------
 
         if not self.cp_data.tasks_obj.task_is_complete(task):

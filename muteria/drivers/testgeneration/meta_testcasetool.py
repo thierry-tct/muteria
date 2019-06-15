@@ -449,6 +449,21 @@ class MetaTestcaseTool(object):
         return meta_test_failed_verdicts
     #~ def runtests()
 
+    def get_candidate_tools_aliases(self, test_tool_type_list):
+        candidate_tools_aliases = []
+        for test_tool_type in test_tool_type_list:
+            # validate the test_tool_types values
+            ERROR_HANDLER.assert_true(\
+                                TestToolType.is_valid(test_tool_type), \
+                    "Invalid test tool type passed to test generation", \
+                                                                __file__)
+            for ttoolalias in self.testcases_configured_tools:
+                if self.testcases_configured_tools[ttoolalias]\
+                                    [self.TOOL_TYPE_KEY] == test_tool_type:
+                    candidate_tools_aliases.append(ttoolalias) 
+        return candidate_tools_aliases
+    #~ def get_candidate_tools_aliases()
+
     def generate_tests (self, exe_path_map=None, test_tool_type_list=None, \
                                 test_generation_guidance_obj=None, \
                                 parallel_testgen_count=1, \
@@ -506,17 +521,8 @@ class MetaTestcaseTool(object):
             ERROR_HANDLER.assert_true(len(test_tool_type_list) > 0,\
                                 "Invalid test_tool_type_list passed (empty)", \
                                                                     __file__)
-            candidate_tools_aliases = []
-            for test_tool_type in test_tool_type_list:
-                # validate the test_tool_types values
-                ERROR_HANDLER.assert_true(\
-                                    TestToolType.is_valid(test_tool_type), \
-                        "Invalid test tool type passed to test generation", \
-                                                                    __file__)
-                for ttoolalias in self.testcases_configured_tools:
-                    if self.testcases_configured_tools[ttoolalias]\
-                                        [self.TOOL_TYPE_KEY] == test_tool_type:
-                        candidate_tools_aliases.append(ttoolalias) 
+            candidate_tools_aliases = self.get_candidate_tools_aliases(\
+                                                        test_tool_type_list)
 
         # @Checkpoint: create a checkpoint handler
         cp_func_name = "generate_tests"

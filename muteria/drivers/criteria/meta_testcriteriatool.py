@@ -440,14 +440,14 @@ class MetaCriteriaTool(object):
             if checkpoint_handler.is_to_execute( \
                                         func_name=cp_func_name, \
                                         taskid=cp_task_id + 1,
-                                        tool=criterion):
+                                        tool=criterion.get_str()):
                 # Serialized the computed matrix
                 result_matrix.serialize()
             # @Checkpoint: Checkpointing
             checkpoint_handler.do_checkpoint( \
                                     func_name=cp_func_name, \
                                     taskid=cp_task_id + 1,
-                                    tool=criterion)
+                                    tool=criterion.get_str())
         
         # Delete the temporary tool matrix's directory
         if os.path.isdir(matrices_dir_tmp):
