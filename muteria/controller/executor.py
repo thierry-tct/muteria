@@ -206,7 +206,7 @@ class Executor(object):
 
             if len(self.meta_testcase_tool.get_candidate_tools_aliases(\
                                     test_tool_type_list=test_tool_types)) == 0:
-                continue
+               continue
             
             # If we have a new seq_id, it is another test type loop
             self.cp_data.switchto_new_test_tool_types(seq_id, test_tool_types)
@@ -440,6 +440,15 @@ class Executor(object):
             # Merge TMP pass fail and potentially existing pass fail
             StatsComputer.merge_lmatrix_into_right(\
                                                 tmp_matrix_file, matrix_file)
+
+            # @Checkpointing
+            self.cp_data.tasks_obj.set_task_completed(task)
+            self.checkpointer.write_checkpoint(self.cp_data.get_json_obj())
+
+            # Cleanup
+            self.head_explorer.remove_file_and_get(\
+                                    outdir_struct.TMP_TEST_PASS_FAIL_MATRIX)
+
         elif task == checkpoint_tasks.Tasks.CRITERIA_STATS:
             # Make sure that the Matrices dir exists
             self.head_explorer.get_or_create_and_get_dir(\
@@ -453,6 +462,16 @@ class Executor(object):
                                 outdir_struct.CRITERIA_MATRIX[criterion])
                 StatsComputer.merge_lmatrix_into_right(tmp_matrix_file, \
                                                                 matrix_file)
+
+            # @Checkpointing
+            self.cp_data.tasks_obj.set_task_completed(task)
+            self.checkpointer.write_checkpoint(self.cp_data.get_json_obj())
+
+            # Cleanup
+            for criterion in self.config.ENABLED_CRITERIA.get_val():
+                self.head_explorer.remove_file_and_get(\
+                                outdir_struct.TMP_CRITERIA_MATRIX[criterion])
+
         elif task == checkpoint_tasks.Tasks.AGGREGATED_STATS:
             # Compute the final stats (MS, ...)
             StatsComputer.compute_stats(self.config, self.head_explorer)

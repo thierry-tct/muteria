@@ -104,9 +104,9 @@ class RawExecutionMatrix(object):
                                            .astype({self.key_column_name: str})
         else:
             self.dataframe = common_fs.loadCSV(self.filename)
-            ERROR_HANDLER.assert_true(len(self.dataframe.columns) >= 2, \
-                    "expect at least 2 columns in dataframe: key, values...",\
-                                                                    __file__)
+            #ERROR_HANDLER.assert_true(len(self.dataframe.columns) >= 2, \
+            #        "expect at least 2 columns in dataframe: key, values...",\
+            #                                                        __file__)
             ERROR_HANDLER.assert_true(self.key_column_name == \
                                     list(self.dataframe)[0], "key_column"\
                             " name missing or not first column in dataframe",\
@@ -449,9 +449,12 @@ class RawExecutionMatrix(object):
         """
         if keys is None:
             keys = self.get_keys()
-        tmp_df = self.extract_by_rowkey(keys).dataframe
-        tmp_df.set_index(self.get_key_colname(), inplace=True)
-        k_v_dict = tmp_df.to_dict('index')
+        if len(keys) == 0:
+            k_v_dict = {}
+        else:
+            tmp_df = self.extract_by_rowkey(keys).dataframe
+            tmp_df.set_index(self.get_key_colname(), inplace=True)
+            k_v_dict = tmp_df.to_dict('index')
         return k_v_dict
 
     def _update_cells(self, key, values):
