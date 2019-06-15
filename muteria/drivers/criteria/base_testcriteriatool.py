@@ -163,18 +163,18 @@ class BaseCriteriaTool(abc.ABC):
         # Since for ExecutionMatrix, active is not 0 thus this is direct.
         testcases_set = set(testcases)
         for criterion in criterion2coverage_per_test:
-            if os.path.isfile(criterion_to_matrix[criterion]):
-                os.remove(criterion_to_matrix[criterion])
-            matrix = common_matrices.ExecutionMatrix(
-                                    filename=criterion_to_matrix[criterion], \
-                                    non_key_col_list=testcases)
+            matrix = criterion_to_matrix[criterion]
+            matrix_file = matrix.get_store_filename()
+            if matrix_file is not None and os.path.isfile(matrix_file):
+                os.remove(matrix_file)
+                                    
             for key, value in list(\
                             criterion2coverage_per_test[criterion].items()):
                 missing_tests = {t:0 for t in testcases_set - set(value)}
                 value.update(missing_tests)
                 matrix.add_row_by_key(key, value, serialize=False)
             # Serialize to disk
-            criterion_to_matrix[criterion].serialize()
+            matrix.serialize()
     #~ def _runtest_meta_criterion_program()
 
     def _runtest_separate_criterion_program (self, criterion, testcases, \

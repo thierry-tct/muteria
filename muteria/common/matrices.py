@@ -166,6 +166,11 @@ class RawExecutionMatrix(object):
         if self.filename is not None:
             common_fs.dumpCSV(self.dataframe, self.filename)
 
+    def get_store_filename(self):
+        """ Get the name of the storing file
+        """
+        return self.filename
+
     #def raw_add_row(self):
 
     #def raw_delete_row(self):
