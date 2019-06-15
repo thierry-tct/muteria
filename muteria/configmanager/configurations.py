@@ -210,7 +210,7 @@ class CompleteConfiguration(object):
     ]
 
     # Test generation tool. Example:
-    # >>> TestcaseToolConfig(tooltype=TestToolType.USE_ONLY_CODE,
+    # >>> TestcaseToolsConfig(tooltype=TestToolType.USE_ONLY_CODE,
     #                        toolname='klee', config_id=0)
     TESTCASE_TOOLS_CONFIGS = [
 
@@ -235,12 +235,13 @@ class CompleteConfiguration(object):
 
     # ===================== CRITERIA COVERAGE =====================#
 
+    # Map with key criteria and values the list of tools
     # criteria tool. Example:
     # >>> CriteriaToolConfig(tooltype=CriteriaToolType.USE_ONLY_CODE,
     #                        toolname='gcov', config_id=0)
-    CRITERIA_TOOLS_CONFIGS = [
+    CRITERIA_TOOLS_CONFIGS_BY_CRITERIA = {
 
-    ]
+    }
 
     # List of criteria to run with failing tests
     RUN_FAILING_TESTS_WITH_CRITERIA = [
@@ -287,6 +288,9 @@ class CompleteConfiguration(object):
 #~ class CompleteConfiguration
 
 class BaseToolConfig(dict):
+    """
+    :param criteria_on: (list) alternate way to represent criteria of a tool (TODO)
+    """
     def __init__(self, tooltype=None, toolname=None, config_id=None, \
                                     criteria_on=None, tool_user_custom=None):
         self.tooltype = tooltype

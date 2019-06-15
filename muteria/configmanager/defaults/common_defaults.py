@@ -150,7 +150,7 @@ TEST_TOOL_TYPES_SCHEDULING = [
 ]
 
 # Test generation tool. Example:
-# >>> TestcaseToolConfig(tooltype=TestToolType.USE_ONLY_CODE,
+# >>> TestcaseToolsConfig(tooltype=TestToolType.USE_ONLY_CODE,
 #                        toolname='klee', config_id=0)
 TESTCASE_TOOLS_CONFIGS = [
 
@@ -175,12 +175,13 @@ ONE_TEST_EXECUTION_TIMEOUT = 900.0 # in seconds (Handle inifnite loops)
 
 # ===================== CRITERIA COVERAGE =====================#
 
+# Map with key criteria and values the list of tools
 # criteria tool. Example:
 # >>> CriteriaToolConfig(tooltype=CriteriaToolType.USE_ONLY_CODE,
 #                        toolname='gcov', config_id=0)
-CRITERIA_TOOLS_CONFIGS = [
+CRITERIA_TOOLS_CONFIGS_BY_CRITERIA = {
 
-]
+}
 
 # List of criteria to run with failing tests
 RUN_FAILING_TESTS_WITH_CRITERIA = [

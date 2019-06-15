@@ -15,6 +15,7 @@ import muteria.common.fs as common_fs
 from muteria.repositoryandcode.repository_manager import RepositoryManager
 from muteria.repositoryandcode.code_builds_factory import CodeBuildsFactory
 
+from muteria.drivers.testgeneration import TestToolType
 from muteria.drivers.testgeneration.meta_testcasetool import MetaTestcaseTool
 from muteria.drivers.criteria.meta_testcriteriatool import MetaCriteriaTool
 
@@ -43,6 +44,7 @@ class CheckpointData(dict):
     def get_json_obj(self):
         retval = dict(self.__dict__)
         retval['tasks_obj'] = retval['tasks_obj'].get_as_json_object()
+        retval['test_types'] = [tt.get_str() for tt in retval['test_types']]
         return retval
     #~ def get_json_obj()
 
@@ -50,6 +52,7 @@ class CheckpointData(dict):
         self.update_all(**json_obj)
         self.tasks_obj = checkpoint_tasks.TaskOrderingDependency(\
                                                     json_obj=self.tasks_obj)
+        self.test_types = tuple([TestToolType[tt] for tt in self.test_types])
     #~ def update_from_json_obj()
 
     def test_tool_types_is_executed(self, seq_id, test_tool_types):
@@ -161,7 +164,8 @@ class Executor(object):
         check_pt_obj = self.checkpointer.load_checkpoint_or_start(\
                                             ret_detailed_exectime_obj=False)
         
-        test_tool_type_sequence = self.config.TEST_TOOL_TYPE_SEQUENCE.get_val()
+        test_tool_type_sequence = \
+                            self.config.TEST_TOOL_TYPES_SCHEDULING.get_val()
 
         # Do nothing if no tool types specified
         if len(test_tool_type_sequence) == 0:
@@ -265,18 +269,19 @@ class Executor(object):
 
         elif task == checkpoint_tasks.Tasks.\
                                     TESTS_EXECUTION_SELECTION_PRIORITIZATION:
-            out_file = self.head_explorer.get_file_pathname(\
-                                        outdir_struct.TMP_SELECTED_TESTS_LIST)
+            out_file_key = outdir_struct.TMP_SELECTED_TESTS_LIST
+            out_file = self.head_explorer.get_file_pathname(out_file_key)
+                                        
             # @Checkpointing
             if task_untouched:
-                self.head_explorer.remove_file_and_get(out_file)
+                self.head_explorer.remove_file_and_get(out_file_key)
                 self.cp_data.tasks_obj.set_task_executing(task)
                 self.checkpointer.write_checkpoint(self.cp_data.get_json_obj())
 
             # TODO: use the actual selector. For now just use all tests
             selected_tests = self.meta_testcase_tool.\
                                     get_testcase_info_object().get_tests_list()
-            common_fs.dumpJSON(selected_tests, out_file)
+            common_fs.dumpJSON(list(selected_tests), out_file)
 
             # @Checkpointing
             self.cp_data.tasks_obj.set_task_completed(task)
@@ -324,7 +329,7 @@ class Executor(object):
                 self.checkpointer.write_checkpoint(self.cp_data.get_json_obj())
 
             self.meta_criteria_tool.instrument_code(criteria_enabled_list=\
-                                        self.config.CRITERIA_LIST.get_val(), \
+                                        self.config.ENABLED_CRITERIA.get_val(), \
                                         finish_destroy_checkpointer=False)
 
             # @Checkpointing
@@ -338,7 +343,7 @@ class Executor(object):
             pass #TODO (Maybe could be used someday. for now, just skip it)
         elif task == checkpoint_tasks.Tasks.CRITERIA_TESTS_EXECUTION:
             matrix_files = {}
-            for criterion in self.config.CRITERIA_LIST.get_val():
+            for criterion in self.config.ENABLED_CRITERIA.get_val():
                 matrix_files[criterion] = \
                                 self.head_explorer.get_path_filename(\
                                 outdir_struct.TMP_CRITERIA_MATRIX[criterion])
@@ -392,7 +397,7 @@ class Executor(object):
                                                 tmp_matrix_file, matrix_file)
         elif task == checkpoint_tasks.Tasks.CRITERIA_STATS:
             # Merge TMP criteria and potentially existing criteria
-            for criterion in self.config.CRITERIA_LIST.get_val():
+            for criterion in self.config.ENABLED_CRITERIA.get_val():
                 tmp_matrix_file = self.head_explorer.get_path_filename(\
                                 outdir_struct.TMP_CRITERIA_MATRIX[criterion])
                 matrix_file = self.head_explorer.get_path_filename(\
@@ -444,41 +449,41 @@ class Executor(object):
 
     def _create_meta_criteria_tool(self, config, testcase_tool):
         meta_criteria_tool = MetaCriteriaTool(\
-                        language=config.PROGRAMMING_LANGUAGE.get_val(),\
-                        meta_test_generation_obj=testcase_tool,\
-                        criteria_working_dir=\
+                    language=config.PROGRAMMING_LANGUAGE.get_val(),\
+                    meta_test_generation_obj=testcase_tool,\
+                    criteria_working_dir=\
                                         self.head_explorer.get_dir_pathname(\
                                             outdir_struct.CRITERIA_WORKDIR),\
-                        code_builds_factory=self.cb_factory,
-                        tools_config_by_criterion_dict=\
-                                    config.CRITERIA_TOOLS_CONFIGS_BY_CRITERIA,)
+                    code_builds_factory=self.cb_factory,
+                    tools_config_by_criterion_dict=\
+                        config.CRITERIA_TOOLS_CONFIGS_BY_CRITERIA.get_val(),)
         return meta_criteria_tool
     #~ def _create_meta_criteria_tool()
 
     def _create_meta_testgen_guidance(self, config):
         # TODO
-        ERROR_HANDLER.error_exit("To be implemented", __file__)
+        #ERROR_HANDLER.error_exit("To be implemented", __file__)
         tgg_tool = None
         return tgg_tool
     #~ def _create_meta_testgen_guidance()
 
     def _create_meta_testexec_optimization(self, config):
         # TODO
-        ERROR_HANDLER.error_exit("To be implemented", __file__)
+        #ERROR_HANDLER.error_exit("To be implemented", __file__)
         teo_tool = None
         return teo_tool
     #~ def _create_meta_testexec_optimization()
 
     def _create_meta_criteriagen_guidance(self, config):
         # TODO
-        ERROR_HANDLER.error_exit("To be implemented", __file__)
+        #ERROR_HANDLER.error_exit("To be implemented", __file__)
         cgg_tool = None
         return cgg_tool
     #~ def _create_meta_criteriagen_guidance()
 
     def _create_meta_criteriaexec_optimization(self, config):
         # TODO
-        ERROR_HANDLER.error_exit("To be implemented", __file__)
+        #ERROR_HANDLER.error_exit("To be implemented", __file__)
         ceo_tool = None
         return ceo_tool
     #~ def _create_meta_criteriaexec_optimization()

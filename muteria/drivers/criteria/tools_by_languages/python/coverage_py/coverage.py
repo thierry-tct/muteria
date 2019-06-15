@@ -222,7 +222,8 @@ class CriteriaToolCoveragePy(BaseCriteriaTool):
         os.mkdir(self.preload_dir)
 
         rel_path_map = {}
-        exes, _ = code_builds_factory.repository_manager.get_relative_exe_map()
+        exes, _ = code_builds_factory.repository_manager.\
+                                                    get_relative_exe_path_map()
         for exe in exes:
             rel_path_map[exe] = os.path.join(self.used_srcs_dir, exe)
             relloc = os.path.join(self.used_srcs_dir, os.path.dirname(exe))

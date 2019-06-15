@@ -95,7 +95,7 @@ class MetaCriteriaTool(object):
                                             ToolsModulesLoader.CRITERIA_TOOLS)
         
         # Set Direct Arguments Variables
-        self.language = language
+        self.language = language.lower()
         self.meta_test_generation_obj = meta_test_generation_obj
         self.criteria_working_dir = criteria_working_dir
         self.code_builds_factory = code_builds_factory
@@ -106,7 +106,7 @@ class MetaCriteriaTool(object):
                             "Must specify criteria_working_dir", __file__)
         for criterion in self.tools_config_by_criterion_dict:
             ERROR_HANDLER.assert_true( \
-                    len(self.tools_config_by_criterion_dict[criterion]) != \
+                    len(self.tools_config_by_criterion_dict[criterion]) == \
                     len(set([c.get_tool_config_alias() for c in \
                         self.tools_config_by_criterion_dict[criterion]])), \
                     "some tool configs appear multiple times for {}".format( \
@@ -132,9 +132,6 @@ class MetaCriteriaTool(object):
         ## Create dirs
         if not os.path.isdir(self.criteria_working_dir):
             self.clear_working_dir()
-
-        if not os.path.isdir(self.checkpoints_dir):
-            os.mkdir(self.checkpoints_dir)
 
         ## set checkpointer
         self.checkpointer = common_fs.CheckpointState(\
@@ -173,11 +170,10 @@ class MetaCriteriaTool(object):
 
         # verify supported criteria
         for criterion in self.tools_config_by_criterion_dict:
-            for toolalias in self.tools_config_by_criterion_dict[criterion]\
-                                                    .get_tool_config_alias():
-                if criterion not in \
-                                self.criteria_configured_tools[toolalias].\
-                                                    get_supported_criteria():
+            for toolconf in self.tools_config_by_criterion_dict[criterion]:
+                toolalias = toolconf.get_tool_config_alias()
+                if criterion not in self.criteria_configured_tools[toolalias]\
+                                [self.TOOL_OBJ_KEY].get_supported_criteria():
                     ERROR_HANDLER.error_exit( \
                             "tool {} specified for unsupported criterion {}".\
                                         format(toolalias, criterion), __file__)
@@ -219,6 +215,11 @@ class MetaCriteriaTool(object):
         if os.path.isdir(self.criteria_working_dir):
             shutil.rmtree(self.criteria_working_dir)
         os.mkdir(self.criteria_working_dir)
+        if os.path.isdir(self.checkpoints_dir):
+            shutil.rmtree(self.checkpoints_dir)
+        os.mkdir(self.checkpoints_dir)
+        for _, tool_dat in list(self.criteria_configured_tools.items()):
+            tool_dat[self.TOOL_OBJ_KEY].clear_working_dir()
     #~ def clear_working_dir()    
 
     def _get_tool2criteria(self, criteria_passed):
@@ -448,10 +449,13 @@ class MetaCriteriaTool(object):
             shutil.rmtree(matrices_dir_tmp)
 
         # @Checkpoint: Finished
-        detailed_exectime = {ct: (\
+        detailed_exectime = {}
+        for ctoolalias in tool2criteria:
+            ct = self.criteria_configured_tools[ctoolalias][self.TOOL_OBJ_KEY]
+            detailed_exectime[ctoolalias] = (\
                         ct.get_checkpointer().get_execution_time(),\
-                        ct.get_checkpointer().get_detailed_execution_time())\
-                                                for ct in tool2criteria}
+                        ct.get_checkpointer().get_detailed_execution_time())
+
         checkpoint_handler.set_finished(\
                                     detailed_exectime_obj=detailed_exectime)
 
@@ -549,10 +553,13 @@ class MetaCriteriaTool(object):
                                 
 
         # @Checkpoint: Finished
-        detailed_exectime = {ct: (\
+        detailed_exectime = {}
+        for ctoolalias in tool2criteria:
+            ct = self.criteria_configured_tools[ctoolalias][self.TOOL_OBJ_KEY]
+            detailed_exectime[ctoolalias] = (\
                         ct.get_checkpointer().get_execution_time(),\
-                        ct.get_checkpointer().get_detailed_execution_time())\
-                                                for ct in tool2criteria}
+                        ct.get_checkpointer().get_detailed_execution_time())
+
         checkpoint_handler.set_finished( \
                                     detailed_exectime_obj=detailed_exectime)
 

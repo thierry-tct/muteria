@@ -37,7 +37,7 @@ def test3():
     tmp_rawconf = {"PROGRAMMING_LANGUAGE": lang,
                     "ENABLED_CRITERIA": ['STATEMENT_COVERAGE'],
                     "TESTCASE_TOOLS_CONFIGS": [{'tool_user_custom': None, 'tooltype': 'USE_ONLY_CODE', 'toolname': 'custom_devtests'}],
-                    "CRITERIA_TOOLS_CONFIGS": [{'tool_user_custom': None, 'toolname': 'coverage_py', 'criteria_on': ["STATEMENT_COVERAGE", "BRANCH_COVERAGE"]}],
+                    "CRITERIA_TOOLS_CONFIGS_BY_CRITERIA": [{'tool_user_custom': None, 'toolname': 'coverage_py', 'criteria_on': ["STATEMENT_COVERAGE", "BRANCH_COVERAGE"]}],
                   }
     res_raw = conf_help.get_extend_raw_conf(tmp_rawconf, lang)
     res = conf_help.get_finalconf_from_rawconf(res_raw)

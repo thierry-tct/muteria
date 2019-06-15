@@ -65,7 +65,7 @@ class BaseTestcaseTool(abc.ABC):
         self.checkpointer = checkpointer
 
         # Verify Direct Arguments Variables
-        ERROR_HANDLER.assert_true(self.tests_working_dir is None, \
+        ERROR_HANDLER.assert_true(self.tests_working_dir is not None, \
                                     "Must specify tests_working_dir", __file__)
 
         # Set Indirect Arguments Variables
@@ -80,8 +80,14 @@ class BaseTestcaseTool(abc.ABC):
         # Make Initialization Computation
         ## Create dirs
         if not os.path.isdir(self.tests_working_dir):
-            os.mkdir(self.tests_working_dir)
+            self.clear_working_dir()
     #~ def __init__()
+
+    def clear_working_dir(self):
+        if os.path.isdir(self.tests_working_dir):
+            shutil.rmtree(self.tests_working_dir)
+        os.mkdir(self.tests_working_dir)
+    #~ def clear_working_dir(self):
 
     def get_checkpointer(self):
         return self.checkpointer

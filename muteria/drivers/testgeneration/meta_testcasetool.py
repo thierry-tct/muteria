@@ -129,7 +129,7 @@ class MetaTestcaseTool(object):
         # Verify Direct Arguments Variables
         ERROR_HANDLER.assert_true(self.tests_working_dir is not None, \
                                     "Must specify tests_working_dir", __file__)
-        ERROR_HANDLER.assert_true(len(self.test_tool_config_list) != \
+        ERROR_HANDLER.assert_true(len(self.test_tool_config_list) == \
                                 len(set([c.get_tool_config_alias() for c in \
                                             self.test_tool_config_list])), \
                         "some tool configs appear multiple times", __file__)
@@ -150,9 +150,6 @@ class MetaTestcaseTool(object):
         ## Create dirs
         if not os.path.isdir(self.tests_working_dir):
             self.clear_working_dir()
-
-        if not os.path.isdir(self.checkpoints_dir):
-            os.mkdir(self.checkpoints_dir)
 
         ## Set the checkpointer
         self.checkpointer = common_fs.CheckpointState(\
@@ -217,6 +214,11 @@ class MetaTestcaseTool(object):
         if os.path.isdir(self.tests_working_dir):
             shutil.rmtree(self.tests_working_dir)
         os.mkdir(self.tests_working_dir)
+        if os.path.isdir(self.checkpoints_dir):
+            shutil.rmtree(self.checkpoints_dir)
+        os.mkdir(self.checkpoints_dir)
+        for _, tool_dat in list(self.testcases_configured_tools.items()):
+            tool_dat[self.TOOL_OBJ_KEY].clear_working_dir()
     #~ def clear_working_dir()    
 
     def execute_testcase (self, meta_testcase, exe_path_map, env_vars):
@@ -419,10 +421,13 @@ class MetaTestcaseTool(object):
                                                 cells_dict, serialize=True)
 
         # @Checkpoint: Finished
-        detailed_exectime = {tt: (\
+        detailed_exectime = {}
+        for ttoolalias in testcases_by_tool.keys():
+            tt = self.testcases_configured_tools[ttoolalias][self.TOOL_OBJ_KEY]
+            detailed_exectime[ttoolalias] = (\
                         tt.get_checkpointer().get_execution_time(),\
-                        tt.get_checkpointer().get_detailed_execution_time())\
-                                            for tt in testcases_by_tool.keys()}
+                        tt.get_checkpointer().get_detailed_execution_time())
+
         checkpoint_handler.set_finished( \
                                     detailed_exectime_obj=detailed_exectime)
 
@@ -536,10 +541,13 @@ class MetaTestcaseTool(object):
         self._invalidate_testcase_info()
 
         # @Checkpoint: Finished
-        detailed_exectime = {tt: (\
+        detailed_exectime = {}
+        for ttoolalias in candidate_tools_aliases:
+            tt = self.testcases_configured_tools[ttoolalias][self.TOOL_OBJ_KEY]
+            detailed_exectime[ttoolalias] = (\
                         tt.get_checkpointer().get_execution_time(),\
-                        tt.get_checkpointer().get_detailed_execution_time())\
-                                    for tt in candidate_tools_aliases}
+                        tt.get_checkpointer().get_detailed_execution_time())
+
         checkpoint_handler.set_finished( \
                                     detailed_exectime_obj=detailed_exectime)
 
@@ -565,8 +573,9 @@ class MetaTestcaseTool(object):
     #~ def _compute_testcases_info()
     
     def get_testcase_info_object(self):
-        return TestcasesInfoObject().load_from_file(\
-                                                self.get_testcase_info_file())
+        tc_info = TestcasesInfoObject()
+        tc_info.load_from_file(self.get_testcase_info_file())
+        return tc_info
     #~ def get_testcase_info_object()
 
     def get_testcase_info_file(self):

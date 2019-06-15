@@ -233,16 +233,20 @@ class ConfigurationHelper(object):
         """
         conf = cls._make_conf_class_from_dict(raw_conf)
         
-        tmp = []
-        for c in conf.ENABLED_CRITERIA:
-            if not isinstance(c, criteria.TestCriteria):
-                c = getattr(criteria.TestCriteria, c) 
-            tmp.append(c)
-        conf.ENABLED_CRITERIA = tmp
+        if conf.ENABLED_CRITERIA is None:
+            conf.ENABLED_CRITERIA = \
+                                list(conf.CRITERIA_TOOLS_CONFIGS_BY_CRITERIA)
+        else:
+            tmp = []
+            for c in conf.ENABLED_CRITERIA:
+                if not isinstance(c, criteria.TestCriteria):
+                    c = getattr(criteria.TestCriteria, c) 
+                tmp.append(c)
+            conf.ENABLED_CRITERIA = tmp
         
         tmp = []
         for tc in conf.TESTCASE_TOOLS_CONFIGS:
-            if not isinstance(tc, testgeneration.TestToolType):
+            if not isinstance(tc, configurations.TestcaseToolsConfig):
                 tc = cls._make_tool_conf_from_raw(tc, \
                             testgeneration.TestToolType,\
                             testgeneration.TEST_TOOL_TYPES_SCHEDULING[0][0],\
@@ -250,16 +254,20 @@ class ConfigurationHelper(object):
             tmp.append(tc)
         conf.TESTCASE_TOOLS_CONFIGS = tmp
 
-        tmp = []
-        for cc in conf.CRITERIA_TOOLS_CONFIGS:
-            if not isinstance(cc, configurations.CriteriaToolsConfig):
-                cc = cls._make_tool_conf_from_raw(cc, \
+        tmp = {}
+        for crit, cc_list in list(\
+                            conf.CRITERIA_TOOLS_CONFIGS_BY_CRITERIA.items()):
+            for cc in cc_list:
+                if not isinstance(cc, configurations.CriteriaToolsConfig):
+                    cc = cls._make_tool_conf_from_raw(cc, \
                             criteria.CriteriaToolType,\
                             criteria.CRITERIA_TOOL_TYPES_SCHEDULING[0][0],\
                             configurations.CriteriaToolsConfig)
             # TODO: Criteria enabled verification
-            tmp.append(cc)
-        conf.CRITERIA_TOOLS_CONFIGS = tmp
+            if crit not in tmp:
+                tmp[crit] = []
+            tmp[crit].append(cc)
+        conf.CRITERIA_TOOLS_CONFIGS_BY_CRITERIA = tmp
 
         # NEXT here
         #TODO: Add optimizers ....
