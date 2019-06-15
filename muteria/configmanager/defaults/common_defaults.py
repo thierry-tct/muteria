@@ -183,6 +183,12 @@ CRITERIA_TOOLS_CONFIGS_BY_CRITERIA = {
 
 }
 
+# List of sets of test criteria stating the order in which criteria
+# should be executed. Example strom mutation after weak mutation.
+# When None, Default to the order in:
+# >>> muteria.drivers.criteria.CRITERIA_SEQUENCE
+CRITERIA_SEQUENCE = None
+
 # List of criteria to run with failing tests
 RUN_FAILING_TESTS_WITH_CRITERIA = [
 
@@ -214,7 +220,7 @@ CRITERIA_EXECUTION_OPTIMIZERS = {
 }
 
 # Will not get full matrix. the non executed will be uncertain
-STOP_CRITERION_EXECUTION_AT_FIRST_COVERING = False
+COVER_CRITERIA_ELEMENTS_ONCE = False
 
 ## --- Modifiable (Code) ---##
 SEPARATED_TEST_EXECUTION_EXTRA_TIMEOUT = 60.0 # in seconds

@@ -221,6 +221,12 @@ class MetaTestcaseTool(object):
             tool_dat[self.TOOL_OBJ_KEY].clear_working_dir()
     #~ def clear_working_dir()    
 
+
+    def _get_default_exe_path_map(self):
+        ex, _ = self.code_builds_factory.repository_manager.get_exe_path_map()
+        return {v:None for v in ex}
+    #~ def _get_default_exe_path_map()
+
     def execute_testcase (self, meta_testcase, exe_path_map, env_vars):
         '''
         Execute a test case with the given executable and 
@@ -235,6 +241,9 @@ class MetaTestcaseTool(object):
                         (True if failed, False otherwise)
         '''
         
+        if exe_path_map is None:
+            exe_path_map = self._get_default_exe_path_map()
+
         # Find which test tool's the testcase is, then execute
         ttoolalias, testcase = DriversUtils.reverse_meta_element(meta_testcase)
         ERROR_HANDLER.assert_true( \
@@ -307,6 +316,9 @@ class MetaTestcaseTool(object):
         #~FIXMEnd
 
         # Check arguments Validity
+        if exe_path_map is None:
+            exe_path_map = self._get_default_exe_path_map()
+
         ERROR_HANDLER.assert_true(parallel_test_count > 0, \
                     "invalid parallel test execution count: {}. {}".format( \
                                     parallel_test_count, "must be >= 1"))
@@ -370,7 +382,7 @@ class MetaTestcaseTool(object):
                         DriversUtils.make_meta_element(testcase, ttoolalias)
                 meta_test_failed_verdicts[meta_testcase] = \
                                                 test_failed_verdicts[testcase]
-                if test_failed_verdicts[testcase == True]:
+                if test_failed_verdicts[testcase] == True:
                     found_a_failure = True
 
             # @Checkpoint: Chekpointing
@@ -483,8 +495,7 @@ class MetaTestcaseTool(object):
 
         # Check arguments Validity
         if exe_path_map is None:
-            exe_path_map = self.code_builds_factory.repository_manager\
-                                                            .get_exe_path_map()
+            exe_path_map = self._get_default_exe_path_map()
 
         ERROR_HANDLER.assert_true(parallel_testgen_count > 0, \
                     "invalid parallel test generation count: {}. {}".format( \

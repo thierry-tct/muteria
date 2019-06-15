@@ -78,7 +78,8 @@ class CustomTestcases(BaseTestcaseTool):
         pre,verdict,post = rep_mgr.run_dev_test(dev_test_name=testcase, \
                                             callback_object=callback_object)
         ERROR_HANDLER.assert_true(pre, "before command failed", __file__)
-        ERROR_HANDLER.assert_true(post, "after command failed", __file__)
+        ERROR_HANDLER.assert_true(post or post is None, \
+                                            "after command failed", __file__)
         return verdict
     #~ def _execute_a_test()
 

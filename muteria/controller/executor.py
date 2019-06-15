@@ -17,6 +17,7 @@ from muteria.repositoryandcode.code_builds_factory import CodeBuildsFactory
 
 from muteria.drivers.testgeneration import TestToolType
 from muteria.drivers.testgeneration.meta_testcasetool import MetaTestcaseTool
+import muteria.drivers.criteria as criteria_pkg
 from muteria.drivers.criteria.meta_testcriteriatool import MetaCriteriaTool
 
 from muteria.statistics.main import StatsComputer
@@ -73,16 +74,17 @@ class CheckpointData(dict):
     #~ def switchto_new_test_tool_types()
 
     def criteria_set_is_executed(self, seq_id, criteria_set):
-        if self.criteria_set_pos > seq_id:
-            return True
-        if self.criteria_set_pos == seq_id and \
-                                set(self.criteria_set) != set(criteria_set):
-            ERROR_HANDLER.error_exit("cp criteria_set changed", __file__)
+        if self.criteria_set_pos is not None:
+            if self.criteria_set_pos > seq_id:
+                return True
+            if self.criteria_set_pos == seq_id and \
+                                    set(self.criteria_set) != set(criteria_set):
+                ERROR_HANDLER.error_exit("cp criteria_set changed", __file__)
         return False
     #~ def criteria_set_is_executed()
 
     def switchto_new_criteria_set(self, seq_id, criteria_set):
-        if seq_id > self.criteria_set_pos:
+        if self.criteria_set_pos is None or seq_id > self.criteria_set_pos:
             self.update_criteria_set(seq_id, criteria_set)
     #~ def switchto_new_criteria_set()
 
@@ -290,11 +292,16 @@ class Executor(object):
             #self.meta_testexec_optimization_tool.get_checkpoint_state_object()\
             #                                            .destroy_checkpoint()
         elif task == checkpoint_tasks.Tasks.PASS_FAIL_TESTS_EXECUTION:
-            matrix_file = self.head_explorer.get_path_filename(\
-                                    outdir_struct.TMP_TEST_PASS_FAIL_MATRIX)
+            # Make sure that the Matrices dir exists
+            self.head_explorer.get_or_create_and_get_dir(\
+                                            outdir_struct.RESULTS_MATRICES_DIR)
+
+            matrix_file_key = outdir_struct.TMP_TEST_PASS_FAIL_MATRIX
+            matrix_file = self.head_explorer.get_file_pathname(matrix_file_key)
+                                    
             # @Checkpointing
             if task_untouched:
-                self.head_explorer.remove_file_and_get(matrix_file)
+                self.head_explorer.remove_file_and_get(matrix_file_key)
                 self.meta_testcase_tool.get_checkpoint_state_object()\
                                                         .restart_task()
                 self.cp_data.tasks_obj.set_task_executing(task)
@@ -305,7 +312,8 @@ class Executor(object):
                                         outdir_struct.TMP_SELECTED_TESTS_LIST)
             meta_testcases = common_fs.loadJSON(test_list_file)
             self.meta_testcase_tool.runtests(meta_testcases=meta_testcases, \
-                        stop_on_failure=self.config.STOP_ON_TEST_FAILURE, \
+                        stop_on_failure=\
+                                self.config.STOP_TESTS_EXECUTION_ON_FAILURE, \
                         fault_test_execution_matrix_file=matrix_file, \
                         test_prioritization_module=\
                                         self.meta_testexec_optimization_tool, \
@@ -342,22 +350,33 @@ class Executor(object):
                                 CRITERIA_EXECUTION_SELECTION_PRIORITIZATION:
             pass #TODO (Maybe could be used someday. for now, just skip it)
         elif task == checkpoint_tasks.Tasks.CRITERIA_TESTS_EXECUTION:
+            # Make sure that the Matrices dir exists
+            self.head_explorer.get_or_create_and_get_dir(\
+                                            outdir_struct.RESULTS_MATRICES_DIR)
+
+            matrix_files_keys = {}
             matrix_files = {}
             for criterion in self.config.ENABLED_CRITERIA.get_val():
+                matrix_files_keys[criterion] = \
+                                outdir_struct.TMP_CRITERIA_MATRIX[criterion]
                 matrix_files[criterion] = \
-                                self.head_explorer.get_path_filename(\
-                                outdir_struct.TMP_CRITERIA_MATRIX[criterion])
+                                self.head_explorer.get_file_pathname(\
+                                                matrix_files_keys[criterion])
             # @Checkpointing
             if task_untouched:
-                for criterion, matrix_file in list(matrix_files.items()):
-                    self.head_explorer.remove_file_and_get(matrix_file)
+                for _, matrix_file_key in list(matrix_files_keys.items()):
+                    self.head_explorer.remove_file_and_get(matrix_file_key)
                 self.meta_criteria_tool.get_checkpoint_state_object()\
                                                         .restart_task()
                 self.cp_data.tasks_obj.set_task_executing(task)
                 self.checkpointer.write_checkpoint(self.cp_data.get_json_obj())
 
             criteria_set_sequence = self.config.CRITERIA_SEQUENCE.get_val()
+            if criteria_set_sequence is None:
+                criteria_set_sequence = criteria_pkg.CRITERIA_SEQUENCE
             for cs_pos, criteria_set in enumerate(criteria_set_sequence):
+                criteria_set &= set(matrix_files)
+
                 # Was it already checkpointed w.r.t criteria set seq
                 if self.cp_data.criteria_set_is_executed(cs_pos, criteria_set):
                     continue
@@ -377,7 +396,7 @@ class Executor(object):
                             testcases=meta_testcases, \
                             criterion_to_matrix=criterion_to_matrix, \
                             cover_criteria_elements_once=\
-                                    self.config.COVER_CRITERIA_ELEMENT_ONCE,
+                                    self.config.COVER_CRITERIA_ELEMENTS_ONCE,
                             finish_destroy_checkpointer=True)
 
                 # @Checkpointing
@@ -388,14 +407,22 @@ class Executor(object):
             self.checkpointer.write_checkpoint(self.cp_data.get_json_obj())
 
         elif task == checkpoint_tasks.Tasks.PASS_FAIL_STATS:
-            tmp_matrix_file = self.head_explorer.get_path_filename(\
+            # Make sure that the Matrices dir exists
+            self.head_explorer.get_or_create_and_get_dir(\
+                                            outdir_struct.RESULTS_STATS_DIR)
+
+            tmp_matrix_file = self.head_explorer.get_file_pathname(\
                                     outdir_struct.TMP_TEST_PASS_FAIL_MATRIX)
-            matrix_file = self.head_explorer.get_path_filename(\
+            matrix_file = self.head_explorer.get_file_pathname(\
                                     outdir_struct.TEST_PASS_FAIL_MATRIX)
             # Merge TMP pass fail and potentially existing pass fail
             StatsComputer.merge_lmatrix_into_right(\
                                                 tmp_matrix_file, matrix_file)
         elif task == checkpoint_tasks.Tasks.CRITERIA_STATS:
+            # Make sure that the Matrices dir exists
+            self.head_explorer.get_or_create_and_get_dir(\
+                                            outdir_struct.RESULTS_STATS_DIR)
+
             # Merge TMP criteria and potentially existing criteria
             for criterion in self.config.ENABLED_CRITERIA.get_val():
                 tmp_matrix_file = self.head_explorer.get_path_filename(\

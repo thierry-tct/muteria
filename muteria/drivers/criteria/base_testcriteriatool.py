@@ -104,9 +104,9 @@ class BaseCriteriaTool(abc.ABC):
                                                             result_dir_tmp, \
                                 enabled_criteria=criterion_to_matrix.keys())
 
-        assert set(criterion2executable_path) == \
-                    set(criterion2environment_vars), \
-                            "mismatch between exe_path_map and env_vars"
+        ERROR_HANDLER.assert_true(set(criterion2executable_path) == \
+                                            set(criterion2environment_vars), \
+                        "mismatch between exe_path_map and env_vars", __file__)
 
         criterialist = criterion2executable_path.keys()
 

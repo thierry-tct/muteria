@@ -22,7 +22,7 @@ REPOSITORY_ROOT_DIR=os.path.join(os.path.dirname(this_dir), 'repo')
 OUTPUT_ROOT_DIR=os.path.join(os.path.dirname(this_dir), 'ctrl', "output")
 RUN_MODE=SessionMode.EXECUTE_MODE
 
-CUSTOM_DEV_TEST_RUNNER = dev_test_runner
+CUSTOM_DEV_TEST_RUNNER_FUNCTION = dev_test_runner
 DEVELOPER_TESTS_LIST = devtestlist
 
 TESTCASE_TOOLS_CONFIGS = [

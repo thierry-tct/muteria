@@ -107,10 +107,10 @@ class CriteriaToolCoveragePy(BaseCriteriaTool):
         return: python dictionary with environment variable as key
                      and their values as value (all strings)
         '''
-        return {
+        return {criterion: {
                     "PYTHONUSERBASE": self.preload_dir, 
                     "COVERAGE_PROCESS_START": self.config_file,
-                }
+                } for criterion in enabled_criteria}
     #~ def _get_criteria_environment_vars()
 
     class PathAliases(object):

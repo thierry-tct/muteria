@@ -95,7 +95,8 @@ class RawExecutionMatrix(object):
         if self.filename is None or not os.path.isfile(self.filename):
             ERROR_HANDLER.assert_true(self.non_key_col_list is not None, \
                                     "Must specify 'non_key_col_list' when " + \
-                                        "filename inexistant", __file__)
+                                    "filename inexistant. filename is " +
+                                    str(self.filename), __file__)
             ordered_cols = [self.key_column_name] + self.non_key_col_list
             self.dataframe = \
                     pd.DataFrame({c:[] for c in ordered_cols})[ordered_cols]

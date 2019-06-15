@@ -333,6 +333,10 @@ class MetaCriteriaTool(object):
         else:
             os.mkdir(matrices_dir_tmp)
 
+        if criteria_element_list_by_criteria is None:
+            criteria_element_list_by_criteria = \
+                                        {c: None for c in criterion_to_matrix}
+
         # get criteria elements by tools
         criteria_elem_list_by_tool = {}
         for criterion in criteria_element_list_by_criteria:
@@ -377,7 +381,8 @@ class MetaCriteriaTool(object):
                 for criterion in _criteria2matrix:
                     _criteria2matrix[criterion] = \
                                         common_matrices.ExecutionMatrix( \
-                                        filename=_criteria2matrix[criterion])
+                                        filename=_criteria2matrix[criterion], \
+                                        non_key_col_list=testcases)
                 # Actual execution
                 ctool = self.criteria_configured_tools[ctoolalias][\
                                                             self.TOOL_OBJ_KEY]
