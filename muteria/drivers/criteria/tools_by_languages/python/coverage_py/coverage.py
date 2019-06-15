@@ -157,9 +157,10 @@ class CriteriaToolCoveragePy(BaseCriteriaTool):
         
 
         dat_obj = coverage.CoverageData()
-        file_map = self.PathAliases(in_dat_files, self.exes_rel, \
+        if len(in_dat_files) > 0:
+            file_map = self.PathAliases(in_dat_files, self.exes_rel, \
                                                             self.used_srcs_dir)
-        dat_obj.update(tmp_dat_obj, aliases=file_map)
+            dat_obj.update(tmp_dat_obj, aliases=file_map)
 
         # Get the coverages
         res = {c: {} for c in criteria_name_list}
@@ -173,7 +174,8 @@ class CriteriaToolCoveragePy(BaseCriteriaTool):
                                                 dat_obj.arcs(self.exes_abs[fi])
 
         # save the temporary coverage
-        common_fs.dumpJSON(res, os.path.join(result_dir_tmp,\
+        res_str = {v.get_str():res[v] for v in res}
+        common_fs.dumpJSON(res_str, os.path.join(result_dir_tmp,\
                                                     self.cov_data_filename))
 
         cov_obj.erase()
@@ -189,7 +191,8 @@ class CriteriaToolCoveragePy(BaseCriteriaTool):
         '''
         in_file = os.path.join(result_dir_tmp, self.cov_data_filename)
         cov_dat_obj = common_fs.loadJSON(in_file)
-        
+        cov_dat_obj = {TestCriteria[v]: cov_dat_obj[v] for v in cov_dat_obj}
+
         ERROR_HANDLER.assert_true(set(cov_dat_obj) == set(enabled_criteria), \
                                     "mismatching criteria enabled", __file__)
 
@@ -246,7 +249,7 @@ class CriteriaToolCoveragePy(BaseCriteriaTool):
         with open(self.preload_file, "w") as f:
             f.write("import coverage\ncoverage.process_startup()\n")
         config = configparser.ConfigParser()
-        config['run'] = {'ServerAliveInterval': '45',
+        config['run'] = {
                         'include': rel_path_map.keys(),
                         'data_file': self.raw_data_file,
                         'branch': (\

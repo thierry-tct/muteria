@@ -427,7 +427,7 @@ class BaseCriteriaTool(abc.ABC):
         """
         ERROR_HANDLER.assert_true(set(criterion2executable_path) == \
                         set(criterion2environment_vars), "Missmatch", __file__)
-        criterialist = criterion2executable_path.keys()
+        criterialist = list(criterion2executable_path.keys())
         groups = []
         for c_pos, criterion in enumerate(criterialist):
             found = False
@@ -440,7 +440,7 @@ class BaseCriteriaTool(abc.ABC):
                 groups.append(([criterion], \
                                     criterion2executable_path[criterion],
                                     criterion2environment_vars[criterion]))
-                # add anyone else from same group
+                # add anything else from same group
                 for e_pos in range(c_pos+1, len(criterialist)):
                     if criterion2executable_path[criterialist[e_pos]] == \
                                             groups[-1][1] and \
