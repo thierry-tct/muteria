@@ -1,4 +1,5 @@
 import os
+import subprocess
 
 from muteria.configmanager.configurations import SessionMode
 from muteria.configmanager.configurations import TestcaseToolsConfig
@@ -11,9 +12,41 @@ this_dir = os.path.dirname(os.path.abspath(__file__))
 
 devtestlist = ['test_lib.py']
 def dev_test_runner(test_name, repo_root_dir, exe_path_map):
+    def parse_test(s):
+        return s.split('...')[0].replace(':','/').replace(' ','')
     if test_name == 'test_lib.py':
-        #TODO: fix it
-        return False #True
+        #TODO fix it
+        cwd = os.getcwd()
+        os.chdir(repo_root_dir)
+
+        try:
+            args_list = ['-m', 'unittest', test_name, '-v']
+            p = subprocess.Popen(['python3']+args_list, \
+                                             #close_fds=True, \
+                                            stderr=subprocess.PIPE,\
+                                            stdout=subprocess.PIPE)
+            stdout, stderr = p.communicate()
+            stdout = stdout.decode('UTF-8').splitlines()
+            stderr = stderr.decode('UTF-8').splitlines()
+            retcode = p.wait()
+        except:
+            # ERROR
+            return True
+        
+        # Parse the result
+        subtests_verdicts = {}
+        hasfail = False
+        for s in stderr:
+            if s.endswith('... FAIL'):
+                hasfail = True
+                subtests_verdicts[parse_test(s)] = True
+            elif s.endswith('... ok'):
+                subtests_verdicts[parse_test(s)] = False
+        #print(subtests_verdicts)
+        os.chdir(cwd)
+        return hasfail
+    # ERROR
+    return True
 
 ### 
 

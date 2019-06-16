@@ -393,7 +393,7 @@ class MetaTestcaseTool(object):
 
             if stop_on_failure and found_a_failure:
                 # @Checkpoint: Chekpointing for remaining tools
-                for rem_tool in testcases_by_tool.keys()[tpos+1:]:
+                for rem_tool in list(testcases_by_tool.keys())[tpos+1:]:
                     checkpoint_handler.do_checkpoint(func_name=cp_func_name, \
                                         taskid=cp_task_id, \
                                         tool=rem_tool, \

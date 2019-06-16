@@ -45,4 +45,7 @@ cp -rf $clean_data $tmp_workspace || error_exit "failed to copy clean into tmp_w
 
 $python_exe $entry_point $muteria_topdir || error_exit "test failed"
 
+echo "Press any key to continue"
+read x #-t 3 -n 1
+
 rm -rf $tmp_workspace
