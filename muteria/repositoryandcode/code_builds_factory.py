@@ -137,6 +137,7 @@ class CodeBuildsFactory(object):
     #~ class RepoRuntestsCallbackObject
 
     def copy_into_repository(self, file_map):
+        return
         if len(file_map) > 0:
             # TODO: Use the locked version of copy (using custom_read_command)
             ERROR_HANDLER.error_exit(\

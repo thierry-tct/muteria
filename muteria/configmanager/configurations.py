@@ -133,7 +133,7 @@ class CompleteConfiguration(object):
     
     # string representing the relative path to the executable
     # (or entry point file) in the repository
-    REPO_EXECUTABLE_RELATIVE_PATH = None
+    REPO_EXECUTABLE_RELATIVE_PATHS = None
 
     # optional map between each source and the corresponding intermediate
     # file map (such as object or assembly file for c of .class file for java)

@@ -306,7 +306,8 @@ class RepositoryManager(object):
         exes = [self.repo_abs_path(e) for e in self.repo_executables_relpaths]
         src_obj_map = {}
         for src, dest in list(self.source_files_to_objects.items()):
-            src_obj_map[self.repo_abs_path(src)] = self.repo_abs_path(dest)
+            src_obj_map[self.repo_abs_path(src)] = \
+                            dest if dest is None else self.repo_abs_path(dest)
         return exes, src_obj_map
     #~ def get_exe_path_map()
 

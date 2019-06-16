@@ -6,7 +6,7 @@ class Lib(object):
         """
         Example:
         >>> l = Lib()
-        >>> l.compute(-1, 2)
+        >>> l.compute(1, 2)
         2
         """
         oddtotal = self.get_odd_total(a,b)

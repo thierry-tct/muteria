@@ -56,7 +56,7 @@ class IdentityCodeConverter(BaseCodeFormatConverter):
             for src, dest in list(file_src_dest_map.items()):
                 abs_src = os.path.join(self.repository_rootdir, src)
                 if os.path.abspath(abs_src) != os.path.abspath(dest):
-                    shutil.copy2(src, dest)
+                    shutil.copy2(abs_src, dest)
             return DefaultCallbackObject.after_command(self)
         #~ def after_command()
     #~ class CopyCallbackObject

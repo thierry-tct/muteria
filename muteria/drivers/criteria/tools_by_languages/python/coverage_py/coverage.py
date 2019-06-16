@@ -33,7 +33,7 @@ class CriteriaToolCoveragePy(BaseCriteriaTool):
                                                             'used_srcs_dir')
         self.preload_dir = os.path.join(self.instrumented_code_storage_dir,\
                                                                 'config_dir')
-        self.preload_file = os.path.join(self.preload_dir, 'usercutomize.py')
+        self.preload_file = os.path.join(self.preload_dir, 'usercustomize.py')
         self.config_file = os.path.join(self.instrumented_code_storage_dir,\
                                                                 '.configrc')
         self.raw_data_file = os.path.join(self.instrumented_code_storage_dir,\
@@ -107,8 +107,13 @@ class CriteriaToolCoveragePy(BaseCriteriaTool):
         return: python dictionary with environment variable as key
                      and their values as value (all strings)
         '''
+        python_path = self.preload_dir
+        if 'PYTHONPATH' is os.environ:
+            python_path += ":"+os.environ['PYTHONPATH']
+
         return {criterion: {
-                    "PYTHONUSERBASE": self.preload_dir, 
+                    #"PYTHONUSERBASE": self.preload_dir,
+                    "PYTHONPATH": python_path, 
                     "COVERAGE_PROCESS_START": self.config_file,
                 } for criterion in enabled_criteria}
     #~ def _get_criteria_environment_vars()
@@ -146,15 +151,14 @@ class CriteriaToolCoveragePy(BaseCriteriaTool):
         # Get file map
         try :
             self.exes_rel
-        except:
+        except AttributeError:
             obj = common_fs.loadJSON(self.instrumentation_details)
             self.exes_abs = []
             self.exes_rel = []
             for rp, ap in list(obj.items()):
-                self.exes_rel = rp
-                self.exes_abs = ap
+                self.exes_rel.append(rp)
+                self.exes_abs.append(ap)
             self.exes_rel.sort(reverse=True,key=lambda x: x.count(os.path.sep))
-        
 
         dat_obj = coverage.CoverageData()
         if len(in_dat_files) > 0:
@@ -199,10 +203,12 @@ class CriteriaToolCoveragePy(BaseCriteriaTool):
         res = {c: {} for c in enabled_criteria}
 
         for c in cov_dat_obj:
-            for filename in cov_dat_obj[c]:
-                for id_ in cov_dat_obj[c][filename]:
-                    ident = DriversUtils.make_meta_element(id_, filename)
-                    res[c][ident] = 1
+            for filename, filedat in list(cov_dat_obj[c].items()):
+                if filedat is not None:
+                    for id_ in filedat:
+                        ident = DriversUtils.make_meta_element(\
+                                                            str(id_), filename)
+                        res[c][ident] = 1
 
         # delete cov file
         os.remove(in_file)
@@ -225,17 +231,18 @@ class CriteriaToolCoveragePy(BaseCriteriaTool):
         os.mkdir(self.preload_dir)
 
         rel_path_map = {}
-        exes, _ = code_builds_factory.repository_manager.\
+        exes, src_inter_map = code_builds_factory.repository_manager.\
                                                     get_relative_exe_path_map()
-        for exe in exes:
-            rel_path_map[exe] = os.path.join(self.used_srcs_dir, exe)
-            relloc = os.path.join(self.used_srcs_dir, os.path.dirname(exe))
+        for f in src_inter_map:
+            rel_path_map[f] = os.path.join(self.used_srcs_dir, f)
+            relloc = os.path.join(self.used_srcs_dir, os.path.dirname(f))
             if not os.path.isdir(relloc):
                 os.makedirs(relloc)
+        not_none_dest = {k:v for k,v in list(rel_path_map.items())}
         ret = code_builds_factory.transform_src_into_dest(\
                         src_fmt=CodeFormats.PYTHON_SOURCE,\
                         dest_fmt=CodeFormats.PYTHON_SOURCE,\
-                        src_dest_files_paths_map=rel_path_map)
+                        src_dest_files_paths_map=not_none_dest)
         # write down the rel_path_map
         ERROR_HANDLER.assert_true(not os.path.isfile(\
                 self.instrumentation_details), "must not exist here", __file__)
@@ -248,17 +255,32 @@ class CriteriaToolCoveragePy(BaseCriteriaTool):
         # Create config and preload
         with open(self.preload_file, "w") as f:
             f.write("import coverage\ncoverage.process_startup()\n")
-        config = configparser.ConfigParser()
+        
+        concurrencies = ['thread', 'multiprocessing', 'gevent', 'greenlet', \
+                                                                'eventlet']
+        concurrency_support = 'thread'
+
+        #config = configparser.ConfigParser()
+        config = {}
         config['run'] = {
-                        'include': rel_path_map.keys(),
+                        'include': \
+                            [os.path.join('*',v) for v in rel_path_map.keys()],
                         'data_file': self.raw_data_file,
                         'branch': (\
                             TestCriteria.BRANCH_COVERAGE in enabled_criteria),
                         'parallel': True,
-                        'concurrency': ['thread', 'multiprocessing', \
-                                            'gevent', 'greenlet', 'eventlet'],
+                        'concurrency': concurrency_support,
                         }
         with open(self.config_file, 'w') as f:
-            config.write(f)
+            #config.write(f)
+            for k, v in list(config.items()):
+                f.write('['+k+']'+'\n')
+                for kk, vv in list(v.items()):
+                    if type(vv) == list:
+                        f.write(kk+' = \n')
+                        for vvv in vv:
+                            f.write('\t'+str(vvv)+'\n')
+                    else:
+                        f.write(kk+' = '+str(vv)+'\n')
     #~ def _do_instrument_code()
 #~ class CriteriaToolCoveragePy

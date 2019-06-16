@@ -199,6 +199,9 @@ class Executor(object):
         # by testtool type sequence loop
         for seq_id, test_tool_types in enumerate(test_tool_type_sequence):
             
+            logging.info("executor: Running for Test tool types = "+\
+                                str([t.get_str() for t in test_tool_types]))
+
             # Was it already checkpointed w.r.t test type seq
             if self.cp_data.test_tool_types_is_executed(\
                                                     seq_id, test_tool_types):
@@ -491,7 +494,7 @@ class Executor(object):
         repo_mgr = RepositoryManager(\
                     repository_rootdir=config.REPOSITORY_ROOT_DIR.get_val(),\
                     repo_executables_relpaths=\
-                            config.REPO_EXECUTABLE_RELATIVE_PATH.get_val(),\
+                            config.REPO_EXECUTABLE_RELATIVE_PATHS.get_val(),\
                     dev_test_runner_func=\
                             config.CUSTOM_DEV_TEST_RUNNER_FUNCTION.get_val(),\
                     code_builder_func=config.CODE_BUILDER_FUNCTION.get_val(),\
