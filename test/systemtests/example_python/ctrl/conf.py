@@ -12,10 +12,11 @@ this_dir = os.path.dirname(os.path.abspath(__file__))
 
 devtestlist = ['test_lib.py']
 def dev_test_runner(test_name, repo_root_dir, exe_path_map):
-    #print(os.environ)
-    #input()
+    # TODO: use exe_path_map
+
     def parse_test(s):
         return s.split('...')[0].replace(':','/').replace(' ','')
+
     if test_name == 'test_lib.py':
         #TODO fix it
         cwd = os.getcwd()
@@ -38,6 +39,7 @@ def dev_test_runner(test_name, repo_root_dir, exe_path_map):
         # Parse the result
         subtests_verdicts = {}
         hasfail = False
+        hasfail |= (retcode != 0)
         for s in stderr:
             if s.endswith('... FAIL'):
                 hasfail = True
