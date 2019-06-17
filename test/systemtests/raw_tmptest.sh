@@ -8,6 +8,12 @@ error_exit()
 	exit 1
 }
 
+only_example=''
+if [ $# -eq 1 ]
+then
+	only_example="$1"
+fi
+
 ensure_python_version()
 {
 	python_exe=python
@@ -34,6 +40,11 @@ muteria_topdir=$topdir/../..
 
 for prog_folder in $py_prog_folder $c_prog_folder
 do
+	if [ "$only_example" != '' ]
+	then
+		[ "$prog_folder" != "$only_example" ] && continue
+	fi
+
 	echo "-- RUNNING $prog_folder"
 	echo ""
 	

@@ -262,7 +262,8 @@ class CriteriaToolGCov(BaseCriteriaTool):
         flags += additionals
         
         rel_path_map = {}
-        exes, _ = code_builds_factory.repository_manager.get_relative_exe_map()
+        exes, _ = code_builds_factory.repository_manager.\
+                                                    get_relative_exe_path_map()
         for exe in exes:
             filename = os.path.basename(exe)
             rel_path_map[exe] = os.path.join(\
