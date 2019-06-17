@@ -11,7 +11,7 @@ class Lib(object):
         """
         oddtotal = self.get_odd_total(a,b)
         eventotal = self.get_even_total(a,b)
-        if oddtotal < 0:
+        if oddtotal < -100000:
             oddtotal = 0
         return oddtotal + eventotal
 

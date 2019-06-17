@@ -492,6 +492,10 @@ class BaseCriteriaTool(abc.ABC):
             # @Checkpoint: Finished (for time)
             checkpoint_handler.set_finished(None)
     #~ def instrument_code()
+
+    def _get_latest_top_output_dir(self):
+        return os.path.dirname(os.path.dirname(self.criteria_working_dir))
+    #~ def _get_latest_top_output_dir()
         
     #######################################################################
     ##################### Methods to implement ############################

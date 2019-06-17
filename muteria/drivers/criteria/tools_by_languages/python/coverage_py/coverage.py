@@ -119,19 +119,37 @@ class CriteriaToolCoveragePy(BaseCriteriaTool):
     #~ def _get_criteria_environment_vars()
 
     class PathAliases(object):
-        def __init__(self, data_files, exe_rel_files, inst_top_dir):
+        def __init__(self, data_files, exe_rel_files, inst_top_dir, \
+                                                        top_out_dir, repo_dir):
+            repo_dir = os.path.join(os.path.normpath(repo_dir), '')
+            top_out_dir = os.path.join(os.path.normpath(top_out_dir), '')
+            prefix_dirs = (repo_dir, top_out_dir)
             self.alias_map = {}
-            a_data_file = os.path.normpath(data_files[0])
-            prefix = None
-            for fn in exe_rel_files:
-                if a_data_file.endswith(fn):
-                    prefix = a_data_file[:-len(fn)]
-            ERROR_HANDLER.assert_true(prefix is not None, \
-                        "file in data has no match in source", __file__)
-            for i in range(len(data_files)):
-                self.alias_map[data_files[i]] = os.path.join(\
-                                                        inst_top_dir, \
-                            os.path.normpath(data_files[i])[len(prefix):])
+            #a_data_file = os.path.normpath(data_files[0])
+            #prefix_out = prefix_repo = None
+            #for fn in exe_rel_files:
+            #    if a_data_file.endswith(fn):
+            #        prefix = a_data_file[:-len(fn)]
+            #ERROR_HANDLER.assert_true(prefix is not None, \
+            #                "file in data has no match in source", __file__)
+            for _, dfile in enumerate(data_files):
+                src = tmp =None
+                for p_dir in prefix_dirs:
+                    if dfile.startswith(p_dir):
+                        tmp = dfile[len(p_dir):]
+                        if tmp in exe_rel_files:
+                            src = tmp
+                            break
+                if src is None:
+                    ERROR_HANDLER.assert_true(tmp is None, \
+                                    'The file {} {} {} {}'.format(\
+                                    dfile, 'is in the right dirs and in',\
+                                    'coverage but was not specified.',\
+                                    'Bug in coverage.py?'), __file__)
+                    self.alias_map[dfile] = dfile
+                else:
+                    self.alias_map[dfile] = os.path.join(inst_top_dir, src)
+
         def map(self, in_dat_file):
             return self.alias_map[in_dat_file]
     #~ PathAliases
@@ -158,24 +176,48 @@ class CriteriaToolCoveragePy(BaseCriteriaTool):
             for rp, ap in list(obj.items()):
                 self.exes_rel.append(rp)
                 self.exes_abs.append(ap)
-            self.exes_rel.sort(reverse=True,key=lambda x: x.count(os.path.sep))
+            self.exes_rel, self.exes_abs = zip(*sorted(\
+                                            zip(self.exes_rel, self.exes_abs),\
+                                            key=lambda x: x.count(os.path.sep)\
+                                            ))
+            
+            # get executables stmt and branches
+            self.executable_lines = {}
+            self.executable_arcs = {}
+            for fn in self.exes_abs:
+                pser = coverage.parser.PythonParser(filename=fn)
+                pser.parse_source() 
+                self.executable_lines[fn] = pser.statements
+                self.executable_arcs[fn] = pser.arcs() 
+
 
         dat_obj = coverage.CoverageData()
         if len(in_dat_files) > 0:
             file_map = self.PathAliases(in_dat_files, self.exes_rel, \
-                                                            self.used_srcs_dir)
+                                    self.used_srcs_dir, \
+                                    self._get_latest_top_output_dir(), \
+                                    self.code_builds_factory.\
+                                        repository_manager.repo_abs_path(''))
             dat_obj.update(tmp_dat_obj, aliases=file_map)
 
         # Get the coverages
         res = {c: {} for c in criteria_name_list}
         if TestCriteria.STATEMENT_COVERAGE in criteria_name_list:
-            for fi in range(len(self.exes_abs)):
-                res[TestCriteria.STATEMENT_COVERAGE][self.exes_rel[fi]] = \
-                                            dat_obj.lines(self.exes_abs[fi])
+            for rel_fn, abs_fn in zip(self.exes_rel, self.exes_abs):
+                res[TestCriteria.STATEMENT_COVERAGE][rel_fn] = \
+                                {ln: 0 for ln in self.executable_lines[abs_fn]}
+                ln_list = dat_obj.lines(abs_fn)
+                if ln_list is not None:
+                    res[TestCriteria.STATEMENT_COVERAGE][rel_fn].\
+                                            update({ln:1 for ln in ln_list})
         if TestCriteria.BRANCH_COVERAGE in criteria_name_list:
-            for fi in range(len(self.exes_abs)):
-                res[TestCriteria.BRANCH_COVERAGE][self.exes_rel[fi]] = \
-                                                dat_obj.arcs(self.exes_abs[fi])
+            for rel_fn, abs_fn in zip(self.exes_rel, self.exes_abs):
+                res[TestCriteria.BRANCH_COVERAGE][rel_fn] = \
+                            {str(an): 0 for an in self.executable_arcs[abs_fn]}
+                an_list = dat_obj.arcs(abs_fn)
+                if an_list is not None:
+                    res[TestCriteria.BRANCH_COVERAGE][rel_fn].\
+                                        update({str(an):1 for an in an_list})
 
         # save the temporary coverage
         res_str = {v.get_str():res[v] for v in res}
@@ -205,10 +247,10 @@ class CriteriaToolCoveragePy(BaseCriteriaTool):
         for c in cov_dat_obj:
             for filename, filedat in list(cov_dat_obj[c].items()):
                 if filedat is not None:
-                    for id_ in filedat:
+                    for id_, cov in list(filedat.items()):
                         ident = DriversUtils.make_meta_element(\
                                                             str(id_), filename)
-                        res[c][ident] = 1
+                        res[c][ident] = cov
 
         # delete cov file
         os.remove(in_file)
