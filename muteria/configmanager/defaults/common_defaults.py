@@ -113,7 +113,7 @@ CUSTOM_DEV_TEST_RUNNER_MODULE = None
 #   <repos directory rootdir: str>
 #   <Executable relative path: str>
 #   <Optional compiler to use(compiler name): str>
-#   <optional flags to pass to compiler: str or list of flags>
+#   <optional flags to pass to compiler: list of flags>
 #   <clean temporary before build: bool>
 #   <reconfigure before build: bool>
 # And returns:

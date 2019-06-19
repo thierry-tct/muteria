@@ -68,9 +68,6 @@ import muteria.common.fs as common_fs
 ERROR_HANDLER = common_mix.ErrorHandler
 
 class RepositoryManager(object):
-    PASS = 0
-    FAIL = 1
-    ERROR = -1
     DEFAULT_TESTS_BRANCH_NAME = "_tests_tmp_muteria_"
     DEFAULT_MUTERIA_REPO_META_FOLDER = ".muteria" 
     def __init__(self, repository_rootdir, repo_executables_relpaths=None, \
@@ -147,9 +144,9 @@ class RepositoryManager(object):
                     "dev_test_runner_func cannot be none when called", \
                                                                     __file__)
 
-        pre_ret = True
-        post_ret = None
-        ret = None
+        pre_ret = common_mix.GlobalConstants.COMMAND_SUCCESS
+        post_ret = common_mix.GlobalConstants.COMMAND_UNCERTAIN
+        ret = common_mix.GlobalConstants.COMMAND_UNCERTAIN
 
         self._set_callback_basics(callback_object)
 
@@ -157,7 +154,7 @@ class RepositoryManager(object):
         try:
             if callback_object is not None:
                 pre_ret = callback_object.before_command()
-            if pre_ret:
+            if pre_ret == common_mix.GlobalConstants.COMMAND_SUCCESS:
                 ret = self.dev_test_runner_func(dev_test_name, \
                                             self.repository_rootdir, \
                                             self.repo_executables_relpaths)
@@ -169,15 +166,16 @@ class RepositoryManager(object):
         return (pre_ret, ret, post_ret)
     #~ def run_dev_test()
 
-    def build_code(self, compiler=None, flags=None, clean_tmp=False, \
+    def build_code(self, compiler=None, flags_list=None, clean_tmp=False, \
                         reconfigure=False, callback_object=None):
         """ Build the code in repository dir to obtain the executable
         
         :type compiler: str
         :param compiler: name of the compiler to usei. default to None.
 
-        :type flags: str
-        :param flags: string to use as compiler flags. default to None.
+        :type flags_list: list
+        :param flags_list: list of strings to use as compiler flags. 
+                        default to None.
 
         :type clean_tmp: bool
         :param clean_tmp: enable clean any build temporary files, 
@@ -229,9 +227,9 @@ class RepositoryManager(object):
             ERROR_HANDLER.error_exit(\
                     "code_builder_func cannot be none when called", __file__)
 
-        pre_ret = True
-        post_ret = None
-        ret = None
+        pre_ret = common_mix.GlobalConstants.COMMAND_SUCCESS
+        post_ret = common_mix.GlobalConstants.COMMAND_UNCERTAIN
+        ret = common_mix.GlobalConstants.COMMAND_UNCERTAIN
 
         self._set_callback_basics(callback_object)
 
@@ -239,10 +237,10 @@ class RepositoryManager(object):
         try:
             if callback_object is not None:
                 pre_ret = callback_object.before_command()
-            if pre_ret:
+            if pre_ret == common_mix.GlobalConstants.COMMAND_SUCCESS:
                 ret = self.code_builder_func(self.repository_rootdir, \
                                         self.repo_executables_relpaths, \
-                                        compiler, flags, clean_tmp, \
+                                        compiler, flags_list, clean_tmp, \
                                         reconfigure)
                 if callback_object is not None:
                     callback_object.set_op_retval(ret)
@@ -282,7 +280,7 @@ class RepositoryManager(object):
                 ERROR_HANDLER.error_exit("{} {}".format(\
                         "callback object must", \
                         "not be None in custom_read_access call"), __file__)
-            post_ret = None
+            post_ret = common_mix.GlobalConstants.COMMAND_UNCERTAIN
             pre_ret = callback_object.before_command()
             if pre_ret:
                 callback_object.set_op_retval(pre_ret)

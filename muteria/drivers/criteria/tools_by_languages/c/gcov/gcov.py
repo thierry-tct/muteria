@@ -29,8 +29,6 @@ class CriteriaToolGCov(BaseCriteriaTool):
         self.gcov_files_list_filename = "gcov_files.json"
         self.gc_files_dir = os.path.join(\
                                         self.criteria_working_dir, "gcno_gcda")
-        self.instrument_callback_obj = self.InstrumentCallbackObject()
-        self.instrument_callback_obj.set_post_callback_args(self.gc_files_dir)
         # clean any possible gcda file
         for file_ in self._get_gcda_list():
             os.remove(file_)
@@ -58,15 +56,20 @@ class CriteriaToolGCov(BaseCriteriaTool):
 
     class InstrumentCallbackObject(DefaultCallbackObject):
         def after_command(self):
-            gc_files_dir = self.post_callback_args
+            if self.op_retval != common_mix.GlobalConstants.COMMAND_SUCCESS:
+                ERROR_HANDLER.error_exit("Build failed", __file__)
+            gc_files_dir, rel_path_map = self.post_callback_args
             for _, obj in list(self.source_files_to_objects.items()):
                 rel_raw_filename, _ = os.path.splitext(obj)
                 gcno_file = rel_raw_filename + '.gcno' 
                 relloc = os.path.join(gc_files_dir, os.path.dirname(obj))
                 if not os.path.isdir(relloc):
                     os.makedirs(relloc)
-                shutil.copy2(os.path.join(self.repository_rootdir, gcno_file),\
-                                    os.path.join(gc_files_dir, gcno_file))
+                abs_gcno = os.path.join(self.repository_rootdir, gcno_file)
+                ERROR_HANDLER.assert_true(os.path.isfile(abs_gcno), \
+                                    "gcno file missing after build", __file__)
+                shutil.copy2(abs_gcno, os.path.join(gc_files_dir, gcno_file))
+            self._copy_from_repo(rel_path_map)
             return DefaultCallbackObject.after_command(self)
         #~ def after_command()
     #~ class InstrumentCallbackObject
@@ -256,8 +259,18 @@ class CriteriaToolGCov(BaseCriteriaTool):
 
         prog = 'gcc'
 
-        flags = ['--coverage', '-fprofile-dir', self.gc_files_dir, '-O0']
-        additionals = ["-fkeep-inline-functions", "-fkeep-static-functions"]
+        flags = ['--coverage', '-fprofile-dir='+self.gc_files_dir, '-O0']
+        additionals = ["-fkeep-inline-functions"]
+        
+        # get gcc version
+        ret, out, err = DriversUtils.execute_and_get_retcode_out_err(\
+                                                        prog, ['-dumpversion'])
+        ERROR_HANDLER.assert_true(ret == 0, "'gcc -dumpversion' failed'")
+        
+        # if version > 6.5
+        if int(out.split('.')[0]) >= 6:
+            if int(out.split('.')[0]) > 6 or int(out.split('.')[1]) > 5:
+                additionals += ["-fkeep-static-functions"]
         
         flags += additionals
         
@@ -268,20 +281,27 @@ class CriteriaToolGCov(BaseCriteriaTool):
             filename = os.path.basename(exe)
             rel_path_map[exe] = os.path.join(\
                                 self.instrumented_code_storage_dir, filename)
-        ret = code_builds_factory.transform_src_into_dest(\
+
+        self.instrument_callback_obj = self.InstrumentCallbackObject()
+        self.instrument_callback_obj.set_post_callback_args(\
+                                            (self.gc_files_dir, rel_path_map))
+        pre_ret, ret, post_ret = code_builds_factory.transform_src_into_dest(\
                         src_fmt=CodeFormats.C_SOURCE,\
                         dest_fmt=CodeFormats.NATIVE_CODE,\
-                        src_dest_files_paths_map=rel_path_map,\
-                        compiler=prog, flags=flags, clean_tmp=True, \
+                        src_dest_files_paths_map=None,\
+                        compiler=prog, flags_list=flags, clean_tmp=True, \
                         reconfigure=True, \
                         callback_object=self.instrument_callback_obj)
+        
+        # Check
+        if ret == common_mix.GlobalConstants.TEST_EXECUTION_ERROR:
+            ERROR_HANDLER.error_exit("Program {} {}.".format(prog,\
+                                        'built problematic'), __file__)
+
         # write down the rel_path_map
         ERROR_HANDLER.assert_true(not os.path.isfile(\
                 self.instrumentation_details), "must not exist here", __file__)
         common_fs.dumpJSON(rel_path_map, self.instrumentation_details)
 
-        if not ret:
-            ERROR_HANDLER.error_exit("Program {} {}.".format(prog,\
-                                        'but problematic'), __file__)
     #~ def _do_instrument_code()
 #~ class CriteriaToolGCov

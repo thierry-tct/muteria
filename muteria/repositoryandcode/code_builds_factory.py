@@ -103,11 +103,11 @@ class CodeBuildsFactory(object):
         
         # call handler
         handler = self.src_dest_fmt_to_handling_obj[src_fmt][dest_fmt]
-        ret = handler.convert_code(src_fmt, dest_fmt, \
+        pre_ret, ret, post_ret = handler.convert_code(src_fmt, dest_fmt, \
                             src_dest_files_paths_map, \
                             repository_manager=self.repository_manager, \
                             **kwargs)
-        return ret
+        return pre_ret, ret, post_ret
     #~ def transform_src_into_dest ()
     
     def override_registration (self, src_fmt, dest_fmt, handling_obj):

@@ -1,7 +1,12 @@
 
 from __future__ import print_function
 
+import os
+import shutil
 import abc
+
+import muteria.common.mix as common_mix
+ERROR_HANDLER = common_mix.ErrorHandler
 
 class BaseCallbackObject(abc.ABC):
     def __init__(self, op_retval=None, pre_callback_args=None, \
@@ -19,18 +24,26 @@ class BaseCallbackObject(abc.ABC):
         self.dev_tests_list = dev_tests_list
     #~ def __init__()
 
+    def _copy_from_repo(self, file_src_dest_map):
+        for src, dest in list(file_src_dest_map.items()):
+            abs_src = os.path.join(self.repository_rootdir, src)
+            if os.path.abspath(abs_src) == os.path.abspath(dest):
+                ERROR_HANDLER.error_exit("src and dest are same (from repo)", __file__)
+            shutil.copy2(abs_src, dest)
+    #~ def _copy_from_repo()
+
+    def _copy_to_repo(self, file_src_dest_map):
+        for src, dest in list(file_src_dest_map.items()):
+            abs_src = os.path.join(self.repository_rootdir, src)
+            if os.path.abspath(abs_src) == os.path.abspath(dest):
+                ERROR_HANDLER.error_exit("src and dest are same (to repo)", __file__)
+            shutil.copy2(dest, abs_src)
+    #~ def _copy_from_repo()
+
     def set_op_retval(self, op_retval):
         self.op_retval = op_retval
     #~ def set_op_retval()
     
-    def set_pre_callback_args (self, pre_callback_args ):
-        self.pre_callback_args = pre_callback_args 
-    #~ def set_pre_callback_args()
-
-    def set_post_callback_args (self, post_callback_args ):
-        self.post_callback_args = post_callback_args 
-    #~ def set_post_callback_args()
-
     def set_repository_rootdir(self, repository_rootdir):
         self.repository_rootdir = repository_rootdir
     #~ def set_repository_rootdir()
@@ -46,6 +59,17 @@ class BaseCallbackObject(abc.ABC):
     def set_dev_tests_list(self, dev_tests_list):
         self.dev_tests_list = dev_tests_list
     #~ def set_dev_tests_list()
+
+    # Following methods are called by the caller. 
+    # The above are called by repo manager
+    
+    def set_pre_callback_args (self, pre_callback_args ):
+        self.pre_callback_args = pre_callback_args 
+    #~ def set_pre_callback_args()
+
+    def set_post_callback_args (self, post_callback_args ):
+        self.post_callback_args = post_callback_args 
+    #~ def set_post_callback_args()
 
     @abc.abstractmethod
     def before_command(self):
@@ -72,12 +96,12 @@ class DefaultCallbackObject(BaseCallbackObject):
     def before_command(self):
         """ Return True for success
         """
-        return True
+        return common_mix.GlobalConstants.COMMAND_SUCCESS
     #~ def before_command()
 
     def after_command(self):
         """ Return True for success
         """
-        return True
+        return common_mix.GlobalConstants.COMMAND_SUCCESS
     #~ def after_command()
 #~ class DefaultCallbackObject

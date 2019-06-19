@@ -1,11 +1,11 @@
 # Define the symbols we might want to change:
 CC	:= gcc
-CFLAGS := -g
+CFLAGS += -g
 
 OBJECTS	:= main.o lib/lib.o
 
 main: $(OBJECTS)
-	$(CC) $(OBJECTS) -o main
+	$(CC) $(CFLAGS) $(OBJECTS) -o main
 
 main.o: main.c
 	$(CC) $(INCLUDES) $(CFLAGS) -c main.c -o main.o

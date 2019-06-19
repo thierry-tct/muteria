@@ -41,8 +41,6 @@ class MetaTestcaseTool(object):
     ''' 
     '''
 
-    UNCERTAIN_TEST_VERDICT = common_mix.GlobalConstants.UNCERTAIN_TEST_VERDICT
-
     TOOL_OBJ_KEY = "tool_obj"
     TOOL_WORKDIR_KEY = "tool_working_dir"
     TOOL_TYPE_KEY = "tool_type"
@@ -382,7 +380,8 @@ class MetaTestcaseTool(object):
                         DriversUtils.make_meta_element(testcase, ttoolalias)
                 meta_test_failed_verdicts[meta_testcase] = \
                                                 test_failed_verdicts[testcase]
-                if test_failed_verdicts[testcase] == True:
+                if test_failed_verdicts[testcase] == \
+                                common_mix.GlobalConstants.COMMAND_UNCERTAIN:
                     found_a_failure = True
 
             # @Checkpoint: Chekpointing
@@ -405,7 +404,7 @@ class MetaTestcaseTool(object):
             if len(meta_test_failed_verdicts) < len(meta_testcases):
                 for meta_testcase in meta_testcases:
                     meta_test_failed_verdicts[meta_testcase] = \
-                                                self.UNCERTAIN_TEST_VERDICT
+                            common_mix.GlobalConstants.UNCERTAIN_TEST_VERDICT
                     
         ERROR_HANDLER.assert_true(len(meta_test_failed_verdicts) == \
                                                         len(meta_testcases), \
@@ -419,9 +418,11 @@ class MetaTestcaseTool(object):
             ERROR_HANDLER.assert_true(fault_test_execution_matrix.is_empty(), \
                                             "matrix must be empty", __file__)
             failverdict2val = {
-                True: fault_test_execution_matrix.getActiveCellDefaultVal(),
-                False: fault_test_execution_matrix.getInactiveCellVal(),
-                self.UNCERTAIN_TEST_VERDICT: \
+                common_mix.GlobalConstants.FAIL_TEST_VERDICT: \
+                        fault_test_execution_matrix.getActiveCellDefaultVal(),
+                common_mix.GlobalConstants.PASS_TEST_VERDICT: \
+                            fault_test_execution_matrix.getInactiveCellVal(),
+                common_mix.GlobalConstants.UNCERTAIN_TEST_VERDICT: \
                     fault_test_execution_matrix.getUncertainCellDefaultVal(),
             }
             cells_dict = {}

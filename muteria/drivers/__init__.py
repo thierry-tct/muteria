@@ -179,4 +179,17 @@ class DriversUtils(object):
                 ERROR_HANDLER.error_exit("Something went wrong", __file__)
         return True
     #~ def check_tool()
+
+    @classmethod
+    def execute_and_get_retcode_out_err(cls, prog, args_list=[]):
+        p = subprocess.Popen([prog]+args_list, \
+                                            #close_fds=True, \
+                                        stderr=subprocess.PIPE,\
+                                        stdout=subprocess.PIPE)
+        stdout, stderr = p.communicate()
+        stdout = stdout.decode('UTF-8')
+        stderr = stderr.decode('UTF-8')
+        retcode = p.wait()
+        return retcode, stdout, stderr
+    #~ def execute_and_get_retcode_out_err()
 #~class DriversUtils()

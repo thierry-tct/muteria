@@ -7,6 +7,7 @@ from muteria.configmanager.configurations import CriteriaToolsConfig
 from muteria.drivers.testgeneration import TestToolType
 from muteria.drivers.criteria import CriteriaToolType
 from muteria.drivers.criteria import TestCriteria
+from muteria.common.mix import GlobalConstants
 
 this_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -34,7 +35,8 @@ def dev_test_runner(test_name, repo_root_dir, exe_path_map):
             retcode = p.wait()
         except:
             # ERROR
-            return True
+            os.chdir(cwd)
+            return GlobalConstants.TEST_EXECUTION_ERROR
         
         # Parse the result
         subtests_verdicts = {}
@@ -48,9 +50,10 @@ def dev_test_runner(test_name, repo_root_dir, exe_path_map):
                 subtests_verdicts[parse_test(s)] = False
         #print(subtests_verdicts)
         os.chdir(cwd)
-        return hasfail
+        return GlobalConstants.FAIL_TEST_VERDICT if hasfail else \
+                                            GlobalConstants.PASS_TEST_VERDICT
     # ERROR
-    return True
+    return GlobalConstants.TEST_EXECUTION_ERROR
 
 ### 
 

@@ -53,10 +53,7 @@ class IdentityCodeConverter(BaseCodeFormatConverter):
     class CopyCallbackObject(DefaultCallbackObject):
         def after_command(self):
             file_src_dest_map = self.post_callback_args
-            for src, dest in list(file_src_dest_map.items()):
-                abs_src = os.path.join(self.repository_rootdir, src)
-                if os.path.abspath(abs_src) != os.path.abspath(dest):
-                    shutil.copy2(abs_src, dest)
+            self._copy_from_repo(file_src_dest_map)
             return DefaultCallbackObject.after_command(self)
         #~ def after_command()
     #~ class CopyCallbackObject
@@ -76,7 +73,7 @@ class IdentityCodeConverter(BaseCodeFormatConverter):
 
         b_ret, a_ret = repository_manager.custom_read_access(copy_callback_obj)
         ERROR_HANDLER.assert_true(b_ret & a_ret, "code copy failed", __file__)
-        return True
+        return b_ret, common_mix.GlobalConstants.COMMAND_UNCERTAIN, a_ret
     #~ def identity_function()
 
     def get_source_formats(self):

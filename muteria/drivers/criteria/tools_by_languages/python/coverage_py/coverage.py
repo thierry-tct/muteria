@@ -281,7 +281,7 @@ class CriteriaToolCoveragePy(BaseCriteriaTool):
             if not os.path.isdir(relloc):
                 os.makedirs(relloc)
         not_none_dest = {k:v for k,v in list(rel_path_map.items())}
-        ret = code_builds_factory.transform_src_into_dest(\
+        pre_ret, ret, post_ret = code_builds_factory.transform_src_into_dest(\
                         src_fmt=CodeFormats.PYTHON_SOURCE,\
                         dest_fmt=CodeFormats.PYTHON_SOURCE,\
                         src_dest_files_paths_map=not_none_dest)
@@ -290,7 +290,7 @@ class CriteriaToolCoveragePy(BaseCriteriaTool):
                 self.instrumentation_details), "must not exist here", __file__)
         common_fs.dumpJSON(rel_path_map, self.instrumentation_details)
 
-        if not ret:
+        if ret == common_mix.GlobalConstants.COMMAND_FAILURE:
             ERROR_HANDLER.error_exit("Problem with copying python sources", \
                                                                     __file__)
 

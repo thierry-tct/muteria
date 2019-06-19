@@ -1,5 +1,5 @@
 #! /bin/bash
-
+# RUN: $0 [<example to run>?]
 set -u
 
 error_exit()

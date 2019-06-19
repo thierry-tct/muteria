@@ -8,6 +8,8 @@ from muteria.drivers.testgeneration import TestToolType
 from muteria.drivers.criteria import CriteriaToolType
 from muteria.drivers.criteria import TestCriteria
 
+from muteria.common.mix import GlobalConstants
+
 this_dir = os.path.dirname(os.path.abspath(__file__))
 
 devtestlist = ['test_lib.sh']
@@ -31,49 +33,71 @@ def dev_test_runner(test_name, repo_root_dir, exe_path_map):
             retcode = p.wait()
         except:
             # ERROR
-            return True
+            return GlobalConstants.TEST_EXECUTION_ERROR
         
         # Parse the result
         hasfail = False
         hasfail |= (retcode != 0)
 
         os.chdir(cwd)
-        return hasfail
+        return GlobalConstants.FAIL_TEST_VERDICT if hasfail else \
+                                            GlobalConstants.PASS_TEST_VERDICT
     # ERROR
-    return True
+    return GlobalConstants.TEST_EXECUTION_ERROR
 #~ def dev_test_runner()
 
-def build_func(repo_root_dir, exe_rel_paths, compiler, flags, clean, reconfigure):
-    failed_build = -1 # TODO: get it from Repo manager
-
+def build_func(repo_root_dir, exe_rel_paths, compiler, flags_list, clean, reconfigure):
     cwd = os.getcwd()
     os.chdir(repo_root_dir)
     try:
-        tmp_env = os.environ
+        tmp_env = os.environ.copy()
         if compiler is not None:
             tmp_env["CC"] = compiler
-        if flags is not None:
-            tmp_env["CFLAGS"] = flags
-        args_list = []
-        if clean or reconfigure:
-            args_list.append('clean')
-        p = subprocess.Popen(['make']+args_list, env=my_env,\
-                                            stderr=subprocess.PIPE,\
-                                            stdout=subprocess.PIPE)
+        if flags_list is not None:
+            tmp_env["CFLAGS"] = " ".join(flags_list)
+        
+        def print_err(sub_p, msg):
+            stdout, stderr = sub_p.communicate()
+            stdout = stdout.decode('UTF-8').splitlines()
+            stderr = stderr.decode('UTF-8').splitlines()
+            print(stdout)
+            print(stderr)
+        #~ def print_err()
+
+        if reconfigure:
+            args_list = ['clean']
+            p = subprocess.Popen(['make']+args_list, env=tmp_env, \
+                                                    stderr=subprocess.PIPE,\
+                                                    stdout=subprocess.PIPE)
+            retcode = p.wait()
+            if retcode != 0:
+                print_err(p, "reconfigure failed")
+                os.chdir(cwd)
+                return GlobalConstants.COMMAND_FAILURE 
+        if clean:
+            args_list = ['clean']
+            p = subprocess.Popen(['make']+args_list, env=tmp_env, \
+                                                    stderr=subprocess.PIPE,\
+                                                    stdout=subprocess.PIPE)
+            retcode = p.wait()
+            if retcode != 0:
+                print_err(p, "clean failed")
+                os.chdir(cwd)
+                return GlobalConstants.COMMAND_FAILURE 
+        
+        p = subprocess.Popen(['make'], env=tmp_env, stderr=subprocess.PIPE,\
+                                                    stdout=subprocess.PIPE)
         retcode = p.wait()
+        if retcode != 0:
+            print_err(p, "clean failed")
+            os.chdir(cwd)
+            return GlobalConstants.COMMAND_FAILURE 
     except:
-        return failed_build
+        os.chdir(cwd)
+        return GlobalConstants.COMMAND_FAILURE
+
     os.chdir(cwd)
-
-    if retcode != 0:
-        stdout, stderr = p.communicate()
-        stdout = stdout.decode('UTF-8').splitlines()
-        stderr = stderr.decode('UTF-8').splitlines()
-        print(stdout)
-        print(stderr)
-        return failed_build 
-
-    return True
+    return GlobalConstants.COMMAND_SUCCESS
 #~ def build_func()
 
 ### 

@@ -98,13 +98,21 @@ class ErrorHandler(object):
 class GlobalConstants(object):
     UNCERTAIN_TEST_VERDICT = None
 
-    PASS_TEST_VERDICT = False
+    PASS_TEST_VERDICT = 0
     
-    FAIL_TEST_VERDICT = True
+    FAIL_TEST_VERDICT = 1
+
+    TEST_EXECUTION_ERROR = -1
     
-    MUTANT_ALIVE_VERDICT = False
+    MUTANT_ALIVE_VERDICT = 0
     
-    MUTANT_KILLED_VERDICT = True
+    MUTANT_KILLED_VERDICT = 1
+
+    COMMAND_UNCERTAIN = None
+
+    COMMAND_SUCCESS = 0
+
+    COMMAND_FAILURE = 1
 #~ class GlobalConstants
 
 @enum.unique
