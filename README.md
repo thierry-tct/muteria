@@ -31,6 +31,8 @@ pip install -r developer-requirements.txt
 ---
 ## Development
 ### Things to fix
+- Make sure to execute tests with the right version of exe files (Let runtests and execute_test set back the repo exes and src to normal state. then each test executor, including custom, must set back the changed exes and srcs)
+
 - Complete and test the web UI.
 - Complete and test the CLI.
 - Supported executable format for test generation tools.

@@ -13,7 +13,7 @@ from muteria.common.mix import GlobalConstants
 this_dir = os.path.dirname(os.path.abspath(__file__))
 
 devtestlist = ['test_lib.sh']
-def dev_test_runner(test_name, repo_root_dir, exe_path_map):
+def dev_test_runner(test_name, repo_root_dir, exe_path_map, env_vars):
     # TODO: use exe_path_map
 
     if test_name == 'test_lib.sh':

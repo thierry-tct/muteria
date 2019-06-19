@@ -135,7 +135,7 @@ class CriteriaToolGCov(BaseCriteriaTool):
         return: python dictionary with environment variable as key
                      and their values as value (all strings)
         '''
-        ERROR_HANDLER.error_exit("not applicable for gcov", __file__)
+        return {e:None for e in enabled_criteria}
     #~ def _get_criteria_environment_vars()
 
     def _collect_temporary_coverage_data(self, criteria_name_list, \
@@ -158,15 +158,21 @@ class CriteriaToolGCov(BaseCriteriaTool):
 
         gcda_files = self._get_gcda_list()
 
-        raw_filename_list = [os.path.splitext(f) for f in gcda_files]
+        raw_filename_list = [os.path.splitext(f)[0] for f in gcda_files]
         args_list += raw_filename_list
         
         if len(gcda_files) > 0:
+            cwd = os.getcwd()
+            os.chdir(self.gc_files_dir)
+
             # collect gcda (gcno)
             p = subprocess.Popen([prog]+args_list, close_fds=True, \
                                             stderr=subprocess.DEVNULL,\
                                             stdout=subprocess.DEVNULL)
             retcode = p.wait()
+            
+            os.chdir(cwd)
+            
             if retcode != 0:
                 ERROR_HANDLER.error_exit("Program {} {}.".format(prog,\
                         'error collecting coverage is problematic'), __file__)

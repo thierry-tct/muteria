@@ -76,9 +76,14 @@ class CustomTestcases(BaseTestcaseTool):
         """
         rep_mgr = self.code_builds_factory.repository_manager
         pre,verdict,post = rep_mgr.run_dev_test(dev_test_name=testcase, \
+                                            exe_path_map=exe_path_map, \
+                                            env_vars=env_vars, \
                                             callback_object=callback_object)
-        ERROR_HANDLER.assert_true(pre, "before command failed", __file__)
-        ERROR_HANDLER.assert_true(post or post is None, \
+        ERROR_HANDLER.assert_true(\
+                            pre == common_mix.GlobalConstants.COMMAND_SUCCESS,\
+                                            "before command failed", __file__)
+        ERROR_HANDLER.assert_true(\
+                        post != common_mix.GlobalConstants.COMMAND_FAILURE,\
                                             "after command failed", __file__)
         return verdict
     #~ def _execute_a_test()

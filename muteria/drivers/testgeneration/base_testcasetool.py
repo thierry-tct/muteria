@@ -50,10 +50,6 @@ class BaseTestcaseTool(abc.ABC):
     '''
     '''
 
-    UNCERTAIN_TEST_VERDICT = common_mix.GlobalConstants.UNCERTAIN_TEST_VERDICT
-    PASS_TEST_VERDICT = common_mix.GlobalConstants.PASS_TEST_VERDICT
-    FAIL_TEST_VERDICT = common_mix.GlobalConstants.FAIL_TEST_VERDICT
-
     def __init__(self, tests_working_dir, code_builds_factory, config, \
                                                                 checkpointer):
         # Set Constants
@@ -215,7 +211,8 @@ class BaseTestcaseTool(abc.ABC):
             test_failed = self._execute_a_test( \
                                             testcase, exe_path_map, env_vars)
             test_failed_verdicts[testcase] = test_failed
-            if stop_on_failure and test_failed:
+            if stop_on_failure and test_failed != \
+                                common_mix.GlobalConstants.PASS_TEST_VERDICT:
                 break
         # Restore back the exes
         self._restore_env_vars()
@@ -226,13 +223,13 @@ class BaseTestcaseTool(abc.ABC):
             if len(test_failed_verdicts) < len(testcases):
                 for testcase in set(testcases) - set(test_failed_verdicts):
                     test_failed_verdicts[testcase] = \
-                                                    self.UNCERTAIN_TEST_VERDICT
+                            common_mix.GlobalConstants.UNCERTAIN_TEST_VERDICT
 
         # @Checkpoint: Finished (for time)
         checkpoint_handler.set_finished(None)
 
         return test_failed_verdicts
-    #~ def runtests()
+    #~ def _runtests()
 
     def generate_tests (self, exe_path_map, parallel_count=1, outputdir=None, \
                                             code_builds_factory_override=None):

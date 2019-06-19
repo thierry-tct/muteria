@@ -138,7 +138,8 @@ class RepositoryManager(object):
             callback_object.set_dev_tests_list(self.dev_tests_list)
     #~ def _set_callback_basics()
 
-    def run_dev_test(self, dev_test_name, callback_object=None):
+    def run_dev_test(self, dev_test_name, exe_path_map=None, env_vars=None,\
+                                                        callback_object=None):
         if self.dev_test_runner_func is None:
             ERROR_HANDLER.error_exit(\
                     "dev_test_runner_func cannot be none when called", \
@@ -157,7 +158,8 @@ class RepositoryManager(object):
             if pre_ret == common_mix.GlobalConstants.COMMAND_SUCCESS:
                 ret = self.dev_test_runner_func(dev_test_name, \
                                             self.repository_rootdir, \
-                                            self.repo_executables_relpaths)
+                                            exe_path_map, env_vars)
+                                            #self.repo_executables_relpaths)
                 if callback_object is not None:
                     callback_object.set_op_retval(ret)
                     post_ret = callback_object.after_command()
@@ -282,7 +284,7 @@ class RepositoryManager(object):
                         "not be None in custom_read_access call"), __file__)
             post_ret = common_mix.GlobalConstants.COMMAND_UNCERTAIN
             pre_ret = callback_object.before_command()
-            if pre_ret:
+            if pre_ret == common_mix.GlobalConstants.COMMAND_SUCCESS:
                 callback_object.set_op_retval(pre_ret)
                 post_ret = callback_object.after_command()
         finally:

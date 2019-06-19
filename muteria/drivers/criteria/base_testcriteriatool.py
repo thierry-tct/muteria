@@ -429,17 +429,14 @@ class BaseCriteriaTool(abc.ABC):
                         set(criterion2environment_vars), "Missmatch", __file__)
         criterialist = list(criterion2executable_path.keys())
         groups = []
+        visited = set()
         for c_pos, criterion in enumerate(criterialist):
-            found = False
-            for g in groups:
-                if criterion == g[0]:
-                    found = True
-                    break
-            if not found:
+            if criterion not in visited:
                 # add its group
                 groups.append(([criterion], \
                                     criterion2executable_path[criterion],
                                     criterion2environment_vars[criterion]))
+                visited.add(criterion)
                 # add anything else from same group
                 for e_pos in range(c_pos+1, len(criterialist)):
                     if criterion2executable_path[criterialist[e_pos]] == \
@@ -447,6 +444,7 @@ class BaseCriteriaTool(abc.ABC):
                             criterion2environment_vars[criterialist[e_pos]] ==\
                                                         groups[-1][2]:
                        groups[-1][0].append(criterialist[e_pos]) 
+                       visited.add(criterialist[e_pos])
         return groups
     #~ def _get_criteria_groups()
 
