@@ -1,0 +1,5 @@
+{
+  "lib/lib.o": "code_build_workdir/1",
+  "main": "code_build_workdir/0",
+  "main.o": "code_build_workdir/2"
+}

@@ -65,7 +65,7 @@ class CodeBuildsFactory(object):
                     count += 1
                 common_fs.dumpJSON(self.stored_files_mapping, \
                                 self.stored_files_mapping_file, pretty=True)
-
+        
         # Initialize 
         for src_fmt, obj_cls in formatfrom_function_tuples:
             if isinstance(obj_cls, ccs.IdentityCodeConverter):
@@ -154,7 +154,7 @@ class CodeBuildsFactory(object):
                                             len(self.stored_files_mapping) > 0:
                 files_backed = os.path.isfile(\
                                     self.stored_files_mapping[\
-                                        self.stored_files_mapping.keys()[0]])
+                                    list(self.stored_files_mapping.keys())[0]])
 
                 # copy the sources into the destinations
                 copy_callback_obj = self.CopyCallbackObject()

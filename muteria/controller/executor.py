@@ -130,7 +130,8 @@ class Executor(object):
 
         # create codes builders
         self.cb_factory = CodeBuildsFactory(self.repo_mgr, \
-                                    workdir=outdir_struct.CB_FACTORY_WORKDIR)
+                                workdir=self.head_explorer.get_file_pathname(\
+                                            outdir_struct.CB_FACTORY_WORKDIR))
     #~ def __init__()
 
     def main(self):
