@@ -55,18 +55,20 @@ class CustomTestcases(BaseTestcaseTool):
                                         parallel_count=parallel_count)
     #~ def runtests()
 
-    def _prepare_executable (self, exe_path_map, env_vars):
+    def _prepare_executable(self, exe_path_map, env_vars):
         """ Make sure we have the right executable ready (if needed)
         """
-        self.code_builds_factory.copy_into_repository(exe_path_map)
-    #~ def _prepare_executale()
+        #self.code_builds_factory.copy_into_repository(exe_path_map)
+        pass
+    #~ def _prepare_executable()
 
     def _restore_default_executable(self, exe_path_map, env_vars):
         """ Restore back the default executable (if needed).
             Useful for test execution that require the executable
             at a specific location.
         """
-        self.code_builds_factory.restore_repository_files(exe_path_map)
+        #self.code_builds_factory.restore_repository_files(exe_path_map)
+        pass
     #~ def _restore_default_executable()
 
     def _execute_a_test (self, testcase, exe_path_map, env_vars, \

@@ -91,7 +91,8 @@ class BaseCriteriaTool(abc.ABC):
         """
         """
         # get instrumented executables
-        criterion2executable_path = self.get_instrumented_executable_paths( \
+        criterion2executable_path = \
+                                self.get_instrumented_executable_paths_map( \
                                                     criterion_to_matrix.keys())
 
         # get environment vars
@@ -537,9 +538,9 @@ class BaseCriteriaTool(abc.ABC):
     #~ def _get_separated_instrumentation_criteria()
 
     @abc.abstractmethod
-    def get_instrumented_executable_paths(self, enabled_criteria):
+    def get_instrumented_executable_paths_map(self, enabled_criteria):
         print ("!!! Must be implemented in child class !!!")
-    #~ def get_instrumented_executable_paths()
+    #~ def get_instrumented_executable_paths_map()
 
     @abc.abstractmethod
     def _get_criterion_element_executable_path(self, criterion, element_id):

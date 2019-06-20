@@ -40,8 +40,9 @@ class FromC(ccs.BaseCodeFormatConverter):
         # post build callbacks
         class CopyCallbackObject(DefaultCallbackObject):
             def after_command(self):
-                if not self.op_retval:
-                    return repository_manager.ERROR
+                if self.op_retval == \
+                                    common_mix.GlobalConstants.COMMAND_FAILURE:
+                    return common_mix.GlobalConstants.COMMAND_FAILURE
                 for sf, df in list(file_src_dest_map.items()):
                     abs_sf = repository_manager.repo_abs_path(sf)
                     if not os.path.isfile(abs_sf):

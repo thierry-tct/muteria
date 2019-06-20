@@ -129,7 +129,8 @@ class Executor(object):
         common_mix.ErrorHandler.set_corresponding_repos_manager(self.repo_mgr)
 
         # create codes builders
-        self.cb_factory = CodeBuildsFactory(self.repo_mgr)
+        self.cb_factory = CodeBuildsFactory(self.repo_mgr, \
+                                    workdir=outdir_struct.CB_FACTORY_WORKDIR)
     #~ def __init__()
 
     def main(self):
@@ -195,6 +196,10 @@ class Executor(object):
                         criteria_set_pos=None)
             self.checkpointer.write_checkpoint(self.cp_data.get_json_obj())
 
+        # Ensure that the repository exe and obj are in default state
+        self.cb_factory.set_repo_to_build_default()
+
+        # Execute the tasks
         task_set = None
         # by testtool type sequence loop
         for seq_id, test_tool_types in enumerate(test_tool_type_sequence):

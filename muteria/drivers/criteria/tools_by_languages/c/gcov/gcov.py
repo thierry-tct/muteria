@@ -109,14 +109,15 @@ class CriteriaToolGCov(BaseCriteriaTool):
         return []
     #~ def _get_separated_instrumentation_criteria()
 
-    def get_instrumented_executable_paths(self, enabled_criteria):
+    def get_instrumented_executable_paths_map(self, enabled_criteria):
         crit_to_exes_map = {}
         obj = common_fs.loadJSON(self.instrumentation_details)
-        exes = [p for _, p in list(obj.items())]
+        #exes = [p for _, p in list(obj.items())]
+        exes = obj
         for criterion in enabled_criteria:
             crit_to_exes_map[criterion] = exes
         return crit_to_exes_map
-    #~ def get_instrumented_executable_paths()
+    #~ def get_instrumented_executable_paths_map()
 
     def _get_criterion_element_executable_path(self, criterion, element_id):
         ERROR_HANDLER.error_exit("not applicable for gcov", __file__)
@@ -162,6 +163,9 @@ class CriteriaToolGCov(BaseCriteriaTool):
         args_list += raw_filename_list
         
         if len(gcda_files) > 0:
+            # TODO: When gcov generate coverage for different files with
+            # same name filename bu located at diferent dir. Avoid override.
+            # Go where the gcov will be looked for
             cwd = os.getcwd()
             os.chdir(self.gc_files_dir)
 
@@ -190,6 +194,7 @@ class CriteriaToolGCov(BaseCriteriaTool):
                                     test_execution_verdict, result_dir_tmp):
         ''' read json files and extract data
             return: the dict of criteria with covering count
+            # TODO: Restrict to returning coverage of specified headers files
         '''
         gcov_list = common_fs.loadJSON(os.path.join(result_dir_tmp,\
                                                 self.gcov_files_list_filename))

@@ -81,14 +81,15 @@ class CriteriaToolCoveragePy(BaseCriteriaTool):
         return []
     #~ def _get_separated_instrumentation_criteria()
 
-    def get_instrumented_executable_paths(self, enabled_criteria):
+    def get_instrumented_executable_paths_map(self, enabled_criteria):
         crit_to_exes_map = {}
         obj = common_fs.loadJSON(self.instrumentation_details)
-        exes = [p for _, p in list(obj.items())]
+        #exes = [p for _, p in list(obj.items())]
+        exes = obj
         for criterion in enabled_criteria:
             crit_to_exes_map[criterion] = exes
         return crit_to_exes_map
-    #~ def get_instrumented_executable_paths()
+    #~ def get_instrumented_executable_paths_map()
 
     def _get_criterion_element_executable_path(self, criterion, element_id):
         ERROR_HANDLER.error_exit("not applicable for coverage_py", __file__)

@@ -24,19 +24,31 @@ class BaseCallbackObject(abc.ABC):
         self.dev_tests_list = dev_tests_list
     #~ def __init__()
 
-    def _copy_from_repo(self, file_src_dest_map):
+    def _copy_from_repo(self, file_src_dest_map, skip_none_dest=False):
         for src, dest in list(file_src_dest_map.items()):
+            if dest is None:
+                if skip_none_dest: 
+                    continue
+                ERROR_HANDLER.error_exit("dest is None while not skipped", \
+                                                                    __file__)
             abs_src = os.path.join(self.repository_rootdir, src)
             if os.path.abspath(abs_src) == os.path.abspath(dest):
-                ERROR_HANDLER.error_exit("src and dest are same (from repo)", __file__)
+                ERROR_HANDLER.error_exit("src and dest are same (from repo)", \
+                                                                    __file__)
             shutil.copy2(abs_src, dest)
     #~ def _copy_from_repo()
 
-    def _copy_to_repo(self, file_src_dest_map):
+    def _copy_to_repo(self, file_src_dest_map, skip_none_dest=False):
         for src, dest in list(file_src_dest_map.items()):
+            if dest is None:
+                if skip_none_dest: 
+                    continue
+                ERROR_HANDLER.error_exit("dest is None while not skipped", \
+                                                                    __file__)
             abs_src = os.path.join(self.repository_rootdir, src)
             if os.path.abspath(abs_src) == os.path.abspath(dest):
-                ERROR_HANDLER.error_exit("src and dest are same (to repo)", __file__)
+                ERROR_HANDLER.error_exit("src and dest are same (to repo)", \
+                                                                    __file__)
             shutil.copy2(dest, abs_src)
     #~ def _copy_from_repo()
 

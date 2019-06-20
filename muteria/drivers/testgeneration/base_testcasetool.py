@@ -107,7 +107,13 @@ class BaseTestcaseTool(abc.ABC):
                             
     class RepoRuntestsCallbackObject(DefaultCallbackObject):
         def after_command(self):
-            return self.post_callback_args[0](**self.post_callback_args[1])
+            # Copy the exes into the repo (user must revert)
+            exe_path_map = self.post_callback_args[1]['exe_path_map']
+            self._copy_to_repo(exe_path_map, skip_none_dest=True)
+
+            # execute
+            res = self.post_callback_args[0](**self.post_callback_args[1])
+            return res
     #~ class RepoRuntestsCallbackObject
 
     def _in_repo_execute_testcase(self, testcase, exe_path_map, env_vars):
@@ -121,6 +127,8 @@ class BaseTestcaseTool(abc.ABC):
                                         }))
         repo_mgr = self.code_builds_factory.repository_manager
         _, exec_verdict = repo_mgr.custom_read_access(cb_obj)
+        # revert exes
+        self.code_builds_factory.set_repo_to_build_default()
         return exec_verdict
     #~ def _in_repo_execute_testcase()
 
@@ -138,6 +146,8 @@ class BaseTestcaseTool(abc.ABC):
                                         }))
         repo_mgr = self.code_builds_factory.repository_manager
         _, exec_verdicts = repo_mgr.custom_read_access(cb_obj)
+        # revert exes
+        self.code_builds_factory.set_repo_to_build_default()
         return exec_verdicts
     #~ def _in_repo_runtests()
 

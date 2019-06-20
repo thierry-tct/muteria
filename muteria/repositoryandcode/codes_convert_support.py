@@ -72,7 +72,10 @@ class IdentityCodeConverter(BaseCodeFormatConverter):
         copy_callback_obj.set_post_callback_args(file_src_dest_map)
 
         b_ret, a_ret = repository_manager.custom_read_access(copy_callback_obj)
-        ERROR_HANDLER.assert_true(b_ret & a_ret, "code copy failed", __file__)
+        ERROR_HANDLER.assert_true(\
+                    b_ret == common_mix.GlobalConstants.COMMAND_SUCCESS & \
+                    a_ret == common_mix.GlobalConstants.COMMAND_SUCCESS, \
+                                                "code copy failed", __file__)
         return b_ret, common_mix.GlobalConstants.COMMAND_UNCERTAIN, a_ret
     #~ def identity_function()
 

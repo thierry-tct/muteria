@@ -6,6 +6,7 @@ from __future__ import print_function
 import sys
 import os
 import logging
+import shutil
 
 import muteria.common.mix as common_mix
 import muteria.common.fs as common_fs
@@ -55,10 +56,12 @@ class CodeBuildsFactory(object):
                 count = 0
                 self.stored_files_mapping = {}
                 for f in exes:
-                    self.stored_files_mapping[f] = str(count)
+                    self.stored_files_mapping[f] = \
+                                        os.path.join(self.workdir, str(count))
                     count += 1
                 for s,o in list(src_obj_map.items()):
-                    self.stored_files_mapping[o] = str(count)
+                    self.stored_files_mapping[o] = \
+                                        os.path.join(self.workdir, str(count))
                     count += 1
                 common_fs.dumpJSON(self.stored_files_mapping, \
                                 self.stored_files_mapping_file, pretty=True)
@@ -76,6 +79,7 @@ class CodeBuildsFactory(object):
                                                                     __file__)
                 for dest_fmt in obj_cls.get_destination_formats_for(src_fmt):
                     self._fmt_from_to_registration(src_fmt, dest_fmt, obj_cls)
+
 
     #~ def __init__()
 
@@ -124,38 +128,63 @@ class CodeBuildsFactory(object):
 
     ## Useful
     
-    def build_default_and_keep(self):
-        if self.repository_manager.should_build():
-            ERROR_HANDLER.error_exit(\
-                    "TODO: implement build and store exe and objects here", \
-                    __file__)
-    #~ def build_default_and_keep()
-    
-    class RepoRuntestsCallbackObject(DefaultCallbackObject):
+    class CopyCallbackObject(DefaultCallbackObject):
+        def before_command(self):
+            revert_src_func = self.pre_callback_args
+            revert_src_func()
+            return common_mix.GlobalConstants.COMMAND_SUCCESS
+        #~ def before_command()
+
         def after_command(self):
-            return self.post_callback_args[0](**self.post_callback_args[1])
-    #~ class RepoRuntestsCallbackObject
+            if self.op_retval == common_mix.GlobalConstants.COMMAND_FAILURE:
+                return common_mix.GlobalConstants.COMMAND_FAILURE
+            file_src_dest_map, reverse = self.post_callback_args
+            if reverse:
+                self._copy_to_repo(file_src_dest_map)
+            else:
+                self._copy_from_repo(file_src_dest_map)
+            return common_mix.GlobalConstants.COMMAND_SUCCESS
+        #~ def after_command()
+    #~ class CopyCallbackObject
 
-    def copy_into_repository(self, file_map):
-        return
-        if len(file_map) > 0:
-            # TODO: Use the locked version of copy (using custom_read_command)
-            ERROR_HANDLER.error_exit(\
-                                "Implement copy of values into keys (files)", \
-                                                                    __file__)
-    #~ def copy_into_repository(self, file_map)
+    def set_repo_to_build_default(self):
+        if self.repository_manager.should_build():
+            files_backed = False
+            if self.stored_files_mapping is not None and \
+                                            len(self.stored_files_mapping) > 0:
+                files_backed = os.path.isfile(\
+                                    self.stored_files_mapping[\
+                                        self.stored_files_mapping.keys()[0]])
 
-    def restore_repository_files(self, file_map):
-        if len(file_map) > 0:
-            # restore sources
-            _, src2obj = self.repository_manager.get_relative_exe_path_map()
-            srcs = set(file_map) & set(src2obj)
-            for src in srcs:
-                # TODO: optimize this (it locks/unlocks for each file)
-                self.repository_manager.revert_repository_file(src)
-            if self.stored_files_mapping is not None:
-                ERROR_HANDLER.error_exit(\
-                        "TODO: implement restoring executables & object files"
-                        " into repo", __file__)
-    #~ def restore_repository_files(self, file_map)
+                # copy the sources into the destinations
+                copy_callback_obj = self.CopyCallbackObject()
+                copy_callback_obj.set_pre_callback_args( \
+                                self.repository_manager.revert_src_list_files)
+
+            if files_backed:
+                copy_callback_obj.set_post_callback_args(\
+                                            [self.stored_files_mapping, True])
+                b_ret, a_ret = self.repository_manager.custom_read_access(\
+                                                            copy_callback_obj)
+                ERROR_HANDLER.assert_true(\
+                        b_ret == common_mix.GlobalConstants.COMMAND_SUCCESS & \
+                        a_ret == common_mix.GlobalConstants.COMMAND_SUCCESS, \
+                                                "code copy failed", __file__)
+            else:
+                # build and possibly backup
+                if self.stored_files_mapping is None:
+                    co = None
+                else:
+                    copy_callback_obj.set_post_callback_args(\
+                                            [self.stored_files_mapping, False])
+                    co = copy_callback_obj
+                pre, ret, post = self.repository_manager.build_code(
+                                                            clean_tmp=True, \
+                                                            reconfigure=True, \
+                                                            callback_object=co)
+                if pre == common_mix.GlobalConstants.COMMAND_FAILURE or \
+                        ret == common_mix.GlobalConstants.COMMAND_FAILURE or \
+                        post == common_mix.GlobalConstants.COMMAND_FAILURE:
+                    ERROR_HANDLER.error_exit("default build failed", __file__)
+    #~ def set_repo_to_build_default(self)
 #~ class CodeBuildsFactory()

@@ -545,6 +545,8 @@ class MetaCriteriaTool(object):
                 ctool.instrument_code(\
                                 enabled_criteria=tool2criteria[ctoolalias],\
                                 exe_path_map=exe_path_map)
+                # ensure repo is set back
+                self.code_builds_factory.set_repo_to_build_default()
 
                 # @Checkpoint: Checkpointing
                 checkpoint_handler.do_checkpoint( \

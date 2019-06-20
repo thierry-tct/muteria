@@ -32,6 +32,7 @@ pip install -r developer-requirements.txt
 ## Development
 ### Things to fix
 - Make sure to execute tests with the right version of exe files (Let runtests and execute_test set back the repo exes and src to normal state. then each test executor, including custom, must set back the changed exes and srcs)
+- Ensure tools plugins do not leave the repo srcs or exes in an infected state. They must cleanup the changes made. Ensure that by cleaning for them at top level (when the driver's methods are called in the meta tools)
 
 - Complete and test the web UI.
 - Complete and test the CLI.
