@@ -10,6 +10,7 @@ import muteria.common.mix as common_mix
 
 import muteria.repositoryandcode.codes_convert_support as ccs
 from muteria.repositoryandcode.callback_object import DefaultCallbackObject
+from muteria.drivers import DriversUtils
 
 ERROR_HANDLER = common_mix.ErrorHandler
 
@@ -75,7 +76,49 @@ class FromC(ccs.BaseCodeFormatConverter):
                 for src, dest in list(file_src_dest_map.items()):
                     shutil.copy2(src, dest)
         if (dest_fmt == ccs.CodeFormats.LLVM_BITCODE):
-            ERROR_HANDLER.error_exit("Must Implement2", __file__)
+            # XXX: This build overrides passed clean_tmp and reconfigure
+            # also overrides Compiler if wllvm if found
+            # and does not use the callback object
+            # and require file_src_dest_map to have the place to store
+            # generated .bc by specifying the corresponding native file.
+            # EX: {x.c: /path/to/main} passed to have /path/to/main.bc
+            # generated
+
+            #1. Ensure wllvm is installed (For now use default llvm compiler)
+            has_wllvm = DriversUtils.check_tool('wllvm', ['--version'])
+            ERROR_HANDLER.assert_true(has_wllvm, 'wllvm not found', __file__)
+
+            spec_compiler = kwargs['compiler'] if 'compiler' in kwargs \
+                                                                    else None
+            bak_llvm_compiler = os.environ['LLVM_COMPILER']
+            if spec_compiler is not None:
+                os.environ['LLVM_COMPILER'] = spec_compiler
+
+            # tmp['LLVM_COMPILER_PATH'] = ...
+            kwargs['compiler'] = 'wllvm'
+            kwargs['clean_tmp'] = True
+            kwargs['reconfigure'] = True
+
+            # Normal build followed by executable copying
+            pre_ret, ret, post_ret = repository_manager.build_code(**kwargs)
+
+            # extract bitcode from copied executables and remove non bitcode
+            if file_src_dest_map is not None:
+                for src, dest in list(file_src_dest_map.items()):
+                    ret, out, err = \
+                            DriversUtils.execute_and_get_retcode_out_err( \
+                                                        "extract-bc", [dest])
+                    ERROR_HANDLER.assert_true(ret != 0, 'extract-bc failed.'+\
+                                        "\nOUT: "+out+"\nERR: "+err, __file__)
+                    os.remove(dest)
+
+            if spec_compiler is not None:
+                os.environ['LLVM_COMPILER'] = bak_llvm_compiler
+
+            # Clean build
+            kwargs['compiler'] = None
+            pre_ret, ret, post_ret = repository_manager.build_code(**kwargs)
+
         if (dest_fmt == ccs.CodeFormats.OBJECT_FILE):
             ERROR_HANDLER.error_exit("Must Implement3", __file__)
         if (dest_fmt == ccs.CodeFormats.NATIVE_CODE):

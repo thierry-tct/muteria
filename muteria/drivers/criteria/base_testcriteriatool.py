@@ -543,6 +543,11 @@ class BaseCriteriaTool(abc.ABC):
     #~ def get_instrumented_executable_paths_map()
 
     @abc.abstractmethod
+    def get_criterion_info_object(self, criterion):
+        print ("!!! Must be implemented in child class !!!")
+    #~ def get_criterion_info_object(self, criterion)
+
+    @abc.abstractmethod
     def _get_criterion_element_executable_path(self, criterion, element_id):
         print ("!!! Must be implemented in child class !!!")
     #~ def _get_criterion_element_executable_path

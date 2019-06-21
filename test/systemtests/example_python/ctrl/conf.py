@@ -1,4 +1,5 @@
 import os
+import sys
 import subprocess
 
 from muteria.configmanager.configurations import SessionMode
@@ -25,7 +26,7 @@ def dev_test_runner(test_name, repo_root_dir, exe_path_map, env_vars):
 
         try:
             args_list = ['-m', 'unittest', test_name, '-v']
-            p = subprocess.Popen(['python3']+args_list, \
+            p = subprocess.Popen([sys.executable]+args_list, \
                                              #close_fds=True, \
                                             stderr=subprocess.PIPE,\
                                             stdout=subprocess.PIPE)

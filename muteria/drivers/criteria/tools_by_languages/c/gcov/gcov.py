@@ -119,6 +119,10 @@ class CriteriaToolGCov(BaseCriteriaTool):
         return crit_to_exes_map
     #~ def get_instrumented_executable_paths_map()
 
+    def get_criterion_info_object(self, criterion):
+        return None
+    #~ def get_criterion_info_object(self, criterion)
+
     def _get_criterion_element_executable_path(self, criterion, element_id):
         ERROR_HANDLER.error_exit("not applicable for gcov", __file__)
     #~ def _get_criterion_element_executable_path
@@ -305,7 +309,7 @@ class CriteriaToolGCov(BaseCriteriaTool):
                         callback_object=self.instrument_callback_obj)
         
         # Check
-        if ret == common_mix.GlobalConstants.TEST_EXECUTION_ERROR:
+        if ret == common_mix.GlobalConstants.COMMAND_FAILURE:
             ERROR_HANDLER.error_exit("Program {} {}.".format(prog,\
                                         'built problematic'), __file__)
 

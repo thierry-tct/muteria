@@ -91,6 +91,10 @@ class CriteriaToolCoveragePy(BaseCriteriaTool):
         return crit_to_exes_map
     #~ def get_instrumented_executable_paths_map()
 
+    def get_criterion_info_object(self, criterion):
+        return None
+    #~ def get_criterion_info_object(self, criterion)
+    
     def _get_criterion_element_executable_path(self, criterion, element_id):
         ERROR_HANDLER.error_exit("not applicable for coverage_py", __file__)
     #~ def _get_criterion_element_executable_path
