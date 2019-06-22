@@ -13,7 +13,7 @@ from muteria.common.mix import GlobalConstants
 this_dir = os.path.dirname(os.path.abspath(__file__))
 
 devtestlist = ['test_lib.sh']
-def dev_test_runner(test_name, repo_root_dir, exe_path_map, env_vars):
+def dev_test_runner(test_name, repo_root_dir, exe_path_map, env_vars, timeout):
     # TODO: use exe_path_map
 
     if test_name == 'test_lib.sh':
@@ -23,14 +23,9 @@ def dev_test_runner(test_name, repo_root_dir, exe_path_map, env_vars):
 
         try:
             args_list = [test_name]
-            p = subprocess.Popen(['bash']+args_list, env=os.environ, \
-                                             #close_fds=True, \
-                                            stderr=subprocess.PIPE,\
-                                            stdout=subprocess.PIPE)
-            #stdout, stderr = p.communicate()
-            #stdout = stdout.decode('UTF-8').splitlines()
-            #stderr = stderr.decode('UTF-8').splitlines()
-            retcode = p.wait()
+            retcode, _, _ = DriversUtils.execute_and_get_retcode_out_err(\
+                                    prog='bash', args_list=args_list, \
+                                timeout=timeout, out_on=False, err_on=False)
         except:
             # ERROR
             return GlobalConstants.TEST_EXECUTION_ERROR
@@ -66,28 +61,26 @@ def build_func(repo_root_dir, exe_rel_paths, compiler, flags_list, clean, reconf
 
         if reconfigure:
             args_list = ['clean']
-            p = subprocess.Popen(['make']+args_list, env=tmp_env, \
-                                                    stderr=subprocess.PIPE,\
-                                                    stdout=subprocess.PIPE)
-            retcode = p.wait()
+            retcode, _, _ = DriversUtils.execute_and_get_retcode_out_err(\
+                                    prog='make', args_list=args_list, \
+                                    env=tmp_env, out_on=False, err_on=False)
             if retcode != 0:
                 print_err(p, "reconfigure failed")
                 os.chdir(cwd)
                 return GlobalConstants.COMMAND_FAILURE 
         if clean:
             args_list = ['clean']
-            p = subprocess.Popen(['make']+args_list, env=tmp_env, \
-                                                    stderr=subprocess.PIPE,\
-                                                    stdout=subprocess.PIPE)
-            retcode = p.wait()
+            retcode, _, _ = DriversUtils.execute_and_get_retcode_out_err(\
+                                    prog='make', args_list=args_list, \
+                                    env=tmp_env, out_on=False, err_on=False)
             if retcode != 0:
                 print_err(p, "clean failed")
                 os.chdir(cwd)
                 return GlobalConstants.COMMAND_FAILURE 
         
-        p = subprocess.Popen(['make'], env=tmp_env, stderr=subprocess.PIPE,\
-                                                    stdout=subprocess.PIPE)
-        retcode = p.wait()
+        retcode, _, _ = DriversUtils.execute_and_get_retcode_out_err(\
+                                    prog='make', env=tmp_env, out_on=False, \
+                                                                err_on=False)
         if retcode != 0:
             print_err(p, "clean failed")
             os.chdir(cwd)

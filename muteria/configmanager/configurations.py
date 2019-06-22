@@ -159,6 +159,8 @@ class CompleteConfiguration(object):
     #   <test_name: str>
     #   <repos directory rootdir: str>
     #   <Executable relative path map: dict>
+    #   <env_vars: map>
+    #   <timeout: int>
     # and run with the executable as in repository
     # The function return:
     #   0 on passing test
@@ -383,12 +385,12 @@ class TestcaseToolsConfig(BaseToolConfig):
     TESTS_ORACLE_OTHER_EXECUTABLE = None
 
     TEST_GENERATION_TIMEOUT = 7200.0 # in seconds
-    ONE_TEST_EXECUTION_TIMEOUT = 900.0 # in seconds (Handle inifnite loops)
+    ONE_TEST_EXECUTION_TIMEOUT = 60.0 # in seconds (Handle inifnite loops)
 #~class TestcaseToolsConfig
     
 class CriteriaToolsConfig(BaseToolConfig):
-    SEPARATED_TEST_EXECUTION_EXTRA_TIMEOUT = 60.0 # in seconds
-    META_TEST_EXECUTION_EXTRA_TIMEOUT = 600.0 # in seconds
+    SEPARATED_TEST_EXECUTION_EXTRA_TIMEOUT = 0.5 # proportion
+    META_TEST_EXECUTION_EXTRA_TIMEOUT = 10.0 # proportion
 #~class CriteriaToolsConfig
 
 

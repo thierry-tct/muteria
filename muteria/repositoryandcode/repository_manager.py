@@ -139,7 +139,7 @@ class RepositoryManager(object):
     #~ def _set_callback_basics()
 
     def run_dev_test(self, dev_test_name, exe_path_map=None, env_vars=None,\
-                                                        callback_object=None):
+                                        timeout=None, callback_object=None):
         if self.dev_test_runner_func is None:
             ERROR_HANDLER.error_exit(\
                     "dev_test_runner_func cannot be none when called", \
@@ -158,7 +158,7 @@ class RepositoryManager(object):
             if pre_ret == common_mix.GlobalConstants.COMMAND_SUCCESS:
                 ret = self.dev_test_runner_func(dev_test_name, \
                                             self.repository_rootdir, \
-                                            exe_path_map, env_vars)
+                                            exe_path_map, env_vars, timeout)
                                             #self.repo_executables_relpaths)
                 if callback_object is not None:
                     callback_object.set_op_retval(ret)

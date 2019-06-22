@@ -80,6 +80,7 @@ class CustomTestcases(BaseTestcaseTool):
         pre,verdict,post = rep_mgr.run_dev_test(dev_test_name=testcase, \
                                             exe_path_map=exe_path_map, \
                                             env_vars=env_vars, \
+                            timeout=self.config.ONE_TEST_EXECUTION_TIMEOUT, \
                                             callback_object=callback_object)
         ERROR_HANDLER.assert_true(\
                             pre == common_mix.GlobalConstants.COMMAND_SUCCESS,\

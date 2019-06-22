@@ -13,7 +13,7 @@ from muteria.common.mix import GlobalConstants
 this_dir = os.path.dirname(os.path.abspath(__file__))
 
 devtestlist = ['test_lib.py']
-def dev_test_runner(test_name, repo_root_dir, exe_path_map, env_vars):
+def dev_test_runner(test_name, repo_root_dir, exe_path_map, env_vars, timeout):
     # TODO: use exe_path_map
 
     def parse_test(s):
@@ -26,14 +26,10 @@ def dev_test_runner(test_name, repo_root_dir, exe_path_map, env_vars):
 
         try:
             args_list = ['-m', 'unittest', test_name, '-v']
-            p = subprocess.Popen([sys.executable]+args_list, env=os.environ, \
-                                             #close_fds=True, \
-                                            stderr=subprocess.PIPE,\
-                                            stdout=subprocess.PIPE)
-            stdout, stderr = p.communicate()
-            stdout = stdout.decode('UTF-8').splitlines()
-            stderr = stderr.decode('UTF-8').splitlines()
-            retcode = p.wait()
+            retcode, _, stderr = DriversUtils.execute_and_get_retcode_out_err(\
+                                    prog=sys.executable, args_list=args_list, \
+                                    timeout=timeout, out_on=False)
+            stderr = stderr.splitlines()
         except:
             # ERROR
             os.chdir(cwd)

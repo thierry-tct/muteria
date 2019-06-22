@@ -174,15 +174,13 @@ class CriteriaToolGCov(BaseCriteriaTool):
             os.chdir(self.gc_files_dir)
 
             # collect gcda (gcno)
-            p = subprocess.Popen([prog]+args_list, env=os.environ, \
-                                            close_fds=True, \
-                                            stderr=subprocess.DEVNULL,\
-                                            stdout=subprocess.DEVNULL)
-            retcode = p.wait()
-            
+            r, _, _ = DriversUtils.execute_and_get_retcode_out_err(prog=prog, \
+                                        args_list=args_list, out_on=False, \
+                                                                err_on=False)
+
             os.chdir(cwd)
             
-            if retcode != 0:
+            if r != 0:
                 ERROR_HANDLER.error_exit("Program {} {}.".format(prog,\
                         'error collecting coverage is problematic'), __file__)
             

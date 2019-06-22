@@ -181,14 +181,28 @@ class DriversUtils(object):
     #~ def check_tool()
 
     @classmethod
-    def execute_and_get_retcode_out_err(cls, prog, args_list=[]):
-        p = subprocess.Popen([prog]+args_list, env=os.environ, \
+    def execute_and_get_retcode_out_err(cls, prog, args_list=[], \
+                                                env=None, timeout=None, \
+                            out_on=True, err_on=True, merge_out_err_on=True):
+        tmp_env = os.environ if env is None else env
+        out = subprocess.PIPE if out_on else subprocess.DEVNULL
+        if err_on:
+            err = subprocess.STDOUT if merge_out_err_on else subprocess.PIPE
+        else:
+            err = subprocess.DEVNULL
+        p = subprocess.Popen([prog]+args_list, env=tmp_env, \
                                             #close_fds=True, \
-                                        stderr=subprocess.PIPE,\
-                                        stdout=subprocess.PIPE)
-        stdout, stderr = p.communicate()
-        stdout = stdout.decode('UTF-8')
-        stderr = stderr.decode('UTF-8')
+                                        stderr=out,\
+                                        stdout=err)
+        try:
+            stdout, stderr = p.communicate(timeout=timeout)
+        except subprocess.TimeoutExpired:
+            p.kill() # TODO: Chose the signal to send
+            stdout, stderr = p.communicate()
+        if stdout is not None:
+            stdout = stdout.decode('UTF-8')
+        if stderr is not None:
+            stderr = stderr.decode('UTF-8')
         retcode = p.wait()
         return retcode, stdout, stderr
     #~ def execute_and_get_retcode_out_err()
