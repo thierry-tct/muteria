@@ -84,15 +84,24 @@ class FromC(ccs.BaseCodeFormatConverter):
             # EX: {x.c: /path/to/main} passed to have /path/to/main.bc
             # generated
 
+            spec_compiler = kwargs['compiler'] if 'compiler' in kwargs \
+                                                                    else None
+            # special kwargs
+            spec_llvm_compiler_path = None 
+            if 'llvm_compiler_path' in kwargs:
+                spec_llvm_compiler_path = kwargs['llvm_compiler_path']
+                del kwargs['llvm_compiler_path']
+
+            if spec_compiler is not None:
+                bak_llvm_compiler = os.environ['LLVM_COMPILER']
+                os.environ['LLVM_COMPILER'] = spec_compiler
+            if spec_llvm_compiler_path is not None:
+                bak_llvm_compiler_path = os.environ['LLVM_COMPILER_PATH']
+                os.environ['LLVM_COMPILER_PATH'] = spec_llvm_compiler_path
+
             #1. Ensure wllvm is installed (For now use default llvm compiler)
             has_wllvm = DriversUtils.check_tool('wllvm', ['--version'])
             ERROR_HANDLER.assert_true(has_wllvm, 'wllvm not found', __file__)
-
-            spec_compiler = kwargs['compiler'] if 'compiler' in kwargs \
-                                                                    else None
-            bak_llvm_compiler = os.environ['LLVM_COMPILER']
-            if spec_compiler is not None:
-                os.environ['LLVM_COMPILER'] = spec_compiler
 
             # tmp['LLVM_COMPILER_PATH'] = ...
             kwargs['compiler'] = 'wllvm'
@@ -101,6 +110,11 @@ class FromC(ccs.BaseCodeFormatConverter):
 
             # Normal build followed by executable copying
             pre_ret, ret, post_ret = repository_manager.build_code(**kwargs)
+            ERROR_HANDLER.assert_true(\
+                    ret != common_mix.GlobalConstants.COMMAND_FAILURE and\
+                    pre_ret != common_mix.GlobalConstants.COMMAND_FAILURE and\
+                    post_ret != common_mix.GlobalConstants.COMMAND_FAILURE,\
+                                        "Build LLVM bitcode failed!", __file__)
 
             # extract bitcode from copied executables and remove non bitcode
             if file_src_dest_map is not None:
@@ -108,12 +122,14 @@ class FromC(ccs.BaseCodeFormatConverter):
                     ret, out, err = \
                             DriversUtils.execute_and_get_retcode_out_err( \
                                                         "extract-bc", [dest])
-                    ERROR_HANDLER.assert_true(ret != 0, 'extract-bc failed.'+\
-                                        "\nOUT: "+out+"\nERR: "+err, __file__)
+                    ERROR_HANDLER.assert_true(ret == 0, 'extract-bc failed.'+\
+                                    "\n# OUT: "+out+"\n# ERR: "+err, __file__)
                     os.remove(dest)
 
             if spec_compiler is not None:
                 os.environ['LLVM_COMPILER'] = bak_llvm_compiler
+            if spec_llvm_compiler_path is not None:
+                os.environ['LLVM_COMPILER_PATH'] = bak_llvm_compiler_path
 
             # Clean build
             kwargs['compiler'] = None

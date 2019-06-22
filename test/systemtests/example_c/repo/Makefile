@@ -1,5 +1,5 @@
 # Define the symbols we might want to change:
-CC	:= gcc
+CC	?= gcc
 CFLAGS += -g
 
 OBJECTS	:= main.o lib/lib.o

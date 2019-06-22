@@ -23,7 +23,7 @@ def dev_test_runner(test_name, repo_root_dir, exe_path_map, env_vars):
 
         try:
             args_list = [test_name]
-            p = subprocess.Popen(['bash']+args_list, \
+            p = subprocess.Popen(['bash']+args_list, env=os.environ, \
                                              #close_fds=True, \
                                             stderr=subprocess.PIPE,\
                                             stdout=subprocess.PIPE)
@@ -122,7 +122,19 @@ ENABLED_CRITERIA = [
         TestCriteria.STATEMENT_COVERAGE, 
         TestCriteria.BRANCH_COVERAGE,
         TestCriteria.FUNCTION_COVERAGE,
+        TestCriteria.WEAK_MUTATION,
+        TestCriteria.MUTANT_COVERAGE,
+        TestCriteria.STRONG_MUTATION,
 ]
 
 gnucov = CriteriaToolsConfig(tooltype=CriteriaToolType.USE_ONLY_CODE, toolname='gcov', config_id=0)
-CRITERIA_TOOLS_CONFIGS_BY_CRITERIA = {crit: [gnucov] for crit in ENABLED_CRITERIA} 
+mart = CriteriaToolsConfig(tooltype=CriteriaToolType.USE_ONLY_CODE, toolname='mart', config_id=0)
+CRITERIA_TOOLS_CONFIGS_BY_CRITERIA = {}
+CRITERIA_TOOLS_CONFIGS_BY_CRITERIA[TestCriteria.STATEMENT_COVERAGE] = [gnucov] 
+CRITERIA_TOOLS_CONFIGS_BY_CRITERIA[TestCriteria.BRANCH_COVERAGE] = [gnucov]
+CRITERIA_TOOLS_CONFIGS_BY_CRITERIA[TestCriteria.FUNCTION_COVERAGE] = [gnucov] 
+CRITERIA_TOOLS_CONFIGS_BY_CRITERIA[TestCriteria.WEAK_MUTATION] = [mart] 
+CRITERIA_TOOLS_CONFIGS_BY_CRITERIA[TestCriteria.MUTANT_COVERAGE] = [mart] 
+CRITERIA_TOOLS_CONFIGS_BY_CRITERIA[TestCriteria.STRONG_MUTATION] = [mart] 
+
+LOG_DEBUG = False #True

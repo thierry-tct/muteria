@@ -44,6 +44,9 @@ RE_EXECUTE_FROM_CHECKPOINT_META_TASKS = [] # Make interaction easy
 # Output dir pathname (Mandatory)
 OUTPUT_ROOT_DIR = None
 
+# Enable logging debug data
+LOG_DEBUG = False
+
 #######################################################
 #######             Reporting Parameters         ######
 #######################################################

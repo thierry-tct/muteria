@@ -34,7 +34,7 @@ def setup(logfile=None, logconsole=False, file_level=logging.INFO,
 
     # create logger 
     logger = logging.getLogger(root_name)
-    #logger.setLevel(logging.DEBUG)
+    logger.setLevel(min(file_level, console_level))
 
     # create formatter and add it to the handlers
     formatter = logging.Formatter(\

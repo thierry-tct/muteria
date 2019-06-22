@@ -104,6 +104,9 @@ class CompleteConfiguration(object):
     # Output dir pathname (Mandatory)
     OUTPUT_ROOT_DIR = None
 
+    # Enable logging debug data
+    LOG_DEBUG = False
+
     #######################################################
     #######             Reporting Parameters         ######
     #######################################################
@@ -421,7 +424,7 @@ def get_full_rawconf_template():
     ERROR_HANDLER.assert_true(not active, \
                     "did not find end of configuration class", __file__)
     return row_list
-#~ def get_full_rawconf-template()
+#~ def get_full_rawconf_template()
 
 def save_common_default_template(filename=None):
     """ Write the default raw configuration template
@@ -464,3 +467,6 @@ def save_common_default_template(filename=None):
         for row in row_list:
             f.write(row+'\n')
 #~ def save_default_rawconf_template_as()
+
+if __name__ == '__main__':
+    save_common_default_template()

@@ -26,7 +26,7 @@ def dev_test_runner(test_name, repo_root_dir, exe_path_map, env_vars):
 
         try:
             args_list = ['-m', 'unittest', test_name, '-v']
-            p = subprocess.Popen([sys.executable]+args_list, \
+            p = subprocess.Popen([sys.executable]+args_list, env=os.environ, \
                                              #close_fds=True, \
                                             stderr=subprocess.PIPE,\
                                             stdout=subprocess.PIPE)

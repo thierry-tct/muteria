@@ -429,9 +429,10 @@ class MetaCriteriaTool(object):
                 key2nonkeydict = tool_matrix.to_pandas_df().\
                         set_index(tool_matrix.get_key_colname(), drop=True).\
                                                 to_dict(orient="index")
+                
                 for c_key in key2nonkeydict:
-                    meta_c_key = \
-                            DriversUtils.make_meta_element(c_key, mtoolalias)
+                    meta_c_key = DriversUtils.make_meta_element(\
+                                                        str(c_key), mtoolalias)
                     result_matrix.add_row_by_key(meta_c_key, 
                                                         key2nonkeydict[c_key], 
                                                         serialize=False)

@@ -269,7 +269,7 @@ class BaseTestcaseTool(abc.ABC):
             try:
                 if self.env_vars_store is not None:
                     ERROR_HANDLER.error_exit(\
-                                "Bug: env_var set again without restore", __file__)
+                            "Bug: env_var set again without restore", __file__)
             except AttributeError:
                 pass
             self.env_vars_store = os.environ.copy()

@@ -119,7 +119,15 @@ class Executor(object):
         self._initialize_output_structure(cleanstart=\
                                 self.config.EXECUTION_CLEANSTART.get_val())
         if not logging_setup.is_setup():
-            logging_setup.setup(logfile=self.head_explorer.get_file_pathname(\
+            if self.config.LOG_DEBUG.get_val():
+                logging_setup.setup(file_level=logging.DEBUG, \
+                            console_level=logging.DEBUG, \
+                            logfile=self.head_explorer.get_file_pathname(\
+                                                outdir_struct.MAIN_LOG_FILE))
+                logging.debug("Logging Debug Level")
+            else:
+                logging_setup.setup(\
+                            logfile=self.head_explorer.get_file_pathname(\
                                                 outdir_struct.MAIN_LOG_FILE))
         # Create repo manager
         # XXX The repo manager automatically revert any previous problem

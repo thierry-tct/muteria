@@ -174,7 +174,8 @@ class CriteriaToolGCov(BaseCriteriaTool):
             os.chdir(self.gc_files_dir)
 
             # collect gcda (gcno)
-            p = subprocess.Popen([prog]+args_list, close_fds=True, \
+            p = subprocess.Popen([prog]+args_list, env=os.environ, \
+                                            close_fds=True, \
                                             stderr=subprocess.DEVNULL,\
                                             stdout=subprocess.DEVNULL)
             retcode = p.wait()

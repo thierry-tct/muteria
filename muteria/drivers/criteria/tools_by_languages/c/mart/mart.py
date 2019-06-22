@@ -93,9 +93,12 @@ class CriteriaToolMart(BaseCriteriaTool):
         crit_to_exes_map = {}
         obj = common_fs.loadJSON(self.instrumentation_details)
         #exes = [p for _, p in list(obj.items())]
-        exes = obj
+        for c, c_exes in list(obj.items()):
+            for k in c_exes:
+                c_exes[k] = os.path.join(self.mart_out, c_exes[k])
+
         for criterion in enabled_criteria:
-            crit_to_exes_map[criterion] = exes[criterion.get_str()]
+            crit_to_exes_map[criterion] = obj[criterion.get_str()]
         return crit_to_exes_map
     #~ def get_instrumented_executable_paths_map()
 
@@ -137,7 +140,7 @@ class CriteriaToolMart(BaseCriteriaTool):
             r_file = list(tmp.keys())[0]
             filename = os.path.splitext(os.path.basename(tmp[r_file]))[0]
             self.single_exe_filename = {r_file: filename}
-            return self.single_exe_filename
+            return self.single_exe_filename.copy()
     #~ def _get_single_exe_filename()
 
     def _get_criterion_element_executable_path(self, criterion, element_id):
@@ -145,10 +148,11 @@ class CriteriaToolMart(BaseCriteriaTool):
         ERROR_HANDLER.assert_true(self.get_criterion_info_object(criterion).\
                                             has_element(element_id),\
                         "Inexistant mutant id: "+element_id, __file__)
-        mut_code = os.path.join(self.separate_muts_dir, element_id, \
-                                    self._get_single_exe_filename(criterion))
+        
+        mut_code = {k:os.path.join(self.separate_muts_dir, element_id, v) for \
+                    k,v in self._get_single_exe_filename(criterion).items()}
         return mut_code
-    #~ def _get_criterion_element_executable_path
+    #~ def _get_criterion_element_executable_path()
 
     def _get_criterion_element_environment_vars(self, criterion, element_id):
         '''
@@ -195,8 +199,8 @@ class CriteriaToolMart(BaseCriteriaTool):
                             "SM metamutant run not yet supported", __file__)
 
         def extract_covered(filename, criterion):
-            mutant_id_list = \
-                        self.get_criterion_info_object(criterion).get_elements_list()
+            mutant_id_list = self.get_criterion_info_object(criterion).\
+                                                            get_elements_list()
             cov_res = {
                     m: common_mix.GlobalConstants.ELEMENT_NOTCOVERED_VERDICT\
                                                     for m in mutant_id_list}
@@ -210,12 +214,12 @@ class CriteriaToolMart(BaseCriteriaTool):
 
         res = {}
         if TestCriteria.WEAK_MUTATION in enabled_criteria:
-            res[TestCriteria.WEAK_MUTATION] = \
-                            extract_covered(self.wm_res_log_file, \
+            res[TestCriteria.WEAK_MUTATION] = extract_covered(\
+                        os.path.join(result_dir_tmp, self.wm_res_log_file), \
                                                     TestCriteria.WEAK_MUTATION)
         if TestCriteria.MUTANT_COVERAGE in enabled_criteria:
-            res[TestCriteria.MUTANT_COVERAGE] = \
-                            extract_covered(self.mcov_res_log_file, \
+            res[TestCriteria.MUTANT_COVERAGE] = extract_covered(\
+                        os.path.join(result_dir_tmp, self.mcov_res_log_file), \
                                                 TestCriteria.MUTANT_COVERAGE)
 
         return res
@@ -232,6 +236,21 @@ class CriteriaToolMart(BaseCriteriaTool):
             shutil.rmtree(self.mutant_data)
         os.mkdir(self.mutant_data)
 
+        prog = 'mart'
+
+        # get llvm compiler path
+        ret, out, err = DriversUtils.execute_and_get_retcode_out_err(\
+                                                        prog, ['--version'])
+        llvm_compiler_path = None
+        for line in out.splitlines():
+            line = line.strip()
+            if line.startswith('LLVM tools dir:'):
+                llvm_compiler_path = line.split()[3]#[1:-1]
+                break
+        
+        ERROR_HANDLER.assert_true(llvm_compiler_path is not None, \
+                                'Problem getting llvm path for mart', __file__)
+
         # Build into LLVM
         rel_path_map = {}
         exes, _ = code_builds_factory.repository_manager.\
@@ -245,7 +264,7 @@ class CriteriaToolMart(BaseCriteriaTool):
                         src_dest_files_paths_map=rel_path_map,\
                         compiler='clang', flags_list=['-g'], clean_tmp=True, \
                         reconfigure=True, \
-                        callback_object=None)
+                        llvm_compiler_path=llvm_compiler_path)
         if ret == common_mix.GlobalConstants.TEST_EXECUTION_ERROR:
             ERROR_HANDLER.error_exit("Program {}.".format(\
                                 'LLVM (clang) built problematic'), __file__)
@@ -264,8 +283,6 @@ class CriteriaToolMart(BaseCriteriaTool):
         bitcode_file = rel2bitcode[list(rel2bitcode.keys())[0]]
 
         # mart params
-        prog = 'mart'
-
         bool_param, k_v_params = self._get_default_params()
         if TestCriteria.STRONG_MUTATION in enabled_criteria:
             bool_param['-write-mutants'] = True
@@ -297,16 +314,13 @@ class CriteriaToolMart(BaseCriteriaTool):
             exe_file = os.path.basename(v)
             if TestCriteria.WEAK_MUTATION in enabled_criteria:
                 crit_str = TestCriteria.WEAK_MUTATION.get_str()
-                store_obj[crit_str][k] = \
-                                os.path.join(self.mart_out, exe_file+'.WM')
+                store_obj[crit_str][k] = exe_file+'.WM'
             if TestCriteria.MUTANT_COVERAGE in enabled_criteria:
                 crit_str = TestCriteria.MUTANT_COVERAGE.get_str()
-                store_obj[crit_str][k] = \
-                                os.path.join(self.mart_out, exe_file+'.COV')
+                store_obj[crit_str][k] = exe_file+'.COV'
             if TestCriteria.STRONG_MUTATION in enabled_criteria:
                 crit_str = TestCriteria.STRONG_MUTATION.get_str()
-                store_obj[crit_str][k] = \
-                                os.path.join(self.mart_out, exe_file+'.MetaMu')
+                store_obj[crit_str][k] = exe_file+'.MetaMu'
         common_fs.dumpJSON(store_obj, self.instrumentation_details)
 
     #~ def _do_instrument_code()

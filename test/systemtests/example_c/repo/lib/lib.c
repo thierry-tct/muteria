@@ -1,5 +1,13 @@
 #include "lib.h"
 
+#ifdef JUST_CHECK_CRASH
+
+int compute(int a, int b){return a+b;}
+int get_even_total(int a, int b){return a+b;}
+int get_odd_total(int a, int b){return a+b;}
+
+#else
+
 int compute(int a, int b){
     int oddtotal = get_odd_total(a,b);
     int eventotal = get_even_total(a,b);
@@ -26,3 +34,5 @@ int get_odd_total(int a, int b){
         t += b;
     return t;
 }
+
+#endif

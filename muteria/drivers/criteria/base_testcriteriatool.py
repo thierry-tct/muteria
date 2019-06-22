@@ -203,9 +203,9 @@ class BaseCriteriaTool(abc.ABC):
 
         # @Checkpoint: validate
         if checkpoint_handler is not None:
-            ERROR_HANDLER.error_exit(cp_calling_func_name is not None)
-            ERROR_HANDLER.error_exit(cp_calling_done_task_id is not None)
-            ERROR_HANDLER.error_exit(cp_calling_tool is not None)
+            ERROR_HANDLER.assert_true(cp_calling_func_name is not None)
+            ERROR_HANDLER.assert_true(cp_calling_done_task_id is not None)
+            ERROR_HANDLER.assert_true(cp_calling_tool is not None)
             cp_data = checkpoint_handler.get_optional_payload()
             if cp_data is None:
                 cp_data = {}
@@ -214,14 +214,11 @@ class BaseCriteriaTool(abc.ABC):
 
         failverdict_to_val_map = {
                     common_mix.GlobalConstants.FAIL_TEST_VERDICT: \
-                                            common_matrices.ExecutionMatrix()\
-                                                    .getActiveCellDefaultVal(),
+                                                matrix.getActiveCellDefaultVal(),
                     common_mix.GlobalConstants.PASS_TEST_VERDICT: \
-                                            common_matrices.ExecutionMatrix()\
-                                                        .getInactiveCellVal(), 
+                                                matrix.getInactiveCellVal(), 
                     common_mix.GlobalConstants.UNCERTAIN_TEST_VERDICT: \
-                                            common_matrices.ExecutionMatrix()\
-                                                .getUncertainCellDefaultVal()
+                                            matrix.getUncertainCellDefaultVal()
         }
 
         assert serialize_period >= 1, \
@@ -230,11 +227,19 @@ class BaseCriteriaTool(abc.ABC):
         # matrix based checkpoint
         completed_elems = set(cp_data)
 
+        if criteria_element_list is None:
+            criteria_element_list = self.get_criterion_info_object(criterion).\
+                                                            get_elements_list()
+
         # main loop for elements execution
+        num_elems = len(criteria_element_list)
         for pos, element in enumerate(criteria_element_list):
             # @Checkpointing: check if already executed
             if element in completed_elems:
                 continue
+
+            logging.debug("# Executing {} element {}/{} ...".format(
+                                        criterion.get_str(), pos, num_elems))
 
             # execute element with the given testcases
             element_executable_path = \
@@ -253,7 +258,7 @@ class BaseCriteriaTool(abc.ABC):
             
             fail_verdicts = self.meta_test_generation_obj.runtests( \
                                 may_cov_tests, \
-                                exe_path=element_executable_path, \
+                                exe_path_map=element_executable_path, \
                                 env_vars=execution_environment_vars, \
                                 stop_on_failure=cover_criteria_elements_once, \
                                 restart_checkpointer=True)
@@ -281,9 +286,6 @@ class BaseCriteriaTool(abc.ABC):
                                             opt_payload=cp_data)
 
         # Write the execution data into the matrix
-        matrix = common_matrices.ExecutionMatrix(
-                                filename=matrix, \
-                                non_key_col_list=testcases)
         for matrix_row_key, matrix_row_values in list(cp_data.items()):
             matrix.add_row_by_key(matrix_row_key, \
                                         matrix_row_values, \
@@ -364,6 +366,8 @@ class BaseCriteriaTool(abc.ABC):
             m_crit2pm, s_crit2pm = self._extract_sub_dicts( \
                                             prioritization_module_by_criteria,\
                                                 [meta_crits, separated_crits])
+        else:
+            s_crit2pm = {c: None for c in separated_crits}
 
         # runtest with the meta files
         if len(m_crit2mat) > 0 and \
@@ -387,7 +391,7 @@ class BaseCriteriaTool(abc.ABC):
         # runtest with the separate files
         for criterion in s_crit2mat.keys():
             if checkpoint_handler.is_to_execute(func_name=cp_func_name, \
-                                            taskid=cp_task_id, tool=criterion):
+                                taskid=cp_task_id, tool=criterion.get_str()):
                 self._runtest_separate_criterion_program(criterion, \
                                 testcases=testcases, \
                                 matrix=s_crit2mat[criterion], \
@@ -399,11 +403,11 @@ class BaseCriteriaTool(abc.ABC):
                                 checkpoint_handler=checkpoint_handler, \
                                 cp_calling_func_name=cp_func_name, \
                                 cp_calling_done_task_id=(cp_task_id - 1), \
-                                cp_calling_tool=criterion)
+                                cp_calling_tool=criterion.get_str())
 
                 # @Checkpoint: checkpoint
                 checkpoint_handler.do_checkpoint(func_name=cp_func_name, \
-                                            taskid=cp_task_id, tool=criterion)
+                                taskid=cp_task_id, tool=criterion.get_str())
 
         # @Checkpoint: Finished (for time)
         checkpoint_handler.set_finished(None)

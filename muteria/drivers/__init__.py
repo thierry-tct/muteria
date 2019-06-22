@@ -163,7 +163,7 @@ class DriversUtils(object):
     @classmethod
     def check_tool(cls, prog, args_list=[], expected_exit_codes=[0]):
         try:
-            p = subprocess.Popen([prog]+args_list, \
+            p = subprocess.Popen([prog]+args_list, env=os.environ, \
                                              #close_fds=True, \
                                             stderr=subprocess.DEVNULL,\
                                             stdout=subprocess.DEVNULL)
@@ -182,7 +182,7 @@ class DriversUtils(object):
 
     @classmethod
     def execute_and_get_retcode_out_err(cls, prog, args_list=[]):
-        p = subprocess.Popen([prog]+args_list, \
+        p = subprocess.Popen([prog]+args_list, env=os.environ, \
                                             #close_fds=True, \
                                         stderr=subprocess.PIPE,\
                                         stdout=subprocess.PIPE)
