@@ -30,6 +30,7 @@ class StatsComputer(object):
     def compute_stats(config, explorer):
         # get the matrix of each test criterion
         coverages = {}
+        total_to = {}
         for c in config.ENABLED_CRITERIA.get_val():
             if explorer.file_exists(fd_structure.CRITERIA_MATRIX[c]):
                 mat_file = explorer.get_existing_file_pathname(\
@@ -39,13 +40,14 @@ class StatsComputer(object):
                 cov = len([k for k,v in row2collist.items() if len(v) > 0])
                 tot = len(row2collist)
                 coverages[c.get_str()] = '{:.2f}'.format(cov * 100.0 / tot)
+                total_to[c.get_str()] = tot
         
         template_file = os.path.join(os.path.dirname(\
                             os.path.abspath(__file__)), 'summary_report.html')
         report_file = explorer.get_file_pathname(\
                                             fd_structure.STATS_MAIN_FILE_HTML)
         rendered = Template(open(template_file).read()).render( \
-                                                    {'coverages':coverages})
+                                {'coverages':coverages, 'total_to':total_to})
         with open(report_file, 'w') as f:
             f.write(rendered)
         print(coverages)

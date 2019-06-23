@@ -28,6 +28,7 @@
 
 <center>
     <h1>Muteria</h1>
+    <h2><em>Summary Report</em></h2>
 </center>
 
 <main class="grid">
@@ -37,7 +38,9 @@
       <center>
           <h5> {{ crit }} </h5>
           <h2>{{ coverages[crit] }}%</h2>
+          <hr>
       </center>
+      <p><i># Test Objectives:</i> {{ total_to[crit] }} </p>
     </div>
   </article>
   {% endfor %}

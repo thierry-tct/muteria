@@ -214,6 +214,10 @@ class CriteriaToolGCov(BaseCriteriaTool):
         if TestCriteria.STATEMENT_COVERAGE in enabled_criteria:
             statement_cov = res[TestCriteria.STATEMENT_COVERAGE]
 
+        # Sources of interest
+        _, src_map = self.code_builds_factory.repository_manager.\
+                                                    get_relative_exe_path_map()
+
         for gcov_file in gcov_list:
             with open(gcov_file) as fp:
                 last_line = None
@@ -226,6 +230,9 @@ class CriteriaToolGCov(BaseCriteriaTool):
                         # preamble
                         if col_split[2] == "Source":
                             src_file = col_split[3]
+                            if src_file not in src_map:
+                                # src not in considered
+                                break
                     elif line.startswith("function "):
                         # match function
                         parts = line.split()
