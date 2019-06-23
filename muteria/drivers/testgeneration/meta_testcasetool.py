@@ -225,7 +225,8 @@ class MetaTestcaseTool(object):
         return {v:None for v in ex}
     #~ def _get_default_exe_path_map()
 
-    def execute_testcase (self, meta_testcase, exe_path_map, env_vars):
+    def execute_testcase (self, meta_testcase, exe_path_map, env_vars, \
+                                                                timeout=None):
         '''
         Execute a test case with the given executable and 
         say whether it failed
@@ -249,11 +250,13 @@ class MetaTestcaseTool(object):
                             "Test tool {} not registered".format(ttoolalias), \
                                                                     __file__)
         ttool = self.testcases_configured_tools[ttoolalias][self.TOOL_OBJ_KEY]
-        return ttool.execute_testcase(testcase, exe_path_map, env_vars)
+        return ttool.execute_testcase(testcase, exe_path_map, env_vars, \
+                                                            timeout=timeout)
     #~ def execute_testcase()
 
     def runtests(self, meta_testcases=None, exe_path_map=None, env_vars=None, \
                         stop_on_failure=False, \
+                        per_test_timeout=None, \
                         fault_test_execution_matrix_file=None, \
                         test_prioritization_module=None, \
                         parallel_test_count=1, \
@@ -374,7 +377,8 @@ class MetaTestcaseTool(object):
             test_failed_verdicts = ttool.runtests( \
                                             testcases_by_tool[ttoolalias], \
                                             exe_path_map, env_vars, \
-                                            stop_on_failure)
+                                            stop_on_failure, \
+                                            per_test_timeout=per_test_timeout)
             for testcase in test_failed_verdicts:
                 meta_testcase =  \
                         DriversUtils.make_meta_element(testcase, ttoolalias)
@@ -466,6 +470,7 @@ class MetaTestcaseTool(object):
     #~ def get_candidate_tools_aliases()
 
     def generate_tests (self, exe_path_map=None, test_tool_type_list=None, \
+                                max_time=None, \
                                 test_generation_guidance_obj=None, \
                                 parallel_testgen_count=1, \
                                 restart_checkpointer=False, \
@@ -548,7 +553,7 @@ class MetaTestcaseTool(object):
                 # Actual Execution
                 ttool = self.testcases_configured_tools[ttoolalias]\
                                                             [self.TOOL_OBJ_KEY]
-                ttool.generate_tests(exe_path_map)
+                ttool.generate_tests(exe_path_map, max_time=max_time)
 
                 # @Checkpoint: Checkpointing
                 checkpoint_handler.do_checkpoint(func_name=cp_func_name, \

@@ -93,15 +93,18 @@ class BaseTestcaseTool(abc.ABC):
         return self.checkpointer is not None
     #~ def has_checkpointer(self)
 
-    def execute_testcase (self, testcase, exe_path_map, env_vars):
-        return self._execute_testcase(testcase, exe_path_map, env_vars)
+    def execute_testcase (self, testcase, exe_path_map, env_vars, timeout=None):
+        return self._execute_testcase(testcase, exe_path_map, env_vars, \
+                                                            timeout=timeout)
     #~ def execute_testcase()
 
     def runtests(self, testcases, exe_path_map, env_vars, \
-                                stop_on_failure=False, parallel_count=1):
+                                stop_on_failure=False, per_test_timeout=None, \
+                                                            parallel_count=1):
         return self._runtests(testcases=testcases, exe_path_map=exe_path_map, \
                                 env_vars=env_vars, \
                                 stop_on_failure=stop_on_failure, \
+                                per_test_timeout=per_test_timeout, \
                                 parallel_count=parallel_count)
     #~ def runtests()
                             
@@ -116,7 +119,8 @@ class BaseTestcaseTool(abc.ABC):
             return res
     #~ class RepoRuntestsCallbackObject
 
-    def _in_repo_execute_testcase(self, testcase, exe_path_map, env_vars):
+    def _in_repo_execute_testcase(self, testcase, exe_path_map, env_vars, \
+                                                                timeout=None):
         callback_func = self._execute_testcase
         cb_obj = self.RepoRuntestsCallbackObject()
         cb_obj.set_post_callback_args((callback_func,
@@ -124,6 +128,7 @@ class BaseTestcaseTool(abc.ABC):
                                             "testcase": testcase,
                                             "exe_path_map": exe_path_map,
                                             "env_vars": env_vars,
+                                            "timeout": timeout,
                                         }))
         repo_mgr = self.code_builds_factory.repository_manager
         _, exec_verdict = repo_mgr.custom_read_access(cb_obj)
@@ -133,17 +138,19 @@ class BaseTestcaseTool(abc.ABC):
     #~ def _in_repo_execute_testcase()
 
     def _in_repo_runtests(self, testcases, exe_path_map, env_vars, \
-                                stop_on_failure=False, parallel_count=1):
+                                stop_on_failure=False, per_test_timeout=None, \
+                                                            parallel_count=1):
         callback_func = self._runtests
         cb_obj = self.RepoRuntestsCallbackObject()
         cb_obj.set_post_callback_args((callback_func,
-                                        {
-                                            "testcases": testcases,
-                                            "exe_path_map": exe_path_map,
-                                            "env_vars": env_vars,
-                                            "stop_on_failure": stop_on_failure,
-                                            "parallel_count": parallel_count,
-                                        }))
+                                    {
+                                        "testcases": testcases,
+                                        "exe_path_map": exe_path_map,
+                                        "env_vars": env_vars,
+                                        "stop_on_failure": stop_on_failure,
+                                        "per_test_timeout": per_test_timeout,
+                                        "parallel_count": parallel_count,
+                                    }))
         repo_mgr = self.code_builds_factory.repository_manager
         _, exec_verdicts = repo_mgr.custom_read_access(cb_obj)
         # revert exes
@@ -151,7 +158,8 @@ class BaseTestcaseTool(abc.ABC):
         return exec_verdicts
     #~ def _in_repo_runtests()
 
-    def _execute_testcase (self, testcase, exe_path_map, env_vars):
+    def _execute_testcase (self, testcase, exe_path_map, env_vars, \
+                                                                timeout=None):
         '''
         Execute a test case with the given executable and 
         say whether it failed
@@ -166,7 +174,8 @@ class BaseTestcaseTool(abc.ABC):
         '''
         self._prepare_executable(exe_path_map, env_vars)
         self._set_env_vars(env_vars)
-        fail_verdict = self._execute_a_test(testcase, exe_path_map,env_vars)
+        fail_verdict = self._execute_a_test(testcase, exe_path_map,env_vars, \
+                                                            timeout=timeout)
         self._restore_env_vars()
         self._restore_default_executable(exe_path_map, env_vars)
 
@@ -174,7 +183,8 @@ class BaseTestcaseTool(abc.ABC):
     #~ def _execute_testcase()
 
     def _runtests(self, testcases, exe_path_map, env_vars, \
-                                stop_on_failure=False, parallel_count=1):
+                                stop_on_failure=False, per_test_timeout=None, \
+                                                            parallel_count=1):
         '''
         Execute the list of test cases with the given executable and 
         say, for each test case, whether it failed.
@@ -218,8 +228,8 @@ class BaseTestcaseTool(abc.ABC):
 
         test_failed_verdicts = {} 
         for testcase in testcases:
-            test_failed = self._execute_a_test( \
-                                            testcase, exe_path_map, env_vars)
+            test_failed = self._execute_a_test(testcase, exe_path_map, \
+                                            env_vars, timeout=per_test_timeout)
             test_failed_verdicts[testcase] = test_failed
             if stop_on_failure and test_failed != \
                                 common_mix.GlobalConstants.PASS_TEST_VERDICT:
@@ -242,7 +252,7 @@ class BaseTestcaseTool(abc.ABC):
     #~ def _runtests()
 
     def generate_tests (self, exe_path_map, parallel_count=1, outputdir=None, \
-                                            code_builds_factory_override=None):
+                            code_builds_factory_override=None, max_time=None):
         '''
         '''
         # @Checkpoint: create a checkpoint handler (for time)
@@ -258,7 +268,8 @@ class BaseTestcaseTool(abc.ABC):
             shutil.rmtree(outputdir)
         os.mkdir(outputdir)
         self._do_generate_tests (exe_path_map, outputdir=outputdir, \
-                            code_builds_factory=code_builds_factory_override)
+                            code_builds_factory=code_builds_factory_override, \
+                                                            max_time=max_time)
 
         # @Checkpoint: Finished (for time)
         checkpoint_handler.set_finished(None)
@@ -327,7 +338,7 @@ class BaseTestcaseTool(abc.ABC):
 
     @abc.abstractmethod
     def _execute_a_test (self, testcase, exe_path_map, env_vars, \
-                                                        callback_object=None):
+                                        callback_object=None, timeout=None):
         """ Execute a test given that the executables have been set 
             properly
         """
@@ -335,7 +346,7 @@ class BaseTestcaseTool(abc.ABC):
 
     @abc.abstractmethod
     def _do_generate_tests (self, exe_path_map, outputdir, \
-                                                        code_builds_factory):
+                                        code_builds_factory, max_time=None):
         print ("!!! Must be implemented in child class !!!")
     #~ def _do_generate_tests()
 #~ class BaseTestcaseTool

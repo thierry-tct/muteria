@@ -7,6 +7,7 @@ from muteria.configmanager.configurations import CriteriaToolsConfig
 from muteria.drivers.testgeneration import TestToolType
 from muteria.drivers.criteria import CriteriaToolType
 from muteria.drivers.criteria import TestCriteria
+from muteria.drivers import DriversUtils
 
 from muteria.common.mix import GlobalConstants
 
@@ -42,52 +43,50 @@ def dev_test_runner(test_name, repo_root_dir, exe_path_map, env_vars, timeout):
 #~ def dev_test_runner()
 
 def build_func(repo_root_dir, exe_rel_paths, compiler, flags_list, clean, reconfigure):
+    def print_err(out, msg):
+        out = out.splitlines()
+        print(out, msg)
+    #~ def print_err()
+
     cwd = os.getcwd()
     os.chdir(repo_root_dir)
-    try:
-        tmp_env = os.environ.copy()
-        if compiler is not None:
-            tmp_env["CC"] = compiler
-        if flags_list is not None:
-            tmp_env["CFLAGS"] = " ".join(flags_list)
-        
-        def print_err(sub_p, msg):
-            stdout, stderr = sub_p.communicate()
-            stdout = stdout.decode('UTF-8').splitlines()
-            stderr = stderr.decode('UTF-8').splitlines()
-            print(stdout)
-            print(stderr)
-        #~ def print_err()
-
-        if reconfigure:
-            args_list = ['clean']
-            retcode, _, _ = DriversUtils.execute_and_get_retcode_out_err(\
-                                    prog='make', args_list=args_list, \
-                                    env=tmp_env, out_on=False, err_on=False)
-            if retcode != 0:
-                print_err(p, "reconfigure failed")
-                os.chdir(cwd)
-                return GlobalConstants.COMMAND_FAILURE 
-        if clean:
-            args_list = ['clean']
-            retcode, _, _ = DriversUtils.execute_and_get_retcode_out_err(\
-                                    prog='make', args_list=args_list, \
-                                    env=tmp_env, out_on=False, err_on=False)
-            if retcode != 0:
-                print_err(p, "clean failed")
-                os.chdir(cwd)
-                return GlobalConstants.COMMAND_FAILURE 
-        
-        retcode, _, _ = DriversUtils.execute_and_get_retcode_out_err(\
-                                    prog='make', env=tmp_env, out_on=False, \
-                                                                err_on=False)
+    
+    #try:
+    tmp_env = os.environ.copy()
+    if compiler is not None:
+        tmp_env["CC"] = compiler
+    if flags_list is not None:
+        tmp_env["CFLAGS"] = " ".join(flags_list)
+    
+    if reconfigure:
+        args_list = ['clean']
+        retcode, out, _ = DriversUtils.execute_and_get_retcode_out_err(\
+                                prog='make', args_list=args_list, \
+                                env=tmp_env, merge_err_to_out=True)
         if retcode != 0:
-            print_err(p, "clean failed")
+            print_err(out, "reconfigure failed")
             os.chdir(cwd)
             return GlobalConstants.COMMAND_FAILURE 
-    except:
+    if clean:
+        args_list = ['clean']
+        retcode, out, _ = DriversUtils.execute_and_get_retcode_out_err(\
+                                prog='make', args_list=args_list, \
+                                env=tmp_env, merge_err_to_out=True)
+        if retcode != 0:
+            print_err(out, "clean failed")
+            os.chdir(cwd)
+            return GlobalConstants.COMMAND_FAILURE 
+    
+    retcode, out, _ = DriversUtils.execute_and_get_retcode_out_err(\
+                        prog='make', env=tmp_env, merge_err_to_out=True)
+    if retcode != 0:
+        print_err(out, "make")
         os.chdir(cwd)
-        return GlobalConstants.COMMAND_FAILURE
+        return GlobalConstants.COMMAND_FAILURE 
+    #except:
+    #    os.chdir(cwd)
+    #    assert False, "Build Unexpected Error in "+__file__
+        #return GlobalConstants.COMMAND_FAILURE
 
     os.chdir(cwd)
     return GlobalConstants.COMMAND_SUCCESS
@@ -107,8 +106,10 @@ CODE_BUILDER_FUNCTION = build_func
 CUSTOM_DEV_TEST_RUNNER_FUNCTION = dev_test_runner
 DEVELOPER_TESTS_LIST = devtestlist
 
+dev_test = TestcaseToolsConfig(tooltype=TestToolType.USE_ONLY_CODE, toolname='custom_devtests', config_id=0)
+dev_test.set_one_test_execution_timeout(2)
 TESTCASE_TOOLS_CONFIGS = [
-        TestcaseToolsConfig(tooltype=TestToolType.USE_ONLY_CODE, toolname='custom_devtests', config_id=0),
+        dev_test,
 ]
 
 ENABLED_CRITERIA = [
@@ -130,4 +131,4 @@ CRITERIA_TOOLS_CONFIGS_BY_CRITERIA[TestCriteria.WEAK_MUTATION] = [mart]
 CRITERIA_TOOLS_CONFIGS_BY_CRITERIA[TestCriteria.MUTANT_COVERAGE] = [mart] 
 CRITERIA_TOOLS_CONFIGS_BY_CRITERIA[TestCriteria.STRONG_MUTATION] = [mart] 
 
-LOG_DEBUG = False #True
+LOG_DEBUG = True

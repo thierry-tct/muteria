@@ -38,20 +38,24 @@ class CustomTestcases(BaseTestcaseTool):
         return tc_info_obj
     #~ def get_testcase_info_object()
 
-    def execute_testcase (self, testcase, exe_path_map, env_vars):
+    def execute_testcase (self, testcase, exe_path_map, env_vars, \
+                                                                timeout=None):
         return self._in_repo_execute_testcase(testcase=testcase, \
                                                 exe_path_map=exe_path_map, \
-                                                env_vars=env_vars)
+                                                env_vars=env_vars, \
+                                                timeout=timeout)
     #~ def execute_testcase()
 
     def runtests(self, testcases, exe_path_map, env_vars, \
-                                    stop_on_failure=False, parallel_count=1):
+                                stop_on_failure=False, per_test_timeout=None, \
+                                                             parallel_count=1):
         """ Override runtests
         """
         return self._in_repo_runtests(testcases=testcases, \
                                         exe_path_map=exe_path_map, \
                                         env_vars=env_vars, \
                                         stop_on_failure=stop_on_failure, \
+                                        per_test_timeout=per_test_timeout, \
                                         parallel_count=parallel_count)
     #~ def runtests()
 
@@ -72,15 +76,17 @@ class CustomTestcases(BaseTestcaseTool):
     #~ def _restore_default_executable()
 
     def _execute_a_test (self, testcase, exe_path_map, env_vars, \
-                                                        callback_object=None):
+                                        callback_object=None, timeout=None):
         """ Execute a test given that the executables have been set 
             properly
         """
+        if timeout is None:
+            timeout = self.config.ONE_TEST_EXECUTION_TIMEOUT
         rep_mgr = self.code_builds_factory.repository_manager
         pre,verdict,post = rep_mgr.run_dev_test(dev_test_name=testcase, \
                                             exe_path_map=exe_path_map, \
                                             env_vars=env_vars, \
-                            timeout=self.config.ONE_TEST_EXECUTION_TIMEOUT, \
+                                            timeout=timeout, \
                                             callback_object=callback_object)
         ERROR_HANDLER.assert_true(\
                             pre == common_mix.GlobalConstants.COMMAND_SUCCESS,\
@@ -92,7 +98,7 @@ class CustomTestcases(BaseTestcaseTool):
     #~ def _execute_a_test()
 
     def _do_generate_tests (self, exe_path_map, outputdir, \
-                                                        code_builds_factory):
+                                        code_builds_factory, max_time=None):
         #tc_inf_obj = self.get_testcase_info_object()
         pass
     #~ def _do_generate_tests()

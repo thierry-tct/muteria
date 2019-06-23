@@ -331,8 +331,10 @@ class RepositoryManager(object):
         try:
             repo = git_repo(self.repository_rootdir)
             gitobj = repo.git
-            for src in self.source_files_list:
-                self._unlocked_revert_repository_file(src, gitobj=gitobj)
+            #for src in self.source_files_list:
+            #    self._unlocked_revert_repository_file(src, gitobj=gitobj)
+            self._unlocked_revert_repository_file(self.source_files_list, \
+                                                                gitobj=gitobj)
         finally:
             self.lock.release()                                
     #~ def revert_src_list_files()

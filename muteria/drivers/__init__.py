@@ -2,6 +2,8 @@ import os
 import logging
 import importlib
 import subprocess
+import signal
+import time
 
 import muteria.common.fs as common_fs
 import muteria.common.mix as common_mix
@@ -183,21 +185,36 @@ class DriversUtils(object):
     @classmethod
     def execute_and_get_retcode_out_err(cls, prog, args_list=[], \
                                                 env=None, timeout=None, \
-                            out_on=True, err_on=True, merge_out_err_on=True):
+                            out_on=True, err_on=True, merge_err_to_out=True):
+        #print(prog, args_list, env is None, timeout, out_on, err_on, merge_err_to_out)
         tmp_env = os.environ if env is None else env
         out = subprocess.PIPE if out_on else subprocess.DEVNULL
         if err_on:
-            err = subprocess.STDOUT if merge_out_err_on else subprocess.PIPE
+            err = subprocess.STDOUT if merge_err_to_out else subprocess.PIPE
         else:
             err = subprocess.DEVNULL
+        # use setsid to kill the process group
         p = subprocess.Popen([prog]+args_list, env=tmp_env, \
-                                            #close_fds=True, \
-                                        stderr=out,\
-                                        stdout=err)
+                                                            #close_fds=True, \
+                                                        stderr=err,\
+                                                        stdout=out, 
+                                                        preexec_fn=os.setsid)
         try:
             stdout, stderr = p.communicate(timeout=timeout)
         except subprocess.TimeoutExpired:
-            p.kill() # TODO: Chose the signal to send
+            #p.terminate() # TODO: Chose the signal to send
+            os.killpg(p.pid, signal.SIGTERM)
+            #p.send_signal(signal.SIGINT) # TODO: Chose the signal to send
+            # give 5 seconds to stop
+            stopped = False
+            for i in range(5):
+                if p.poll() is None:
+                    time.sleep(1)
+                else:
+                    stopped = True
+                    break
+            if not stopped:
+                p.kill() # TODO: Chose the signal to send
             stdout, stderr = p.communicate()
         if stdout is not None:
             stdout = stdout.decode('UTF-8')

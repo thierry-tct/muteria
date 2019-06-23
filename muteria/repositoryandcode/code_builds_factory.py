@@ -41,29 +41,36 @@ class CodeBuildsFactory(object):
         self.workdir = workdir
         self.src_dest_fmt_to_handling_obj = {}
 
+        self.code_conversion_tracker_file = None
         self.stored_files_mapping = None
         self.stored_files_mapping_file = None
         if self.workdir is not None:
+            self.code_conversion_tracker_file = \
+                                    os.path.join(self.workdir, "is_converting")
             self.stored_files_mapping_file = \
                                         os.path.join(self.workdir, "files_map")
             exes, src_obj_map = \
                             self.repository_manager.get_relative_exe_path_map()
             if os.path.isdir(self.workdir):
-                self.stored_files_mapping = \
-                            common_fs.loadJSON(self.stored_files_mapping_file)
+                tmp = common_fs.loadJSON(self.stored_files_mapping_file)
+                self.stored_files_mapping = {k: os.path.join(self.workdir, v) \
+                                                        for k,v in tmp.items()}
             else:
                 os.mkdir(self.workdir)
                 count = 0
                 self.stored_files_mapping = {}
+                tmp = {}
                 for f in exes:
+                    tmp[f] = str(count)
                     self.stored_files_mapping[f] = \
                                         os.path.join(self.workdir, str(count))
                     count += 1
                 for s,o in list(src_obj_map.items()):
+                    tmp[o] = str(count)
                     self.stored_files_mapping[o] = \
                                         os.path.join(self.workdir, str(count))
                     count += 1
-                common_fs.dumpJSON(self.stored_files_mapping, \
+                common_fs.dumpJSON(tmp, \
                                 self.stored_files_mapping_file, pretty=True)
         
         # Initialize 
@@ -107,10 +114,21 @@ class CodeBuildsFactory(object):
         
         # call handler
         handler = self.src_dest_fmt_to_handling_obj[src_fmt][dest_fmt]
+
+        # track code conversion
+        if self.repository_manager.should_build():
+            with open(self.code_conversion_tracker_file, 'w') as f:
+                f.write('converting code...')
+
         pre_ret, ret, post_ret = handler.convert_code(src_fmt, dest_fmt, \
                             src_dest_files_paths_map, \
                             repository_manager=self.repository_manager, \
                             **kwargs)
+
+        # untrack code conversion
+        if self.repository_manager.should_build():
+            os.remove(self.code_conversion_tracker_file)
+
         return pre_ret, ret, post_ret
     #~ def transform_src_into_dest ()
     
@@ -152,6 +170,11 @@ class CodeBuildsFactory(object):
             files_backed = False
             if self.stored_files_mapping is not None and \
                                             len(self.stored_files_mapping) > 0:
+                # rebuild if failed while building
+                if os.path.isfile(self.code_conversion_tracker_file):
+                    for _, savef in self.stored_files_mapping:
+                        os.remove(savef)
+
                 files_backed = os.path.isfile(\
                                     self.stored_files_mapping[\
                                     list(self.stored_files_mapping.keys())[0]])

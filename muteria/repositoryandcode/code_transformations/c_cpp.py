@@ -122,8 +122,9 @@ class FromC(ccs.BaseCodeFormatConverter):
                     ret, out, err = \
                             DriversUtils.execute_and_get_retcode_out_err( \
                                                         "extract-bc", [dest])
-                    ERROR_HANDLER.assert_true(ret == 0, 'extract-bc failed.'+\
-                                    "\n# OUT: "+out+"\n# ERR: "+err, __file__)
+                    ERROR_HANDLER.assert_true(ret == 0, \
+                                        '{}. \n# OUT: {}\n# ERR: {}'.format(\
+                                    'extract-bc failed', out, err), __file__)
                     os.remove(dest)
 
             if spec_compiler is not None:

@@ -384,8 +384,13 @@ class TestcaseToolsConfig(BaseToolConfig):
     # file path to an executable to use as oracle
     TESTS_ORACLE_OTHER_EXECUTABLE = None
 
-    TEST_GENERATION_TIMEOUT = 7200.0 # in seconds
+    TEST_GENERATION_MAXTIME = 7200.0 # in seconds
     ONE_TEST_EXECUTION_TIMEOUT = 60.0 # in seconds (Handle inifnite loops)
+
+    def set_test_gen_maxtime(self, max_time):
+        self. = max_time
+    def set_one_test_execution_timeout(self, timeout):
+        self.ONE_TEST_EXECUTION_TIMEOUT = timeout
 #~class TestcaseToolsConfig
     
 class CriteriaToolsConfig(BaseToolConfig):

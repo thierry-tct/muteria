@@ -252,6 +252,7 @@ class CriteriaToolMart(BaseCriteriaTool):
                                 'Problem getting llvm path for mart', __file__)
 
         # Build into LLVM
+        back_llvm_compiler = 'clang'
         rel_path_map = {}
         exes, _ = code_builds_factory.repository_manager.\
                                                     get_relative_exe_path_map()
@@ -262,8 +263,8 @@ class CriteriaToolMart(BaseCriteriaTool):
                         src_fmt=CodeFormats.C_SOURCE,\
                         dest_fmt=CodeFormats.LLVM_BITCODE,\
                         src_dest_files_paths_map=rel_path_map,\
-                        compiler='clang', flags_list=['-g'], clean_tmp=True, \
-                        reconfigure=True, \
+                        compiler=back_llvm_compiler, flags_list=['-g'], \
+                        clean_tmp=True, reconfigure=True, \
                         llvm_compiler_path=llvm_compiler_path)
         if ret == common_mix.GlobalConstants.TEST_EXECUTION_ERROR:
             ERROR_HANDLER.error_exit("Program {}.".format(\
