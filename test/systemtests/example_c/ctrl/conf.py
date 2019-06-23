@@ -4,6 +4,7 @@ import subprocess
 from muteria.configmanager.configurations import SessionMode
 from muteria.configmanager.configurations import TestcaseToolsConfig
 from muteria.configmanager.configurations import CriteriaToolsConfig
+from muteria.configmanager.configurations import ToolUserCustom
 from muteria.drivers.testgeneration import TestToolType
 from muteria.drivers.criteria import CriteriaToolType
 from muteria.drivers.criteria import TestCriteria
@@ -107,9 +108,12 @@ CUSTOM_DEV_TEST_RUNNER_FUNCTION = dev_test_runner
 DEVELOPER_TESTS_LIST = devtestlist
 
 dev_test = TestcaseToolsConfig(tooltype=TestToolType.USE_ONLY_CODE, toolname='custom_devtests', config_id=0)
+klee_test = TestcaseToolsConfig(tooltype=TestToolType.USE_ONLY_CODE, toolname='klee', \
+                        tool_user_custom=ToolUserCustom(POST_TARGET_CMD_ORDERED_FLAGS_LIST=[('-sym-args', '2', '2', '2')]))
 dev_test.set_one_test_execution_timeout(2)
+klee_test.set_one_test_execution_timeout(2)
 TESTCASE_TOOLS_CONFIGS = [
-        dev_test,
+        dev_test, klee_test,
 ]
 
 ENABLED_CRITERIA = [

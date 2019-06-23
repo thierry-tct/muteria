@@ -223,4 +223,7 @@ class DriversUtils(object):
         retcode = p.wait()
         return retcode, stdout, stderr
     #~ def execute_and_get_retcode_out_err()
+
+    EXEC_TIMED_OUT_RET_CODE = -15
+    EXEC_SEGFAULT_OUT_RET_CODE = -11
 #~class DriversUtils()

@@ -94,19 +94,25 @@ class TestcasesToolKlee(BaseTestcaseTool):
 
         if timeout is None:
             timeout = self.config.ONE_TEST_EXECUTION_TIMEOUT
+        
         ERROR_HANDLER.assert_true(len(exe_path_map) == 1, \
                                     "support a single exe for now", __file__)
         ERROR_HANDLER.assert_true(callback_object is None, \
                                         'TODO: handle callback_obj', __file__)
         exe = exe_path_map[list(exe_path_map.keys())[0]]
-        args = [exe, os.path.join(self.tests_working_dir, testcase)]
+        if exe is None:
+            # TODO: CRITICAL: Go though the repo manager or copy elsewhere
+            # before using repo exe (paralelism)
+            exe = list(exe_path_map.keys())[0]
+        args = [exe, os.path.join(self.tests_storage_dir, testcase)]
         tmp_env = os.environ.copy()
         tmp_env['KLEE_REPLAY_TIMEOUT'] = str(timeout)
         retcode, out, err = DriversUtils.execute_and_get_retcode_out_err(\
                                     prog=prog, args_list=args, env=tmp_env, \
                                                         merge_err_to_out=True)
         # TODO: Oracle here
-        if retcode in (124, 139):
+        if retcode in (DriversUtils.EXEC_TIMED_OUT_RET_CODE, \
+                                    DriversUtils.EXEC_SEGFAULT_OUT_RET_CODE):
             retcode = common_mix.GlobalConstants.FAIL_TEST_VERDICT
         else:
             retcode = common_mix.GlobalConstants.PASS_TEST_VERDICT
@@ -153,21 +159,28 @@ class TestcasesToolKlee(BaseTestcaseTool):
         ERROR_HANDLER.assert_true(len(rel_path_map) == 1, \
                             "Support single bitcode module for now", __file__)
 
-        bitcode_file = rel2bitcode
+        bitcode_file = rel2bitcode[list(rel2bitcode.keys())[0]]
         
         # klee params
         bool_param, k_v_params = self._get_default_params()
         if max_time is not None:
-            k_v_params['-max-time'] = max_time
+            k_v_params['-max-time'] = str(max_time)
 
         args = [bp for bp, en in list(bool_param.items()) if en]
         for k,v in list(k_v_params.items()):
             if v is not None:
-                args += [k,v]
+                args += [k,str(v)]
         args.append(bitcode_file)
 
         # sym args
         klee_sym_args = default_sym_args
+        uc = self.config.get_tool_user_custom()
+        if uc is not None:
+            post_bc_cmd = uc.POST_TARGET_CMD_ORDERED_FLAGS_LIST
+            if post_bc_cmd is not None:
+                klee_sym_args = []
+                for tup in post_bc_cmd:
+                    klee_sym_args += list(tup)
         args += klee_sym_args
 
         # Execute Klee
@@ -180,7 +193,7 @@ class TestcasesToolKlee(BaseTestcaseTool):
             logging.error("\n>> CMD: " + " ".join([prog]+args))
             ERROR_HANDLER.error_exit("\nmart failed'", __file__)
 
-        store_obj = {r: os.path.basename(b) for r,b in bitcode_file.items()}
+        store_obj = {r: os.path.basename(b) for r,b in rel2bitcode.items()}
         common_fs.dumpJSON(store_obj, self.test_details_file)
     #~ def _do_generate_tests()
 #~ class CustomTestcases

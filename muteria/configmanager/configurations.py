@@ -360,14 +360,18 @@ class ToolUserCustom(dict):
     POST_TARGET_CMD_ORDERED_FLAGS_LIST = None
 
     def __init__(self, **kwargs):
-        num_elem = len(self)
-        super(ToolUserCustom, self).__init__(**kwargs)
-        self.__dict__ = self
-        diff = len(self.__dict__) - num_elem
-        if diff != 0:
-            ERROR_HANDLER.error_exit(\
-                        "{} invalid parameter was/were added".format(diff), \
-                                                                    __file__)
+        for k in kwargs:
+            ERROR_HANDLER.assert_true(k.isupper() and k in dir(self), \
+                                    "invalid parameter passed: "+k, __file__)
+            setattr(self, k, kwargs[k])
+        #num_elem = len(self)
+        #super(ToolUserCustom, self).__init__(**kwargs)
+        #self.__dict__ = self
+        #diff = len(self.__dict__) - num_elem
+        #if diff != 0:
+        #    ERROR_HANDLER.error_exit(\
+        #                "{} invalid parameter was/were added".format(diff), \
+        #                                                            __file__)
     #~def __init__()
 
     def __eq__(self, value):
