@@ -7,7 +7,7 @@ class Lib(object):
         Example:
         >>> l = Lib()
         >>> l.compute(1, 2)
-        2
+        3
         """
         oddtotal = self.get_odd_total(a,b)
         eventotal = self.get_even_total(a,b)

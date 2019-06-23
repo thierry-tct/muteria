@@ -44,7 +44,8 @@ CRITERIA_MATRIX = {}
 for criterion in TestCriteria:
     CRITERIA_MATRIX[criterion] = criterion.get_str()+".csv"
 
-STATS_MAIN_FILE_MD = "main_stats.md"
+STATS_MAIN_FILE_HTML = "main_stats.html"
+STATS_MAIN_FILE_JSON = "main_stats.json"
 
 TMP_TEST_PASS_FAIL_MATRIX = "tmp_PASSFAIL.csv"
 PARTIAL_TMP_TEST_PASS_FAIL_MATRIX = "partial_tmp_PASSFAIL.csv"
@@ -115,8 +116,11 @@ def get_outputdir_structure_by_filesdirs():
     TopExecutionDir[TMP_SELECTED_TESTS_LIST] = \
                 TopExecutionDir[EXECUTION_TMP_DIR] + [TMP_SELECTED_TESTS_LIST]
 
-    TopExecutionDir[STATS_MAIN_FILE_MD] = TopExecutionDir[RESULTS_STATS_DIR] \
-                                                    + [STATS_MAIN_FILE_MD]
+    TopExecutionDir[STATS_MAIN_FILE_HTML] = TopExecutionDir[RESULTS_STATS_DIR]\
+                                                    + [STATS_MAIN_FILE_HTML]
+
+    TopExecutionDir[STATS_MAIN_FILE_JSON] = TopExecutionDir[RESULTS_STATS_DIR]\
+                                                    + [STATS_MAIN_FILE_JSON]
                                                     
     return TopExecutionDir
 #~ def get_outputdir_structure_by_filesdirs():

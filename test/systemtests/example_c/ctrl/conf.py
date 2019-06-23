@@ -10,87 +10,28 @@ from muteria.drivers.criteria import CriteriaToolType
 from muteria.drivers.criteria import TestCriteria
 from muteria.drivers import DriversUtils
 
+from muteria.repositoryandcode.build_utils.c import make_build_func
+
 from muteria.common.mix import GlobalConstants
+
+from muteria.drivers.testgeneration.testcase_formats.bash import \
+                                                            bash_test_runner
 
 this_dir = os.path.dirname(os.path.abspath(__file__))
 
 devtestlist = ['test_lib.sh']
-def dev_test_runner(test_name, repo_root_dir, exe_path_map, env_vars, timeout):
+def dev_test_runner(test_name, *args, **kwargs):
     # TODO: use exe_path_map
 
     if test_name == 'test_lib.sh':
-        #TODO fix it
-        cwd = os.getcwd()
-        os.chdir(repo_root_dir)
+        return bash_test_runner(test_name, *args, **kwargs)
 
-        try:
-            args_list = [test_name]
-            retcode, _, _ = DriversUtils.execute_and_get_retcode_out_err(\
-                                    prog='bash', args_list=args_list, \
-                                timeout=timeout, out_on=False, err_on=False)
-        except:
-            # ERROR
-            return GlobalConstants.TEST_EXECUTION_ERROR
-        
-        # Parse the result
-        hasfail = False
-        hasfail |= (retcode != 0)
-
-        os.chdir(cwd)
-        return GlobalConstants.FAIL_TEST_VERDICT if hasfail else \
-                                            GlobalConstants.PASS_TEST_VERDICT
     # ERROR
     return GlobalConstants.TEST_EXECUTION_ERROR
 #~ def dev_test_runner()
 
-def build_func(repo_root_dir, exe_rel_paths, compiler, flags_list, clean, reconfigure):
-    def print_err(out, msg):
-        out = out.splitlines()
-        print(out, msg)
-    #~ def print_err()
-
-    cwd = os.getcwd()
-    os.chdir(repo_root_dir)
-    
-    #try:
-    tmp_env = os.environ.copy()
-    if compiler is not None:
-        tmp_env["CC"] = compiler
-    if flags_list is not None:
-        tmp_env["CFLAGS"] = " ".join(flags_list)
-    
-    if reconfigure:
-        args_list = ['clean']
-        retcode, out, _ = DriversUtils.execute_and_get_retcode_out_err(\
-                                prog='make', args_list=args_list, \
-                                env=tmp_env, merge_err_to_out=True)
-        if retcode != 0:
-            print_err(out, "reconfigure failed")
-            os.chdir(cwd)
-            return GlobalConstants.COMMAND_FAILURE 
-    if clean:
-        args_list = ['clean']
-        retcode, out, _ = DriversUtils.execute_and_get_retcode_out_err(\
-                                prog='make', args_list=args_list, \
-                                env=tmp_env, merge_err_to_out=True)
-        if retcode != 0:
-            print_err(out, "clean failed")
-            os.chdir(cwd)
-            return GlobalConstants.COMMAND_FAILURE 
-    
-    retcode, out, _ = DriversUtils.execute_and_get_retcode_out_err(\
-                        prog='make', env=tmp_env, merge_err_to_out=True)
-    if retcode != 0:
-        print_err(out, "make")
-        os.chdir(cwd)
-        return GlobalConstants.COMMAND_FAILURE 
-    #except:
-    #    os.chdir(cwd)
-    #    assert False, "Build Unexpected Error in "+__file__
-        #return GlobalConstants.COMMAND_FAILURE
-
-    os.chdir(cwd)
-    return GlobalConstants.COMMAND_SUCCESS
+def build_func(*args, **kwargs):
+    return make_build_func(*args, **kwargs)
 #~ def build_func()
 
 ### 
@@ -107,13 +48,18 @@ CODE_BUILDER_FUNCTION = build_func
 CUSTOM_DEV_TEST_RUNNER_FUNCTION = dev_test_runner
 DEVELOPER_TESTS_LIST = devtestlist
 
+# custom devtest
 dev_test = TestcaseToolsConfig(tooltype=TestToolType.USE_ONLY_CODE, toolname='custom_devtests', config_id=0)
+dev_test.set_one_test_execution_timeout(2)
+
+# klee tests
 klee_test = TestcaseToolsConfig(tooltype=TestToolType.USE_ONLY_CODE, toolname='klee', \
                         tool_user_custom=ToolUserCustom(POST_TARGET_CMD_ORDERED_FLAGS_LIST=[('-sym-args', '2', '2', '2')]))
-dev_test.set_one_test_execution_timeout(2)
 klee_test.set_one_test_execution_timeout(2)
+
+# test tool list
 TESTCASE_TOOLS_CONFIGS = [
-        dev_test, klee_test,
+        dev_test, #klee_test,
 ]
 
 ENABLED_CRITERIA = [

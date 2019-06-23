@@ -125,9 +125,9 @@ class BaseCriteriaTool(abc.ABC):
 
                 # run testcase
                 test_verdict = self.meta_test_generation_obj.execute_testcase(\
-                                        testcase, \
-                                        exe_path_map=cg_exe_path_map, \
-                                        env_vars=cg_env_vars)
+                                                testcase, \
+                                                exe_path_map=cg_exe_path_map, \
+                                                env_vars=cg_env_vars)
                 
                 # Collect temporary data into result_dir_tmp
                 self._collect_temporary_coverage_data(\
@@ -153,7 +153,12 @@ class BaseCriteriaTool(abc.ABC):
                                         "cov num type must be int", __file__)
                         ERROR_HANDLER.assert_true(v_elem >= 0, \
                                         "invalid cov num(negative)", __file__)
-                        res = criterion2coverage_per_test[criterion][elem]
+                        try:
+                            res = criterion2coverage_per_test[criterion][elem]
+                        except KeyError:
+                            res = {}
+                            criterion2coverage_per_test[criterion][elem] = res
+
                         res[testcase] = coverage_tmp_data_per_criterion\
                                                             [criterion][elem]
 
@@ -171,7 +176,9 @@ class BaseCriteriaTool(abc.ABC):
                                     
             for key, value in list(\
                             criterion2coverage_per_test[criterion].items()):
-                missing_tests = {t:0 for t in testcases_set - set(value)}
+                missing_tests = {t:common_mix.GlobalConstants.\
+                                        ELEMENT_NOTCOVERED_VERDICT for t in \
+                                                    testcases_set - set(value)}
                 value.update(missing_tests)
                 matrix.add_row_by_key(key, value, serialize=False)
             # Serialize to disk
