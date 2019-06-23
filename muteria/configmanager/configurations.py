@@ -388,7 +388,7 @@ class TestcaseToolsConfig(BaseToolConfig):
     ONE_TEST_EXECUTION_TIMEOUT = 60.0 # in seconds (Handle inifnite loops)
 
     def set_test_gen_maxtime(self, max_time):
-        self. = max_time
+        self.TEST_GENERATION_MAXTIME = max_time
     def set_one_test_execution_timeout(self, timeout):
         self.ONE_TEST_EXECUTION_TIMEOUT = timeout
 #~class TestcaseToolsConfig
