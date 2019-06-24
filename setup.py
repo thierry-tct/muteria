@@ -5,17 +5,33 @@ setup(
     name='muteria',    
     python_requires='>3.2.2',
     # Update the version number for new releases
-    version='0.0',
+    version='0.1',
     description='Software Analysis and Testing Framework',
     author='Thierry Titcheu Chekam',
     author_email='thierry_tct@yahoo.com',
     url='https://github.com/muteria/muteria',
-    #packages = [],
-    packages=find_packages(),
+    packages = ['muteria'],
+    #packages=find_packages(),
     include_package_data=True,
-    #install_requires = [],
+    install_requires = [
+            "numpy",
+            "pandas",
+            "scipy",
+            "matplotlib",
+            "networkx",
+            "gitpython",
+
+            # SERVER
+            "flask",
+            "flask_socketio",
+    ],
     # The name of your scipt, and also the command you'll be using for calling it
-    scripts=['muteria'],
+    scripts=['cli/muteria'],
+    entry_points={
+        'console_scripts': [
+            'muteria=cli/cli.py:main',
+        ],
+    },
 
     classifiers=[
         'Development Status :: 1 - Alpha',

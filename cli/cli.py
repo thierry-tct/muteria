@@ -98,5 +98,8 @@ class CliUserInterface(object):
 
 #~ class CliUserInterface
 
-if __name__ == "__main__":
+def main():
     CliUserInterface.cmd_main()
+
+if __name__ == "__main__":
+    main()

@@ -3,10 +3,12 @@ from __future__ import print_function
 
 import os
 import shutil
+import logging
 from jinja2 import Template
 import webbrowser
 
 import muteria.common.mix as common_mix
+import muteria.common.fs as common_fs
 import muteria.common.matrices as common_matrices
 
 import muteria.statistics.algorithms as stats_algo
@@ -42,6 +44,15 @@ class StatsComputer(object):
                 coverages[c.get_str()] = '{:.2f}'.format(cov * 100.0 / tot)
                 total_to[c.get_str()] = tot
         
+        # JSON
+        out_json = {}
+        for c in coverages:
+            out_json[c] = {'coverage': coverages[c], 
+                            '# test objectives': total_to[c]}
+        common_fs.dumpJSON(out_json, explorer.get_file_pathname(\
+                                            fd_structure.STATS_MAIN_FILE_JSON))
+
+        # HTML
         template_file = os.path.join(os.path.dirname(\
                             os.path.abspath(__file__)), 'summary_report.html')
         report_file = explorer.get_file_pathname(\
@@ -50,6 +61,10 @@ class StatsComputer(object):
                                 {'coverages':coverages, 'total_to':total_to})
         with open(report_file, 'w') as f:
             f.write(rendered)
-        print(coverages)
-        webbrowser.open('file://' + report_file,new=2)
+        
+        try:
+            webbrowser.get()
+            webbrowser.open('file://' + report_file,new=2)
+        except Exception as e:
+            logging.warning("webbrowser error: "+str(e))
 #~ class DataHandling
