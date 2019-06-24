@@ -128,7 +128,7 @@ class CriteriaToolMart(BaseCriteriaTool):
                                             IRPosInFunc=info['IRPosInFunc'])
             self.mutant_info_object = minf_obj
             return minf_obj
-    #~ def get_criterion_info_object(self, criterion)
+    #~ def get_criterion_info_object()
 
     def _get_single_exe_filename(self, criterion):
         try:
@@ -199,15 +199,18 @@ class CriteriaToolMart(BaseCriteriaTool):
                             "SM metamutant run not yet supported", __file__)
 
         def extract_covered(filename, criterion):
-            mutant_id_list = self.get_criterion_info_object(criterion).\
-                                                            get_elements_list()
+            mutant_id_set = set(self.get_criterion_info_object(criterion).\
+                                                        get_elements_list())
             cov_res = {
                     m: common_mix.GlobalConstants.ELEMENT_NOTCOVERED_VERDICT\
-                                                    for m in mutant_id_list}
+                                                    for m in mutant_id_set}
             with open(filename) as f:
                 for line in f:
                     mut_id = line.strip()
-                    cov_res[mut_id] = \
+                    # use if because mart currently do not update WM and MCOV
+                    # after fdupes TCE
+                    if mut_id in mutant_id_set: 
+                        cov_res[mut_id] = \
                             common_mix.GlobalConstants.ELEMENT_COVERED_VERDICT
             return cov_res
         #~ def extract_covered()

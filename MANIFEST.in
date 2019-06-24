@@ -1,0 +1,6 @@
+recursive-include muteria *
+recursive-include cli *
+recursive-include server *
+
+recursive-exclude test *
+recursive-exclude doc *
