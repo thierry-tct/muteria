@@ -27,6 +27,6 @@ ensure_python_version
 
 topdir=$(dirname $(readlink -f $0))
 
-muteria_topdir=$(readlink -f $topdir/..)
+muteria_topdir=$(readlink -f $topdir/../..)
 
 PYTHONPATH=$muteria_topdir $python_exe $topdir/cli.py "$@"

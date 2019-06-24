@@ -1,26 +1,25 @@
 # MUTERIA (MUlti-Tools and critERIA framework for automated software testing)
-[https://github.com/muteria](https://github.com/muteria)
+[https://github.com/muteria/muteria](https://github.com/muteria/muteria)
 
 *Muteria* is a Software Analysis/Testing framework that integrate multiple tools. 
 *Muteria* support tools from various programming languages which are supported by implementing a driver.
 
+  Report Sample. ![sample](doc/imgs/report_summary.png?raw=true "Title")
+
 *Muteria* can be used through:
 - Its [API]()
 - Commnad Line Interface (CLI)
-- Web Interface. ![sample](doc/imgs/webui_sample.jpg?raw=true "Title")
 
 ## Suported Systems
 *Muteria* is written in Python and thus can run on Windows, Linux or macOS.
 
 ## Installation
-1. Install the requirement by running: 
+muteria requires Python 3.
+1. Install Muteria by running: 
 ```
-pip install -r requirements.txt
+pip install muteria
 ```
-For developer, also install the developer requirements as following:
-```
-pip install -r developer-requirements.txt
-```
+
 
 ## Usage
 *Muteria* requires to have the underlying tools installed on the system.
@@ -31,20 +30,12 @@ pip install -r developer-requirements.txt
 ---
 ## Development
 ### Things to fix
-- Make sure to execute tests with the right version of exe files (Let runtests and execute_test set back the repo exes and src to normal state. then each test executor, including custom, must set back the changed exes and srcs)
 - Ensure tools plugins do not leave the repo srcs or exes in an infected state. They must cleanup the changes made. Ensure that by cleaning for them at top level (when the driver's methods are called in the meta tools)
 - Handle reporting test error in stats (first within meta test execution)
 - Enable having no criterion set
 
 - Complete and test the web UI.
-- Complete and test the CLI.
-- Supported executable format for test generation tools.
 - Choice of test level (unit, system, ...)
-- Configurations validation. Must support comparison as following:
-  ```python
-  def __eq__(self, other):
-      self.__dict__ == other.__dict__
-  ```
 - Complete the documentation
 - Augment the test suite
 

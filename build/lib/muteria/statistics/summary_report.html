@@ -1,0 +1,47 @@
+<!doctype html>
+<title>Muteria Report</title>
+<style>
+.grid { 
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-gap: 20px;
+  align-items: stretch;
+  }
+.grid > article {
+  border: 1px solid #ccc;
+  box-shadow: 2px 2px 6px 0px  rgba(0,0,0,0.3);
+}
+.grid > article img {
+  max-width: 100%;
+}
+.text {
+  padding: 0 20px 20px;
+}
+.text > button {
+  background: gray;
+  border: 0;
+  color: white;
+  padding: 10px;
+  width: 100%;
+  }
+</style>
+
+<center>
+    <h1><font color="steelblue"><b>Muteria</b></font></h1>
+    <h2><em>Summarized Execution Report</em></h2>
+</center>
+
+<main class="grid">
+  {% for crit in coverages %}
+  <article>
+    <div class="text">
+      <center>
+          <h5> {{ crit }} </h5>
+          <h2>{{ coverages[crit] }}%</h2>
+          <hr>
+      </center>
+      <p><i># Test Objectives:</i> {{ total_to[crit] }} </p>
+    </div>
+  </article>
+  {% endfor %}
+</main>
