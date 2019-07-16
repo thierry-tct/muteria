@@ -16,13 +16,35 @@
 ## Installation
 muteria requires Python 3.
 1. Install Muteria by running: 
-```
+``` bash
 pip install muteria
+```
+2. View the usage help:
+```bash
+muteria --help
 ```
 
 
 ## Usage
 *Muteria* requires to have the underlying tools installed on the system.
+### Usage example
+Example of measuring coverage for a python program using [coverage.py](https://coverage.readthedocs.io/en/v4.5.x/#).
+1. Install `coverage.py`:
+``` bash
+pip install coverage
+```
+2. Download the example program:
+```bash
+git clone https://github.com/muteria/example_python.git 
+```
+3. Change into the example program directory:
+```bash
+cd example_python
+```
+4. run using the configuration file in ctrl/conf.py
+```bash
+muteria --config ctrl/conf.py --lang python run
+```
 
 ## Current Limitation
 - Interface difference between multiple versions of the same tool 
