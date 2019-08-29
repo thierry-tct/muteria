@@ -48,6 +48,10 @@ class CliUserInterface(object):
         parser_run.add_argument("--cleanstart", action='store_true', \
                                             help="Clear out dir and restart")
 
+        if len(sys.argv)==1:
+            parser.print_help(sys.stderr)
+            sys.exit(1)
+
         args = parser.parse_args()
         return args
     #~ def _cmd_load()
