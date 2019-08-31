@@ -5,6 +5,8 @@ import sys
 import os
 import argparse
 
+from _version import __version__, _framework_name
+
 import muteria.common.mix as common_mix
 
 import muteria.configmanager.configurations as configurations
@@ -21,6 +23,9 @@ class CliUserInterface(object):
             The required depend on the mode used (TODO: define required by modes)
         """
         parser = argparse.ArgumentParser()
+        parser.add_argument('-v', '--version', action='version',
+                                    version='\n{} {}\n'.format(_framework_name, 
+                                                                  __version__))
         parser.add_argument("--config", help="Config file")
         parser.add_argument("--lang", help="Programming Language")
         subparsers = parser.add_subparsers(dest='command')
