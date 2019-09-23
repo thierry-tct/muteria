@@ -1,5 +1,5 @@
 """
-This module implement the main controller class, whic is the entry point
+This module implement the main controller class, which is the entry point
 of the execution.
 The entry class is `MainController` and the entrypoint method is 
 `MainController.mainrun`
