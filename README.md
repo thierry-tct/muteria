@@ -1,4 +1,4 @@
-# MUTERIA (MUlti-Tools and critERIA framework for automated software testing)
+# MUTERIA (MUlti-Tools and criTERIA framework for automated software testing)
 [https://github.com/muteria/muteria](https://github.com/muteria/muteria)
 
 *Muteria* is a Software Analysis/Testing framework that integrate multiple tools. 
