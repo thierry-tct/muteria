@@ -4,13 +4,13 @@
 #> python3 setup.py sdist bdist_wheel
 #> python3 -m pip install --user --upgrade twine
 #> python3 -m twine upload dist/muteria-<version>.tar.gz
-#> rm -rf dist build muteria.egg-info __pycache__/
+#> rm -rf dist build muteria.egg-info
 #
 
 import os
 from setuptools import setup, find_packages
 
-from _version import __version__, _framework_name
+from _version import __version__
  
 thisdir = os.path.dirname(os.path.abspath(__file__))
 with open(os.path.join(thisdir, "README.md"), "r") as fh:
@@ -18,7 +18,7 @@ with open(os.path.join(thisdir, "README.md"), "r") as fh:
 
 setup(
     # This is the name of your PyPI-package.
-    name=_framework_name,    
+    name='muteria',    
     python_requires='>3.3.0',
     # Update the version number for new releases
     version=__version__,
@@ -30,7 +30,6 @@ setup(
     url='https://github.com/muteria/muteria',
     packages = ['muteria'],
     #packages=find_packages(),
-    py_modules = ['_version'],
     include_package_data=True,
     install_requires = [
             "numpy",

@@ -1,8 +1,0 @@
-numpy
-pandas
-scipy
-matplotlib
-networkx
-gitpython
-flask
-flask_socketio
