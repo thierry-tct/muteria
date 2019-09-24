@@ -111,7 +111,14 @@ class CheckpointData(dict):
 #~ class CheckpointData
 
 class Executor(object):
+    """ Execution Orchestration class
+        The execution entry point is the method 'main' 
+    """
+
     def __init__(self, config, top_timeline_explorer):
+        """ The various configurations for the execution are passed here, as
+            well as the corresponding directory structure
+        """
         self.config = config
         self.top_timeline_explorer = top_timeline_explorer
 
