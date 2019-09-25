@@ -221,9 +221,9 @@ class BaseCriteriaTool(abc.ABC):
 
         failverdict_to_val_map = {
                     common_mix.GlobalConstants.FAIL_TEST_VERDICT: \
-                                                matrix.getActiveCellDefaultVal(),
+                                            matrix.getActiveCellDefaultVal(),
                     common_mix.GlobalConstants.PASS_TEST_VERDICT: \
-                                                matrix.getInactiveCellVal(), 
+                                            matrix.getInactiveCellVal(), 
                     common_mix.GlobalConstants.UNCERTAIN_TEST_VERDICT: \
                                             matrix.getUncertainCellDefaultVal()
         }
@@ -238,9 +238,18 @@ class BaseCriteriaTool(abc.ABC):
             criteria_element_list = self.get_criterion_info_object(criterion).\
                                                             get_elements_list()
 
+        ERROR_HANDLER.assert_true(prioritization_module is not None, 
+                                        "prioritization module must be passed")
+            
         # main loop for elements execution
         num_elems = len(criteria_element_list)
-        for pos, element in enumerate(criteria_element_list):
+        pos = -1
+        ## prepare the optimizer
+        prioritization_module.reset(criteria_element_list, testcases)
+        while prioritization_module.has_next_test_objective():
+            pos += 1
+            element = prioritization_module.get_next_test_objective()
+
             # @Checkpointing: check if already executed
             if element in completed_elems:
                 continue
@@ -256,12 +265,10 @@ class BaseCriteriaTool(abc.ABC):
                                 self._get_criterion_element_environment_vars(\
                                                             criterion, element)
             # run optimizer
-            if prioritization_module is None:
-                may_cov_tests, cannot_cov_tests = testcases, []
-            else:
-                may_cov_tests, cannot_cov_tests = \
-                                prioritization_module.separate_tests( \
-                                                            element, testcases)
+            may_cov_tests = prioritization_module.select_tests(100, \
+                                                            is_proportion=True)
+
+            cannot_cov_tests = set(testcases) - set(may_cov_tests)
             
             fail_verdicts = self.meta_test_generation_obj.runtests( \
                                 may_cov_tests, \
@@ -270,9 +277,7 @@ class BaseCriteriaTool(abc.ABC):
                                 stop_on_failure=cover_criteria_elements_once, \
                                 restart_checkpointer=True)
 
-            if prioritization_module is not None:
-                prioritization_module.update(element, cannot_cov_tests, \
-                                                                fail_verdicts)
+            prioritization_module.feedback(element, fail_verdicts)
 
             fail_verdicts.update({\
                             v: common_mix.GlobalConstants.PASS_TEST_VERDICT \

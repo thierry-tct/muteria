@@ -21,6 +21,9 @@ from muteria.drivers.testgeneration.meta_testcasetool import MetaTestcaseTool
 import muteria.drivers.criteria as criteria_pkg
 from muteria.drivers.criteria.meta_testcriteriatool import MetaCriteriaTool
 
+import muteria.drivers.optimizers.criteriatestexecution.optimizerdefs as \
+                                                                crit_opt_module
+
 from muteria.statistics.main import StatsComputer
 
 import muteria.controller.explorer as outdir_struct
@@ -182,7 +185,7 @@ class Executor(object):
                             self._create_meta_criteriagen_guidance(self.config)
 
         # Criteria optimization
-        self.meta_criteriaexec_optimization_tool = \
+        self.meta_criteriaexec_optimization_tools = \
                     self._create_meta_criteriaexec_optimization(self.config)
 
 
@@ -441,8 +444,10 @@ class Executor(object):
                 self.meta_criteria_tool.runtests_criteria_coverage( \
                             testcases=meta_testcases, \
                             criterion_to_matrix=criterion_to_matrix, \
-                            cover_criteria_elements_once=\
-                            self.config.COVER_CRITERIA_ELEMENTS_ONCE.get_val(),
+                            cover_criteria_elements_once=self.config.\
+                                    COVER_CRITERIA_ELEMENTS_ONCE.get_val(),\
+                            prioritization_module_by_criteria=\
+                                    self.meta_criteriaexec_optimization_tools,\
                             finish_destroy_checkpointer=True)
 
                 # @Checkpointing
@@ -573,10 +578,13 @@ class Executor(object):
     #~ def _create_meta_criteriagen_guidance()
 
     def _create_meta_criteriaexec_optimization(self, config):
-        # TODO
-        #ERROR_HANDLER.error_exit("To be implemented", __file__)
-        ceo_tool = None
-        return ceo_tool
+        ceo_tools = None
+        if len(config.CRITERIA_EXECUTION_OPTIMIZERS.get_val()) > 0:
+            ceo_tools = {}
+            for crit, opt in \
+                        config.CRITERIA_EXECUTION_OPTIMIZERS.get_val().items():
+                ceo_tools[crit] = opt.get_optimizer() 
+        return ceo_tools
     #~ def _create_meta_criteriaexec_optimization()
 
     def _initialize_output_structure(self, cleanstart=False):

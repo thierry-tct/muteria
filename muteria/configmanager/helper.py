@@ -19,6 +19,9 @@ import muteria.common.mix as common_mix
 import muteria.drivers.criteria as criteria
 import muteria.drivers.testgeneration as testgeneration
 
+import muteria.drivers.optimizers.criteriatestexecution.optimizerdefs as \
+                                                                crit_opt_module
+
 import muteria.configmanager.configurations as configurations
 from muteria.configmanager.configurations import CompleteConfiguration
 from muteria.configmanager.configurations import ConfigElement
@@ -268,6 +271,28 @@ class ConfigurationHelper(object):
                 tmp[crit] = []
             tmp[crit].append(cc)
         conf.CRITERIA_TOOLS_CONFIGS_BY_CRITERIA = tmp
+
+        # criteria Optimizer
+        tmp = {}
+        for c, opt in conf.CRITERIA_EXECUTION_OPTIMIZERS.items():
+            if not isinstance(c, criteria.TestCriteria):
+                c = getattr(criteria.TestCriteria, c) 
+            if c not in conf.ENABLED_CRITERIA:
+                continue
+            if not isinstance(opt, crit_opt_module.CriteriaOptimizers):
+                ERROR_HANDLER.assert_true(crit_opt_module.CriteriaOptimizers.\
+                                                    has_element_named(opt), \
+                                        "Invalid criterion Optimizer: "+opt)
+                opt = getattr(criteria.TestCriteria, opt) 
+            ERROR_HANDLER.assert_true(\
+                            crit_opt_module.check_is_right_optimizer(c, opt), \
+                                        "Wrong optimizer for test criterion")
+            tmp[c] = opt
+        # Make sure that all criteria have optimizers
+        for c in conf.ENABLED_CRITERIA:
+            if c not in tmp:
+                tmp[c] = crit_opt_module.CriteriaOptimizers.NO_OPTIMIZATION
+        conf.CRITERIA_EXECUTION_OPTIMIZERS = tmp
 
         # NEXT here
         #TODO: Add optimizers ....

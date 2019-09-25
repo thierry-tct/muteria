@@ -279,7 +279,7 @@ class CompleteConfiguration(object):
 
     }
 
-    # Criterion: optimizers dict. ex: {STRONG_MUTATION: SM_WM_OPTIMIZER}
+    # Criterion: optimizers dict. ex: {STRONG_MUTATION: SM_OPTIMIZED_BY_WM}
     CRITERIA_EXECUTION_OPTIMIZERS = {
 
     }
