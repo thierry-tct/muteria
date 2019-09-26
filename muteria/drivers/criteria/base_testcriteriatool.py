@@ -245,7 +245,8 @@ class BaseCriteriaTool(abc.ABC):
         num_elems = len(criteria_element_list)
         pos = -1
         ## prepare the optimizer
-        prioritization_module.reset(criteria_element_list, testcases)
+        prioritization_module.reset(self.config.get_tool_config_alias(), \
+                                            criteria_element_list, testcases)
         while prioritization_module.has_next_test_objective():
             pos += 1
             element = prioritization_module.get_next_test_objective()

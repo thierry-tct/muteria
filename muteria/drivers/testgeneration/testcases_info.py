@@ -40,7 +40,7 @@ class TestcasesInfoObject(object):
     #~ def has_test():
 
     def get_tests_list(self):
-        return self.data[self.DATA_KEY].keys()
+        return list(self.data[self.DATA_KEY].keys())
     #~ def get_tests_list()
 
     def update_using(self, toolname, old2new_tests, old_test_info_obj):

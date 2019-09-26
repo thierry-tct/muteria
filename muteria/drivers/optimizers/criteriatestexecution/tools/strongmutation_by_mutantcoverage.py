@@ -32,11 +32,8 @@ class CriteriaTestExecutionOptimizer(sm_wm.CriteriaTestExecutionOptimizer):
 
     ##### Private methods #####
     
-    def _get_matrix_file(self):
-        criterion = TestCriteria.MUTANT_COVERAGE
-        matrix_file = self.explorer.get_existing_file_pathname(\
-                                        explorer.CRITERIA_MATRIX[criterion])
-        return matrix_file
-    #~ def _get_matrix_file()
+    def _get_optimizing_criterion(self):
+        return TestCriteria.MUTANT_COVERAGE
+    #~ def _get_optimizing_criterion()
 #~ class CriteriaTestExecutionOptimizer
 

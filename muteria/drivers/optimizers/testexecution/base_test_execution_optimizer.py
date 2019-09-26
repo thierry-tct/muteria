@@ -87,7 +87,7 @@ class BaseTestExecutionOptimizer(abc.ABC):
     #~ def installed()
 
     @abc.abstractmethod
-    def reset (self, test_list, disable_reset=False, **kwargs):
+    def reset (self, toolalias, test_list, disable_reset=False, **kwargs):
         """ Reset the optimizer
             :param disable_reset: disable reset after this call to reset
         """

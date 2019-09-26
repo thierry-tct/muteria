@@ -99,7 +99,7 @@ class BaseCriteriaTestExecutionOptimizer(abc.ABC):
     #~ def installed()
 
     @abc.abstractmethod
-    def reset (self, test_objective_list, test_list, **kwargs):
+    def reset (self, toolalias, test_objective_list, test_list, **kwargs):
         """ Reset the optimizer 
             (compute test objective ordering and their test orderings)
         """

@@ -585,7 +585,8 @@ class Executor(object):
             ceo_tools = {}
             for crit, opt in \
                         config.CRITERIA_EXECUTION_OPTIMIZERS.get_val().items():
-                ceo_tools[crit] = opt.get_optimizer() 
+                ceo_tools[crit] = opt.get_optimizer()\
+                                            (config, self.head_explorer, crit) 
         return ceo_tools
     #~ def _create_meta_criteriaexec_optimization()
 

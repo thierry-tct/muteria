@@ -14,6 +14,7 @@ import muteria.common.mix as common_mix
 import muteria.common.matrices as common_matrices
 
 import muteria.controller.explorer as explorer
+from muteria.drivers import DriversUtils
 from muteria.drivers.criteria import TestCriteria
 
 from muteria.drivers.optimizers.criteriatestexecution.\
@@ -41,7 +42,7 @@ class CriteriaTestExecutionOptimizer(BaseCriteriaTestExecutionOptimizer):
         """
     #~ def installed()
 
-    def reset (self, test_objective_list, test_list, **kwargs):
+    def reset (self, toolalias, test_objective_list, test_list, **kwargs):
         """ Reset the optimizer
         """
         self.test_objective_ordered_list = copy.deepcopy(test_objective_list)
@@ -53,26 +54,28 @@ class CriteriaTestExecutionOptimizer(BaseCriteriaTestExecutionOptimizer):
         }
 
         # get the test list per test objectives, based on the matrix
-        matrix_file = self._get_matrix_file()
+        opt_by_criterion = self._get_optimizing_criterion()
+        matrix_file = self.explorer.get_existing_file_pathname(\
+                                explorer.TMP_CRITERIA_MATRIX[opt_by_criterion])
         test_list_per_test_objective = \
                             self._get_test_objective_tests_from_matrix(\
                                                     matrix_file=matrix_file)
 
         # Update test list
         for to, teo in self.test_objective_to_test_execution_optimizer.items():
-            ERROR_HANDLER.assert_true(to in test_list_per_test_objective, \
+            alias_to = DriversUtils.make_meta_element(to, toolalias)
+            ERROR_HANDLER.assert_true(\
+                                    alias_to in test_list_per_test_objective, \
                                     "Bug: test objective missing("+str(to)+')')
-            teo.reset(test_list_per_test_objective[to], disable_reset=True)
+            teo.reset(None, test_list_per_test_objective[alias_to], \
+                                                            disable_reset=True)
     #~ def reset()
 
     ##### Private methods #####
     
-    def _get_matrix_file(self):
-        criterion = TestCriteria.WEAK_MUTATION
-        matrix_file = self.explorer.get_existing_file_pathname(\
-                                        explorer.CRITERIA_MATRIX[criterion])
-        return matrix_file
-    #~ def _get_matrix_file()
+    def _get_optimizing_criterion(self):
+        return TestCriteria.WEAK_MUTATION
+    #~ def _get_optimizing_criterion()
 
     def _get_test_objective_tests_from_matrix (self, matrix_file):
         matrix = common_matrices.ExecutionMatrix(filename=matrix_file)

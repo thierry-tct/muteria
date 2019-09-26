@@ -42,7 +42,7 @@ class CriterionElementInfoObject(object):
     #~ def has_element():
 
     def get_elements_list(self):
-        return self.data[self.DATA_KEY].keys()
+        return list(self.data[self.DATA_KEY].keys())
     #~ def get_elements_list()
 
     def update_using(self, toolname, old2new_elements, old_element_info_obj):

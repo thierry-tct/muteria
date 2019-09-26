@@ -33,7 +33,7 @@ class TestExecutionOptimizer(BaseTestExecutionOptimizer):
         """
     #~ def installed()
 
-    def reset (self, test_list, disable_reset=False, **kwargs):
+    def reset (self, toolalias, test_list, disable_reset=False, **kwargs):
         """ Reset the optimizer
         """
         ERROR_HANDLER.assert_true(not self.reset_disabled, "reset is disabled")

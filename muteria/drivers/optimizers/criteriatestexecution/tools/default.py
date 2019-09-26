@@ -37,7 +37,7 @@ class CriteriaTestExecutionOptimizer(BaseCriteriaTestExecutionOptimizer):
         """
     #~ def installed()
 
-    def reset (self, test_objective_list, test_list, **kwargs):
+    def reset (self, toolalias, test_objective_list, test_list, **kwargs):
         """ Reset the optimizer
         """
         self.test_objective_ordered_list = copy.deepcopy(test_objective_list)

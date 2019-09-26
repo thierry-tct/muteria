@@ -59,7 +59,7 @@ klee_test.set_one_test_execution_timeout(2)
 
 # test tool list
 TESTCASE_TOOLS_CONFIGS = [
-        dev_test, klee_test,
+        dev_test,# klee_test,
 ]
 
 ENABLED_CRITERIA = [
