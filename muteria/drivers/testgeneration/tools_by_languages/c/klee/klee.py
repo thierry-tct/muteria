@@ -28,7 +28,7 @@ class TestcasesToolKlee(BaseTestcaseTool):
         """
         for prog in ('klee', 'klee-replay'):
             if not DriversUtils.check_tool(prog=prog, args_list=['--version'],\
-                                                    expected_exit_codes=[0]):
+                                                    expected_exit_codes=[1]):
                 return False
         return True
     #~ def installed()

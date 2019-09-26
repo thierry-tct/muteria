@@ -243,7 +243,10 @@ class ConfigurationHelper(object):
             tmp = []
             for c in conf.ENABLED_CRITERIA:
                 if not isinstance(c, criteria.TestCriteria):
-                    c = getattr(criteria.TestCriteria, c) 
+                    ERROR_HANDLER.assert_true(\
+                                criteria.TestCriteria.has_element_named(c), \
+                                "invalid test criterion: "+c)
+                    c = criteria.TestCriteria[c] 
                 tmp.append(c)
             conf.ENABLED_CRITERIA = tmp
         
@@ -276,14 +279,21 @@ class ConfigurationHelper(object):
         tmp = {}
         for c, opt in conf.CRITERIA_EXECUTION_OPTIMIZERS.items():
             if not isinstance(c, criteria.TestCriteria):
-                c = getattr(criteria.TestCriteria, c) 
+                ERROR_HANDLER.assert_true(\
+                            criteria.TestCriteria.has_element_named(c), \
+                            "invalid test criterion: "+c)
+                c = criteria.TestCriteria[c] 
             if c not in conf.ENABLED_CRITERIA:
                 continue
             if not isinstance(opt, crit_opt_module.CriteriaOptimizers):
                 ERROR_HANDLER.assert_true(crit_opt_module.CriteriaOptimizers.\
                                                     has_element_named(opt), \
                                         "Invalid criterion Optimizer: "+opt)
-                opt = getattr(criteria.TestCriteria, opt) 
+                ERROR_HANDLER.assert_true(\
+                                crit_opt_module.CriteriaOptimizers.\
+                                                    has_element_named(opt), \
+                                "invalid test criterion: "+opt)
+                opt = crit_opt_module.CriteriaOptimizers[opt] 
             ERROR_HANDLER.assert_true(\
                             crit_opt_module.check_is_right_optimizer(c, opt), \
                                         "Wrong optimizer for test criterion")

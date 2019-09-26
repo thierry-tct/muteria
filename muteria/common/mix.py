@@ -66,7 +66,9 @@ class ErrorHandler(object):
         logging.error("# Error happened in function %s" % last_function)
                                                         
         if err_string:
+            logging.error('')
             logging.error(" (msg) "+err_string)
+            logging.error('')
         if ask_revert and cls.repos_dir_manager is not None:
             if cls.error_exit_revert_repo_called:
                 logging.error("@ post error: Failed to revert repository."

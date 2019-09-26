@@ -211,6 +211,17 @@ class MetaCriteriaTool(object):
         return crit_tool
     #~ def _create_criteria_tool()
 
+    def check_tools_installed(self):
+        non_installed = []
+        for toolalias, tool_obj in self.criteria_configured_tools.items():
+            if not tool_obj[self.TOOL_OBJ_KEY].installed():
+                non_installed.append(toolalias)
+        if len(non_installed) > 0:
+            ERROR_HANDLER.error_exit("{}: {}".format(\
+                            "The following Criteria tools are not installed", \
+                            str(non_installed)))
+    #~ def check_tools_installed()
+
     def clear_working_dir(self):
         if os.path.isdir(self.criteria_working_dir):
             shutil.rmtree(self.criteria_working_dir)

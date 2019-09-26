@@ -11,7 +11,25 @@ error_exit()
     exit 1
 }
 
-TOP_DIR=$(python -c "import os; print (os.path.dirname(os.path.realpath('$0')))")
+ensure_python_version()
+{
+        python_exe=python
+        pip_exe=pip
+        major=$($python_exe --version 2>&1 | awk '{print $2}' | cut -d'.' -f1)
+        if [ "$major" != "" -a $major -lt 3 ] 
+        then
+                # check that python3 is on the path
+                python3 --version > /dev/null || error_exit "'python' represent earlier python version( < 3.0) and python3 not existing"
+                python_exe=python3
+                pip_exe=pip3
+        fi  
+}
+
+##
+
+ensure_python_version
+
+TOP_DIR=$($python_exe -c "import os; print (os.path.dirname(os.path.realpath('$0')))")
 
 cd $TOP_DIR
 
@@ -19,10 +37,10 @@ if [ $# = 1 ]
 then
     # example of test name: 
     # test.unittests.common.test_fs
-    python -m unittest $1 -v
+    python_exe -m unittest $1 -v
 else
     [ $# = 0 ] || error_exit "expect no argument for unittests"
-    python -m unittest discover -s test/unittests -v #test.unittests.common.test_fs
+    $python_exe -m unittest discover -s test/unittests -v #test.unittests.common.test_fs
 fi
 
 test -d tmp && rm -rf tmp

@@ -8,12 +8,6 @@ error_exit()
 	exit 1
 }
 
-only_example=''
-if [ $# -eq 1 ]
-then
-	only_example="$1"
-fi
-
 ensure_python_version()
 {
 	python_exe=python
@@ -28,17 +22,27 @@ ensure_python_version()
 	fi
 }
 
-##
+###
+
+
+# List of tests to run
+TestList=(example_python example_c)
+
+
+only_example=''
+if [ $# -eq 1 ]
+then
+	only_example="$1"
+	echo "${TestList[@]}" | tr ' ' '\n' | grep "^$only_example$" > /dev/null || error_exit "invalid test: $only_example"
+fi
 
 ensure_python_version
 
 topdir=$(dirname $(readlink -f $0))
-py_prog_folder=example_python
-c_prog_folder=example_c
 
 muteria_topdir=$topdir/../..
 
-for prog_folder in $py_prog_folder $c_prog_folder
+for prog_folder in "${TestList[@]}"
 do
 	if [ "$only_example" != '' ]
 	then

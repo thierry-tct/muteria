@@ -208,6 +208,18 @@ class MetaTestcaseTool(object):
         return testcase_tool
     #~ def _create_testcase_tool()
 
+    def check_tools_installed(self):
+        non_installed = []
+        for toolalias, tool_obj in self.testcases_configured_tools.items():
+            if not tool_obj[self.TOOL_OBJ_KEY].installed():
+                non_installed.append(toolalias)
+        if len(non_installed) > 0:
+            ERROR_HANDLER.error_exit("{}: {}".format(\
+                            "The following Testcase tools are not installed", \
+                            str(non_installed)))
+    #~ def check_tools_installed()
+
+
     def clear_working_dir(self):
         if os.path.isdir(self.tests_working_dir):
             shutil.rmtree(self.tests_working_dir)

@@ -63,9 +63,9 @@ class CriteriaToolMart(BaseCriteriaTool):
                     - True: the tool is installed and works
                     - False: the tool is not installed or do not work
         """
-        for prog in ('mart'):
+        for prog in ('mart',):
             if not DriversUtils.check_tool(prog=prog, args_list=['--version'],\
-                                                    expected_exit_codes=[0]):
+                                                    expected_exit_codes=[1]):
                 return False
         return True
     #~ def installed()

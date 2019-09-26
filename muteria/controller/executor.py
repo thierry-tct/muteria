@@ -167,10 +167,12 @@ class Executor(object):
 
         # Meta testcases tool
         self.meta_testcase_tool = self._create_meta_test_tool(self.config)
+        self.meta_testcase_tool.check_tools_installed()
 
         # Meta criteria
         self.meta_criteria_tool = self._create_meta_criteria_tool(self.config,\
                                                     self.meta_testcase_tool)
+        self.meta_criteria_tool.check_tools_installed()
 
         # Test generation guidance
         self.meta_testgen_guidance_tool = self._create_meta_testgen_guidance(\

@@ -1,21 +1,29 @@
 
 from __future__ import print_function
 
+import importlib
+
 import muteria.common.mix as common_mix
 
 from muteria.drivers.criteria import TestCriteria
 
-import muteria.drivers.optimizers.criteriatestexecution as crit_opt
+import muteria.drivers.optimizers.criteriatestexecution.tools as crit_opt
 
 class CriteriaOptimizers(common_mix.EnumAutoName):
     # Default (No Optimization)
-    NO_OPTIMIZATION = crit_opt.tools.default.CriteriaTestExecutionOptimizer
+    NO_OPTIMIZATION = importlib.import_module(".default", \
+                                                package=crit_opt.__name__
+                                            ).CriteriaTestExecutionOptimizer
 
     # Strong Mutation
-    SM_OPTIMIZED_BY_WM = crit_opt.tools.strongmutation_by_weakmutation.\
-                                                CriteriaTestExecutionOptimizer
-    SM_OPTIMIZED_BY_MCOV = crit_opt.tools.strongmutation_by_mutantcoverage.\
-                                                CriteriaTestExecutionOptimizer
+    SM_OPTIMIZED_BY_WM = importlib.import_module(\
+                                        ".strongmutation_by_weakmutation", \
+                                        package=crit_opt.__name__
+                                    ).CriteriaTestExecutionOptimizer
+    SM_OPTIMIZED_BY_MCOV = importlib.import_module(\
+                                        ".strongmutation_by_mutantcoverage", \
+                                        package=crit_opt.__name__
+                                    ).CriteriaTestExecutionOptimizer
 
     def get_optimizer(self):
         return self.get_field_value()
