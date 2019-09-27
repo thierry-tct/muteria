@@ -266,8 +266,9 @@ class BaseCriteriaTool(abc.ABC):
                                 self._get_criterion_element_environment_vars(\
                                                             criterion, element)
             # run optimizer
-            may_cov_tests = prioritization_module.select_tests(100, \
-                                                            is_proportion=True)
+            may_cov_tests = prioritization_module\
+                                    .get_test_execution_optimizer(element)\
+                                    .select_tests(100, is_proportion=True)
 
             cannot_cov_tests = set(testcases) - set(may_cov_tests)
             
