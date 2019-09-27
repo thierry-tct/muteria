@@ -10,6 +10,7 @@ from __future__ import print_function
 import os
 import json
 import tarfile
+import zipfile
 import time
 import shutil
 import logging
