@@ -76,43 +76,44 @@ def dumpCSV (dataframe, out_file_pathname, separator=" "):
     return None
 #~ dumpCSV()         
 
-# TAR/UNTAR
-def compressDir (in_directory, out_tarfile_pathname=None, 
-                remove_in_directory=False):
-    '''
-    Compress (Archive) a directory to save up disk space and inodes
-
-    :param in_directory: Directory to compress (archive). 
-    :param out_tarfile_pathname: Optional Pathname of the compressed file. 
-        If None, the :param:`in_directory` name is used with extension 
-        `tar.gz` added.
-    :param remove_in_directory: Decide whether the compressed directory
-        should be deleted after compression
-    :returns: None on success and an error message on failure
-    '''
-    if out_tarfile_pathname is None:
-        out_tarfile_pathname = in_directory + ".tar.gz"
-
-    with tarfile.open(out_tarfile_pathname, "w:gz") as tar_handle:
-        tar_handle.add(in_directory, arcname='.')
-
-    if not tarfile.is_tarfile(out_tarfile_pathname):
-        errmsg = " ".join(["The created tar file", out_tarfile_pathname, \
-                            "is invalid"])
-        return errmsg
-
-    if remove_in_directory:
-        shutil.rmtree(in_directory)
-
-    return None
-#~ def compressDir()
-
 class TarGz:
     """
         File preperties preserving archiving
+        # TAR/UNTAR
     """
 
     archive_ext = ".tar.gz"
+
+    @classmethod
+    def compressDir (cls, in_directory, out_tarfile_pathname=None, 
+                    remove_in_directory=False):
+        '''
+        Compress (Archive) a directory to save up disk space and inodes
+
+        :param in_directory: Directory to compress (archive). 
+        :param out_tarfile_pathname: Optional Pathname of the compressed file. 
+            If None, the :param:`in_directory` name is used with extension 
+            `tar.gz` added.
+        :param remove_in_directory: Decide whether the compressed directory
+            should be deleted after compression
+        :returns: None on success and an error message on failure
+        '''
+        if out_tarfile_pathname is None:
+            out_tarfile_pathname = in_directory + cls.archive_ext
+
+        with tarfile.open(out_tarfile_pathname, "w:gz") as tar_handle:
+            tar_handle.add(in_directory, arcname='.')
+
+        if not tarfile.is_tarfile(out_tarfile_pathname):
+            errmsg = " ".join(["The created tar file", out_tarfile_pathname, \
+                                "is invalid"])
+            return errmsg
+
+        if remove_in_directory:
+            shutil.rmtree(in_directory)
+
+        return None
+    #~ def compressDir()
 
     @classmethod
     def decompressDir (cls, in_tarfile_pathname, out_directory=None, 
@@ -190,20 +191,31 @@ class TarGz:
                                                 out_location, is_folder=False):
         if (in_tarfile_pathname.endswith(cls.archive_ext)):
 
-            if out_directory is None:
-                out_directory = in_tarfile_pathname[:-len('.tar.gz')]
-
-            if os.path.isdir(out_directory):
-                shutil.rmtree(out_directory)
+            if out_location is None:
+                out_location = os.path.dirname(in_tarfile_pathname)
 
             tar = tarfile.open(in_tarfile_pathname, "r:gz")
-            tar.extractall(path=out_directory)
+            try:
+                tar.getmember(extract_pathname)
+            except KeyError:
+                errmsg = " ".join(["Member", extract_pathname, \
+                                    "abscent in archive", in_tarfile_pathname])
+                return errmsg
+            tar.extract(extract_pathname, path=out_location)
             tar.close()
             
-            if not os.path.isdir(out_directory):
-                errmsg = " ".join(["The out_directory", out_directory, \
-                                    "is missing after decompress"])
-                return errmsg
+            dest = os.path.join(out_location, extract_pathname)
+            if is_folder:
+                if not os.path.isdir(dest):
+                    errmsg = " ".join(["The extracted directory", dest, \
+                                                "is missing after decompress"])
+                    return errmsg
+            else:
+                if not os.path.isfile(dest):
+                    errmsg = " ".join(["The extracted file", dest, \
+                                                "is missing after decompress"])
+                    return errmsg
+                
     #    elif (in_tarfile_pathname.endswith(".tar")):
     #        if out_directory is None:
     #            out_directory = in_tarfile_pathname[:-len('.tar')]
