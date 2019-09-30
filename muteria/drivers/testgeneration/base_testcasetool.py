@@ -51,13 +51,14 @@ class BaseTestcaseTool(abc.ABC):
     '''
 
     def __init__(self, tests_working_dir, code_builds_factory, config, \
-                                                                checkpointer):
+                                            test_oracle_manager, checkpointer):
         # Set Constants
 
         # Set Direct Arguments Variables
         self.tests_working_dir = tests_working_dir
         self.code_builds_factory = code_builds_factory
         self.config = config
+        self.test_oracle_manager = test_oracle_manager
         self.checkpointer = checkpointer
 
         # Verify Direct Arguments Variables
@@ -68,6 +69,8 @@ class BaseTestcaseTool(abc.ABC):
         ## Generate the tests into this folder (to be created by user)
         self.tests_storage_dir = os.path.join(
                         self.tests_working_dir, "tests_files")
+        self.test_oracle_dir = os.path.join(
+                        self.tests_working_dir, "test_oracles")
 
         # Verify indirect Arguments Variables
 
@@ -77,6 +80,8 @@ class BaseTestcaseTool(abc.ABC):
         ## Create dirs
         if not os.path.isdir(self.tests_working_dir):
             self.clear_working_dir()
+
+        self.test_oracle_manager.add_mapping(self, self.test_oracle_dir)
     #~ def __init__()
 
     def clear_working_dir(self):
@@ -174,8 +179,8 @@ class BaseTestcaseTool(abc.ABC):
         '''
         self._prepare_executable(exe_path_map, env_vars)
         self._set_env_vars(env_vars)
-        fail_verdict = self._execute_a_test(testcase, exe_path_map,env_vars, \
-                                                            timeout=timeout)
+        fail_verdict = self._oracle_execute_a_test(testcase, exe_path_map, \
+                                                    env_vars, timeout=timeout)
         self._restore_env_vars()
         self._restore_default_executable(exe_path_map, env_vars)
 
@@ -223,12 +228,12 @@ class BaseTestcaseTool(abc.ABC):
                         "finished execution"), call_location=__file__)
 
         # Prepare the exes
-        self._prepare_executable(exe_path_map,env_vars)
+        self._prepare_executable(exe_path_map, env_vars)
         self._set_env_vars(env_vars)
 
         test_failed_verdicts = {} 
         for testcase in testcases:
-            test_failed = self._execute_a_test(testcase, exe_path_map, \
+            test_failed = self._oracle_execute_a_test(testcase, exe_path_map, \
                                             env_vars, timeout=per_test_timeout)
             test_failed_verdicts[testcase] = test_failed
             if stop_on_failure and test_failed != \
@@ -250,6 +255,21 @@ class BaseTestcaseTool(abc.ABC):
 
         return test_failed_verdicts
     #~ def _runtests()
+
+    def _oracle_execute_a_test (self, testcase, exe_path_map, env_vars, \
+                                        callback_object=None, timeout=None):
+        """ Execute a test and use the specified oracles to check
+        """
+
+        output_log = None
+        if self.test_oracle_manager.oracle_checks_output():
+            output_log = self.test_oracle_manager.get_output_log()
+        retcode = self._execute_a_test(testcase,exe_path_map,env_vars,\
+                            callback_object=callback_object, timeout=timeout, \
+                                                output_log=output_log)
+
+        return None #TODO
+    #~ def _oracle_execute_a_test()
 
     def generate_tests (self, exe_path_map, parallel_count=1, outputdir=None, \
                             code_builds_factory_override=None, max_time=None):
@@ -338,7 +358,7 @@ class BaseTestcaseTool(abc.ABC):
 
     @abc.abstractmethod
     def _execute_a_test (self, testcase, exe_path_map, env_vars, \
-                                        callback_object=None, timeout=None):
+                        callback_object=None, timeout=None, output_log=None):
         """ Execute a test given that the executables have been set 
             properly
         """

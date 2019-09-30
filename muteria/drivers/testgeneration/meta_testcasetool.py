@@ -95,7 +95,7 @@ class MetaTestcaseTool(object):
     #~ def get_toolnames_by_types_by_language()
 
     def __init__(self, language, tests_working_dir, code_builds_factory,
-                                                    test_tool_config_list):
+                                test_tool_config_list, test_oracle_manager):
 
         """ Initialize a meta testcase tool object.
         :type language:
@@ -123,6 +123,7 @@ class MetaTestcaseTool(object):
         self.tests_working_dir = tests_working_dir
         self.code_builds_factory = code_builds_factory
         self.test_tool_config_list = test_tool_config_list
+        self.test_oracle_manager = test_oracle_manager
 
         # Verify Direct Arguments Variables
         ERROR_HANDLER.assert_true(self.tests_working_dir is not None, \
@@ -204,7 +205,8 @@ class MetaTestcaseTool(object):
 
         testcase_tool = TestcaseTool(tool_working_dir, \
                                         self.code_builds_factory, config, \
-                                                        tool_checkpointer)
+                                                    self.test_oracle_manager, \
+                                                    tool_checkpointer)
         return testcase_tool
     #~ def _create_testcase_tool()
 

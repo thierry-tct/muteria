@@ -84,4 +84,4 @@ class TestcasesInfoObject(object):
     def get_custom(self):
         return self.data[self.CUSTOM_KEY]
     #~ def get_custom():
-#~ class TestcasesInfoObject(object):
+#~ class TestcasesInfoObject

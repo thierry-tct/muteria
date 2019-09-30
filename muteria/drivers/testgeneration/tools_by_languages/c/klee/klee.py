@@ -86,7 +86,7 @@ class TestcasesToolKlee(BaseTestcaseTool):
     #~ def _restore_default_executable()
 
     def _execute_a_test (self, testcase, exe_path_map, env_vars, \
-                                        callback_object=None, timeout=None):
+                        callback_object=None, timeout=None, output_log=None):
         """ Execute a test given that the executables have been set 
             properly
         """
@@ -106,6 +106,7 @@ class TestcasesToolKlee(BaseTestcaseTool):
             exe = list(exe_path_map.keys())[0]
         args = [exe, os.path.join(self.tests_storage_dir, testcase)]
         tmp_env = os.environ.copy()
+        #tmp_env.update(env_vars)
         tmp_env['KLEE_REPLAY_TIMEOUT'] = str(timeout)
         retcode, out, err = DriversUtils.execute_and_get_retcode_out_err(\
                                     prog=prog, args_list=args, env=tmp_env, \

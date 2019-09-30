@@ -18,6 +18,8 @@ from muteria.repositoryandcode.code_builds_factory import CodeBuildsFactory
 from muteria.drivers import DriversUtils
 from muteria.drivers.testgeneration import TestToolType
 from muteria.drivers.testgeneration.meta_testcasetool import MetaTestcaseTool
+from muteria.drivers.testgeneration.test_oracle_manager import \
+                                                            TestOracleManager
 import muteria.drivers.criteria as criteria_pkg
 from muteria.drivers.criteria.meta_testcriteriatool import MetaCriteriaTool
 
@@ -165,8 +167,11 @@ class Executor(object):
         if self.checkpointer.is_finished():
             return
 
+        self.test_oracle_manager = TestOracleManager(self.config)
+
         # Meta testcases tool
-        self.meta_testcase_tool = self._create_meta_test_tool(self.config)
+        self.meta_testcase_tool = self._create_meta_test_tool(self.config, \
+                                                    self.test_oracle_manager)
         self.meta_testcase_tool.check_tools_installed()
 
         # Meta criteria
@@ -189,7 +194,6 @@ class Executor(object):
         # Criteria optimization
         self.meta_criteriaexec_optimization_tools = \
                     self._create_meta_criteriaexec_optimization(self.config)
-
 
         # See whether starting or continuing
         check_pt_obj = self.checkpointer.load_checkpoint_or_start(\
@@ -359,7 +363,12 @@ class Executor(object):
             # Execute tests
             test_list_file = self.head_explorer.get_file_pathname(\
                                         outdir_struct.TMP_SELECTED_TESTS_LIST)
+
             meta_testcases = common_fs.loadJSON(test_list_file)
+
+            # Set test oracle
+            self.test_oracle_manager.set_oracle(passfail=True)
+            
             self.meta_testcase_tool.runtests(meta_testcases=meta_testcases, \
                         stop_on_failure=\
                                 self.config.STOP_TESTS_EXECUTION_ON_FAILURE, \
@@ -367,6 +376,9 @@ class Executor(object):
                         test_prioritization_module=\
                                         self.meta_testexec_optimization_tool, \
                         finish_destroy_checkpointer=False)
+            
+            # Unset test oracle
+            self.test_oracle_manager.set_oracle(passfail=False)
 
             # @Checkpointing
             self.cp_data.tasks_obj.set_task_completed(task)
@@ -442,6 +454,9 @@ class Executor(object):
                 criterion_to_matrix = {\
                                     c: matrix_files[c] for c in criteria_set}
 
+                # Set test oracle
+                self.test_oracle_manager.set_oracle(criteria_on=criteria_set)
+
                 # execute
                 self.meta_criteria_tool.runtests_criteria_coverage( \
                             testcases=meta_testcases, \
@@ -451,6 +466,9 @@ class Executor(object):
                             prioritization_module_by_criteria=\
                                     self.meta_criteriaexec_optimization_tools,\
                             finish_destroy_checkpointer=True)
+
+                # Unset test oracle
+                self.test_oracle_manager.set_oracle(criteria_on=None)
 
                 # @Checkpointing
                 self.checkpointer.write_checkpoint(self.cp_data.get_json_obj())
@@ -533,7 +551,7 @@ class Executor(object):
         return repo_mgr
     #~ def create_repo_manager()
 
-    def _create_meta_test_tool(self, config):
+    def _create_meta_test_tool(self, config, test_oracle_mgr):
         # create and return the metatest_tool
         meta_test_tool = MetaTestcaseTool(\
                         language=config.PROGRAMMING_LANGUAGE.get_val(),\
@@ -541,7 +559,8 @@ class Executor(object):
                                             outdir_struct.TESTSCASES_WORKDIR),\
                         code_builds_factory=self.cb_factory,
                         test_tool_config_list=\
-                                    config.TESTCASE_TOOLS_CONFIGS.get_val(),)
+                                    config.TESTCASE_TOOLS_CONFIGS.get_val(),\
+                        test_oracle_manager=test_oracle_mgr)
         return meta_test_tool
     #~ def _create_meta_test_tool()
 
