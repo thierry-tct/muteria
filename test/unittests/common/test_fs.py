@@ -109,7 +109,7 @@ class Test_Compress_Decompress(unittest.TestCase):
     def tearDownClass(cls):
         shutil.rmtree(cls._worktmpdir)
 
-    def test_compress_decompress(self):
+    def test_targz_compress_decompress(self):
         copy_targetd = os.path.join(self._worktmpdir, "copytartmpdir")
         other_copy_targetd = copy_targetd+"-other"
         tar_copy_targetd = copy_targetd+".tar.gz"
@@ -132,7 +132,7 @@ class Test_Compress_Decompress(unittest.TestCase):
         # Repreat above steps with decompress
 
         # Compress Default
-        res = common_fs.compressDir(copy_targetd)
+        res = common_fs.TarGz.compressDir(copy_targetd)
         self.assertEqual(res, None)
 
         # make sure the out file is generated
@@ -143,8 +143,8 @@ class Test_Compress_Decompress(unittest.TestCase):
         self.assertEqual(len(dcmp.right_only), 0)
 
         # Compress Params
-        res = common_fs.compressDir(copy_targetd, 
-                                    out_tarfile_pathname=other_tar_copy_targetd,
+        res = common_fs.TarGz.compressDir(copy_targetd, 
+                                    out_archive_pathname=other_tar_copy_targetd,
                                     remove_in_directory=True)
         self.assertEqual(res, None)
         # Make sure that in dir was removed and the tar files are same
@@ -154,7 +154,7 @@ class Test_Compress_Decompress(unittest.TestCase):
         ###
 
         # Decompress Default
-        res = common_fs.decompressDir(tar_copy_targetd)
+        res = common_fs.TarGz.decompressDir(tar_copy_targetd)
         self.assertEqual(res, None)
 
         # make sure decompress keeps tar file by default
@@ -167,9 +167,9 @@ class Test_Compress_Decompress(unittest.TestCase):
         self.assertEqual(len(dcmp.right_only), 0)
 
         # Decompress Params
-        res = common_fs.decompressDir(tar_copy_targetd,
+        res = common_fs.TarGz.decompressDir(tar_copy_targetd,
                                     out_directory=other_copy_targetd,
-                                    remove_in_tarfile=True)
+                                    remove_in_archive=True)
         self.assertEqual(res, None)
 
         # make sure decompress removes tar file by default

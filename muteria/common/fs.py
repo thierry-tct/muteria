@@ -78,11 +78,27 @@ def dumpCSV (dataframe, out_file_pathname, separator=" "):
 
 class TarGz:
     """
-        File preperties preserving archiving
-        # TAR/UNTAR
+        File preperties preserving archiving (using tar gz)
     """
 
     archive_ext = ".tar.gz"
+
+    open_read_flag = "r:gz"
+    open_write_flag = "w:gz"
+    opening_function = tarfile.TarFile
+
+    is_archive_file = tarfile.is_tarfile
+
+    get_element = lambda handle, elem: handle.getmember(elem)
+
+    @classmethod
+    def _add_folder_function(cls, handle, in_directory, *args, **kwargs):
+        handle.add(in_directory, *args, **kwargs)
+    #~ def _add_folder_function()
+
+    #################################################################
+    ######################## PUBLIC INTERFACE #######################
+    #################################################################
 
     @classmethod
     def compressDir (cls, in_directory, out_archive_pathname=None, 
@@ -93,20 +109,29 @@ class TarGz:
         :param in_directory: Directory to compress (archive). 
         :param out_archive_pathname: Optional Pathname of the compressed file. 
             If None, the :param:`in_directory` name is used with extension 
-            `tar.gz` added.
+            cls.archive_ext added.
         :param remove_in_directory: Decide whether the compressed directory
             should be deleted after compression
         :returns: None on success and an error message on failure
         '''
+
+        ERROR_HANDLER.assert_true(os.path.isdir(in_directory), \
+                                        "invalid in_directory: "+in_directory)
+
         if out_archive_pathname is None:
             out_archive_pathname = in_directory + cls.archive_ext
 
-        with tarfile.open(out_archive_pathname, "w:gz") as tar_handle:
-            tar_handle.add(in_directory, arcname='.')
+        with cls.opening_function(out_archive_pathname, cls.open_write_flag) \
+                                                                    as handle:
+            push_dir = os.getcwd()
+            os.chdir(os.path.dirname(os.path.abspath(in_directory)))
+            cls._add_folder_function(handle, os.path.basename(in_directory), \
+                                                                arcname='.')
+            os.chdir(push_dir)
 
-        if not tarfile.is_tarfile(out_archive_pathname):
-            errmsg = " ".join(["The created tar file", out_archive_pathname, \
-                                "is invalid"])
+        if not cls.is_archive_file(out_archive_pathname):
+            errmsg = " ".join(["The created", cls.archive_ext, "file", \
+                                        out_archive_pathname, "is invalid"])
             return errmsg
 
         if remove_in_directory:
@@ -137,9 +162,9 @@ class TarGz:
             if os.path.isdir(out_directory):
                 shutil.rmtree(out_directory)
 
-            tar = tarfile.open(in_archive_pathname, "r:gz")
-            tar.extractall(path=out_directory)
-            tar.close()
+            with cls.opening_function(in_archive_pathname, cls.open_read_flag)\
+                                                                    as handle:
+                handle.extractall(path=out_directory)
             
             if not os.path.isdir(out_directory):
                 errmsg = " ".join(["The out_directory", out_directory, \
@@ -154,7 +179,8 @@ class TarGz:
     #        tar.extractall()
     #        tar.close()
         else:
-            errmsg = " ".join(["Invalid tar file:", in_archive_pathname])
+            errmsg = " ".join(["Invalid", cls.archive_ext, "file:", \
+                                                        in_archive_pathname])
 
         if remove_in_archive:
             os.remove(in_archive_pathname)
@@ -170,15 +196,15 @@ class TarGz:
             if out_location is None:
                 out_location = os.path.dirname(in_archive_pathname)
 
-            tar = tarfile.open(in_archive_pathname, "r:gz")
-            try:
-                tar.getmember(extract_pathname)
-            except KeyError:
-                errmsg = " ".join(["Member", extract_pathname, \
+            with cls.opening_function(in_archive_pathname, cls.open_read_flag)\
+                                                                    as handle:
+                try:
+                    cls.get_element(handle, extract_pathname)
+                except KeyError:
+                    errmsg = " ".join(["Member", extract_pathname, \
                                     "abscent in archive", in_archive_pathname])
-                return errmsg
-            tar.extract(extract_pathname, path=out_location)
-            tar.close()
+                    return errmsg
+                handle.extract(extract_pathname, path=out_location)
             
             dest = os.path.join(out_location, extract_pathname)
             if is_folder:
@@ -201,7 +227,8 @@ class TarGz:
     #        tar.extractall()
     #        tar.close()
         else:
-            errmsg = " ".join(["Invalid tar file:", in_archive_pathname])
+            errmsg = " ".join(["Invalid", cls.archive_ext, "file:", \
+                                                        in_archive_pathname])
 
         return None
     #~ def extractFromArchive()
@@ -236,41 +263,67 @@ class Zip (TarGz):
         File properties non preserving but with option to addd to archive
     """
 
+    #######################################################################
+    ######################### OVERRIDES ###################################
+    #######################################################################
+
     archive_ext = ".zip"
 
+    open_read_flag = "r"
+    open_write_flag = "w"
+    opening_function = zipfile.ZipFile
+
+    is_archive_file = zipfile.is_zipfile
+
+    get_element = lambda handle, elem: handle.getinfo(elem)
+
     @classmethod
-    def addToArchive (cls, in_archive_pathname, new_pathname, \
+    def _add_folder_function(cls, handle, in_directory, *args, **kwargs):
+        # setup file paths variable
+        file_paths = []
+   
+        # Read all directory, subdirectories and file lists
+        for root, directories, files in os.walk(in_directory):
+            for filename in files:
+                # Create the full filepath by using os module.
+                file_path = os.path.join(root, filename)
+                file_paths.append(file_path)
+         
+        for file_path in file_paths:
+            handle.write(file_path, *args, **kwargs)
+    #~ def _add_folder_function()
+
+    #######################################################################
+    #######################   ADDITIONAL METHOD   #########################
+    #######################################################################
+
+    @classmethod
+    def addToArchive (cls, archive_pathname, added_pathname, \
                                     in_archive_name=None, is_folder=False):
-        if (in_archive_pathname.endswith(cls.archive_ext)):
+        """ Create archive if not existing
+        """
+        if (archive_pathname.endswith(cls.archive_ext)):
 
-            tar = tarfile.open(in_archive_pathname, "r:gz")
-            tar.add(name=new_pathname, arcname=in_archive_name)
-            tar.close()
-            
-            try:
-                tar.getmember(name)
-            if not os.path.isdir(out_directory):
-                errmsg = " ".join(["The out_directory", out_directory, \
-                                    "is missing after decompress"])
-                return errmsg
-    #    elif (in_archive_pathname.endswith(".tar")):
-    #        if out_directory is None:
-    #            out_directory = in_archive_pathname[:-len('.tar')]
-    #        if os.path.isdir(out_directory):
-    #            shutil.rmtree(out_directory)
-    #        tar = tarfile.open(in_archive_pathname, "r:")
-    #        tar.extractall()
-    #        tar.close()
+            with cls.opening_function(archive_pathname, "a") as handle:
+                if not is_folder:
+                    handle.write(added_pathname, arcname=in_archive_name)
+                else:
+                    cls._add_folder_function(handle, added_pathname) #TODO
+
+                # Check
+                try:
+                    cls.get_element(handle, in_archive_name)
+                except KeyError:
+                    errmsg = " ".join(["added element", added_pathname, \
+                                    "With archive name", in_archive_name,
+                                    "abscent in archive", archive_pathname])
+                    return errmsg
         else:
-            errmsg = " ".join(["Invalid tar file:", in_archive_pathname])
-
-        if remove_in_archive:
-            os.remove(in_archive_pathname)
+            errmsg = " ".join(["Invalid", cls.archive_ext, "file:", \
+                                                            archive_pathname])
 
         return None
     #~ def addToArchive ()
-
-
 #~ class Zip
 
 class FileDirStructureHandling(object):
