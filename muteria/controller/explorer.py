@@ -21,6 +21,7 @@ CRITERIA_WORKDIR = "criteria_workdir"
 TESTSCASES_WORKDIR = "testscases_workdir"
 RESULTS_DATA_DIR = "RESULTS_DATA"
 RESULTS_MATRICES_DIR = "matrices"
+RESULTS_TESTEXECUTION_OUTPUTS_DIR = "testexecution_outputs"
 RESULTS_STATS_DIR = "statistics"
 
 CB_FACTORY_WORKDIR = "code_build_workdir"
@@ -57,6 +58,22 @@ for criterion in TestCriteria:
     PARTIAL_TMP_CRITERIA_MATRIX[criterion] = \
                                     "partial_tmp_"+criterion.get_str()+".csv"
 TMP_SELECTED_TESTS_LIST = "tmp_selected_test.json"
+
+# OUTPUT Hashed
+PROGRAM_TESTEXECUTION_OUTPUT = "program_output.csv" 
+TMP_PROGRAM_TESTEXECUTION_OUTPUT = "tmp_program_output.csv" 
+PARTIAL_TMP_PROGRAM_TESTEXECUTION_OUTPUT = "partial_tmp_program_output.csv"
+CRITERIA_EXECUTION_OUTPUT = {}
+for criterion in TestCriteria:
+    CRITERIA_EXECUTION_OUTPUT[criterion] = criterion.get_str()+"_output.csv"
+TMP_CRITERIA_EXECUTION_OUTPUT = {}
+for criterion in TestCriteria:
+    TMP_CRITERIA_EXECUTION_OUTPUT[criterion] = \
+                                    "tmp_"+criterion.get_str()+"_output.csv"
+PARTIAL_TMP_CRITERIA_EXECUTION_OUTPUT = {}
+for criterion in TestCriteria:
+    PARTIAL_TMP_CRITERIA_EXECUTION_OUTPUT[criterion] = \
+                            "partial_tmp_"+criterion.get_str()+"_output.csv"
 # ---------------------------------------------------------
 
 def get_outputdir_structure_by_filesdirs():
@@ -73,6 +90,8 @@ def get_outputdir_structure_by_filesdirs():
         TESTSCASES_WORKDIR: [TESTSCASES_WORKDIR],
         RESULTS_DATA_DIR: [RESULTS_DATA_DIR],
         RESULTS_MATRICES_DIR: [RESULTS_DATA_DIR, RESULTS_MATRICES_DIR],
+        RESULTS_TESTEXECUTION_OUTPUTS_DIR: [RESULTS_DATA_DIR, \
+                                            RESULTS_TESTEXECUTION_OUTPUTS_DIR],
         RESULTS_STATS_DIR: [RESULTS_DATA_DIR, RESULTS_STATS_DIR],
         CB_FACTORY_WORKDIR: [CB_FACTORY_WORKDIR],
         CONTROLLER_DATA_DIR: [CONTROLLER_DATA_DIR],
@@ -113,6 +132,27 @@ def get_outputdir_structure_by_filesdirs():
         TopExecutionDir[PARTIAL_TMP_CRITERIA_MATRIX[criterion]] = \
                                     TopExecutionDir[EXECUTION_TMP_DIR] \
                                     + [PARTIAL_TMP_CRITERIA_MATRIX[criterion]]
+    # Output
+    TopExecutionDir[PROGRAM_TESTEXECUTION_OUTPUT] = \
+                    TopExecutionDir[RESULTS_TESTEXECUTION_OUTPUTS_DIR] + \
+                                                [PROGRAM_TESTEXECUTION_OUTPUT]
+    TopExecutionDir[TMP_PROGRAM_TESTEXECUTION_OUTPUT] = \
+                        TopExecutionDir[RESULTS_TESTEXECUTION_OUTPUTS_DIR] + \
+                                            [TMP_PROGRAM_TESTEXECUTION_OUTPUT]
+    TopExecutionDir[PARTIAL_TMP_PROGRAM_TESTEXECUTION_OUTPUT] = \
+                        TopExecutionDir[RESULTS_TESTEXECUTION_OUTPUTS_DIR] + \
+                                    [PARTIAL_TMP_PROGRAM_TESTEXECUTION_OUTPUT]
+    for criterion in TestCriteria:
+        TopExecutionDir[CRITERIA_EXECUTION_OUTPUT[criterion]] = \
+                        TopExecutionDir[RESULTS_TESTEXECUTION_OUTPUTS_DIR] + \
+                                        [CRITERIA_EXECUTION_OUTPUT[criterion]]
+        TopExecutionDir[TMP_CRITERIA_EXECUTION_OUTPUT[criterion]] = \
+                                        TopExecutionDir[EXECUTION_TMP_DIR] + \
+                                    [TMP_CRITERIA_EXECUTION_OUTPUT[criterion]]
+        TopExecutionDir[PARTIAL_TMP_CRITERIA_EXECUTION_OUTPUT[criterion]] = \
+                                    TopExecutionDir[EXECUTION_TMP_DIR] + \
+                            [PARTIAL_TMP_CRITERIA_EXECUTION_OUTPUT[criterion]]
+    
     TopExecutionDir[TMP_SELECTED_TESTS_LIST] = \
                 TopExecutionDir[EXECUTION_TMP_DIR] + [TMP_SELECTED_TESTS_LIST]
 

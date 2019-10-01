@@ -259,6 +259,7 @@ class BaseTestcaseTool(abc.ABC):
     def _oracle_execute_a_test (self, testcase, exe_path_map, env_vars, \
                                         callback_object=None, timeout=None):
         """ Execute a test and use the specified oracles to check
+            Also collect the output
         """
 
         output_log = None
@@ -268,7 +269,7 @@ class BaseTestcaseTool(abc.ABC):
                             callback_object=callback_object, timeout=timeout, \
                                                 output_log=output_log)
 
-        return None #TODO
+        return retcode #TODO
     #~ def _oracle_execute_a_test()
 
     def generate_tests (self, exe_path_map, parallel_count=1, outputdir=None, \

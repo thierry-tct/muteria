@@ -9,6 +9,7 @@ ERROR_HANDLER = common_mix.ErrorHandler
 
 class TestOracleManager(object):
     """ This class represent the test oracle manager
+        TODO: Complete this
     """
 
     METADATA_FILE = ".test_oracle_mgr.metadata"
@@ -61,5 +62,8 @@ class TestOracleManager(object):
     def set_oracle(self, passfail=False, criteria_on=None):
         self.passfail = passfail
         self.criteria_on = criteria_on
+
+        self.watching = (self.passfail or self.criteria_on)
     #~ def set_oracle()
+
 #~ class TestOracleManager

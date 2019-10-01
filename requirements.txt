@@ -4,6 +4,7 @@ scipy
 matplotlib
 networkx
 gitpython
+sh # easy subprocess creation
 #enum #(python 2.7)
 
 # SERVER
