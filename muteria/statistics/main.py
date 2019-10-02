@@ -27,6 +27,19 @@ class StatsComputer(object):
             rmatrix = common_matrices.ExecutionMatrix(filename=rmatrix_file)
             rmatrix.update_with_other_matrix(lmatrix)
             rmatrix.serialize()
+    #~ def merge_lmatrix_into_right()
+
+    @staticmethod
+    def merge_lexecoutput_into_right(lexecoutput_file, rexecoutput_file):
+        lexecoutput = common_matrices.OutputLogData(filename=lexecoutput_file)
+        if not os.path.isfile(rexecoutput_file):
+            shutil.copy2(lexecoutput_file, rexecoutput_file)
+        else:
+            rexecoutput = common_matrices.OutputLogData(\
+                                                    filename=rexecoutput_file)
+            rexecoutput.update_with_other_matrix(lexecoutput)
+            rexecoutput.serialize()
+    #~ def merge_lmatrix_into_right()
 
     @staticmethod
     def compute_stats(config, explorer):
@@ -67,4 +80,5 @@ class StatsComputer(object):
             webbrowser.open('file://' + report_file,new=2)
         except Exception as e:
             logging.warning("webbrowser error: "+str(e))
+    #~ def compute_stats()
 #~ class DataHandling

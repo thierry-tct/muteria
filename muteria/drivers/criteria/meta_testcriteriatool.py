@@ -250,6 +250,7 @@ class MetaCriteriaTool(object):
     #~ def _get_tool2criteria()
                                             
     def runtests_criteria_coverage (self, testcases, criterion_to_matrix, \
+                                    criterion_to_executionoutput,
                                     criteria_element_list_by_criteria=None, \
                                     re_instrument_code=False, \
                                     cover_criteria_elements_once=False,

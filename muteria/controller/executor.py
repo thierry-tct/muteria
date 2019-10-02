@@ -351,10 +351,15 @@ class Executor(object):
 
             matrix_file_key = outdir_struct.TMP_TEST_PASS_FAIL_MATRIX
             matrix_file = self.head_explorer.get_file_pathname(matrix_file_key)
+            execoutput_file_key = \
+                                outdir_struct.TMP_PROGRAM_TESTEXECUTION_OUTPUT
+            execoutput_file = self.head_explorer.get_file_pathname(\
+                                                           execoutput_file_key)
                                     
             # @Checkpointing
             if task_untouched:
                 self.head_explorer.remove_file_and_get(matrix_file_key)
+                self.head_explorer.remove_file_and_get(execoutput_file_key)
                 self.meta_testcase_tool.get_checkpoint_state_object()\
                                                         .restart_task()
                 self.cp_data.tasks_obj.set_task_executing(task)
@@ -373,6 +378,7 @@ class Executor(object):
                         stop_on_failure=\
                                 self.config.STOP_TESTS_EXECUTION_ON_FAILURE, \
                         fault_test_execution_matrix_file=matrix_file, \
+                        fault_test_execution_execoutput_file=execoutput_file, \
                         test_prioritization_module=\
                                         self.meta_testexec_optimization_tool, \
                         finish_destroy_checkpointer=False)
@@ -417,16 +423,26 @@ class Executor(object):
 
             matrix_files_keys = {}
             matrix_files = {}
+            execoutput_files_keys = {}
+            execoutput_files = {}
             for criterion in self.config.ENABLED_CRITERIA.get_val():
                 matrix_files_keys[criterion] = \
                                 outdir_struct.TMP_CRITERIA_MATRIX[criterion]
                 matrix_files[criterion] = \
                                 self.head_explorer.get_file_pathname(\
                                                 matrix_files_keys[criterion])
+                execoutput_files_keys[criterion] = \
+                        outdir_struct.TMP_CRITERIA_EXECUTION_OUTPUT[criterion]
+                execoutput_files[criterion] = \
+                                self.head_explorer.get_file_pathname(\
+                                            execoutput_files_keys[criterion])
             # @Checkpointing
             if task_untouched:
                 for _, matrix_file_key in list(matrix_files_keys.items()):
                     self.head_explorer.remove_file_and_get(matrix_file_key)
+                for _, execoutput_file_key in list(\
+                                                execoutput_files_keys.items()):
+                    self.head_explorer.remove_file_and_get(execoutput_file_key)
                 self.meta_criteria_tool.get_checkpoint_state_object()\
                                                         .restart_task()
                 self.cp_data.tasks_obj.set_task_executing(task)
@@ -451,8 +467,11 @@ class Executor(object):
                 test_list_file = self.head_explorer.get_file_pathname(\
                                         outdir_struct.TMP_SELECTED_TESTS_LIST)
                 meta_testcases = common_fs.loadJSON(test_list_file)
+                
                 criterion_to_matrix = {\
                                     c: matrix_files[c] for c in criteria_set}
+                criterion_to_execoutput = {\
+                                c: execoutput_files[c] for c in criteria_set}
 
                 # Set test oracle
                 self.test_oracle_manager.set_oracle(criteria_on=criteria_set)
@@ -461,6 +480,8 @@ class Executor(object):
                 self.meta_criteria_tool.runtests_criteria_coverage( \
                             testcases=meta_testcases, \
                             criterion_to_matrix=criterion_to_matrix, \
+                            criterion_to_executionoutput=\
+                                                    criterion_to_execoutput, \
                             cover_criteria_elements_once=self.config.\
                                     COVER_CRITERIA_ELEMENTS_ONCE.get_val(),\
                             prioritization_module_by_criteria=\
@@ -486,9 +507,15 @@ class Executor(object):
                                     outdir_struct.TMP_TEST_PASS_FAIL_MATRIX)
             matrix_file = self.head_explorer.get_file_pathname(\
                                     outdir_struct.TEST_PASS_FAIL_MATRIX)
+            tmp_execoutput_file = self.head_explorer.get_file_pathname(\
+                                outdir_struct.TMP_PROGRAM_TESTEXECUTION_OUTPUT)
+            execoutput_file = self.head_explorer.get_file_pathname(\
+                                    outdir_struct.PROGRAM_TESTEXECUTION_OUTPUT)
             # Merge TMP pass fail and potentially existing pass fail
             StatsComputer.merge_lmatrix_into_right(\
                                                 tmp_matrix_file, matrix_file)
+            StatsComputer.merge_lexecoutput_into_right(\
+                                        tmp_execoutput_file, execoutput_file)
 
             # @Checkpointing
             self.cp_data.tasks_obj.set_task_completed(task)
@@ -509,8 +536,14 @@ class Executor(object):
                                 outdir_struct.TMP_CRITERIA_MATRIX[criterion])
                 matrix_file = self.head_explorer.get_file_pathname(\
                                 outdir_struct.CRITERIA_MATRIX[criterion])
+                tmp_execoutput_file = self.head_explorer.get_file_pathname(\
+                        outdir_struct.TMP_CRITERIA_EXECUTION_OUTPUT[criterion])
+                execoutput_file = self.head_explorer.get_file_pathname(\
+                            outdir_struct.CRITERIA_EXECUTION_OUTPUT[criterion])
                 StatsComputer.merge_lmatrix_into_right(tmp_matrix_file, \
                                                                 matrix_file)
+                StatsComputer.merge_lexecoutput_into_right(\
+                                        tmp_execoutput_file, execoutput_file)
 
             # @Checkpointing
             self.cp_data.tasks_obj.set_task_completed(task)

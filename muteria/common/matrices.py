@@ -165,11 +165,13 @@ class RawExecutionMatrix(object):
         """
         if self.filename is not None:
             common_fs.dumpCSV(self.dataframe, self.filename)
+    #~ def serialize()
 
     def get_store_filename(self):
         """ Get the name of the storing file
         """
         return self.filename
+    #~ def get_store_filename()
 
     #def raw_add_row(self):
 
@@ -574,6 +576,8 @@ class RawExecutionMatrix(object):
 
         if serialize:
             self.serialize()
+    #~ def update_with_other_matrix()
+#~ class RawExecutionMatrix
 
 class ExecutionMatrix(RawExecutionMatrix):
     '''
@@ -582,4 +586,68 @@ class ExecutionMatrix(RawExecutionMatrix):
     def __init__(self, filename=None, non_key_col_list=None):
         RawExecutionMatrix.__init__(self, filename=filename, \
                                             non_key_col_list=non_key_col_list)
+    #~ def __init__()
+#~ class ExecutionMatrix
 
+
+class OutputLogData(object):
+    OBJECTIVE_ID = "OBJECTIVE_ID"
+    TEST_ID = "TEST_ID"
+    OUTLOG_LEN = "OUTLOG_LEN"
+    OUTLOG_HASH = "OUTLOG_HASH"
+    RETURN_CODE = "RETURN_CODE"
+    ordered_cols = [OBJECTIVE_ID, TEST_ID, OUTLOG_LEN, OUTLOG_HASH, \
+                                                                RETURN_CODE]
+    def __init__(self, filename=None):
+        self.filename = filename
+        if self.filename is None or not os.path.isfile(self.filename):
+            self.dataframe = pd.DataFrame({c:[] for c in self.ordered_cols})\
+                                                            [self.ordered_cols]
+        else:
+            self.dataframe = common_fs.loadCSV(self.filename)
+            ERROR_HANDLER.assert_true(list(self.dataframe.columns) == \
+                            self.ordered_cols, "Invalid Output log data file",\
+                                                                    __file__)
+    #~ def __init__()
+
+    def get_keys(self):
+        """ get a pandas serie of the keys (example mutant ids)
+        Example:
+        >>> nc = ['a', 'b', 'c']
+        >>> mat = ExecutionMatrix(non_key_col_list=nc)
+        >>> type(mat.get_keys()) == pd.core.series.Series
+        True
+        >>> len(mat.get_keys())
+        0
+        >>> mat.add_row_by_key('k', [1, 2, 3])
+        >>> list(mat.get_keys())
+        ['k']
+        """
+        return list(zip(self.dataframe[self.OBJECTIVE_ID], \
+                                                self.dataframe[self.TEST_ID]))
+    #~ def get_keys()
+
+    def update_with_other_matrix(self, other_execoutput, \
+                                    override_existing=False, serialize=False):
+        row_existing = set(self.get_keys()) & set(other_execoutput.get_keys())
+        if len(row_existing) > 0:
+            ERROR_HANDLER.assert_true(override_existing, \
+                            "Override_existing not set but there is overlap", \
+                                                                    __file__)            
+        # TODO: update
+
+    #~ def update_with_other_matrix()
+
+    def serialize(self):
+        """ Serialize the matrix to its corresponding file if not None
+        """
+        if self.filename is not None:
+            common_fs.dumpCSV(self.dataframe, self.filename)
+    #~ def serialize()
+
+    def get_store_filename(self):
+        """ Get the name of the storing file
+        """
+        return self.filename
+    #~ def get_store_filename()
+#~ class OutputLogData

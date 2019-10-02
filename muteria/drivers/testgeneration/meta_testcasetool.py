@@ -272,6 +272,7 @@ class MetaTestcaseTool(object):
                         stop_on_failure=False, \
                         per_test_timeout=None, \
                         fault_test_execution_matrix_file=None, \
+                        fault_test_execution_execoutput_file=None, \
                         test_prioritization_module=None, \
                         parallel_test_count=1, \
                         parallel_test_scheduler=None, \
