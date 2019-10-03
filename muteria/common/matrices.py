@@ -591,58 +591,65 @@ class ExecutionMatrix(RawExecutionMatrix):
 
 
 class OutputLogData(object):
-    OBJECTIVE_ID = "OBJECTIVE_ID"
-    TEST_ID = "TEST_ID"
+    #OBJECTIVE_ID = "OBJECTIVE_ID"
+    #TEST_ID = "TEST_ID"
     OUTLOG_LEN = "OUTLOG_LEN"
     OUTLOG_HASH = "OUTLOG_HASH"
     RETURN_CODE = "RETURN_CODE"
-    ordered_cols = [OBJECTIVE_ID, TEST_ID, OUTLOG_LEN, OUTLOG_HASH, \
-                                                                RETURN_CODE]
+    #ordered_cols = [OBJECTIVE_ID, TEST_ID, OUTLOG_LEN, OUTLOG_HASH, \
+    #                                                            RETURN_CODE]
+    Dat_Keys = {OUTLOG_LEN, OUTLOG_HASH, RETURN_CODE}
+
     def __init__(self, filename=None):
         self.filename = filename
         if self.filename is None or not os.path.isfile(self.filename):
-            self.dataframe = pd.DataFrame({c:[] for c in self.ordered_cols})\
-                                                            [self.ordered_cols]
+            self.data = {}
         else:
-            self.dataframe = common_fs.loadCSV(self.filename)
-            ERROR_HANDLER.assert_true(list(self.dataframe.columns) == \
-                            self.ordered_cols, "Invalid Output log data file",\
-                                                                    __file__)
+            self.data = common_fs.loadJSON(self.filename)
     #~ def __init__()
 
-    def get_keys(self):
-        """ get a pandas serie of the keys (example mutant ids)
-        Example:
-        >>> nc = ['a', 'b', 'c']
-        >>> mat = ExecutionMatrix(non_key_col_list=nc)
-        >>> type(mat.get_keys()) == pd.core.series.Series
-        True
-        >>> len(mat.get_keys())
-        0
-        >>> mat.add_row_by_key('k', [1, 2, 3])
-        >>> list(mat.get_keys())
-        ['k']
-        """
-        return list(zip(self.dataframe[self.OBJECTIVE_ID], \
-                                                self.dataframe[self.TEST_ID]))
-    #~ def get_keys()
+    def add_data (self, data_dict, check_all=True, override_existing=False):
+        if check_all:
+            ERROR_HANDLER.assert_true(\
+                            type(data_dict) == dict and len(data_dict) > 0, \
+                                        "expecting a non empty dict", __file__)
+            for o, o_obj in data_dict.items():
+                ERROR_HANDLER.assert_true(\
+                            type(o_obj) == dict and len(o_obj) > 0, \
+                            "expecting a non empty dict: objective is "+o, \
+                                                                    __file__)
+                for t, t_obj in o_obj.items():
+                    ERROR_HANDLER.assert_true(set(t_obj) == self.Dat_Keys , \
+                                "Invalid data for o "+o+' and t '+t, __file__)
+
+        intersect_objective = set(self.data) & set(data_dict)
+        onlynew_objective = set(data_dict) - intersect_objective
+        if not override_existing:
+            for objective in intersect_objective:
+                ERROR_HANDLER.assert_true(len(set(self.data[objective]) & \
+                                                    data_dict[objective]), \
+                            "Override_existing not set but there is overlap", \
+                                                                    __file__)            
+        for objective in intersect_objective:
+            self.data[objective].update(data_dict[objective])
+        for objective in onlynew_objective:
+            self.data[objective] = \
+                                copy.deepcopy(data_dict[objective])
+    #~ def add_data ()
 
     def update_with_other_matrix(self, other_execoutput, \
                                     override_existing=False, serialize=False):
-        row_existing = set(self.get_keys()) & set(other_execoutput.get_keys())
-        if len(row_existing) > 0:
-            ERROR_HANDLER.assert_true(override_existing, \
-                            "Override_existing not set but there is overlap", \
-                                                                    __file__)            
-        # TODO: update
-
+        self.add_data(other_execoutput.data, check_all=False, \
+                                        override_existing=override_existing)
+        if serialize:
+            self.serialize()
     #~ def update_with_other_matrix()
 
     def serialize(self):
         """ Serialize the matrix to its corresponding file if not None
         """
         if self.filename is not None:
-            common_fs.dumpCSV(self.dataframe, self.filename)
+            common_fs.dumpJSON(self.data, self.filename, pretty=True)
     #~ def serialize()
 
     def get_store_filename(self):

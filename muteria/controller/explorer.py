@@ -60,20 +60,20 @@ for criterion in TestCriteria:
 TMP_SELECTED_TESTS_LIST = "tmp_selected_test.json"
 
 # OUTPUT Hashed
-PROGRAM_TESTEXECUTION_OUTPUT = "program_output.csv" 
-TMP_PROGRAM_TESTEXECUTION_OUTPUT = "tmp_program_output.csv" 
-PARTIAL_TMP_PROGRAM_TESTEXECUTION_OUTPUT = "partial_tmp_program_output.csv"
+PROGRAM_TESTEXECUTION_OUTPUT = "program_output.json" 
+TMP_PROGRAM_TESTEXECUTION_OUTPUT = "tmp_program_output.json" 
+PARTIAL_TMP_PROGRAM_TESTEXECUTION_OUTPUT = "partial_tmp_program_output.json"
 CRITERIA_EXECUTION_OUTPUT = {}
 for criterion in TestCriteria:
-    CRITERIA_EXECUTION_OUTPUT[criterion] = criterion.get_str()+"_output.csv"
+    CRITERIA_EXECUTION_OUTPUT[criterion] = criterion.get_str()+"_output.json"
 TMP_CRITERIA_EXECUTION_OUTPUT = {}
 for criterion in TestCriteria:
     TMP_CRITERIA_EXECUTION_OUTPUT[criterion] = \
-                                    "tmp_"+criterion.get_str()+"_output.csv"
+                                    "tmp_"+criterion.get_str()+"_output.json"
 PARTIAL_TMP_CRITERIA_EXECUTION_OUTPUT = {}
 for criterion in TestCriteria:
     PARTIAL_TMP_CRITERIA_EXECUTION_OUTPUT[criterion] = \
-                            "partial_tmp_"+criterion.get_str()+"_output.csv"
+                            "partial_tmp_"+criterion.get_str()+"_output.json"
 # ---------------------------------------------------------
 
 def get_outputdir_structure_by_filesdirs():
