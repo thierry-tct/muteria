@@ -98,18 +98,20 @@ class BaseTestcaseTool(abc.ABC):
         return self.checkpointer is not None
     #~ def has_checkpointer(self)
 
-    def execute_testcase (self, testcase, exe_path_map, env_vars, timeout=None):
+    def execute_testcase (self, testcase, exe_path_map, env_vars, \
+                                        timeout=None, with_outlog_hash=True):
         return self._execute_testcase(testcase, exe_path_map, env_vars, \
-                                                            timeout=timeout)
+                            timeout=timeout, with_outlog_hash=with_outlog_hash)
     #~ def execute_testcase()
 
     def runtests(self, testcases, exe_path_map, env_vars, \
                                 stop_on_failure=False, per_test_timeout=None, \
-                                                            parallel_count=1):
+                                    with_outlog_hash=True, parallel_count=1):
         return self._runtests(testcases=testcases, exe_path_map=exe_path_map, \
                                 env_vars=env_vars, \
                                 stop_on_failure=stop_on_failure, \
                                 per_test_timeout=per_test_timeout, \
+                                with_outlog_hash=with_outlog_hash, \
                                 parallel_count=parallel_count)
     #~ def runtests()
                             
@@ -125,16 +127,17 @@ class BaseTestcaseTool(abc.ABC):
     #~ class RepoRuntestsCallbackObject
 
     def _in_repo_execute_testcase(self, testcase, exe_path_map, env_vars, \
-                                                                timeout=None):
+                                        timeout=None, with_outlog_hash=True):
         callback_func = self._execute_testcase
         cb_obj = self.RepoRuntestsCallbackObject()
         cb_obj.set_post_callback_args((callback_func,
-                                        {
-                                            "testcase": testcase,
-                                            "exe_path_map": exe_path_map,
-                                            "env_vars": env_vars,
-                                            "timeout": timeout,
-                                        }))
+                                    {
+                                        "testcase": testcase,
+                                        "exe_path_map": exe_path_map,
+                                        "env_vars": env_vars,
+                                        "timeout": timeout,
+                                        "with_outlog_hash": with_outlog_hash,
+                                    }))
         repo_mgr = self.code_builds_factory.repository_manager
         _, exec_verdict = repo_mgr.custom_read_access(cb_obj)
         # revert exes
@@ -144,7 +147,7 @@ class BaseTestcaseTool(abc.ABC):
 
     def _in_repo_runtests(self, testcases, exe_path_map, env_vars, \
                                 stop_on_failure=False, per_test_timeout=None, \
-                                                            parallel_count=1):
+                                with_outlog_hash=True, parallel_count=1):
         callback_func = self._runtests
         cb_obj = self.RepoRuntestsCallbackObject()
         cb_obj.set_post_callback_args((callback_func,
@@ -154,6 +157,7 @@ class BaseTestcaseTool(abc.ABC):
                                         "env_vars": env_vars,
                                         "stop_on_failure": stop_on_failure,
                                         "per_test_timeout": per_test_timeout,
+                                        "with_outlog_hash": with_outlog_hash,
                                         "parallel_count": parallel_count,
                                     }))
         repo_mgr = self.code_builds_factory.repository_manager
@@ -164,7 +168,7 @@ class BaseTestcaseTool(abc.ABC):
     #~ def _in_repo_runtests()
 
     def _execute_testcase (self, testcase, exe_path_map, env_vars, \
-                                                                timeout=None):
+                                        timeout=None, with_outlog_hash=True):
         '''
         Execute a test case with the given executable and 
         say whether it failed
@@ -179,17 +183,20 @@ class BaseTestcaseTool(abc.ABC):
         '''
         self._prepare_executable(exe_path_map, env_vars)
         self._set_env_vars(env_vars)
-        fail_verdict = self._oracle_execute_a_test(testcase, exe_path_map, \
-                                                    env_vars, timeout=timeout)
+
+        fail_verdict, execoutlog_hash = \
+                        self._oracle_execute_a_test(testcase, exe_path_map, \
+                                            env_vars, timeout=timeout, \
+                                            with_outlog_hash=with_outlog_hash)
         self._restore_env_vars()
         self._restore_default_executable(exe_path_map, env_vars)
 
-        return fail_verdict
+        return fail_verdict, execoutlog_hash
     #~ def _execute_testcase()
 
     def _runtests(self, testcases, exe_path_map, env_vars, \
                                 stop_on_failure=False, per_test_timeout=None, \
-                                                            parallel_count=1):
+                                with_outlog_hash=True, parallel_count=1):
         '''
         Execute the list of test cases with the given executable and 
         say, for each test case, whether it failed.
@@ -203,11 +210,13 @@ class BaseTestcaseTool(abc.ABC):
                         executing each test ({<variable>: <value>})
         :param stop_on_failure: decide whether to stop the test execution once
                         a test fails
-        :returns: dict of testcase and their failed verdict.
+        :returns: plitair of:
+                - dict of testcase and their failed verdict.
                  {<test case name>: <True if failed, False if passed, 
                     UNCERTAIN_TEST_VERDICT if uncertain>}
                  If stop_on_failure is True, only return the tests that have 
                  been executed until the failure
+                - test execution output log hash data object or None
         '''
         # @Checkpoint: create a checkpoint handler (for time)
         checkpoint_handler = CheckPointHandler(self.get_checkpointer())
@@ -232,10 +241,14 @@ class BaseTestcaseTool(abc.ABC):
         self._set_env_vars(env_vars)
 
         test_failed_verdicts = {} 
+        test_outlog_hash = {} 
         for testcase in testcases:
-            test_failed = self._oracle_execute_a_test(testcase, exe_path_map, \
-                                            env_vars, timeout=per_test_timeout)
+            test_failed, execoutlog_hash = \
+                        self._oracle_execute_a_test(testcase, exe_path_map, \
+                                        env_vars, timeout=per_test_timeout, \
+                                            with_outlog_hash=with_outlog_hash)
             test_failed_verdicts[testcase] = test_failed
+            test_outlog_hash[testcase] = execoutlog_hash
             if stop_on_failure and test_failed != \
                                 common_mix.GlobalConstants.PASS_TEST_VERDICT:
                 break
@@ -249,23 +262,30 @@ class BaseTestcaseTool(abc.ABC):
                 for testcase in set(testcases) - set(test_failed_verdicts):
                     test_failed_verdicts[testcase] = \
                             common_mix.GlobalConstants.UNCERTAIN_TEST_VERDICT
+                    test_outlog_hash[testcase] = common_matrices.\
+                                        OutputLogData.UNCERTAIN_TEST_OUTLOGDATA
 
         # @Checkpoint: Finished (for time)
         checkpoint_handler.set_finished(None)
 
-        return test_failed_verdicts
+        if not with_outlog_hash:
+            test_outlog_hash = None
+
+        return test_failed_verdicts, test_outlog_hash
     #~ def _runtests()
 
     def _oracle_execute_a_test (self, testcase, exe_path_map, env_vars, \
-                                        callback_object=None, timeout=None):
+                                        callback_object=None, timeout=None,
+                                                        with_outlog_hash=True):
         """ Execute a test and use the specified oracles to check
             Also collect the output
         """
 
-        output_log = None
+        # TODO TODO TODO
+        output_log = None # TODO: use with_outlog_hash
         if self.test_oracle_manager.oracle_checks_output():
             output_log = self.test_oracle_manager.get_output_log()
-        retcode = self._execute_a_test(testcase,exe_path_map,env_vars,\
+        retcode = self._execute_a_test(testcase,exe_path_map, env_vars,\
                             callback_object=callback_object, timeout=timeout, \
                                                 output_log=output_log)
 

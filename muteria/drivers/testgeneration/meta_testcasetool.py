@@ -241,7 +241,7 @@ class MetaTestcaseTool(object):
     #~ def _get_default_exe_path_map()
 
     def execute_testcase (self, meta_testcase, exe_path_map, env_vars, \
-                                                                timeout=None):
+                                        timeout=None, with_outlog_hash=True):
         '''
         Execute a test case with the given executable and 
         say whether it failed
@@ -251,8 +251,10 @@ class MetaTestcaseTool(object):
                         the executable to execute with the test
         :param env_vars: dict of environment variables to set before
                         executing the test ({<variable>: <value>})
-        :returns: boolean failed verdict of the test 
+        :returns: pair of:
+                - boolean failed verdict of the test 
                         (True if failed, False otherwise)
+                - test execution output log hash data object or None
         '''
         
         if exe_path_map is None:
@@ -266,7 +268,7 @@ class MetaTestcaseTool(object):
                                                                     __file__)
         ttool = self.testcases_configured_tools[ttoolalias][self.TOOL_OBJ_KEY]
         return ttool.execute_testcase(testcase, exe_path_map, env_vars, \
-                                                            timeout=timeout)
+                            timeout=timeout, with_outlog_hash=with_outlog_hash)
     #~ def execute_testcase()
 
     def runtests(self, meta_testcases=None, exe_path_map=None, env_vars=None, \
@@ -274,6 +276,7 @@ class MetaTestcaseTool(object):
                         per_test_timeout=None, \
                         fault_test_execution_matrix_file=None, \
                         fault_test_execution_execoutput_file=None, \
+                        with_outlog_hash=True, \
                         test_prioritization_module=None, \
                         parallel_test_count=1, \
                         parallel_test_scheduler=None, \
@@ -294,6 +297,7 @@ class MetaTestcaseTool(object):
                         to store the tests' pass fail execution data
         :param fault_test_execution_execoutput_file: Optional output log file 
                         to store the tests' execution actual output (hashed)
+        :param with_outlog_hash: decide whether to return outlog hash 
         :param test_prioritization_module: Specify the test prioritization
                         module. 
                         (TODO: Implement support)
@@ -399,7 +403,8 @@ class MetaTestcaseTool(object):
                                             testcases_by_tool[ttoolalias], \
                                             exe_path_map, env_vars, \
                                             stop_on_failure, \
-                                            per_test_timeout=per_test_timeout)
+                                            per_test_timeout=per_test_timeout,
+                                            with_outlog_hash=with_outlog_hash)
             for testcase in test_failed_verdicts:
                 meta_testcase =  \
                         DriversUtils.make_meta_element(testcase, ttoolalias)
@@ -464,7 +469,9 @@ class MetaTestcaseTool(object):
             fault_test_execution_matrix.add_row_by_key(self.FAULT_MATRIX_KEY, \
                                                 cells_dict, serialize=True)
 
-        if fault_test_execution_execoutput_file is not None:
+        if fault_test_execution_execoutput_file is None:
+            meta_test_failedverdicts_outlog[1] = None
+        else:
             # Load or Create the data object 
             fault_test_execution_execoutput = common_matrices.OutputLogData( \
                                 filename=fault_test_execution_execoutput_file)
