@@ -47,6 +47,7 @@ class MetaTestcaseTool(object):
 
     # The Fault execution matrix has a unique key represented by this string
     FAULT_MATRIX_KEY = "fault_revealed"
+    PROGRAM_EXECOUTPUT_KEY = "program"
 
     @classmethod
     def get_toolnames_by_types_by_language(cls):
@@ -291,6 +292,8 @@ class MetaTestcaseTool(object):
                         execution once a test fails
         :param fault_test_execution_matrix_file: Optional matrix file 
                         to store the tests' pass fail execution data
+        :param fault_test_execution_execoutput_file: Optional output log file 
+                        to store the tests' execution actual output (hashed)
         :param test_prioritization_module: Specify the test prioritization
                         module. 
                         (TODO: Implement support)
@@ -361,9 +364,12 @@ class MetaTestcaseTool(object):
                         "finished execution"), call_location=__file__)
 
         # @Checkpoint: Get the saved payload (data kapt for each tool)
-        meta_test_failed_verdicts = checkpoint_handler.get_optional_payload()
-        if meta_test_failed_verdicts is None:
-            meta_test_failed_verdicts = {} 
+        # pair list of testfailed verdict and execution output
+        meta_test_failedverdicts_outlog = \
+                                    checkpoint_handler.get_optional_payload()
+        if meta_test_failedverdicts_outlog is None:
+            meta_test_failedverdicts_outlog = [\
+                                        {}, {self.PROGRAM_EXECOUTPUT_KEY: {}}]
 
         # Make sure the tests are unique
         ERROR_HANDLER.assert_true(len(meta_testcases) == \
@@ -389,7 +395,7 @@ class MetaTestcaseTool(object):
             # Actual execution
             ttool = \
                 self.testcases_configured_tools[ttoolalias][self.TOOL_OBJ_KEY]
-            test_failed_verdicts = ttool.runtests( \
+            test_failed_verdicts, test_execoutput = ttool.runtests( \
                                             testcases_by_tool[ttoolalias], \
                                             exe_path_map, env_vars, \
                                             stop_on_failure, \
@@ -397,35 +403,41 @@ class MetaTestcaseTool(object):
             for testcase in test_failed_verdicts:
                 meta_testcase =  \
                         DriversUtils.make_meta_element(testcase, ttoolalias)
-                meta_test_failed_verdicts[meta_testcase] = \
+                meta_test_failedverdicts_outlog[0][meta_testcase] = \
                                                 test_failed_verdicts[testcase]
+                meta_test_failedverdicts_outlog[1][meta_testcase] = \
+                                                    test_execoutput[testcase]
                 if test_failed_verdicts[testcase] == \
                                 common_mix.GlobalConstants.COMMAND_UNCERTAIN:
                     found_a_failure = True
 
             # @Checkpoint: Chekpointing
             checkpoint_handler.do_checkpoint(func_name=cp_func_name, \
-                                        taskid=cp_task_id, \
-                                        tool=ttoolalias, \
-                                        opt_payload=meta_test_failed_verdicts)
+                                taskid=cp_task_id, \
+                                tool=ttoolalias, \
+                                opt_payload=meta_test_failedverdicts_outlog)
 
             if stop_on_failure and found_a_failure:
                 # @Checkpoint: Chekpointing for remaining tools
                 for rem_tool in list(testcases_by_tool.keys())[tpos+1:]:
                     checkpoint_handler.do_checkpoint(func_name=cp_func_name, \
-                                        taskid=cp_task_id, \
-                                        tool=rem_tool, \
-                                        opt_payload=meta_test_failed_verdicts)
+                                taskid=cp_task_id, \
+                                tool=rem_tool, \
+                                opt_payload=meta_test_failedverdicts_outlog)
                 break
                                         
         if stop_on_failure:
             # Make sure the non executed test has the uncertain value (None)
-            if len(meta_test_failed_verdicts) < len(meta_testcases):
-                for meta_testcase in meta_testcases:
-                    meta_test_failed_verdicts[meta_testcase] = \
+            if len(meta_test_failedverdicts_outlog[0]) < len(meta_testcases):
+                for meta_testcase in set(meta_testcases) - \
+                                    set(meta_test_failedverdicts_outlog[0]):
+                    meta_test_failedverdicts_outlog[0][meta_testcase] = \
                             common_mix.GlobalConstants.UNCERTAIN_TEST_VERDICT
+                    meta_test_failedverdicts_outlog[1][meta_testcase] = \
+                            common_matrices.OutputLogData.\
+                                                    UNCERTAIN_TEST_OUTLOGDATA
                     
-        ERROR_HANDLER.assert_true(len(meta_test_failed_verdicts) == \
+        ERROR_HANDLER.assert_true(len(meta_test_failedverdicts_outlog[0]) == \
                                                         len(meta_testcases), \
                             "Not all tests have a verdict reported", __file__)
 
@@ -445,12 +457,23 @@ class MetaTestcaseTool(object):
                     fault_test_execution_matrix.getUncertainCellDefaultVal(),
             }
             cells_dict = {}
-            for meta_testcase in meta_test_failed_verdicts:
-                cells_dict[meta_testcase] = \
-                    failverdict2val[meta_test_failed_verdicts[meta_testcase]]
+            for meta_testcase in meta_test_failedverdicts_outlog[0]:
+                cells_dict[meta_testcase] = failverdict2val[\
+                            meta_test_failedverdicts_outlog[0][meta_testcase]]
 
             fault_test_execution_matrix.add_row_by_key(self.FAULT_MATRIX_KEY, \
                                                 cells_dict, serialize=True)
+
+        if fault_test_execution_execoutput_file is not None:
+            # Load or Create the data object 
+            fault_test_execution_execoutput = common_matrices.OutputLogData( \
+                                filename=fault_test_execution_execoutput_file)
+            ERROR_HANDLER.assert_true(\
+                            fault_test_execution_execoutput.is_empty(), \
+                                        "outlog data must be empty", __file__)
+            fault_test_execution_execoutput.add_data(\
+                            meta_test_failedverdicts_outlog[1], serialize=True)
+
 
         # @Checkpoint: Finished
         detailed_exectime = {}
@@ -466,7 +489,7 @@ class MetaTestcaseTool(object):
         if finish_destroy_checkpointer:
             checkpoint_handler.destroy()
 
-        return meta_test_failed_verdicts
+        return meta_test_failedverdicts_outlog
     #~ def runtests()
 
     def get_candidate_tools_aliases(self, test_tool_type_list):

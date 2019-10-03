@@ -20,10 +20,10 @@ ERROR_HANDLER = common_mix.ErrorHandler
 class StatsComputer(object):
     @staticmethod
     def merge_lmatrix_into_right(lmatrix_file, rmatrix_file):
-        lmatrix = common_matrices.ExecutionMatrix(filename=lmatrix_file)
         if not os.path.isfile(rmatrix_file):
             shutil.copy2(lmatrix_file, rmatrix_file)
         else:
+            lmatrix = common_matrices.ExecutionMatrix(filename=lmatrix_file)
             rmatrix = common_matrices.ExecutionMatrix(filename=rmatrix_file)
             rmatrix.update_with_other_matrix(lmatrix)
             rmatrix.serialize()
@@ -31,13 +31,14 @@ class StatsComputer(object):
 
     @staticmethod
     def merge_lexecoutput_into_right(lexecoutput_file, rexecoutput_file):
-        lexecoutput = common_matrices.OutputLogData(filename=lexecoutput_file)
         if not os.path.isfile(rexecoutput_file):
             shutil.copy2(lexecoutput_file, rexecoutput_file)
         else:
+            lexecoutput = common_matrices.OutputLogData(\
+                                                    filename=lexecoutput_file)
             rexecoutput = common_matrices.OutputLogData(\
                                                     filename=rexecoutput_file)
-            rexecoutput.update_with_other_matrix(lexecoutput)
+            rexecoutput.update_with_other(lexecoutput)
             rexecoutput.serialize()
     #~ def merge_lmatrix_into_right()
 

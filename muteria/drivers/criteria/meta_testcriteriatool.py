@@ -250,7 +250,7 @@ class MetaCriteriaTool(object):
     #~ def _get_tool2criteria()
                                             
     def runtests_criteria_coverage (self, testcases, criterion_to_matrix, \
-                                    criterion_to_executionoutput,
+                                    criterion_to_executionoutput=None,
                                     criteria_element_list_by_criteria=None, \
                                     re_instrument_code=False, \
                                     cover_criteria_elements_once=False,
@@ -267,6 +267,8 @@ class MetaCriteriaTool(object):
 
         :param criterion_to_matrix: dict of <criterion, Matrix file 
                         where to store coverage>. 
+        :param criterion_to_executionoutput: dict of <criterion, execoutput 
+                        file where to store coverage>. 
         
         :param criteria_element_list_by_criteria: dictionary representing the
                         list of criteria elements (stmts, branches, mutants)
@@ -334,6 +336,12 @@ class MetaCriteriaTool(object):
                     "Passed matrices output are more than tool specified", \
                                                                     __file__)
 
+        if criterion_to_executionoutput is not None:
+            ERROR_HANDLER.assert_true(set(criterion_to_matrix) == \
+                                        set(criterion_to_executionoutput), \
+                            "criteria mismatch between matrix and output", \
+                                                                    __file__)
+
         tool2criteria = self._get_tool2criteria(criterion_to_matrix.keys())
 
         matrices_dir_tmp = os.path.join(self.criteria_working_dir, \
@@ -374,16 +382,29 @@ class MetaCriteriaTool(object):
                                 "some tool in data not registered", __file__)
 
         crit2tool2matrixfile = {cv: {} for cv in criterion_to_matrix}
+        crit2tool2outhashfile = {cv: {} for cv in criterion_to_executionoutput}
         for ctoolalias in tool2criteria:
             _criteria2matrix = {}
+            _criteria2outhash = {}
             for criterion in tool2criteria[ctoolalias]:
                 _criteria2matrix[criterion] = os.path.join(matrices_dir_tmp, \
                                                 criterion.get_field_value() 
                                                                 + '-' 
                                                                 + ctoolalias 
                                                                 + '.csv')
+                if criterion_to_executionoutput is None or \
+                            criterion_to_executionoutput[criterion] is None:
+                    _criteria2outhash[criterion] = None
+                else:
+                    _criteria2outhash[criterion] = os.path.join(matrices_dir_tmp, \
+                                                criterion.get_field_value() 
+                                                        + '-' 
+                                                        + ctoolalias 
+                                                        + '.outloghash.json')
                 crit2tool2matrixfile[criterion][ctoolalias] = \
                                                     _criteria2matrix[criterion]
+                crit2tool2outhashfile[criterion][ctoolalias] = \
+                                                _criteria2outhash[criterion]
 
             # @Checkpoint: Check whether already executed
             if checkpoint_handler.is_to_execute( \
@@ -395,11 +416,16 @@ class MetaCriteriaTool(object):
                                         common_matrices.ExecutionMatrix( \
                                         filename=_criteria2matrix[criterion], \
                                         non_key_col_list=testcases)
+                    _criteria2outhash[criterion] = \
+                                        common_matrices.OutputLogData( \
+                                        filename=_criteria2outhash[criterion])
                 # Actual execution
                 ctool = self.criteria_configured_tools[ctoolalias][\
                                                             self.TOOL_OBJ_KEY]
                 ctool.runtests_criteria_coverage(testcases, \
                                 criterion_to_matrix=_criteria2matrix, \
+                                criterion_to_executionoutput=\
+                                                            _criteria2outhash,\
                                 criteria_element_list_by_criteria=\
                                         criteria_elem_list_by_tool[toolalias],\
                                 re_instrument_code=re_instrument_code, \
@@ -414,16 +440,27 @@ class MetaCriteriaTool(object):
                                         taskid=cp_task_id, \
                                         tool=ctoolalias)
 
-        # Aggregate the matrices
-        ## Create reult matrices
+        # Aggregate the matrices and out hashes
+        ## Create reult matrices and out hashes
         result_matrices = {}
+        result_outloghashes = {}
         for criterion in criterion_to_matrix:
             result_matrices[criterion] = common_matrices.ExecutionMatrix( \
                                 filename=criterion_to_matrix[criterion], \
                                 non_key_col_list=testcases)
+            if criterion_to_executionoutput[criterion] is None:
+                result_outloghashes[criterion] = None
+            else:
+                result_outloghashes[criterion] = \
+                            common_matrices.OutputLogData(filename=\
+                                    criterion_to_executionoutput[criterion])
+                ERROR_HANDLER.assert_true(\
+                            crit2tool2outhashfile[criterion] is not None,
+                            "Bug: log enabled but hidden from tool", __file__)
         ## Actual aggregate
         for criterion in result_matrices:
             result_matrix = result_matrices[criterion]
+            result_outloghash = result_outloghashes[criterion]
             for mtoolalias in crit2tool2matrixfile[criterion]:
                 tool_matrix = common_matrices.ExecutionMatrix(\
                         filename=crit2tool2matrixfile[criterion][mtoolalias])
@@ -449,6 +486,19 @@ class MetaCriteriaTool(object):
                                                         key2nonkeydict[c_key], 
                                                         serialize=False)
 
+                # out log hash
+                if crit2tool2outhashfile[criterion] is not None:
+                    tool_outloghash = common_matrices.OutputLogData(\
+                            filename=\
+                                crit2tool2outhashfile[criterion][mtoolalias])
+                    for objective, objective_data in \
+                                tool_outloghash.get_zip_objective_and_data():
+                        meta_objective = DriversUtils.make_meta_element(\
+                                                    str(objective), mtoolalias)
+                        result_outloghash.add_data(
+                                            {meta_objective: objective_data}, \
+                                            serialize=False)
+
             # @Checkpoint: Check whether already executed
             if checkpoint_handler.is_to_execute( \
                                         func_name=cp_func_name, \
@@ -456,6 +506,8 @@ class MetaCriteriaTool(object):
                                         tool=criterion.get_str()):
                 # Serialized the computed matrix
                 result_matrix.serialize()
+                if result_outloghash is not None:
+                    result_outloghash.serialize()
             # @Checkpoint: Checkpointing
             checkpoint_handler.do_checkpoint( \
                                     func_name=cp_func_name, \

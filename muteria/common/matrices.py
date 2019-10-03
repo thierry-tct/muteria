@@ -599,6 +599,12 @@ class OutputLogData(object):
     #ordered_cols = [OBJECTIVE_ID, TEST_ID, OUTLOG_LEN, OUTLOG_HASH, \
     #                                                            RETURN_CODE]
     Dat_Keys = {OUTLOG_LEN, OUTLOG_HASH, RETURN_CODE}
+    
+    UNCERTAIN_TEST_OUTLOGDATA = {
+                OUTLOG_LEN: common_mix.GlobalConstants.COMMAND_UNCERTAIN,
+                OUTLOG_HASH: common_mix.GlobalConstants.COMMAND_UNCERTAIN,
+                RETURN_CODE: common_mix.GlobalConstants.COMMAND_UNCERTAIN,
+    }
 
     def __init__(self, filename=None):
         self.filename = filename
@@ -608,7 +614,16 @@ class OutputLogData(object):
             self.data = common_fs.loadJSON(self.filename)
     #~ def __init__()
 
-    def add_data (self, data_dict, check_all=True, override_existing=False):
+    def is_empty(self):
+        return len(self.data) == 0
+    #~ def is_empty()
+
+    def get_zip_objective_and_data(self):
+        return self.data.items()
+    #~ def get_zip_objective_and_data()
+
+    def add_data (self, data_dict, check_all=True, override_existing=False, 
+                                                            serialize=False):
         if check_all:
             ERROR_HANDLER.assert_true(\
                             type(data_dict) == dict and len(data_dict) > 0, \
@@ -635,14 +650,15 @@ class OutputLogData(object):
         for objective in onlynew_objective:
             self.data[objective] = \
                                 copy.deepcopy(data_dict[objective])
-    #~ def add_data ()
-
-    def update_with_other_matrix(self, other_execoutput, \
-                                    override_existing=False, serialize=False):
-        self.add_data(other_execoutput.data, check_all=False, \
-                                        override_existing=override_existing)
         if serialize:
             self.serialize()
+    #~ def add_data ()
+
+    def update_with_other(self, other_execoutput, \
+                                    override_existing=False, serialize=False):
+        self.add_data(other_execoutput.data, check_all=False, \
+                                        override_existing=override_existing, \
+                                        serialize=serialize)
     #~ def update_with_other_matrix()
 
     def serialize(self):
