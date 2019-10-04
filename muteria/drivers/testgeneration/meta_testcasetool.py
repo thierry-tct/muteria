@@ -33,7 +33,8 @@ from muteria.drivers.checkpoint_handler import CheckPointHandler
 from muteria.drivers.testgeneration.testcases_info import TestcasesInfoObject
 from muteria.drivers.testgeneration import TestToolType
 
-from muteria.drivers.testgeneration.custom_dev_testcase import CustomTestcases
+from muteria.drivers.testgeneration.custom_dev_testcase.custom_dev_testcase \
+                                                        import CustomTestcases
 
 ERROR_HANDLER = common_mix.ErrorHandler
 

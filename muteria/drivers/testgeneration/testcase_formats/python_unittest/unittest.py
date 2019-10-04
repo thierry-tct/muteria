@@ -4,7 +4,7 @@ from muteria.common.mix import GlobalConstants
 from muteria.drivers import DriversUtils
 
 def python_unittest_runner(test_name, repo_root_dir, exe_path_map, env_vars, \
-                                                                    timeout):
+                                            timeout, collected_output=None):
     # TODO: use exe_path_map 
 
     def parse_test(s):
@@ -15,10 +15,16 @@ def python_unittest_runner(test_name, repo_root_dir, exe_path_map, env_vars, \
 
     try:
         args_list = ['-m', 'unittest', test_name, '-v']
-        retcode, stdout, _ = DriversUtils.execute_and_get_retcode_out_err(\
+
+        if collected_output is None:
+            retcode, stdout, _ = DriversUtils.execute_and_get_retcode_out_err(\
                                 prog=sys.executable, args_list=args_list, \
                                         timeout=timeout, merge_err_to_out=True)
-        stdout = stdout.splitlines()
+            stdout = stdout.splitlines()
+        else:
+            # collected_output is a list ([retcode, out_err_log])
+            # TODO: use wrapper? or parse out for particular codes... 
+            assert False, "TO BE Implemented"
     except:
         # ERROR
         os.chdir(cwd)

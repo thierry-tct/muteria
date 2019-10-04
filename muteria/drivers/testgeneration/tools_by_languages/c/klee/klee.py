@@ -69,14 +69,16 @@ class TestcasesToolKlee(BaseTestcaseTool):
             return self.testcase_info_object
     #~ def get_testcase_info_object()
 
-    def _prepare_executable(self, exe_path_map, env_vars):
+    def _prepare_executable(self, exe_path_map, env_vars, \
+                                                        collect_output=False):
         """ Make sure we have the right executable ready (if needed)
         """
         #self.code_builds_factory.copy_into_repository(exe_path_map)
         pass
     #~ def _prepare_executable()
 
-    def _restore_default_executable(self, exe_path_map, env_vars):
+    def _restore_default_executable(self, exe_path_map, env_vars, \
+                                                        collect_output=False):
         """ Restore back the default executable (if needed).
             Useful for test execution that require the executable
             at a specific location.
@@ -112,7 +114,7 @@ class TestcasesToolKlee(BaseTestcaseTool):
             retcode, out, err = DriversUtils.execute_and_get_retcode_out_err(\
                                     prog=prog, args_list=args, env=tmp_env, \
                                                         merge_err_to_out=True)
-            output_err = out
+            output_err = (retcode, out)
         else:
             retcode, out, err = DriversUtils.execute_and_get_retcode_out_err(\
                                     prog=prog, args_list=args, env=tmp_env, \

@@ -3,7 +3,7 @@ from muteria.common.mix import GlobalConstants
 from muteria.drivers import DriversUtils
 
 def bash_test_runner(test_name, repo_root_dir, exe_path_map, env_vars, \
-                                                                    timeout):
+                                            timeout, collected_output=None):
     # TODO: use exe_path_map
 
     cwd = os.getcwd()
@@ -11,9 +11,14 @@ def bash_test_runner(test_name, repo_root_dir, exe_path_map, env_vars, \
 
     try:
         args_list = [test_name]
-        retcode, _, _ = DriversUtils.execute_and_get_retcode_out_err(\
+        if collected_output is None:
+            retcode, _, _ = DriversUtils.execute_and_get_retcode_out_err(\
                                 prog='bash', args_list=args_list, \
                             timeout=timeout, out_on=False, err_on=False)
+        else:
+            # collected_output is a list ([retcode, out_err_log])
+            # TODO: use wrapper to get the output 
+            assert False, "TO BE Implemented"
     except:
         # ERROR
         return GlobalConstants.TEST_EXECUTION_ERROR

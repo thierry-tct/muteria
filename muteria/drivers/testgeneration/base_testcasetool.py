@@ -182,7 +182,8 @@ class BaseTestcaseTool(abc.ABC):
         :returns: boolean failed verdict of the test 
                         (True if failed, False otherwise)
         '''
-        self._prepare_executable(exe_path_map, env_vars)
+        self._prepare_executable(exe_path_map, env_vars, \
+                                            collect_output=with_outlog_hash)
         self._set_env_vars(env_vars)
 
         fail_verdict, execoutlog_hash = \
@@ -190,7 +191,8 @@ class BaseTestcaseTool(abc.ABC):
                                             env_vars, timeout=timeout, \
                                             with_outlog_hash=with_outlog_hash)
         self._restore_env_vars()
-        self._restore_default_executable(exe_path_map, env_vars)
+        self._restore_default_executable(exe_path_map, env_vars, \
+                                            collect_output=with_outlog_hash)
 
         return fail_verdict, execoutlog_hash
     #~ def _execute_testcase()
@@ -238,7 +240,8 @@ class BaseTestcaseTool(abc.ABC):
                         "finished execution"), call_location=__file__)
 
         # Prepare the exes
-        self._prepare_executable(exe_path_map, env_vars)
+        self._prepare_executable(exe_path_map, env_vars, \
+                                            collect_output=with_outlog_hash)
         self._set_env_vars(env_vars)
 
         test_failed_verdicts = {} 
@@ -255,7 +258,8 @@ class BaseTestcaseTool(abc.ABC):
                 break
         # Restore back the exes
         self._restore_env_vars()
-        self._restore_default_executable(exe_path_map, env_vars)
+        self._restore_default_executable(exe_path_map, env_vars, \
+                                            collect_output=with_outlog_hash)
 
         if stop_on_failure:
             # Make sure the non executed test has the uncertain value (None)
@@ -373,14 +377,16 @@ class BaseTestcaseTool(abc.ABC):
     #~ def get_testcase_info_object()
 
     @abc.abstractmethod
-    def _prepare_executable (self, exe_path_map, env_vars):
+    def _prepare_executable (self, exe_path_map, env_vars, \
+                                                        collect_output=False):
         """ Make sure we have the right executable ready (if needed)
         """
         print ("!!! Must be implemented in child class !!!")
     #~ def _prepare_executale()
 
     @abc.abstractmethod
-    def _restore_default_executable(self, exe_path_map, env_vars):
+    def _restore_default_executable(self, exe_path_map, env_vars, \
+                                                        collect_output=False):
         """ Restore back the default executable (if needed).
             Useful for test execution that require the executable
             at a specific location.

@@ -12,6 +12,9 @@ import muteria.common.mix as common_mix
 from muteria.drivers.testgeneration.base_testcasetool import BaseTestcaseTool
 from muteria.drivers.testgeneration.testcases_info import TestcasesInfoObject
 
+import muteria.drivers.testgeneration.custom_dev_testcase.wrapper_setup as \
+                                                                wrapper_setup
+
 ERROR_HANDLER = common_mix.ErrorHandler
 
 class CustomTestcases(BaseTestcaseTool):
@@ -39,16 +42,17 @@ class CustomTestcases(BaseTestcaseTool):
     #~ def get_testcase_info_object()
 
     def execute_testcase (self, testcase, exe_path_map, env_vars, \
-                                                                timeout=None):
+                                        timeout=None, with_outlog_hash=True):
         return self._in_repo_execute_testcase(testcase=testcase, \
-                                                exe_path_map=exe_path_map, \
-                                                env_vars=env_vars, \
-                                                timeout=timeout)
+                                            exe_path_map=exe_path_map, \
+                                            env_vars=env_vars, \
+                                            timeout=timeout, \
+                                            with_outlog_hash=with_outlog_hash)
     #~ def execute_testcase()
 
     def runtests(self, testcases, exe_path_map, env_vars, \
                                 stop_on_failure=False, per_test_timeout=None, \
-                                                             parallel_count=1):
+                                    with_outlog_hash=True, parallel_count=1):
         """ Override runtests
         """
         return self._in_repo_runtests(testcases=testcases, \
@@ -56,37 +60,56 @@ class CustomTestcases(BaseTestcaseTool):
                                         env_vars=env_vars, \
                                         stop_on_failure=stop_on_failure, \
                                         per_test_timeout=per_test_timeout, \
+                                        with_outlog_hash=with_outlog_hash, \
                                         parallel_count=parallel_count)
     #~ def runtests()
 
-    def _prepare_executable(self, exe_path_map, env_vars):
+    def _prepare_executable(self, exe_path_map, env_vars, \
+                                                        collect_output=False):
         """ Make sure we have the right executable ready (if needed)
         """
         #self.code_builds_factory.copy_into_repository(exe_path_map)
-        pass
+        # TODO: Call the wrapper installation function in wrapper_setup.py
+        
+        if collect_output:
+            #wrapper_setup.install_wrapper()
+            assert False
     #~ def _prepare_executable()
 
-    def _restore_default_executable(self, exe_path_map, env_vars):
+    def _restore_default_executable(self, exe_path_map, env_vars, \
+                                                        collect_output=False):
         """ Restore back the default executable (if needed).
             Useful for test execution that require the executable
             at a specific location.
         """
         #self.code_builds_factory.restore_repository_files(exe_path_map)
-        pass
+        # TODO: Call the wrapper uninstallation function in wrapper_setup.py
+        
+        if collect_output:
+            #wrapper_setup.uninstall_wrapper()
+            assert False
     #~ def _restore_default_executable()
 
     def _execute_a_test (self, testcase, exe_path_map, env_vars, \
-                                        callback_object=None, timeout=None):
+                                callback_object=None, timeout=None, \
+                                                    collect_output=None):
         """ Execute a test given that the executables have been set 
             properly
         """
         if timeout is None:
             timeout = self.config.ONE_TEST_EXECUTION_TIMEOUT
         rep_mgr = self.code_builds_factory.repository_manager
+
+        if collect_output:
+            collected_output = []
+        else:
+            collected_output = None
+        
         pre,verdict,post = rep_mgr.run_dev_test(dev_test_name=testcase, \
                                             exe_path_map=exe_path_map, \
                                             env_vars=env_vars, \
                                             timeout=timeout, \
+                                            collected_output=collected_output,\
                                             callback_object=callback_object)
         ERROR_HANDLER.assert_true(\
                             pre == common_mix.GlobalConstants.COMMAND_SUCCESS,\
@@ -94,7 +117,7 @@ class CustomTestcases(BaseTestcaseTool):
         ERROR_HANDLER.assert_true(\
                         post != common_mix.GlobalConstants.COMMAND_FAILURE,\
                                             "after command failed", __file__)
-        return verdict
+        return verdict, collected_output
     #~ def _execute_a_test()
 
     def _do_generate_tests (self, exe_path_map, outputdir, \
