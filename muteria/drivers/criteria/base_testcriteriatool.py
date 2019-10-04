@@ -84,6 +84,7 @@ class BaseCriteriaTool(abc.ABC):
     #~ def has_checkpointer()
 
     def _runtest_meta_criterion_program (self, testcases, criterion_to_matrix,\
+                                    criterion_to_executionoutput, \
                                     criteria_element_list_by_criteria, \
                                     cover_criteria_elements_once=False, \
                                     prioritization_module_by_criteria=None, \
@@ -115,9 +116,19 @@ class BaseCriteriaTool(abc.ABC):
         groups = self._get_criteria_groups(criterion2executable_path,\
                                                     criterion2environment_vars)
 
-        # Execute each test and gather the data
+        # important tmp vars
         criterion2coverage_per_test = \
                                 {criterion: {} for criterion in criterialist}
+        criterion2metaoutlog_per_test = {}
+        a_criterion_has_outlog = False
+        for criterion in criterialist:
+            if criterion_to_executionoutput is None:
+                criterion2metaoutlog_per_test[criterion] = None
+            else:
+                criterion2metaoutlog_per_test[criterion] = {}
+                a_criterion_has_outlog = True
+
+        # Execute each test and gather the data
         for testcase in testcases:
             for cg_criteria, cg_exe_path_map, cg_env_vars in groups:
                 # Create reult_tmp_dir
@@ -139,11 +150,21 @@ class BaseCriteriaTool(abc.ABC):
                                 self._extract_coverage_data_of_a_test(\
                                                 cg_criteria, test_verdict, \
                                                     result_dir_tmp)
+                if a_criterion_has_outlog:
+                    metaoutlog_tmp_data_per_criterion = \
+                                    self._extract_metaoutlog_data_of_a_test( \
+                                                cg_criteria, test_verdict, \
+                                                    result_dir_tmp)
                 # update data
                 for criterion in cg_criteria:
                     if len(criterion2coverage_per_test[criterion]) == 0:
                         for elem in coverage_tmp_data_per_criterion[criterion]:
                             criterion2coverage_per_test[criterion][elem] = {}
+                        if criterion_to_executionoutput[criterion] is not None:
+                            for elem in metaoutlog_tmp_data_per_criterion[\
+                                                                    criterion]:
+                                criterion2metaoutlog_per_test[criterion]\
+                                                                    [elem] = {}
 
                     for elem in coverage_tmp_data_per_criterion[criterion]:
                         # verify that the value is positive or null
@@ -161,6 +182,21 @@ class BaseCriteriaTool(abc.ABC):
 
                         res[testcase] = coverage_tmp_data_per_criterion\
                                                             [criterion][elem]
+
+                    if criterion_to_executionoutput[criterion] is not None:
+                        for elem in metaoutlog_tmp_data_per_criterion[\
+                                                                    criterion]:
+                            try:
+                                res = criterion2metaoutlog_per_test[criterion]\
+                                                                        [elem]
+                            except KeyError:
+                                res = {}
+                                criterion2metaoutlog_per_test[criterion][\
+                                                                    elem] = res
+
+                            res[testcase] = metaoutlog_tmp_data_per_criterion\
+                                                            [criterion][elem]
+                            
 
                 # remove dir created for temporal storage
                 shutil.rmtree(result_dir_tmp)
@@ -183,10 +219,23 @@ class BaseCriteriaTool(abc.ABC):
                 matrix.add_row_by_key(key, value, serialize=False)
             # Serialize to disk
             matrix.serialize()
+
+            # outLog
+            if criterion_to_executionoutput[criterion] is not None:
+                outlog_datfile = criterion_to_executionoutput[criterion]\
+                                                        .get_store_filename()
+                if outlog_datfile is not None and \
+                                                os.path.isfile(outlog_datfile):
+                    os.remove(outlog_datfile)
+
+                criterion_to_executionoutput[criterion].add_data(\
+                                    criterion2metaoutlog_per_test[criterion], \
+                                    serialize=True)
     #~ def _runtest_meta_criterion_program()
 
     def _runtest_separate_criterion_program (self, criterion, testcases, \
                                     matrix, 
+                                    executionoutput, \
                                     criteria_element_list, \
                                     cover_criteria_elements_once=False, \
                                     prioritization_module=None, \
@@ -308,8 +357,10 @@ class BaseCriteriaTool(abc.ABC):
         matrix.serialize()
     #~ def _runtest_separate_criterion_program()
 
-    def runtests_criteria_coverage (self, testcases, criterion_to_matrix, \
+    def runtests_criteria_coverage (self, testcases, \
                                     criteria_element_list_by_criteria, \
+                                    criterion_to_matrix, \
+                                    criterion_to_executionoutput, \
                                     re_instrument_code=True, \
                                     cover_criteria_elements_once=False, \
                                     prioritization_module_by_criteria=None, \
@@ -337,6 +388,10 @@ class BaseCriteriaTool(abc.ABC):
                                 set(self.get_supported_criteria())) == 0, \
                             "Some unsuported criteria are enabled", __file__)
 
+        ERROR_HANDLER.assert_true(criterion_to_executionoutput is None or \
+                set(criterion_to_matrix) == set(criterion_to_executionoutput),\
+                "mismatch of criteria between matrix and outlog" , __file__)
+
         # Check that the result_matrix is empty and fine
         for criterion in criterion_to_matrix:
             ERROR_HANDLER.assert_true( \
@@ -348,6 +403,10 @@ class BaseCriteriaTool(abc.ABC):
                                                 .get_nonkey_colname_list()), \
                         "The specified test cases are not same in the matrix",
                                                                     __file__)
+
+            ERROR_HANDLER.assert_true(criterion_to_executionoutput is None or \
+                        criterion_to_executionoutput[criterion].is_empty(), \
+                                    "the execoutput must be empty", __file__)
 
         # @Checkpoint: check 
         if checkpoint_handler.is_to_execute(func_name=cp_func_name, \
@@ -372,6 +431,10 @@ class BaseCriteriaTool(abc.ABC):
 
         m_crit2mat, s_crit2mat = self._extract_sub_dicts(criterion_to_matrix,\
                                                 [meta_crits, separated_crits])
+        if criterion_to_executionoutput is not None:
+            m_crit2execout, s_crit2execout = self._extract_sub_dicts(\
+                                                criterion_to_executionoutput,\
+                                                [meta_crits, separated_crits])
         m_crit2elem, s_crit2elem = self._extract_sub_dicts( \
                                         criteria_element_list_by_criteria,\
                                                 [meta_crits, separated_crits])
@@ -389,6 +452,7 @@ class BaseCriteriaTool(abc.ABC):
                                             taskid=cp_task_id):
             self._runtest_meta_criterion_program(testcases=testcases, \
                                 criterion_to_matrix=m_crit2mat, \
+                                criterion_to_executionoutput=m_crit2execout, \
                                 criteria_element_list_by_criteria=m_crit2elem,\
                                 cover_criteria_elements_once=\
                                             cover_criteria_elements_once,\
@@ -409,6 +473,7 @@ class BaseCriteriaTool(abc.ABC):
                 self._runtest_separate_criterion_program(criterion, \
                                 testcases=testcases, \
                                 matrix=s_crit2mat[criterion], \
+                                executionoutput=s_crit2execout[criterion], \
                                 criteria_element_list=s_crit2elem[criterion],\
                                 cover_criteria_elements_once=\
                                             cover_criteria_elements_once,\
@@ -513,6 +578,15 @@ class BaseCriteriaTool(abc.ABC):
     def _get_latest_top_output_dir(self):
         return os.path.dirname(os.path.dirname(self.criteria_working_dir))
     #~ def _get_latest_top_output_dir()
+
+    def _extract_metaoutlog_data_of_a_test(self, enabled_criteria, \
+                                    test_execution_verdict, result_dir_tmp):
+        """ Override this in a tool that suports it
+            By default it is not supported and thus fails
+        """
+        ERROR_HANDLER.assert_true("meta outlog unsupported by this tool")
+        return {}
+    #~ def _extract_metaoutlog_data_of_a_test()
         
     #######################################################################
     ##################### Methods to implement ############################

@@ -396,7 +396,8 @@ class MetaCriteriaTool(object):
                             criterion_to_executionoutput[criterion] is None:
                     _criteria2outhash[criterion] = None
                 else:
-                    _criteria2outhash[criterion] = os.path.join(matrices_dir_tmp, \
+                    _criteria2outhash[criterion] = \
+                                            os.path.join(matrices_dir_tmp, \
                                                 criterion.get_field_value() 
                                                         + '-' 
                                                         + ctoolalias 
@@ -423,11 +424,11 @@ class MetaCriteriaTool(object):
                 ctool = self.criteria_configured_tools[ctoolalias][\
                                                             self.TOOL_OBJ_KEY]
                 ctool.runtests_criteria_coverage(testcases, \
+                                criteria_element_list_by_criteria=\
+                                        criteria_elem_list_by_tool[toolalias],\
                                 criterion_to_matrix=_criteria2matrix, \
                                 criterion_to_executionoutput=\
                                                             _criteria2outhash,\
-                                criteria_element_list_by_criteria=\
-                                        criteria_elem_list_by_tool[toolalias],\
                                 re_instrument_code=re_instrument_code, \
                                 cover_criteria_elements_once=\
                                                 cover_criteria_elements_once, \

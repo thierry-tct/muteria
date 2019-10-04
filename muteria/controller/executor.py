@@ -470,6 +470,8 @@ class Executor(object):
                 
                 criterion_to_matrix = {\
                                     c: matrix_files[c] for c in criteria_set}
+
+                # TODO: chack set based on the criteria for which execout is enabled
                 criterion_to_execoutput = {\
                                 c: execoutput_files[c] for c in criteria_set}
 
