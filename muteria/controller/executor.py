@@ -353,8 +353,11 @@ class Executor(object):
             matrix_file = self.head_explorer.get_file_pathname(matrix_file_key)
             execoutput_file_key = \
                                 outdir_struct.TMP_PROGRAM_TESTEXECUTION_OUTPUT
-            execoutput_file = self.head_explorer.get_file_pathname(\
+            if self.config.GET_PASSFAIL_OUTPUT_SUMMARY:
+                execoutput_file = self.head_explorer.get_file_pathname(\
                                                            execoutput_file_key)
+            else:
+                execoutput_file = None
                                     
             # @Checkpointing
             if task_untouched:
@@ -433,9 +436,13 @@ class Executor(object):
                                                 matrix_files_keys[criterion])
                 execoutput_files_keys[criterion] = \
                         outdir_struct.TMP_CRITERIA_EXECUTION_OUTPUT[criterion]
-                execoutput_files[criterion] = \
+                if criterion in self.config.CRITERIA_WITH_OUTPUT_SUMMARY:
+                    execoutput_files[criterion] = \
                                 self.head_explorer.get_file_pathname(\
                                             execoutput_files_keys[criterion])
+                else:
+                    execoutput_files[criterion] = None
+
             # @Checkpointing
             if task_untouched:
                 for _, matrix_file_key in list(matrix_files_keys.items()):

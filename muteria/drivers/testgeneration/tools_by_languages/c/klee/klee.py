@@ -86,7 +86,7 @@ class TestcasesToolKlee(BaseTestcaseTool):
     #~ def _restore_default_executable()
 
     def _execute_a_test (self, testcase, exe_path_map, env_vars, \
-                        callback_object=None, timeout=None, output_log=None):
+                    callback_object=None, timeout=None, collect_output=False):
         """ Execute a test given that the executables have been set 
             properly
         """
@@ -108,16 +108,24 @@ class TestcasesToolKlee(BaseTestcaseTool):
         tmp_env = os.environ.copy()
         #tmp_env.update(env_vars)
         tmp_env['KLEE_REPLAY_TIMEOUT'] = str(timeout)
-        retcode, out, err = DriversUtils.execute_and_get_retcode_out_err(\
+        if collect_output:
+            retcode, out, err = DriversUtils.execute_and_get_retcode_out_err(\
                                     prog=prog, args_list=args, env=tmp_env, \
                                                         merge_err_to_out=True)
-        # TODO: Oracle here
+            output_err = out
+        else:
+            retcode, out, err = DriversUtils.execute_and_get_retcode_out_err(\
+                                    prog=prog, args_list=args, env=tmp_env, \
+                                                    out_on=False, err_on=False)
+            output_err = None
+
         if retcode in (DriversUtils.EXEC_TIMED_OUT_RET_CODE, \
                                     DriversUtils.EXEC_SEGFAULT_OUT_RET_CODE):
-            retcode = common_mix.GlobalConstants.FAIL_TEST_VERDICT
+            verdict = common_mix.GlobalConstants.FAIL_TEST_VERDICT
         else:
-            retcode = common_mix.GlobalConstants.PASS_TEST_VERDICT
-        return retcode
+            verdict = common_mix.GlobalConstants.PASS_TEST_VERDICT
+
+        return verdict, output_err
     #~ def _execute_a_test()
 
     def _do_generate_tests (self, exe_path_map, outputdir, \

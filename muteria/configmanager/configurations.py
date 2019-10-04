@@ -92,6 +92,12 @@ class CompleteConfiguration(object):
     # None mean all criteria with tool specified
     ENABLED_CRITERIA = [] 
 
+    # Enable keeping output summary for program passfail execution
+    GET_PASSFAIL_OUTPUT_SUMMARY = True
+
+    # keepoutput summary for the following criteria (may run slower)
+    CRITERIA_WITH_OUTPUT_SUMMARY = []
+
     # PARALELISM
     SINGLE_REPO_PARALLELISM = 1 # Max number of parallel exec in a repo dir
 

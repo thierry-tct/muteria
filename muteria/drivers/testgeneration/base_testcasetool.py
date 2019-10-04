@@ -37,6 +37,7 @@ import glob
 import shutil
 import logging
 import abc
+import hashlib
 
 import muteria.common.matrices as common_matrices
 import muteria.common.mix as common_mix
@@ -280,16 +281,26 @@ class BaseTestcaseTool(abc.ABC):
         """ Execute a test and use the specified oracles to check
             Also collect the output
         """
+#        if self.test_oracle_manager.oracle_checks_output():
+#            output_log = self.test_oracle_manager.get_output_log()
+        verdict, output_err = self._execute_a_test(\
+                                            testcase,exe_path_map, env_vars,\
+                                            callback_object=callback_object, \
+                                            timeout=timeout, \
+                                            collect_output=with_outlog_hash)
 
-        # TODO TODO TODO
-        output_log = None # TODO: use with_outlog_hash
-        if self.test_oracle_manager.oracle_checks_output():
-            output_log = self.test_oracle_manager.get_output_log()
-        retcode = self._execute_a_test(testcase,exe_path_map, env_vars,\
-                            callback_object=callback_object, timeout=timeout, \
-                                                output_log=output_log)
+        if with_outlog_hash:
+            out_len = len(output_err[1])
+            out_hash_val = hashlib.sha512(output_err[1]).hexdigest()
+            outlog_summary = {
+                common_matrices.OutputLogData.OUTLOG_LEN: out_len,
+                common_matrices.OutputLogData.OUTLOG_HASH: out_hash_val,
+                common_matrices.OutputLogData.RETURN_CODE: output_err[0],
+            }
+        else:
+            outlog_summary = None
 
-        return retcode #TODO
+        return verdict, outlog_summary
     #~ def _oracle_execute_a_test()
 
     def generate_tests (self, exe_path_map, parallel_count=1, outputdir=None, \
@@ -379,7 +390,7 @@ class BaseTestcaseTool(abc.ABC):
 
     @abc.abstractmethod
     def _execute_a_test (self, testcase, exe_path_map, env_vars, \
-                        callback_object=None, timeout=None, output_log=None):
+                    callback_object=None, timeout=None, collect_output=None):
         """ Execute a test given that the executables have been set 
             properly
         """

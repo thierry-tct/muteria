@@ -239,16 +239,27 @@ class ConfigurationHelper(object):
         if conf.ENABLED_CRITERIA is None:
             conf.ENABLED_CRITERIA = \
                                 list(conf.CRITERIA_TOOLS_CONFIGS_BY_CRITERIA)
-        else:
-            tmp = []
-            for c in conf.ENABLED_CRITERIA:
-                if not isinstance(c, criteria.TestCriteria):
-                    ERROR_HANDLER.assert_true(\
-                                criteria.TestCriteria.has_element_named(c), \
-                                "invalid test criterion: "+c)
-                    c = criteria.TestCriteria[c] 
-                tmp.append(c)
-            conf.ENABLED_CRITERIA = tmp
+        tmp = []
+        for c in conf.ENABLED_CRITERIA:
+            if not isinstance(c, criteria.TestCriteria):
+                ERROR_HANDLER.assert_true(\
+                            criteria.TestCriteria.has_element_named(c), \
+                            "invalid test criterion: "+c)
+                c = criteria.TestCriteria[c] 
+            tmp.append(c)
+        conf.ENABLED_CRITERIA = tmp
+
+        tmp = []
+        for c in conf.CRITERIA_WITH_OUTPUT_SUMMARY:
+            if not isinstance(c, criteria.TestCriteria):
+                ERROR_HANDLER.assert_true(\
+                            criteria.TestCriteria.has_element_named(c), \
+                            "invalid test criterion in out sum: "+c, __file__)
+                c = criteria.TestCriteria[c] 
+            if c not in conf.ENABLED_CRITERIA:
+                continue
+            tmp.append(c)
+        conf.CRITERIA_WITH_OUTPUT_SUMMARY = tmp
         
         tmp = []
         for tc in conf.TESTCASE_TOOLS_CONFIGS:
@@ -281,7 +292,7 @@ class ConfigurationHelper(object):
             if not isinstance(c, criteria.TestCriteria):
                 ERROR_HANDLER.assert_true(\
                             criteria.TestCriteria.has_element_named(c), \
-                            "invalid test criterion: "+c)
+                            "invalid test criterion in opt: "+c, __file__)
                 c = criteria.TestCriteria[c] 
             if c not in conf.ENABLED_CRITERIA:
                 continue

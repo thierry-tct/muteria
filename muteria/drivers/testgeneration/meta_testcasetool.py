@@ -372,8 +372,7 @@ class MetaTestcaseTool(object):
         meta_test_failedverdicts_outlog = \
                                     checkpoint_handler.get_optional_payload()
         if meta_test_failedverdicts_outlog is None:
-            meta_test_failedverdicts_outlog = [\
-                                        {}, {self.PROGRAM_EXECOUTPUT_KEY: {}}]
+            meta_test_failedverdicts_outlog = [{}, {}]
 
         # Make sure the tests are unique
         ERROR_HANDLER.assert_true(len(meta_testcases) == \
@@ -479,7 +478,9 @@ class MetaTestcaseTool(object):
                             fault_test_execution_execoutput.is_empty(), \
                                         "outlog data must be empty", __file__)
             fault_test_execution_execoutput.add_data(\
-                            meta_test_failedverdicts_outlog[1], serialize=True)
+                                    {self.PROGRAM_EXECOUTPUT_KEY: \
+                                         meta_test_failedverdicts_outlog[1]}, \
+                                                                serialize=True)
 
 
         # @Checkpoint: Finished

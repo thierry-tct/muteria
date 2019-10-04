@@ -264,9 +264,9 @@ class BaseCriteriaTool(abc.ABC):
             ERROR_HANDLER.assert_true(cp_calling_tool is not None)
             cp_data = checkpoint_handler.get_optional_payload()
             if cp_data is None:
-                cp_data = {}
+                cp_data = [{}, {}]
         else:
-            cp_data = {}
+            cp_data = [{}, {}]
 
         failverdict_to_val_map = {
                     common_mix.GlobalConstants.FAIL_TEST_VERDICT: \
@@ -281,7 +281,7 @@ class BaseCriteriaTool(abc.ABC):
                             "Serialize period must be an integer in [1,inf["
 
         # matrix based checkpoint
-        completed_elems = set(cp_data)
+        completed_elems = set(cp_data[0])
 
         if criteria_element_list is None:
             criteria_element_list = self.get_criterion_info_object(criterion).\
@@ -321,12 +321,14 @@ class BaseCriteriaTool(abc.ABC):
 
             cannot_cov_tests = set(testcases) - set(may_cov_tests)
             
-            fail_verdicts = self.meta_test_generation_obj.runtests( \
-                                may_cov_tests, \
-                                exe_path_map=element_executable_path, \
-                                env_vars=execution_environment_vars, \
-                                stop_on_failure=cover_criteria_elements_once, \
-                                restart_checkpointer=True)
+            fail_verdicts, exec_outs_by_tests = \
+                                    self.meta_test_generation_obj.runtests(\
+                                        may_cov_tests, \
+                                        exe_path_map=element_executable_path, \
+                                        env_vars=execution_environment_vars, \
+                                        stop_on_failure=\
+                                                cover_criteria_elements_once, \
+                                        restart_checkpointer=True)
 
             prioritization_module.feedback(element, fail_verdicts)
 
@@ -338,7 +340,10 @@ class BaseCriteriaTool(abc.ABC):
             matrix_row_values = {tc:failverdict_to_val_map[fail_verdicts[tc]] \
                                                     for tc in fail_verdicts}
             serialize_on = (pos % serialize_period == 0)
-            cp_data[matrix_row_key] = matrix_row_values
+            cp_data[0][matrix_row_key] = matrix_row_values
+
+            if executionoutput is not None:
+                cp_data[1][element] = exec_outs_by_tests
 
             # @Checkpointing: for time
             if serialize_on and checkpoint_handler is not None:
@@ -349,12 +354,15 @@ class BaseCriteriaTool(abc.ABC):
                                             opt_payload=cp_data)
 
         # Write the execution data into the matrix
-        for matrix_row_key, matrix_row_values in list(cp_data.items()):
-            matrix.add_row_by_key(matrix_row_key, \
-                                        matrix_row_values, \
-                                        serialize=False)
+        for matrix_row_key, matrix_row_values in list(cp_data[0].items()):
+            matrix.add_row_by_key(matrix_row_key, matrix_row_values, \
+                                                            serialize=False)
         # final serialization (in case #Muts not multiple od serialize_period)
         matrix.serialize()
+
+        # Write the execution output data
+        if executionoutput is not None:
+            executionoutput.add_data(cp_data[1], serialize=True)
     #~ def _runtest_separate_criterion_program()
 
     def runtests_criteria_coverage (self, testcases, \
