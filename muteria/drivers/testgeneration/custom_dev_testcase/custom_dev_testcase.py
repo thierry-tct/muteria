@@ -64,16 +64,25 @@ class CustomTestcases(BaseTestcaseTool):
                                         parallel_count=parallel_count)
     #~ def runtests()
 
-    def _prepare_executable(self, exe_path_map, env_vars, \
+    def _prepare_executable(self, exe_path_map, env_vars, timeout, \
                                                         collect_output=False):
         """ Make sure we have the right executable ready (if needed)
         """
         #self.code_builds_factory.copy_into_repository(exe_path_map)
-        # TODO: Call the wrapper installation function in wrapper_setup.py
         
         if collect_output:
-            #wrapper_setup.install_wrapper()
+            # TODO: Add condition to check that wrapper is needed
             assert False
+            ERROR_HANDLER.assert_true(len(exe_path_map) == 1, \
+                                    "support a single exe for now", __file__)
+            run_exe = exe_path_map[list(exe_path_map.keys())[0]]
+            if run_exe is None:
+                # TODO: CRITICAL: Go though the repo manager or copy elsewhere
+                # before using repo exe (paralelism)
+                run_exe = list(exe_path_map.keys())[0]
+            repo_exe = list(exe_path_map.keys())[0]
+        
+            wrapper_setup.install_wrapper(repo_exe, run_exe, timeout)
     #~ def _prepare_executable()
 
     def _restore_default_executable(self, exe_path_map, env_vars, \
@@ -83,11 +92,18 @@ class CustomTestcases(BaseTestcaseTool):
             at a specific location.
         """
         #self.code_builds_factory.restore_repository_files(exe_path_map)
-        # TODO: Call the wrapper uninstallation function in wrapper_setup.py
         
         if collect_output:
-            #wrapper_setup.uninstall_wrapper()
             assert False
+            # TODO: Add condition to check that wrapper is needed
+            run_exe = exe_path_map[list(exe_path_map.keys())[0]]
+            if run_exe is None:
+                # TODO: CRITICAL: Go though the repo manager or copy elsewhere
+                # before using repo exe (paralelism)
+                run_exe = list(exe_path_map.keys())[0]
+            repo_exe = list(exe_path_map.keys())[0]
+
+            wrapper_setup.uninstall_wrapper(repo_exe)
     #~ def _restore_default_executable()
 
     def _execute_a_test (self, testcase, exe_path_map, env_vars, \
@@ -101,6 +117,9 @@ class CustomTestcases(BaseTestcaseTool):
         rep_mgr = self.code_builds_factory.repository_manager
 
         if collect_output:
+            # possible existing wrapper data logs are 
+            # removed during wrapper install
+
             collected_output = []
         else:
             collected_output = None
@@ -117,6 +136,13 @@ class CustomTestcases(BaseTestcaseTool):
         ERROR_HANDLER.assert_true(\
                         post != common_mix.GlobalConstants.COMMAND_FAILURE,\
                                             "after command failed", __file__)
+
+        if collect_output:
+            # TODO: Add condition to check that wrapper is needed
+            # TODO use repomgr
+            repo_exe_abs_path = list(exe_path_map.keys())[0]
+            wrapper_setup.cleanup_logs(repo_exe_abs_path)
+
         return verdict, collected_output
     #~ def _execute_a_test()
 

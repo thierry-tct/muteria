@@ -9,6 +9,9 @@ def bash_test_runner(test_name, repo_root_dir, exe_path_map, env_vars, \
     cwd = os.getcwd()
     os.chdir(repo_root_dir)
 
+    # TODO: pass the test script name as env_var to wrapper so that only 
+    # TODO: call from that are considered
+
     try:
         args_list = [test_name]
         if collected_output is None:

@@ -69,7 +69,7 @@ class TestcasesToolKlee(BaseTestcaseTool):
             return self.testcase_info_object
     #~ def get_testcase_info_object()
 
-    def _prepare_executable(self, exe_path_map, env_vars, \
+    def _prepare_executable(self, exe_path_map, env_vars, timeout, \
                                                         collect_output=False):
         """ Make sure we have the right executable ready (if needed)
         """

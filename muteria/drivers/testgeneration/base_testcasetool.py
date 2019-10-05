@@ -182,7 +182,7 @@ class BaseTestcaseTool(abc.ABC):
         :returns: boolean failed verdict of the test 
                         (True if failed, False otherwise)
         '''
-        self._prepare_executable(exe_path_map, env_vars, \
+        self._prepare_executable(exe_path_map, env_vars, timeout=timeout,
                                             collect_output=with_outlog_hash)
         self._set_env_vars(env_vars)
 
@@ -241,6 +241,7 @@ class BaseTestcaseTool(abc.ABC):
 
         # Prepare the exes
         self._prepare_executable(exe_path_map, env_vars, \
+                                            timeout=per_test_timeout, \
                                             collect_output=with_outlog_hash)
         self._set_env_vars(env_vars)
 
@@ -377,7 +378,7 @@ class BaseTestcaseTool(abc.ABC):
     #~ def get_testcase_info_object()
 
     @abc.abstractmethod
-    def _prepare_executable (self, exe_path_map, env_vars, \
+    def _prepare_executable (self, exe_path_map, env_vars, timeout, \
                                                         collect_output=False):
         """ Make sure we have the right executable ready (if needed)
         """
