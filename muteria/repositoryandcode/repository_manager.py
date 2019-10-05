@@ -165,10 +165,13 @@ class RepositoryManager(object):
                 pre_ret = callback_object.before_command()
             if pre_ret == common_mix.GlobalConstants.COMMAND_SUCCESS:
                 ret = self.dev_test_runner_func(dev_test_name, \
-                                            self.repository_rootdir, \
-                                            exe_path_map, env_vars, timeout, \
-                                            collected_output)
-                                            #self.repo_executables_relpaths)
+                                        self.repository_rootdir, \
+                                        exe_path_map, env_vars, timeout, \
+                                        collected_output, \
+                                        using_wrapper=(\
+                                                    self.get_wrapper_object() \
+                                                                is not None))
+                                        #self.repo_executables_relpaths)
                 if callback_object is not None:
                     callback_object.set_op_retval(ret)
                     post_ret = callback_object.after_command()

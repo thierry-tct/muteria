@@ -158,14 +158,16 @@ class CodeBuildsFactory(object):
                 return common_mix.GlobalConstants.COMMAND_FAILURE
             file_src_dest_map, reverse = self.post_callback_args
             if reverse:
-                self._copy_to_repo(file_src_dest_map)
+                self._copy_to_repo(file_src_dest_map[0])
+                # Do not consider the second
             else:
-                self._copy_from_repo(file_src_dest_map)
+                self._copy_from_repo(file_src_dest_map[0])
+                self._copy_from_repo(file_src_dest_map[1])
             return common_mix.GlobalConstants.COMMAND_SUCCESS
         #~ def after_command()
     #~ class CopyCallbackObject
 
-    def set_repo_to_build_default(self):
+    def set_repo_to_build_default(self, also_copy_to_map={}):
         if self.repository_manager.should_build():
             files_backed = False
             if self.stored_files_mapping is not None and \
@@ -185,21 +187,26 @@ class CodeBuildsFactory(object):
                                 self.repository_manager.revert_src_list_files)
 
             if files_backed:
-                copy_callback_obj.set_post_callback_args(\
-                                            [self.stored_files_mapping, True])
+                copy_callback_obj.set_post_callback_args([\
+                                (self.stored_files_mapping, also_copy_to_map),\
+                                                                        True])
                 b_ret, a_ret = self.repository_manager.custom_read_access(\
                                                             copy_callback_obj)
                 ERROR_HANDLER.assert_true(\
                         b_ret == common_mix.GlobalConstants.COMMAND_SUCCESS & \
                         a_ret == common_mix.GlobalConstants.COMMAND_SUCCESS, \
                                                 "code copy failed", __file__)
+                # copy also
+                for src,dest in also_copy_to_map.items():
+                    shutil.copy2(self.stored_files_mapping[src], dest)
             else:
                 # build and possibly backup
                 if self.stored_files_mapping is None:
                     co = None
                 else:
-                    copy_callback_obj.set_post_callback_args(\
-                                            [self.stored_files_mapping, False])
+                    copy_callback_obj.set_post_callback_args([\
+                                (self.stored_files_mapping, also_copy_to_map),\
+                                                                        False])
                     co = copy_callback_obj
                 pre, ret, post = self.repository_manager.build_code(
                                                             clean_tmp=True, \
@@ -209,5 +216,8 @@ class CodeBuildsFactory(object):
                         ret == common_mix.GlobalConstants.COMMAND_FAILURE or \
                         post == common_mix.GlobalConstants.COMMAND_FAILURE:
                     ERROR_HANDLER.error_exit("default build failed", __file__)
+                # XXX: Also already copied
+        else:
+            ERROR_HANDLER.error_exit("TODO: implement baking relevant files")
     #~ def set_repo_to_build_default(self)
 #~ class CodeBuildsFactory()

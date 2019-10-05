@@ -14,20 +14,29 @@ from muteria.repositoryandcode.build_utils.c import make_build_func
 
 from muteria.common.mix import GlobalConstants
 
-from muteria.drivers.testgeneration.testcase_formats.bash import \
-                                                            bash_test_runner
+from muteria.drivers.testgeneration.testcase_formats.system_devtest import \
+                                                            system_test_runner
+from muteria.drivers.testgeneration.custom_dev_testcase.system_wrappers.\
+                                            native_code import SystemWrapper
 
 this_dir = os.path.dirname(os.path.abspath(__file__))
 
 devtestlist = ['test_lib.sh']
-def dev_test_runner(test_name, *args, **kwargs):
+def dev_test_runner(test_name, repo_root_dir, *args, **kwargs):
     # TODO: use exe_path_map
+    cwd = os.getcwd()
+    os.chdir(repo_root_dir)
 
     if test_name == 'test_lib.sh':
-        return bash_test_runner(test_name, *args, **kwargs)
+        retcode = system_test_runner('bash', [test_name], test_name, \
+                                                repo_root_dir, *args, **kwargs)
+    else:
+        # ERROR
+        retcode = GlobalConstants.TEST_EXECUTION_ERROR
 
-    # ERROR
-    return GlobalConstants.TEST_EXECUTION_ERROR
+    os.chdir(cwd)
+
+    return retcode
 #~ def dev_test_runner()
 
 def build_func(*args, **kwargs):
@@ -46,6 +55,7 @@ REPO_EXECUTABLE_RELATIVE_PATHS = ['main']
 CODE_BUILDER_FUNCTION = build_func
 
 CUSTOM_DEV_TEST_RUNNER_FUNCTION = dev_test_runner
+CUSTOM_DEV_TEST_PROGRAM_WRAPPER_CLASS = SystemWrapper
 DEVELOPER_TESTS_LIST = devtestlist
 
 # custom devtest
@@ -68,6 +78,9 @@ ENABLED_CRITERIA = [
         TestCriteria.FUNCTION_COVERAGE,
         TestCriteria.WEAK_MUTATION,
         TestCriteria.MUTANT_COVERAGE,
+        TestCriteria.STRONG_MUTATION,
+]
+CRITERIA_WITH_OUTPUT_SUMMARY = [
         TestCriteria.STRONG_MUTATION,
 ]
 

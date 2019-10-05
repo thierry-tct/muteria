@@ -110,7 +110,8 @@ class CustomTestcases(BaseTestcaseTool):
         pre,verdict,post = rep_mgr.run_dev_test(dev_test_name=testcase, \
                                 exe_path_map=exe_path_map, \
                                 env_vars=env_vars, \
-                                timeout=timeout, \
+                                timeout=(timeout \
+                                            if wrapper_obj is None else None),\
                                 collected_output=(collected_output \
                                             if wrapper_obj is None else None),\
                                 callback_object=callback_object)

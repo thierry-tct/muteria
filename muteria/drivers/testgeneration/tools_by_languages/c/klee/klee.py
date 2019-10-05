@@ -111,13 +111,26 @@ class TestcasesToolKlee(BaseTestcaseTool):
         ERROR_HANDLER.assert_true(callback_object is None, \
                                         'TODO: handle callback_obj', __file__)
         
-        # TODO: Copy exe to local
-        exe = exe_path_map[list(exe_path_map.keys())[0]]
-        if exe is None:
-            # TODO: CRITICAL: Go though the repo manager or copy elsewhere
-            # before using repo exe (paralelism)
-            exe = list(exe_path_map.keys())[0]
-        args = [exe, os.path.join(self.tests_storage_dir, testcase)]
+        repo_exe = list(exe_path_map.keys())[0]
+        local_exe = os.path.join(self.klee_used_tmp_build_dir, repo_exe)
+        if repo_exe not in self.repo_exe_to_local_to_remote:
+            if not os.path.isdir(os.path.dirname(local_exe)):
+                os.makedirs(os.path.dirname(local_exe))
+            self.repo_exe_to_local_to_remote[repo_exe] = {local_exe: None}
+
+        remote_exe = exe_path_map[repo_exe]
+        if remote_exe is None:
+            remote_exe = repo_exe
+
+        if remote_exe != self.repo_exe_to_local_to_remote[repo_exe][local_exe]:
+            if remote_exe == repo_exe:
+                self.code_builds_factory.repository_manager.\
+                                    set_repo_to_build_default(\
+                                        also_copy_to_map={repo_exe: local_exe})
+            else:
+                shutil.copy2(remote_exe, local_exe)
+
+        args = [local_exe, os.path.join(self.tests_storage_dir, testcase)]
         tmp_env = os.environ.copy()
         #tmp_env.update(env_vars)
         tmp_env['KLEE_REPLAY_TIMEOUT'] = str(timeout)

@@ -22,9 +22,9 @@ class SystemNoWrapper(object):
 '''
 
 class BaseSystemWrapper(object):
-    wrapper_template_filename = None #"MUTERIA_WRAPPER.sh.in"
-    wrapper_template_string = None 
     
+    # do not change
+
     backup_ext = '.muteria_bak'
     used_ext = '.muteria_used'
 
@@ -33,7 +33,13 @@ class BaseSystemWrapper(object):
     outlog_ext = '.muteria_outlog'
     outretcode_ext = '.muteria_outretcode'
 
+    # Must Override
+
+    wrapper_template_filename = None #"MUTERIA_WRAPPER.sh.in"
+    wrapper_template_string = None 
     dev_null = None
+
+    # Can override
 
     def __init__(self, repo_mgr):
         self.repo_mgr = repo_mgr
@@ -96,7 +102,6 @@ class BaseSystemWrapper(object):
         match_replacing = {
             'WRAPPER_TEMPLATE_RUN_EXE_ASBSOLUTE_PATH': \
                                             repo_exe_abs_path+self.used_ext,
-            'WRAPPER_TEMPLATE_TIMEOUT': str(timeout),
             'WRAPPER_TEMPLATE_COUNTER_FILE': \
                                         repo_exe_abs_path+self.counter_ext \
                                         if collect_output else self.dev_null,
