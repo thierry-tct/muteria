@@ -174,6 +174,8 @@ class CompleteConfiguration(object):
     #   -1 on error
     CUSTOM_DEV_TEST_RUNNER_FUNCTION = None
 
+    CUSTOM_DEV_TEST_PROGRAM_WRAPPER_CLASS = None
+
     # Optional. When not None, the CUSTOM_DEV_TEST_RUNNER is the name of 
     # the function in this file to use
     CUSTOM_DEV_TEST_RUNNER_MODULE = None

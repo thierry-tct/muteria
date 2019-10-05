@@ -37,6 +37,15 @@ class TestcasesToolKlee(BaseTestcaseTool):
         BaseTestcaseTool.__init__(self, *args, **kwargs)
         self.test_details_file = \
                     os.path.join(self.tests_working_dir, 'test_details.json')
+        self.klee_used_tmp_build_dir = os.path.join(self.tests_working_dir, \
+                                                    'klee_used_tmp_build_dir')
+
+        # mapping between exes, to have a local copy for execution
+        self.repo_exe_to_local_to_remote = {}
+
+        if os.path.isdir(self.klee_used_tmp_build_dir):
+            shutil.rmtree(self.klee_used_tmp_build_dir)
+        os.mkdir(self.klee_used_tmp_build_dir)
     #~ def __init__()
 
     def _get_default_params(self):
@@ -101,6 +110,8 @@ class TestcasesToolKlee(BaseTestcaseTool):
                                     "support a single exe for now", __file__)
         ERROR_HANDLER.assert_true(callback_object is None, \
                                         'TODO: handle callback_obj', __file__)
+        
+        # TODO: Copy exe to local
         exe = exe_path_map[list(exe_path_map.keys())[0]]
         if exe is None:
             # TODO: CRITICAL: Go though the repo manager or copy elsewhere

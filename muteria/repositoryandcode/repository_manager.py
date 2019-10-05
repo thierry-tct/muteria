@@ -72,6 +72,7 @@ class RepositoryManager(object):
     DEFAULT_MUTERIA_REPO_META_FOLDER = ".muteria" 
     def __init__(self, repository_rootdir, repo_executables_relpaths=None, \
                         dev_test_runner_func=None, code_builder_func=None, \
+                        dev_test_program_wrapper=None, \
                         source_files_to_objects=None, dev_tests_list=None, \
                         delete_created_on_revert_as_initial=False, \
                         test_branch_name=DEFAULT_TESTS_BRANCH_NAME):
@@ -81,6 +82,9 @@ class RepositoryManager(object):
         self.code_builder_func = code_builder_func
         self.source_files_to_objects = source_files_to_objects
         self.dev_tests_list = dev_tests_list
+        self.dev_test_program_wrapper = dev_test_program_wrapper
+        if self.dev_test_program_wrapper is not None:
+            self.dev_test_program_wrapper = self.dev_test_program_wrapper(self)
 
         self.delete_created_on_revert_as_initial = \
                                         delete_created_on_revert_as_initial
@@ -123,6 +127,10 @@ class RepositoryManager(object):
         return (self.dev_test_runner_func is not None and \
                                             self.dev_tests_list is not None)
     #~ def has_dev_tests()
+
+    def get_wrapper_object(self):
+        return self.dev_test_program_wrapper
+    #~ def get_wrapper_object()
 
     def should_build(self):
         return (self.code_builder_func is not None)

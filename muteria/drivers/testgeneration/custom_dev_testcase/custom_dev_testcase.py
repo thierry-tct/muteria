@@ -12,9 +12,6 @@ import muteria.common.mix as common_mix
 from muteria.drivers.testgeneration.base_testcasetool import BaseTestcaseTool
 from muteria.drivers.testgeneration.testcases_info import TestcasesInfoObject
 
-import muteria.drivers.testgeneration.custom_dev_testcase.wrapper_setup as \
-                                                                wrapper_setup
-
 ERROR_HANDLER = common_mix.ErrorHandler
 
 class CustomTestcases(BaseTestcaseTool):
@@ -70,19 +67,10 @@ class CustomTestcases(BaseTestcaseTool):
         """
         #self.code_builds_factory.copy_into_repository(exe_path_map)
         
-        if collect_output:
-            # TODO: Add condition to check that wrapper is needed
-            assert False
-            ERROR_HANDLER.assert_true(len(exe_path_map) == 1, \
-                                    "support a single exe for now", __file__)
-            run_exe = exe_path_map[list(exe_path_map.keys())[0]]
-            if run_exe is None:
-                # TODO: CRITICAL: Go though the repo manager or copy elsewhere
-                # before using repo exe (paralelism)
-                run_exe = list(exe_path_map.keys())[0]
-            repo_exe = list(exe_path_map.keys())[0]
-        
-            wrapper_setup.install_wrapper(repo_exe, run_exe, timeout)
+        wrapper_obj = self.code_builds_factory.repository_manager.\
+                                                        get_wrapper_object()
+        if wrapper_obj is not None:
+            wrapper_obj.install_wrapper(exe_path_map, timeout, collect_output)
     #~ def _prepare_executable()
 
     def _restore_default_executable(self, exe_path_map, env_vars, \
@@ -93,17 +81,10 @@ class CustomTestcases(BaseTestcaseTool):
         """
         #self.code_builds_factory.restore_repository_files(exe_path_map)
         
-        if collect_output:
-            assert False
-            # TODO: Add condition to check that wrapper is needed
-            run_exe = exe_path_map[list(exe_path_map.keys())[0]]
-            if run_exe is None:
-                # TODO: CRITICAL: Go though the repo manager or copy elsewhere
-                # before using repo exe (paralelism)
-                run_exe = list(exe_path_map.keys())[0]
-            repo_exe = list(exe_path_map.keys())[0]
-
-            wrapper_setup.uninstall_wrapper(repo_exe)
+        wrapper_obj = self.code_builds_factory.repository_manager.\
+                                                        get_wrapper_object()
+        if wrapper_obj is not None:
+            wrapper_obj.uninstall_wrapper(exe_path_map)
     #~ def _restore_default_executable()
 
     def _execute_a_test (self, testcase, exe_path_map, env_vars, \
@@ -116,8 +97,10 @@ class CustomTestcases(BaseTestcaseTool):
             timeout = self.config.ONE_TEST_EXECUTION_TIMEOUT
         rep_mgr = self.code_builds_factory.repository_manager
 
+        wrapper_obj = rep_mgr.get_wrapper_object()
+
         if collect_output:
-            # possible existing wrapper data logs are 
+            # possibly existing wrapper data logs are 
             # removed during wrapper install
 
             collected_output = []
@@ -125,11 +108,12 @@ class CustomTestcases(BaseTestcaseTool):
             collected_output = None
         
         pre,verdict,post = rep_mgr.run_dev_test(dev_test_name=testcase, \
-                                            exe_path_map=exe_path_map, \
-                                            env_vars=env_vars, \
-                                            timeout=timeout, \
-                                            collected_output=collected_output,\
-                                            callback_object=callback_object)
+                                exe_path_map=exe_path_map, \
+                                env_vars=env_vars, \
+                                timeout=timeout, \
+                                collected_output=(collected_output \
+                                            if wrapper_obj is None else None),\
+                                callback_object=callback_object)
         ERROR_HANDLER.assert_true(\
                             pre == common_mix.GlobalConstants.COMMAND_SUCCESS,\
                                             "before command failed", __file__)
@@ -137,11 +121,12 @@ class CustomTestcases(BaseTestcaseTool):
                         post != common_mix.GlobalConstants.COMMAND_FAILURE,\
                                             "after command failed", __file__)
 
-        if collect_output:
-            # TODO: Add condition to check that wrapper is needed
-            # TODO use repomgr
-            repo_exe_abs_path = list(exe_path_map.keys())[0]
-            wrapper_setup.cleanup_logs(repo_exe_abs_path)
+        # wrapper cleanup
+        if wrapper_obj is not None:
+            if collect_output:
+                wrapper_obj.collect_output(exe_path_map, collected_output, \
+                                                                    testcase)
+            wrapper_obj.cleanup_logs(exe_path_map)
 
         return verdict, collected_output
     #~ def _execute_a_test()
