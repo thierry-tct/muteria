@@ -404,6 +404,7 @@ class RawExecutionMatrix(object):
                                         if self.is_active_cell_func(row[x])]
 
         return result
+    #~ def query_active_columns_of_rows()
 
     def query_active_rows_of_columns(self, non_key_col_list=None):
         ''' return a dict in the form col2rows
@@ -418,7 +419,7 @@ class RawExecutionMatrix(object):
         >>> inact = mat.getInactiveCellVal()
         >>> uncert = mat.getUncertainCellDefaultVal()
         >>> mat.add_row_by_key('k', [inact, uncert, act])
-        >>> mat.query_active_rows_of_columns() == {'a': [], 'b':[], 'c':['k']}
+        >>> mat.query_active_rows_of_columns() == {'a':[], 'b':[], 'c':['k']}
         True
         '''
         if non_key_col_list is None:
@@ -432,6 +433,123 @@ class RawExecutionMatrix(object):
                                                         [self.key_column_name])
 
         return result
+    #~ def query_active_rows_of_columns()
+
+    def query_inactive_columns_of_rows(self, row_key_list=None):
+        ''' return a dict in the form row2cols
+        :param row_key_list: list of rows to query for
+        :return: a dict representing a mapping between the passed rows
+                and the list of columns inactive for those rows
+
+        Example:
+        >>> nc = ['a', 'b', 'c']
+        >>> mat = ExecutionMatrix(non_key_col_list=nc)
+        >>> act = mat.getActiveCellDefaultVal()
+        >>> inact = mat.getInactiveCellVal()
+        >>> uncert = mat.getUncertainCellDefaultVal()
+        >>> mat.add_row_by_key('k', [inact, uncert, act])
+        >>> mat.query_inactive_columns_of_rows() == {'k': ['a']}
+        True
+        '''
+        if row_key_list is None:
+            row_key_list = self.get_keys()
+
+        result = {}
+        small_df = self.extract_by_rowkey(row_key_list).dataframe
+        for _, row in small_df.iterrows():
+            result[row[self.key_column_name]] = \
+                                        [x for x in self.non_key_col_list \
+                                        if self.is_inactive_cell_func(row[x])]
+
+        return result
+    #~ def query_inactive_columns_of_rows()
+
+    def query_inactive_rows_of_columns(self, non_key_col_list=None):
+        ''' return a dict in the form col2rows
+        :param non_key_col_list: list of columns to query for
+        :return: a dict representing a mapping between the passed columns
+                and the list of rows inactive for those columns
+
+        Example:
+        >>> nc = ['a', 'b', 'c']
+        >>> mat = ExecutionMatrix(non_key_col_list=nc)
+        >>> act = mat.getActiveCellDefaultVal()
+        >>> inact = mat.getInactiveCellVal()
+        >>> uncert = mat.getUncertainCellDefaultVal()
+        >>> mat.add_row_by_key('k', [inact, uncert, act])
+        >>> mat.query_inactive_rows_of_columns() == {'a':['k'], 'b':[], 'c':[]}
+        True
+        '''
+        if non_key_col_list is None:
+            non_key_col_list = self.non_key_col_list
+
+        result = {}
+        small_df = self.extract_by_column(non_key_col_list).dataframe
+        for col in non_key_col_list:
+            result[col] = list( \
+                small_df.loc[small_df[col].apply(self.is_inactive_cell_func)]\
+                                                        [self.key_column_name])
+
+        return result
+    #~ def query_inactive_rows_of_columns()
+
+    def query_uncertain_columns_of_rows(self, row_key_list=None):
+        ''' return a dict in the form row2cols
+        :param row_key_list: list of rows to query for
+        :return: a dict representing a mapping between the passed rows
+                and the list of columns uncertain for those rows
+
+        Example:
+        >>> nc = ['a', 'b', 'c']
+        >>> mat = ExecutionMatrix(non_key_col_list=nc)
+        >>> act = mat.getActiveCellDefaultVal()
+        >>> inact = mat.getInactiveCellVal()
+        >>> uncert = mat.getUncertainCellDefaultVal()
+        >>> mat.add_row_by_key('k', [inact, uncert, act])
+        >>> mat.query_uncertain_columns_of_rows() == {'k': ['b']}
+        True
+        '''
+        if row_key_list is None:
+            row_key_list = self.get_keys()
+
+        result = {}
+        small_df = self.extract_by_rowkey(row_key_list).dataframe
+        for _, row in small_df.iterrows():
+            result[row[self.key_column_name]] = \
+                                        [x for x in self.non_key_col_list \
+                                        if self.is_uncertain_cell_func(row[x])]
+
+        return result
+    #~ def query_uncertain_columns_of_rows()
+
+    def query_uncertain_rows_of_columns(self, non_key_col_list=None):
+        ''' return a dict in the form col2rows
+        :param non_key_col_list: list of columns to query for
+        :return: a dict representing a mapping between the passed columns
+                and the list of rows inactive for those columns
+
+        Example:
+        >>> nc = ['a', 'b', 'c']
+        >>> mat = ExecutionMatrix(non_key_col_list=nc)
+        >>> act = mat.getActiveCellDefaultVal()
+        >>> inact = mat.getInactiveCellVal()
+        >>> uncert = mat.getUncertainCellDefaultVal()
+        >>> mat.add_row_by_key('k', [inact, uncert, act])
+        >>> mat.query_uncertain_rows_of_columns() == {'a':[],'b':['k'],'c':[]}
+        True
+        '''
+        if non_key_col_list is None:
+            non_key_col_list = self.non_key_col_list
+
+        result = {}
+        small_df = self.extract_by_column(non_key_col_list).dataframe
+        for col in non_key_col_list:
+            result[col] = list( \
+                small_df.loc[small_df[col].apply(self.is_uncertain_cell_func)]\
+                                                        [self.key_column_name])
+
+        return result
+    #~ def query_uncertain_rows_of_columns()
 
     def _get_key_values_dict(self, keys=None):
         """ compute a dict object with key each element of keys and value
@@ -459,7 +577,7 @@ class RawExecutionMatrix(object):
             k_v_dict = tmp_df.to_dict('index')
         return k_v_dict
 
-    def _update_cells(self, key, values):
+    def update_cells(self, key, values):
         """ Update the values for the key with the values 
         :param key: key whose values to update
         :param values: dict representing the new cell values by column name
@@ -470,7 +588,7 @@ class RawExecutionMatrix(object):
         >>> mat = ExecutionMatrix(non_key_col_list=nc)
         >>> mat.add_row_by_key('k', [1, 2, 3])
         >>> mat.add_row_by_key('r', [1, 2, 3])
-        >>> mat._update_cells('k', {'a':0, 'c':4})
+        >>> mat.update_cells('k', {'a':0, 'c':4})
         >>> mat._get_key_values_dict(['k']) == {'k': {'a':0, 'b':2, 'c':4}}
         True
         """
@@ -572,7 +690,7 @@ class RawExecutionMatrix(object):
         k_v_dict = other_matrix._get_key_values_dict(row_existing)
         for key, values in list(k_v_dict.items()):
             for col in values:
-                self._update_cells(key, values)
+                self.update_cells(key, values)
 
         if serialize:
             self.serialize()

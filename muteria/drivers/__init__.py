@@ -7,6 +7,7 @@ import time
 
 import muteria.common.fs as common_fs
 import muteria.common.mix as common_mix
+import muteria.common.matrices as common_matrices
 
 ERROR_HANDLER = common_mix.ErrorHandler
 
@@ -149,6 +150,9 @@ class RepoFileToCustomMap(dict):
 #~ class RepoFileToCustomMap
 
 class DriversUtils(object):
+
+    ################### Meta to non meta and vice versa ####################
+    
     @classmethod
     def make_meta_element(cls, element, toolalias):
         return ":".join([toolalias, element])
@@ -161,6 +165,11 @@ class DriversUtils(object):
         toolalias, element = parts
         return toolalias, element
     #~ def reverse_meta_element()
+
+    ############################ Subprocess Stuffs #########################
+
+    EXEC_TIMED_OUT_RET_CODE = -15
+    EXEC_SEGFAULT_OUT_RET_CODE = -11
 
     @classmethod
     def check_tool(cls, prog, args_list=[], expected_exit_codes=[0]):
@@ -224,6 +233,89 @@ class DriversUtils(object):
         return retcode, stdout, stderr
     #~ def execute_and_get_retcode_out_err()
 
-    EXEC_TIMED_OUT_RET_CODE = -15
-    EXEC_SEGFAULT_OUT_RET_CODE = -11
+    ############################### Misc ###################################
+
+    @classmethod
+    def update_matrix_to_cover_when_diference(cls, \
+                                target_matrix_file, target_outdata_file, \
+                                comparing_vector_file, comparing_outdata_file):
+        ERROR_HANDLER.assert_true(target_matrix_file is not None \
+                                and comparing_vector_file is not None, \
+                                "target or comparing matrix is None", __file__)
+
+        target_matrix = common_matrices.ExecutionMatrix(\
+                                                filename=target_matrix_file)
+        comparing_vector = common_matrices.ExecutionMatrix(\
+                                                filename=comparing_vector_file)
+
+        ERROR_HANDLER.assert_true(\
+                            set(target_matrix.get_nonkey_colname_list()) == \
+                            set(comparing_vector.get_nonkey_colname_list()), \
+                                            "Mismatch of columns", __file__)
+
+        # Get uncertain
+        target_uncertain_cols_dict = \
+                                target_matrix.query_uncertain_columns_of_rows()
+        vector_uncertain_cols = \
+                            comparing_vector.query_uncertain_columns_of_rows()
+        vector_uncertain_cols = \
+                    set(vector_uncertain_cols[list(vector_uncertain_cols)[0]])
+
+        # Check if outdata and proceed accordingly
+        if target_outdata_file is not None and \
+                                            comparing_outdata_file is not None:
+            # outdata are set use outdata values to decide of differences
+            target_outdata = common_matrices.OutputLogData(\
+                                                filename=target_outdata_file)
+            vector_outdata = common_matrices.OutputLogData(\
+                                            filename=comparing_outdata_file)
+
+            vector_outdata_uniq, _ = list(\
+                                vector_outdata.get_zip_objective_and_data())[0]
+
+            ## Compare using output
+            key_to_diffs = {}
+            for key, key_data in target_outdata.get_zip_objective_and_data():
+                intersect = set(vector_outdata_uniq) & set(key_data)
+                key_to_diffs[key] = (set(vector_outdata_uniq) | \
+                                                    set(key_data)) - intersect
+                for elem in intersect:
+                    if key_data[elem] != vector_outdata_uniq[elem]:
+                        key_to_diffs[key].add(elem)
+        else:
+            # outdata is not set use difference of matrices
+            ## obtain the active cols for each rows
+            target_active_cols_dict = \
+                                target_matrix.query_active_columns_of_rows()
+            
+            vector_active_cols = \
+                                comparing_vector.query_active_columns_of_rows()
+            vector_active_cols = \
+                        set(vector_active_cols[list(vector_active_cols)[0]])
+
+            ## for each row of target matrix, get diff
+            key_to_diffs = {}
+            for row_key, row_active in target_active_cols_dict.items():
+                key_to_diffs[row_key] = (set(row_active) - vector_active_cols)\
+                                    | (vector_active_cols - set(row_active))
+
+        # Update matrix based on diff
+        for key, diffs in key_to_diffs.items():
+            # gather the uncertain and set to uncertain
+            uncertain = vector_uncertain_cols | \
+                                        set(target_uncertain_cols_dict[key])
+            set_uncertain = uncertain & diffs
+            diffs -= uncertain
+
+            values = {}
+            for col in set_uncertain:
+                values[col] = target_matrix.getUncertainCellDefaultVal()
+            for col in diffs:
+                values[col] = target_matrix.getActiveCellDefaultVal()
+
+            if len(values) > 0:
+                target_matrix.update_cells(key, values)
+
+        target_matrix.serialize()
+    #~ def update_matrix_to_cover_when_diference()
 #~class DriversUtils()

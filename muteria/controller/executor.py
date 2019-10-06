@@ -497,6 +497,23 @@ class Executor(object):
                                     self.meta_criteriaexec_optimization_tools,\
                             finish_destroy_checkpointer=True)
 
+                # Update matrix if needed to have output diff or such
+                # TODO: add CRITERIA_REQUIRING_OUTDIFF_WITH_PROGRAM to config
+                for crit in criteria_set & set(\
+                        criteria_pkg.CRITERIA_REQUIRING_OUTDIFF_WITH_PROGRAM):
+                    pf_matrix_file = self.head_explorer.get_file_pathname(\
+                                    outdir_struct.TMP_TEST_PASS_FAIL_MATRIX)
+                    if self.config.GET_PASSFAIL_OUTPUT_SUMMARY:
+                        pf_execoutput_file = \
+                                        self.head_explorer.get_file_pathname(\
+                                outdir_struct.TMP_PROGRAM_TESTEXECUTION_OUTPUT)
+                    else:
+                        pf_execoutput_file = None
+                    DriversUtils.update_matrix_to_cover_when_diference(\
+                                                criterion_to_matrix[crit], \
+                                            criterion_to_execoutput[crit], \
+                                            pf_matrix_file, pf_execoutput_file)
+
                 # Unset test oracle
                 self.test_oracle_manager.set_oracle(criteria_on=None)
 

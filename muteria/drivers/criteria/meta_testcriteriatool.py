@@ -259,7 +259,7 @@ class MetaCriteriaTool(object):
                                     parallel_criteria_test_scheduler=None,\
                                     restart_checkpointer=False, \
                                     finish_destroy_checkpointer=True):
-        ''' #TODO: incorporate criteria_element_list_by_criteria, cover_criteria_elements_once 
+        ''' 
         Executes the instrumented executable code with testscases and
         returns the different code coverage matrices.
 
