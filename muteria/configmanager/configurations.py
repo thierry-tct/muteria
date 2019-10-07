@@ -1,4 +1,10 @@
 """ This module implements the definition of the different configuration.
+    NOTE: Make sure to run the function 'save_common_default_template'
+        to save the default config after altering CompleteConfiguration.
+        Write the default raw configuration template
+            >>> import muteria.configmanager.configurations as mcc
+            >>> mcc.save_common_default_template()
+
     We have a class defined for each configuration type. namely:
         - `ExecutionConfig`: Execution Configuration.
         - `ReportingConfig`: Reporting Configuration.
@@ -261,6 +267,12 @@ class CompleteConfiguration(object):
     # When None, Default to the order in:
     # >>> muteria.drivers.criteria.CRITERIA_SEQUENCE
     CRITERIA_SEQUENCE = None
+
+    # List of criteria that have test objectives covered when test execution
+    # differs with original
+    # When None, Default to the order in:
+    # >>> muteria.drivers.criteria.CRITERIA_REQUIRING_OUTDIFF_WITH_PROGRAM
+    CRITERIA_REQUIRING_OUTDIFF_WITH_PROGRAM = None
 
     # List of criteria to run with failing tests
     RUN_FAILING_TESTS_WITH_CRITERIA = [

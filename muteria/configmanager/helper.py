@@ -13,6 +13,7 @@ import sys
 import argparse
 import logging
 import importlib
+import copy
 
 import muteria.common.mix as common_mix
 
@@ -25,6 +26,8 @@ import muteria.drivers.optimizers.criteriatestexecution.optimizerdefs as \
 import muteria.configmanager.configurations as configurations
 from muteria.configmanager.configurations import CompleteConfiguration
 from muteria.configmanager.configurations import ConfigElement
+
+import muteria.controller.checkpoint_tasks as checkpoint_tasks
 
 ERROR_HANDLER = common_mix.ErrorHandler
 
@@ -238,7 +241,7 @@ class ConfigurationHelper(object):
         
         if conf.ENABLED_CRITERIA is None:
             conf.ENABLED_CRITERIA = \
-                                list(conf.CRITERIA_TOOLS_CONFIGS_BY_CRITERIA)
+                        copy.deepcopy(conf.CRITERIA_TOOLS_CONFIGS_BY_CRITERIA)
         tmp = []
         for c in conf.ENABLED_CRITERIA:
             if not isinstance(c, criteria.TestCriteria):
@@ -260,6 +263,39 @@ class ConfigurationHelper(object):
                 continue
             tmp.append(c)
         conf.CRITERIA_WITH_OUTPUT_SUMMARY = tmp
+
+
+        if conf.CRITERIA_SEQUENCE is None:
+            conf.CRITERIA_SEQUENCE = copy.deepcopy(criteria.CRITERIA_SEQUENCE)
+        for pos, group in enumerate(conf.CRITERIA_SEQUENCE):
+            tmp = set()
+            for c in group:
+                if not isinstance(c, criteria.TestCriteria):
+                    ERROR_HANDLER.assert_true(\
+                                criteria.TestCriteria.has_element_named(c), \
+                                "invalid test criterion in seq: "+c, __file__)
+                    c = criteria.TestCriteria[c] 
+                if c not in conf.ENABLED_CRITERIA:
+                    continue
+                tmp.add(c)
+            conf.CRITERIA_SEQUENCE[pos] = tmp
+
+        
+        if conf.CRITERIA_REQUIRING_OUTDIFF_WITH_PROGRAM is None:
+            conf.CRITERIA_REQUIRING_OUTDIFF_WITH_PROGRAM = copy.deepcopy(\
+                            criteria.CRITERIA_REQUIRING_OUTDIFF_WITH_PROGRAM)
+        tmp = []
+        for c in conf.CRITERIA_REQUIRING_OUTDIFF_WITH_PROGRAM:
+            if not isinstance(c, criteria.TestCriteria):
+                ERROR_HANDLER.assert_true(\
+                            criteria.TestCriteria.has_element_named(c), \
+                            "invalid test criterion in outdiff: "+c, __file__)
+                c = criteria.TestCriteria[c] 
+            if c not in conf.ENABLED_CRITERIA:
+                continue
+            tmp.append(c)
+        conf.CRITERIA_REQUIRING_OUTDIFF_WITH_PROGRAM = tmp
+        
         
         tmp = []
         for tc in conf.TESTCASE_TOOLS_CONFIGS:
@@ -314,6 +350,17 @@ class ConfigurationHelper(object):
             if c not in tmp:
                 tmp[c] = crit_opt_module.CriteriaOptimizers.NO_OPTIMIZATION
         conf.CRITERIA_EXECUTION_OPTIMIZERS = tmp
+
+
+        tmp = []
+        for ct in conf.RE_EXECUTE_FROM_CHECKPOINT_META_TASKS:
+            if not isinstance(ct, checkpoint_tasks.Tasks):
+                ERROR_HANDLER.assert_true(\
+                            checkpoint_tasks.Tasks.has_element_named(ct), \
+                            "invalid checkpoint task: "+ct)
+                ct = checkpoint_tasks.Tasks[ct] 
+            tmp.append(ct)
+        conf.RE_EXECUTE_FROM_CHECKPOINT_META_TASKS = tmp
 
         # NEXT here
         #TODO: Add optimizers ....

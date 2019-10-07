@@ -32,6 +32,12 @@ RUN_MODE = None
 # None mean all criteria with tool specified
 ENABLED_CRITERIA = []
 
+# Enable keeping output summary for program passfail execution
+GET_PASSFAIL_OUTPUT_SUMMARY = True
+
+# keepoutput summary for the following criteria (may run slower)
+CRITERIA_WITH_OUTPUT_SUMMARY = []
+
 # PARALELISM
 SINGLE_REPO_PARALLELISM = 1 # Max number of parallel exec in a repo dir
 
@@ -99,12 +105,16 @@ DEVELOPER_TESTS_LIST = None
 #   <test_name: str>
 #   <repos directory rootdir: str>
 #   <Executable relative path map: dict>
+#   <env_vars: map>
+#   <timeout: int>
 # and run with the executable as in repository
 # The function return:
 #   0 on passing test
 #   1 on failing test
 #   -1 on error
 CUSTOM_DEV_TEST_RUNNER_FUNCTION = None
+
+CUSTOM_DEV_TEST_PROGRAM_WRAPPER_CLASS = None
 
 # Optional. When not None, the CUSTOM_DEV_TEST_RUNNER is the name of
 # the function in this file to use
@@ -192,6 +202,12 @@ CRITERIA_TOOLS_CONFIGS_BY_CRITERIA = {
 # >>> muteria.drivers.criteria.CRITERIA_SEQUENCE
 CRITERIA_SEQUENCE = None
 
+# List of criteria that have test objectives covered when test execution
+# differs with original
+# When None, Default to the order in:
+# >>> muteria.drivers.criteria.CRITERIA_REQUIRING_OUTDIFF_WITH_PROGRAM
+CRITERIA_REQUIRING_OUTDIFF_WITH_PROGRAM = None
+
 # List of criteria to run with failing tests
 RUN_FAILING_TESTS_WITH_CRITERIA = [
 
@@ -217,7 +233,7 @@ CRITERIA_TESTGEN_GUIDANCE = {
 
 }
 
-# Criterion: optimizers dict. ex: {STRONG_MUTATION: SM_WM_OPTIMIZER}
+# Criterion: optimizers dict. ex: {STRONG_MUTATION: SM_OPTIMIZED_BY_WM}
 CRITERIA_EXECUTION_OPTIMIZERS = {
 
 }

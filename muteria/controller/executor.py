@@ -246,18 +246,48 @@ class Executor(object):
 
             # Actual Execution in the temporary dir (until before finish)
             while True:
+                # (Break flow)
+                if len(self.config.RE_EXECUTE_FROM_CHECKPOINT_META_TASKS.\
+                                                                get_val()) > 0:
+                    for task in self.config\
+                                        .RE_EXECUTE_FROM_CHECKPOINT_META_TASKS\
+                                        .get_val():
+                        self.cp_data.tasks_obj\
+                                        .set_task_back_as_todo_untouched(task)
+                    self.config.RE_EXECUTE_FROM_CHECKPOINT_META_TASKS\
+                                                                .set_val([])
+
                 # 1. get executing task
                 task_set = self.cp_data.tasks_obj.get_next_todo_tasks()
 
-                # stop if the next task is FINISHED
+                # 2. stop if the next task is FINISHED
                 if len(task_set) == 0 or (len(task_set) == 1 and \
                         list(task_set)[0] == checkpoint_tasks.Tasks.FINISHED):
                     break
 
-                # 2. execute the tasks
-                # (TODO: parallelism)
+                # (Break flow)
+                # use the rerun from here, only here, stop after here
+                if self.config.RESTART_CURRENT_EXECUTING_META_TASKS.get_val():
+                    # restarts the tasks
+                    for task in task_set:
+                        self.cp_data.tasks_obj.\
+                                        set_task_back_as_todo_untouched(task)
+                    # disable it
+                    self.config.RESTART_CURRENT_EXECUTING_META_TASKS.set_val(\
+                                                                        False)
+                    
+                
+                # 3. execute the tasks  (TODO: parallelism)
                 for task in task_set:
                     self._execute_task(task)
+
+                # (Break flow)
+                if self.config.EXECUTE_ONLY_CURENT_CHECKPOINT_META_TASK.\
+                                                                    get_val():
+                    ERROR_HANDLER.error_exit("(DBG) Stopped after executing"
+                                " only the current checkpoint meta tasks."
+                                " because of corresponding variable was set", \
+                                                                    __file__)
 
         ERROR_HANDLER.assert_true(task_set is not None, \
                 "There must be task set (empty list or FINISHED)", __file__)
@@ -456,8 +486,8 @@ class Executor(object):
                 self.checkpointer.write_checkpoint(self.cp_data.get_json_obj())
 
             criteria_set_sequence = self.config.CRITERIA_SEQUENCE.get_val()
-            if criteria_set_sequence is None:
-                criteria_set_sequence = criteria_pkg.CRITERIA_SEQUENCE
+            #if criteria_set_sequence is None:
+            #    criteria_set_sequence = criteria_pkg.CRITERIA_SEQUENCE
             for cs_pos, criteria_set in enumerate(criteria_set_sequence):
                 criteria_set &= set(matrix_files)
                 if len(criteria_set) == 0:
@@ -499,11 +529,12 @@ class Executor(object):
 
                 # Update matrix if needed to have output diff or such
                 # TODO: add CRITERIA_REQUIRING_OUTDIFF_WITH_PROGRAM to config
-                for crit in criteria_set & set(\
-                        criteria_pkg.CRITERIA_REQUIRING_OUTDIFF_WITH_PROGRAM):
+                for crit in criteria_set & set(self.config.\
+                                CRITERIA_REQUIRING_OUTDIFF_WITH_PROGRAM.\
+                                                                    get_val()):
                     pf_matrix_file = self.head_explorer.get_file_pathname(\
                                     outdir_struct.TMP_TEST_PASS_FAIL_MATRIX)
-                    if self.config.GET_PASSFAIL_OUTPUT_SUMMARY:
+                    if self.config.GET_PASSFAIL_OUTPUT_SUMMARY.get_val():
                         pf_execoutput_file = \
                                         self.head_explorer.get_file_pathname(\
                                 outdir_struct.TMP_PROGRAM_TESTEXECUTION_OUTPUT)
