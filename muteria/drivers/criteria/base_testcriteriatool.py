@@ -136,9 +136,11 @@ class BaseCriteriaTool(abc.ABC):
 
                 # run testcase
                 test_verdict = self.meta_test_generation_obj.execute_testcase(\
-                                                testcase, \
-                                                exe_path_map=cg_exe_path_map, \
-                                                env_vars=cg_env_vars)
+                                            testcase, \
+                                            exe_path_map=cg_exe_path_map, \
+                                            env_vars=cg_env_vars,\
+                                            use_recorded_timeout_times=\
+                                self.config.META_TEST_EXECUTION_EXTRA_TIMEOUT)
                 
                 # Collect temporary data into result_dir_tmp
                 self._collect_temporary_coverage_data(\
@@ -328,6 +330,8 @@ class BaseCriteriaTool(abc.ABC):
                                         env_vars=execution_environment_vars, \
                                         stop_on_failure=\
                                                 cover_criteria_elements_once, \
+                                        use_recorded_timeout_times=\
+                                self.config.SEPARATED_TEST_EXECUTION_EXTRA_TIMEOUT)
                                         restart_checkpointer=True)
 
             prioritization_module.feedback(element, fail_verdicts)

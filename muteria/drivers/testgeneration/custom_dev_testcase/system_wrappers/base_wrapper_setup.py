@@ -10,16 +10,6 @@ import muteria.common.mix as common_mix
 
 ERROR_HANDLER = common_mix.ErrorHandler
 
-'''
-class SystemNoWrapper(object):
-    def cleanup_logs(self, repo_exe_abs_path):
-        pass
-    def install_wrapper(self, repo_exe_abs_path, run_exe_abs_path, timeout):
-        pass
-    def uninstall_wrapper(self, repo_exe_abs_path):
-        pass
-#~ class NoWrapper
-'''
 
 class BaseSystemWrapper(object):
     
@@ -88,7 +78,7 @@ class BaseSystemWrapper(object):
             collected_output.append(f.read())
     #~ def collect_output()
 
-    def install_wrapper(self, exe_path_map, timeout, collect_output):
+    def install_wrapper(self, exe_path_map, collect_output):
         repo_exe_abs_path, run_exe_abs_path = \
                                 self._get_repo_run_path_pairs(exe_path_map)[0]
 

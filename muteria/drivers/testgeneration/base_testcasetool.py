@@ -38,9 +38,11 @@ import shutil
 import logging
 import abc
 import hashlib
+import time
 
 import muteria.common.matrices as common_matrices
 import muteria.common.mix as common_mix
+import muteria.common.fs as common_fs
 
 from muteria.drivers.checkpoint_handler import CheckPointHandler
 from muteria.repositoryandcode.callback_object import DefaultCallbackObject
@@ -76,6 +78,9 @@ class BaseTestcaseTool(abc.ABC):
         # Verify indirect Arguments Variables
 
         # Initialize Other Fields
+        self.test_execution_time = {}
+        self.test_execution_time_storage_file = os.path.join(\
+                        self.tests_working_dir, "test_to_execution_time.json")
 
         # Make Initialization Computation
         ## Create dirs
@@ -83,6 +88,10 @@ class BaseTestcaseTool(abc.ABC):
             self.clear_working_dir()
 
         self.test_oracle_manager.add_mapping(self, self.test_oracle_dir)
+
+        if os.path.isfile(self.test_execution_time_storage_file):
+            self.test_execution_time = common_fs.loadJSON(\
+                                        self.test_execution_time_storage_file)
     #~ def __init__()
 
     def clear_working_dir(self):
@@ -100,18 +109,28 @@ class BaseTestcaseTool(abc.ABC):
     #~ def has_checkpointer(self)
 
     def execute_testcase (self, testcase, exe_path_map, env_vars, \
-                                        timeout=None, with_outlog_hash=True):
+                                        timeout=None, \
+                                        use_recorded_timeout_times=None, \
+                                        recalculate_execution_times=False, \
+                                        with_outlog_hash=True):
         return self._execute_testcase(testcase, exe_path_map, env_vars, \
-                            timeout=timeout, with_outlog_hash=with_outlog_hash)
+                                timeout=timeout, \
+                                use_recorded_timeout_times=None, \
+                                recalculate_execution_times=False, \
+                                with_outlog_hash=with_outlog_hash)
     #~ def execute_testcase()
 
     def runtests(self, testcases, exe_path_map, env_vars, \
                                 stop_on_failure=False, per_test_timeout=None, \
+                                use_recorded_timeout_times=None, \
+                                recalculate_execution_times=False, \
                                     with_outlog_hash=True, parallel_count=1):
         return self._runtests(testcases=testcases, exe_path_map=exe_path_map, \
                                 env_vars=env_vars, \
                                 stop_on_failure=stop_on_failure, \
                                 per_test_timeout=per_test_timeout, \
+                                use_recorded_timeout_times=None, \
+                                recalculate_execution_times=False, \
                                 with_outlog_hash=with_outlog_hash, \
                                 parallel_count=parallel_count)
     #~ def runtests()
@@ -128,7 +147,10 @@ class BaseTestcaseTool(abc.ABC):
     #~ class RepoRuntestsCallbackObject
 
     def _in_repo_execute_testcase(self, testcase, exe_path_map, env_vars, \
-                                        timeout=None, with_outlog_hash=True):
+                                        timeout=None, \
+                                        use_recorded_timeout_times=None, \
+                                        recalculate_execution_times=False, \
+                                        with_outlog_hash=True):
         callback_func = self._execute_testcase
         cb_obj = self.RepoRuntestsCallbackObject()
         cb_obj.set_post_callback_args((callback_func,
@@ -137,6 +159,10 @@ class BaseTestcaseTool(abc.ABC):
                                         "exe_path_map": exe_path_map,
                                         "env_vars": env_vars,
                                         "timeout": timeout,
+                                        "use_recorded_timeout_times":\
+                                                use_recorded_timeout_times, \
+                                        "recalculate_execution_times":\
+                                                recalculate_execution_times, \
                                         "with_outlog_hash": with_outlog_hash,
                                     }))
         repo_mgr = self.code_builds_factory.repository_manager
@@ -148,6 +174,8 @@ class BaseTestcaseTool(abc.ABC):
 
     def _in_repo_runtests(self, testcases, exe_path_map, env_vars, \
                                 stop_on_failure=False, per_test_timeout=None, \
+                                use_recorded_timeout_times=None, \
+                                recalculate_execution_times=False, \
                                 with_outlog_hash=True, parallel_count=1):
         callback_func = self._runtests
         cb_obj = self.RepoRuntestsCallbackObject()
@@ -158,6 +186,10 @@ class BaseTestcaseTool(abc.ABC):
                                         "env_vars": env_vars,
                                         "stop_on_failure": stop_on_failure,
                                         "per_test_timeout": per_test_timeout,
+                                        "use_recorded_timeout_times":\
+                                                use_recorded_timeout_times, \
+                                        "recalculate_execution_times":\
+                                                recalculate_execution_times, \
                                         "with_outlog_hash": with_outlog_hash,
                                         "parallel_count": parallel_count,
                                     }))
@@ -169,7 +201,10 @@ class BaseTestcaseTool(abc.ABC):
     #~ def _in_repo_runtests()
 
     def _execute_testcase (self, testcase, exe_path_map, env_vars, \
-                                        timeout=None, with_outlog_hash=True):
+                                        timeout=None, \
+                                        use_recorded_timeout_times=None, \
+                                        recalculate_execution_times=False, \
+                                        with_outlog_hash=True):
         '''
         Execute a test case with the given executable and 
         say whether it failed
@@ -182,14 +217,36 @@ class BaseTestcaseTool(abc.ABC):
         :returns: boolean failed verdict of the test 
                         (True if failed, False otherwise)
         '''
-        self._prepare_executable(exe_path_map, env_vars, timeout=timeout,
+
+        if timeout is None:
+            if use_recorded_timeout_times is not None:
+                ERROR_HANDLER.assert_true(use_recorded_timeout_times > 0, \
+                                        "use_recorded_timeout_times must be "
+                                        "positive if not None", __file__)
+                if testcase in self.test_execution_time:
+                    timeout = self.test_execution_time[testcase] * \
+                                                use_recorded_timeout_times
+        else:
+            ERROR_HANDLER.assert_true(use_recorded_timeout_times is None, \
+                                "use_recorded_timeout_times must not be set "
+                                "when timeout is not None", __file__)
+
+
+        self._prepare_executable(exe_path_map, env_vars, \
                                             collect_output=with_outlog_hash)
         self._set_env_vars(env_vars)
 
+        start_time = time.time()
         fail_verdict, execoutlog_hash = \
                         self._oracle_execute_a_test(testcase, exe_path_map, \
                                             env_vars, timeout=timeout, \
                                             with_outlog_hash=with_outlog_hash)
+
+        # Record exec time if not existing
+        if recalculate_execution_times:
+            self.test_execution_time[testcase] = \
+                                        1 + int(time.time() - start_time)
+
         self._restore_env_vars()
         self._restore_default_executable(exe_path_map, env_vars, \
                                             collect_output=with_outlog_hash)
@@ -199,6 +256,8 @@ class BaseTestcaseTool(abc.ABC):
 
     def _runtests(self, testcases, exe_path_map, env_vars, \
                                 stop_on_failure=False, per_test_timeout=None, \
+                                use_recorded_timeout_times=None, \
+                                recalculate_execution_times=False, \
                                 with_outlog_hash=True, parallel_count=1):
         '''
         Execute the list of test cases with the given executable and 
@@ -239,24 +298,49 @@ class BaseTestcaseTool(abc.ABC):
                         " can be returned. Check the results of the", \
                         "finished execution"), call_location=__file__)
 
+        if per_test_timeout is None:
+            per_test_timeout = {tc: None for tc in testcases}
+            if use_recorded_timeout_times is not None:
+                ERROR_HANDLER.assert_true(use_recorded_timeout_times > 0, \
+                                        "use_recorded_timeout_times must be "
+                                        "positive if not None", __file__)
+                per_test_timeout.update({x: (y * use_recorded_timeout_times) \
+                                for x, y in self.test_execution_time.items()})
+        else:
+            ERROR_HANDLER.assert_true(use_recorded_timeout_times is None, \
+                                "use_recorded_timeout_times must not be set "
+                                "when per_test_timeout is set", __file__)
+
         # Prepare the exes
         self._prepare_executable(exe_path_map, env_vars, \
-                                            timeout=per_test_timeout, \
                                             collect_output=with_outlog_hash)
         self._set_env_vars(env_vars)
 
         test_failed_verdicts = {} 
         test_outlog_hash = {} 
         for testcase in testcases:
+            start_time = time.time()
             test_failed, execoutlog_hash = \
                         self._oracle_execute_a_test(testcase, exe_path_map, \
-                                        env_vars, timeout=per_test_timeout, \
-                                            with_outlog_hash=with_outlog_hash)
+                                        env_vars, \
+                                        timeout=per_test_timeout[testcase], \
+                                        with_outlog_hash=with_outlog_hash)
+            
+            # Record exec time if not existing
+            if recalculate_execution_times:
+                self.test_execution_time[testcase] = \
+                                            1 + int(time.time() - start_time)
+
             test_failed_verdicts[testcase] = test_failed
             test_outlog_hash[testcase] = execoutlog_hash
             if stop_on_failure and test_failed != \
                                 common_mix.GlobalConstants.PASS_TEST_VERDICT:
                 break
+        
+        if recalculate_execution_times:
+            common_fs.dumpJSON(self.test_execution_time, \
+                            self.test_execution_time_storage_file, pretty=True)
+
         # Restore back the exes
         self._restore_env_vars()
         self._restore_default_executable(exe_path_map, env_vars, \
@@ -296,6 +380,7 @@ class BaseTestcaseTool(abc.ABC):
 
         if with_outlog_hash:
             out_len = len(output_err[1])
+            #TODO: Choose to hash or not at runtime (flakiness check)
             out_hash_val = hashlib.sha512(output_err[1]).hexdigest()
             outlog_summary = {
                 common_matrices.OutputLogData.OUTLOG_LEN: out_len,
@@ -378,7 +463,7 @@ class BaseTestcaseTool(abc.ABC):
     #~ def get_testcase_info_object()
 
     @abc.abstractmethod
-    def _prepare_executable (self, exe_path_map, env_vars, timeout, \
+    def _prepare_executable (self, exe_path_map, env_vars, \
                                                         collect_output=False):
         """ Make sure we have the right executable ready (if needed)
         """

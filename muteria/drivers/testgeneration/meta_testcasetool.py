@@ -242,7 +242,10 @@ class MetaTestcaseTool(object):
     #~ def _get_default_exe_path_map()
 
     def execute_testcase (self, meta_testcase, exe_path_map, env_vars, \
-                                        timeout=None, with_outlog_hash=True):
+                                        timeout=None, \
+                                        use_recorded_timeout_times=None, \
+                                        recalculate_execution_times=False, \
+                                        with_outlog_hash=True):
         '''
         Execute a test case with the given executable and 
         say whether it failed
@@ -269,12 +272,19 @@ class MetaTestcaseTool(object):
                                                                     __file__)
         ttool = self.testcases_configured_tools[ttoolalias][self.TOOL_OBJ_KEY]
         return ttool.execute_testcase(testcase, exe_path_map, env_vars, \
-                            timeout=timeout, with_outlog_hash=with_outlog_hash)
+                            timeout=timeout, \
+                            use_recorded_timeout_times=\
+                                                use_recorded_timeout_times, \
+                            recalculate_execution_times=\
+                                                recalculate_execution_times, \
+                            with_outlog_hash=with_outlog_hash)
     #~ def execute_testcase()
 
     def runtests(self, meta_testcases=None, exe_path_map=None, env_vars=None, \
                         stop_on_failure=False, \
                         per_test_timeout=None, \
+                        use_recorded_timeout_times=None, \
+                        recalculate_execution_times=False, \
                         fault_test_execution_matrix_file=None, \
                         fault_test_execution_execoutput_file=None, \
                         with_outlog_hash=True, \
@@ -404,6 +414,10 @@ class MetaTestcaseTool(object):
                                             exe_path_map, env_vars, \
                                             stop_on_failure, \
                                             per_test_timeout=per_test_timeout,
+                                            use_recorded_timeout_times=\
+                                                use_recorded_timeout_times, \
+                                            recalculate_execution_times=\
+                                                recalculate_execution_times, \
                                             with_outlog_hash=with_outlog_hash)
             for testcase in test_failed_verdicts:
                 meta_testcase =  \

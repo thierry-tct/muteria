@@ -410,6 +410,7 @@ class Executor(object):
             self.meta_testcase_tool.runtests(meta_testcases=meta_testcases, \
                         stop_on_failure=\
                                 self.config.STOP_TESTS_EXECUTION_ON_FAILURE, \
+                        recalculate_execution_times=True, \
                         fault_test_execution_matrix_file=matrix_file, \
                         fault_test_execution_execoutput_file=execoutput_file, \
                         test_prioritization_module=\

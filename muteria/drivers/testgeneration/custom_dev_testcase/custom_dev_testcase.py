@@ -61,7 +61,7 @@ class CustomTestcases(BaseTestcaseTool):
                                         parallel_count=parallel_count)
     #~ def runtests()
 
-    def _prepare_executable(self, exe_path_map, env_vars, timeout, \
+    def _prepare_executable(self, exe_path_map, env_vars, \
                                                         collect_output=False):
         """ Make sure we have the right executable ready (if needed)
         """
@@ -70,7 +70,7 @@ class CustomTestcases(BaseTestcaseTool):
         wrapper_obj = self.code_builds_factory.repository_manager.\
                                                         get_wrapper_object()
         if wrapper_obj is not None:
-            wrapper_obj.install_wrapper(exe_path_map, timeout, collect_output)
+            wrapper_obj.install_wrapper(exe_path_map, collect_output)
     #~ def _prepare_executable()
 
     def _restore_default_executable(self, exe_path_map, env_vars, \

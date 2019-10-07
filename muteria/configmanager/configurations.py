@@ -418,7 +418,7 @@ class TestcaseToolsConfig(BaseToolConfig):
 #~class TestcaseToolsConfig
     
 class CriteriaToolsConfig(BaseToolConfig):
-    SEPARATED_TEST_EXECUTION_EXTRA_TIMEOUT = 0.5 # proportion
+    SEPARATED_TEST_EXECUTION_EXTRA_TIMEOUT = 1.5 # proportion
     META_TEST_EXECUTION_EXTRA_TIMEOUT = 10.0 # proportion
 #~class CriteriaToolsConfig
 
