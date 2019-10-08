@@ -417,7 +417,8 @@ class MetaCriteriaTool(object):
                                         common_matrices.ExecutionMatrix( \
                                         filename=_criteria2matrix[criterion], \
                                         non_key_col_list=testcases)
-                    _criteria2outhash[criterion] = \
+                    if _criteria2outhash[criterion] is not None:
+                        _criteria2outhash[criterion] = \
                                         common_matrices.OutputLogData( \
                                         filename=_criteria2outhash[criterion])
                 # Actual execution

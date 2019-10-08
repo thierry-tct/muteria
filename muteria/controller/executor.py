@@ -471,7 +471,8 @@ class Executor(object):
                                                 matrix_files_keys[criterion])
                 execoutput_files_keys[criterion] = \
                         outdir_struct.TMP_CRITERIA_EXECUTION_OUTPUT[criterion]
-                if criterion in self.config.CRITERIA_WITH_OUTPUT_SUMMARY:
+                if criterion in self.config.CRITERIA_WITH_OUTPUT_SUMMARY\
+                                                                    .get_val():
                     # Make sure that the Exec output dir exists
                     self.head_explorer.get_or_create_and_get_dir(\
                             outdir_struct.RESULTS_TESTEXECUTION_OUTPUTS_DIR)
@@ -517,7 +518,7 @@ class Executor(object):
                 criterion_to_matrix = {\
                                     c: matrix_files[c] for c in criteria_set}
 
-                # TODO: chack set based on the criteria for which execout is enabled
+                # TODO: check set based on the criteria for which execout is enabled
                 criterion_to_execoutput = {\
                                 c: execoutput_files[c] for c in criteria_set}
 

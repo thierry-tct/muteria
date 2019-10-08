@@ -383,14 +383,15 @@ class BaseTestcaseTool(abc.ABC):
                                             collect_output=with_outlog_hash)
 
         if with_outlog_hash:
-            output_err[1] = output_err[1].encode('utf-8')
-            out_len = len(output_err[1])
+            retcode, outlog = output_err
+            outlog = outlog.encode('utf-8')
+            out_len = len(outlog)
             #TODO: Choose to hash or not at runtime (flakiness check)
-            out_hash_val = hashlib.sha512(output_err[1]).hexdigest()
+            out_hash_val = hashlib.sha512(outlog).hexdigest()
             outlog_summary = {
                 common_matrices.OutputLogData.OUTLOG_LEN: out_len,
                 common_matrices.OutputLogData.OUTLOG_HASH: out_hash_val,
-                common_matrices.OutputLogData.RETURN_CODE: output_err[0],
+                common_matrices.OutputLogData.RETURN_CODE: retcode,
             }
         else:
             outlog_summary = None

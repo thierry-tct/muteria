@@ -420,7 +420,8 @@ class BaseCriteriaTool(abc.ABC):
                         "The specified test cases are not same in the matrix",
                                                                     __file__)
 
-            ERROR_HANDLER.assert_true(criterion_to_executionoutput is None or \
+            ERROR_HANDLER.assert_true(\
+                        criterion_to_executionoutput[criterion] is None or \
                         criterion_to_executionoutput[criterion].is_empty(), \
                                     "the execoutput must be empty", __file__)
 
