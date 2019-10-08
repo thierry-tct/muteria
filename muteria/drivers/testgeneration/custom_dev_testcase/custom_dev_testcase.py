@@ -39,17 +39,26 @@ class CustomTestcases(BaseTestcaseTool):
     #~ def get_testcase_info_object()
 
     def execute_testcase (self, testcase, exe_path_map, env_vars, \
-                                        timeout=None, with_outlog_hash=True):
+                                            timeout=None, \
+                                            use_recorded_timeout_times=None, \
+                                            recalculate_execution_times=False, \
+                                            with_outlog_hash=True):
         return self._in_repo_execute_testcase(testcase=testcase, \
                                             exe_path_map=exe_path_map, \
                                             env_vars=env_vars, \
                                             timeout=timeout, \
+                                            use_recorded_timeout_times=\
+                                                use_recorded_timeout_times, \
+                                            recalculate_execution_times=\
+                                                recalculate_execution_times, \
                                             with_outlog_hash=with_outlog_hash)
     #~ def execute_testcase()
 
     def runtests(self, testcases, exe_path_map, env_vars, \
                                 stop_on_failure=False, per_test_timeout=None, \
-                                    with_outlog_hash=True, parallel_count=1):
+                                use_recorded_timeout_times=None, \
+                                recalculate_execution_times=False, \
+                                with_outlog_hash=True, parallel_count=1):
         """ Override runtests
         """
         return self._in_repo_runtests(testcases=testcases, \
@@ -57,6 +66,10 @@ class CustomTestcases(BaseTestcaseTool):
                                         env_vars=env_vars, \
                                         stop_on_failure=stop_on_failure, \
                                         per_test_timeout=per_test_timeout, \
+                                        use_recorded_timeout_times=\
+                                                use_recorded_timeout_times, \
+                                        recalculate_execution_times=\
+                                                recalculate_execution_times, \
                                         with_outlog_hash=with_outlog_hash, \
                                         parallel_count=parallel_count)
     #~ def runtests()

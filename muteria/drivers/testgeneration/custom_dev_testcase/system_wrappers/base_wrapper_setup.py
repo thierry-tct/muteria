@@ -5,13 +5,14 @@ import os
 import sys
 import shutil
 import logging
+import abc
 
 import muteria.common.mix as common_mix
 
 ERROR_HANDLER = common_mix.ErrorHandler
 
 
-class BaseSystemWrapper(object):
+class BaseSystemWrapper(abc.ABC):
     
     # do not change
 
@@ -25,9 +26,15 @@ class BaseSystemWrapper(object):
 
     # Must Override
 
-    wrapper_template_filename = None #"MUTERIA_WRAPPER.sh.in"
-    wrapper_template_string = None 
-    dev_null = None
+    @abc.abstractmethod
+    def get_dev_null(self):
+        print ("Implement!!!")
+    #~ def get_dev_null()
+
+    @abc.abstractmethod
+    def _get_wrapper_template_string(self):
+        print("Implement!!!")
+    #~ def _get_wrapper_template_string()
 
     # Can override
 
@@ -35,14 +42,10 @@ class BaseSystemWrapper(object):
         self.repo_mgr = repo_mgr
     #~ def __init__()
 
-    def _get_wrapper_template_path(self):
-        return os.path.join(os.path.dirname(__file__), \
-                                                self.wrapper_template_filename)
-    #~ def _get_wrapper_template_path()
-
     def _get_repo_run_path_pairs(self, exe_path_map):
         ERROR_HANDLER.assert_true(len(exe_path_map) == 1, \
-                                "support a single exe for now", __file__)
+                    "support a single exe for now. got: "+str(exe_path_map), \
+                                                                    __file__)
         repo_exe = list(exe_path_map.keys())[0]
         run_exe = exe_path_map[repo_exe]
         repo_exe = self.repo_mgr.repo_abs_path(repo_exe)
@@ -93,17 +96,14 @@ class BaseSystemWrapper(object):
             'WRAPPER_TEMPLATE_RUN_EXE_ASBSOLUTE_PATH': \
                                             repo_exe_abs_path+self.used_ext,
             'WRAPPER_TEMPLATE_COUNTER_FILE': \
-                                        repo_exe_abs_path+self.counter_ext \
-                                        if collect_output else self.dev_null,
+                                    repo_exe_abs_path+self.counter_ext \
+                                    if collect_output else self.get_dev_null(),
             'WRAPPER_TEMPLATE_OUTPUT_RETCODE': \
-                                        repo_exe_abs_path+self.outretcode_ext \
-                                        if collect_output else self.dev_null,
+                                    repo_exe_abs_path+self.outretcode_ext \
+                                    if collect_output else self.get_dev_null(),
             'WRAPPER_TEMPLATE_OUTPUT_LOG': repo_exe_abs_path+self.outlog_ext,
         }
-        if self.wrapper_template_string is None:
-            with open(self._get_wrapper_template_path()) as template:
-                self.wrapper_template_string = template.read()
-        wrapper_obj = self.wrapper_template_string
+        wrapper_obj = self._get_wrapper_template_string()
         for match, replace in match_replacing.items():
             wrapper_obj = wrapper_obj.replace(match, replace)
         with open(repo_exe_abs_path, 'w') as dest:

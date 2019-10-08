@@ -115,8 +115,10 @@ class BaseTestcaseTool(abc.ABC):
                                         with_outlog_hash=True):
         return self._execute_testcase(testcase, exe_path_map, env_vars, \
                                 timeout=timeout, \
-                                use_recorded_timeout_times=None, \
-                                recalculate_execution_times=False, \
+                                use_recorded_timeout_times=\
+                                                use_recorded_timeout_times, \
+                                recalculate_execution_times=\
+                                                recalculate_execution_times, \
                                 with_outlog_hash=with_outlog_hash)
     #~ def execute_testcase()
 
@@ -124,13 +126,15 @@ class BaseTestcaseTool(abc.ABC):
                                 stop_on_failure=False, per_test_timeout=None, \
                                 use_recorded_timeout_times=None, \
                                 recalculate_execution_times=False, \
-                                    with_outlog_hash=True, parallel_count=1):
+                                with_outlog_hash=True, parallel_count=1):
         return self._runtests(testcases=testcases, exe_path_map=exe_path_map, \
                                 env_vars=env_vars, \
                                 stop_on_failure=stop_on_failure, \
                                 per_test_timeout=per_test_timeout, \
-                                use_recorded_timeout_times=None, \
-                                recalculate_execution_times=False, \
+                                use_recorded_timeout_times=\
+                                                use_recorded_timeout_times, \
+                                recalculate_execution_times=\
+                                                recalculate_execution_times, \
                                 with_outlog_hash=with_outlog_hash, \
                                 parallel_count=parallel_count)
     #~ def runtests()

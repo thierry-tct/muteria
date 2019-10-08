@@ -307,8 +307,8 @@ class CriteriaToolMart(BaseCriteriaTool):
         if (ret != 0):
             logging.error(out)
             logging.error(err)
-            logging.error("\n>> CMD: " + " ".join([prog]+args))
-            ERROR_HANDLER.error_exit("\nmart failed'", __file__)
+            logging.error("\n>> CMD: " + " ".join([prog]+args) + '\n')
+            ERROR_HANDLER.error_exit("mart failed'", __file__)
         
         # write down the rel_path_map
         ERROR_HANDLER.assert_true(not os.path.isfile(\

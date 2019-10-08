@@ -225,8 +225,8 @@ class TestcasesToolKlee(BaseTestcaseTool):
         if (ret != 0):
             logging.error(out)
             logging.error(err)
-            logging.error("\n>> CMD: " + " ".join([prog]+args))
-            ERROR_HANDLER.error_exit("\nmart failed'", __file__)
+            logging.error("\n>> CMD: " + " ".join([prog]+args) + '\n')
+            ERROR_HANDLER.error_exit("klee failed'", __file__)
 
         store_obj = {r: os.path.basename(b) for r,b in rel2bitcode.items()}
         common_fs.dumpJSON(store_obj, self.test_details_file)
