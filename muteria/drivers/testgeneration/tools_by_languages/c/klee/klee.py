@@ -78,7 +78,7 @@ class TestcasesToolKlee(BaseTestcaseTool):
             return self.testcase_info_object
     #~ def get_testcase_info_object()
 
-    def _prepare_executable(self, exe_path_map, env_vars, timeout, \
+    def _prepare_executable(self, exe_path_map, env_vars, \
                                                         collect_output=False):
         """ Make sure we have the right executable ready (if needed)
         """
@@ -124,8 +124,7 @@ class TestcasesToolKlee(BaseTestcaseTool):
 
         if remote_exe != self.repo_exe_to_local_to_remote[repo_exe][local_exe]:
             if remote_exe == repo_exe:
-                self.code_builds_factory.repository_manager.\
-                                    set_repo_to_build_default(\
+                self.code_builds_factory.set_repo_to_build_default(\
                                         also_copy_to_map={repo_exe: local_exe})
             else:
                 shutil.copy2(remote_exe, local_exe)

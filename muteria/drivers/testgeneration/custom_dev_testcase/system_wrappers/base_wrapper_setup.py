@@ -68,7 +68,8 @@ class BaseSystemWrapper(abc.ABC):
         repo_exe_abs_path, _ = self._get_repo_run_path_pairs(exe_path_map)[0]
         tmp = []
         if not os.path.isfile(repo_exe_abs_path + self.outretcode_ext):
-            ERROR_HANDLER.error_exit("testcase has no log:" + testcase, \
+            ERROR_HANDLER.error_exit("testcase has no log: '" +testcase+ "'."
+                                " repo_exe_abs_path is " + repo_exe_abs_path, \
                                                                     __file__)
         with open(repo_exe_abs_path + self.outretcode_ext) as f:
             for line in f:
@@ -113,7 +114,7 @@ class BaseSystemWrapper(abc.ABC):
         shutil.copymode(repo_exe_abs_path + self.backup_ext, repo_exe_abs_path)
 
         # cleanup data
-        self.cleanup_logs(repo_exe_abs_path)
+        self.cleanup_logs(exe_path_map)
     #~ def install_wrapper()
 
     def uninstall_wrapper(self, exe_path_map):
@@ -126,6 +127,6 @@ class BaseSystemWrapper(abc.ABC):
         os.remove(repo_exe_abs_path + self.used_ext)
 
         # cleanup data
-        self.cleanup_logs(repo_exe_abs_path)
+        self.cleanup_logs(exe_path_map)
     #~ def uninstall_wrapper()
 #~ class BaseSystemWrapper

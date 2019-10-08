@@ -193,7 +193,7 @@ class DriversUtils(object):
 
     @classmethod
     def execute_and_get_retcode_out_err(cls, prog, args_list=[], \
-                                                env=None, timeout=None, \
+                                    env=None, timeout=None, do_decode=False, \
                             out_on=True, err_on=True, merge_err_to_out=True):
         #print(prog, args_list, env is None, timeout, out_on, err_on, merge_err_to_out)
         tmp_env = os.environ if env is None else env
@@ -225,9 +225,9 @@ class DriversUtils(object):
             if not stopped:
                 p.kill() # TODO: Chose the signal to send
             stdout, stderr = p.communicate()
-        if stdout is not None:
+        if stdout is not None and do_decode:
             stdout = stdout.decode('UTF-8')
-        if stderr is not None:
+        if stderr is not None and do_decode:
             stderr = stderr.decode('UTF-8')
         retcode = p.wait()
         return retcode, stdout, stderr

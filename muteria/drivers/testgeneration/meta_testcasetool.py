@@ -237,8 +237,9 @@ class MetaTestcaseTool(object):
 
 
     def _get_default_exe_path_map(self):
-        ex, _ = self.code_builds_factory.repository_manager.get_exe_path_map()
-        return {v:None for v in ex}
+        exes, _ = self.code_builds_factory.repository_manager\
+                                                .get_relative_exe_path_map()
+        return {v:None for v in exes}
     #~ def _get_default_exe_path_map()
 
     def execute_testcase (self, meta_testcase, exe_path_map, env_vars, \

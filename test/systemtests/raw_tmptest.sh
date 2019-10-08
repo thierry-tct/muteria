@@ -30,10 +30,18 @@ TestList=(example_python example_c)
 
 
 only_example=''
-if [ $# -eq 1 ]
+if [ $# -eq 1 -o $# -eq 2 ]
 then
 	only_example="$1"
 	echo "${TestList[@]}" | tr ' ' '\n' | grep "^$only_example$" > /dev/null || error_exit "invalid test: $only_example"
+	just_continue=0
+	if [ $# -eq 2 ]; then
+		if [ "$2" = "continue" ]; then
+			just_continue=1
+		else
+			error_exit "invalid secon parameter. expect 'continue'"
+		fi
+	fi
 fi
 
 ensure_python_version
@@ -60,9 +68,16 @@ do
 
 	entry_point=$topdir/run.py
 
-	rm -rf $tmp_workspace
-	mkdir $tmp_workspace || error_exit "failed creating tmp_workspace"
-	cp -rf $clean_data $tmp_workspace || error_exit "failed to copy clean into tmp_workspace"
+	if [ $just_continue -eq 1 ] && `test -d $tmp_workspace/$prog_folder`
+	then
+		echo
+		echo "# CONTINUING..."
+		echo
+	else
+		rm -rf $tmp_workspace
+		mkdir $tmp_workspace || error_exit "failed creating tmp_workspace"
+		cp -rf $clean_data $tmp_workspace || error_exit "failed to copy clean into tmp_workspace"
+	fi
 
 	$python_exe $entry_point $muteria_topdir $workdata_ctrl || error_exit "test failed for $prog_folder"
 
