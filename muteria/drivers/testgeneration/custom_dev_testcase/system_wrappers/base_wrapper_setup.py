@@ -73,7 +73,7 @@ class BaseSystemWrapper(abc.ABC):
                                                                     __file__)
         with open(repo_exe_abs_path + self.outretcode_ext) as f:
             for line in f:
-                tmp.append(line.strip)
+                tmp.append(line.strip())
             if len(tmp) == 1:
                 tmp = tmp[0]
         collected_output.append(tmp)

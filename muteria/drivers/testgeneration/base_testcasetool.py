@@ -383,6 +383,7 @@ class BaseTestcaseTool(abc.ABC):
                                             collect_output=with_outlog_hash)
 
         if with_outlog_hash:
+            output_err[1] = output_err[1].encode('utf-8')
             out_len = len(output_err[1])
             #TODO: Choose to hash or not at runtime (flakiness check)
             out_hash_val = hashlib.sha512(output_err[1]).hexdigest()

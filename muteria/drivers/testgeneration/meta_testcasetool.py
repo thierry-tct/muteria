@@ -467,7 +467,8 @@ class MetaTestcaseTool(object):
                                 filename=fault_test_execution_matrix_file, \
                                             non_key_col_list=meta_testcases)
             ERROR_HANDLER.assert_true(fault_test_execution_matrix.is_empty(), \
-                                            "matrix must be empty", __file__)
+                                "matrix must be empty. Filename is:"
+                                " "+fault_test_execution_matrix_file, __file__)
             failverdict2val = {
                 common_mix.GlobalConstants.FAIL_TEST_VERDICT: \
                         fault_test_execution_matrix.getActiveCellDefaultVal(),

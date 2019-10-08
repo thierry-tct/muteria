@@ -9,6 +9,7 @@ W_COUNTER_FILE="WRAPPER_TEMPLATE_COUNTER_FILE"
 W_OUTPUT_RETCODE="WRAPPER_TEMPLATE_OUTPUT_RETCODE"
 W_OUTPUT_LOG="WRAPPER_TEMPLATE_OUTPUT_LOG"
 
+# If timeout is specified, run with it
 W_EXEC_TIMEOUT=""
 if [ "${MUTERIA_TEST_EXECUTION_TIMEOUT_ENV_VAR:-}" != "" ]; then
     W_EXEC_TIMEOUT="$MUTERIA_TEST_EXECUTION_TIMEOUT_ENV_VAR"
@@ -22,15 +23,15 @@ plain_replay() {
     fi
 }
 
-if [ "${MUTERIA_TEST_FILE_NAME_ENV_VAR:-}" = "" ]; then 
-    plain_replay
-else
+# If specified the test file name, only execute, and record, calls from it
+if [ "${MUTERIA_TEST_FILE_NAME_ENV_VAR:-}" != "" ]; then 
     # Check test file match
-    if ! `/bin/ps $$ | /bin/grep "$MUTERIA_TEST_FILE_NAME_ENV_VAR "` ; then
-        plain_replay
+    if ! `/bin/ps -o command $$ | /bin/sed 1d | /bin/grep "$MUTERIA_TEST_FILE_NAME_ENV_VAR" > /dev/null` ; then
+        plain_replay "${@:1}"
     fi
 fi
 
+# If specified counter, only execute, and record, the corresponding 
 if [ "${MUTERIA_TEST_COUNT_ID_ENV_VAR:-}" != "" ]; then
 # critical section
   # FD is redirected to our lock file
@@ -70,7 +71,9 @@ else
 fi
 
 if [ "$COUNTER" = "$MUTERIA_TEST_COUNT_ID_ENV_VAR" ]; then
+    # This is fine because the run exe is copied in repo before run
     /bin/echo "TOOL: $(/usr/bin/basename $W_TOOL_ABS_NAME)" > "$W_OUTPUT_LOG"
+
     if [ "$W_EXEC_TIMEOUT" != "" ]; then
         /usr/bin/timeout -s 9 $W_EXEC_TIMEOUT $W_TOOL_ABS_NAME "${@:1}" 2>&1 | /usr/bin/tee -a "$W_OUTPUT_LOG"
         retcode="$?"
@@ -83,5 +86,5 @@ if [ "$COUNTER" = "$MUTERIA_TEST_COUNT_ID_ENV_VAR" ]; then
 
     exit $retcode
 else
-    plain_replay
+    plain_replay "${@:1}"
 fi

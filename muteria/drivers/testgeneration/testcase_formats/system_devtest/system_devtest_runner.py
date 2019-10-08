@@ -1,11 +1,13 @@
 import os
+import logging
+
 from muteria.common.mix import GlobalConstants
 from muteria.drivers import DriversUtils
 
 from muteria.drivers.testgeneration.custom_dev_testcase.system_wrappers \
                 import TEST_FILE_NAME_ENV_VAR, TEST_EXECUTION_TIMEOUT_ENV_VAR
 
-def system_test_runner(prog, arg_list, test_filename, repo_root_dir, 
+def system_test_runner(prog, args_list, test_filename, repo_root_dir, 
                                         exe_path_map, env_vars, timeout, \
                                 collected_output=None, using_wrapper=False):
     # TODO: use exe_path_map
@@ -30,8 +32,9 @@ def system_test_runner(prog, arg_list, test_filename, repo_root_dir,
                                 timeout=timeout, merge_err_to_out=True)
             collected_output.append(retcode)
             collected_output.append(out)
-    except:
+    except (ValueError, OSError) as e:
         # ERROR
+        # TODO: 
         return GlobalConstants.TEST_EXECUTION_ERROR
     
     # Parse the result

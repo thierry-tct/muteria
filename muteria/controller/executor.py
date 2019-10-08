@@ -384,6 +384,10 @@ class Executor(object):
             execoutput_file_key = \
                                 outdir_struct.TMP_PROGRAM_TESTEXECUTION_OUTPUT
             if self.config.GET_PASSFAIL_OUTPUT_SUMMARY:
+                # Make sure that the exec Output dir exists
+                self.head_explorer.get_or_create_and_get_dir(\
+                            outdir_struct.RESULTS_TESTEXECUTION_OUTPUTS_DIR)
+
                 execoutput_file = self.head_explorer.get_file_pathname(\
                                                            execoutput_file_key)
             else:
@@ -468,6 +472,10 @@ class Executor(object):
                 execoutput_files_keys[criterion] = \
                         outdir_struct.TMP_CRITERIA_EXECUTION_OUTPUT[criterion]
                 if criterion in self.config.CRITERIA_WITH_OUTPUT_SUMMARY:
+                    # Make sure that the Exec output dir exists
+                    self.head_explorer.get_or_create_and_get_dir(\
+                            outdir_struct.RESULTS_TESTEXECUTION_OUTPUTS_DIR)
+
                     execoutput_files[criterion] = \
                                 self.head_explorer.get_file_pathname(\
                                             execoutput_files_keys[criterion])
