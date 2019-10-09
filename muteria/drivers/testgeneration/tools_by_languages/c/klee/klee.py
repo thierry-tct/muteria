@@ -169,7 +169,7 @@ class TestcasesToolKlee(BaseTestcaseTool):
                                     "mismatch: [0-9]+ [vV][sS] [0-9]+$" + ")" \
                         ]))
 
-            self.sed_regex1 = re.compile(" \\([0-9]+\\s+seconds\\)")
+            self.sed_regex1 = re.compile(" \\([0-9]+\\s+seconds\\)") #+"$")
             self.sed_regex2 = re.compile(\
                         "RUNNING GDB: /usr/bin/gdb --pid [0-9]+ -q --batch")
 
