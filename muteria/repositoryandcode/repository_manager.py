@@ -61,6 +61,7 @@ import threading
 # https://gitpython.readthedocs.io/en/stable/
 from git import Repo as git_repo
 import git.exc as git_exc
+logging.getLogger("git.cmd").setLevel(logging.INFO)
 
 import muteria.common.mix as common_mix
 import muteria.common.fs as common_fs

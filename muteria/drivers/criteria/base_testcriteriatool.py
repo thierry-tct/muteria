@@ -322,7 +322,7 @@ class BaseCriteriaTool(abc.ABC):
             execution_environment_vars = \
                                 self._get_criterion_element_environment_vars(\
                                                             criterion, element)
-            # run optimizer
+            # run optimizer with all tests of targeting the test objective
             may_cov_tests = prioritization_module\
                                     .get_test_execution_optimizer(element)\
                                     .select_tests(100, is_proportion=True)
