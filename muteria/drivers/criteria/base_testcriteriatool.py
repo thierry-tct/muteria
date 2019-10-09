@@ -298,17 +298,19 @@ class BaseCriteriaTool(abc.ABC):
 
         # main loop for elements execution
         num_elems = len(criteria_element_list)
-        pos = -1
+        pos = -1 + len(completed_elems)
         ## prepare the optimizer
         prioritization_module.reset(self.config.get_tool_config_alias(), \
                                             criteria_element_list, testcases)
         while prioritization_module.has_next_test_objective():
-            pos += 1
+            #pos += 1 # Done bellow in the case where it was not completed
             element = prioritization_module.get_next_test_objective()
 
             # @Checkpointing: check if already executed
             if element in completed_elems:
                 continue
+            else:
+                pos += 1
 
             logging.debug("# Executing {} element {}/{} ...".format(
                                         criterion.get_str(), pos, num_elems))
