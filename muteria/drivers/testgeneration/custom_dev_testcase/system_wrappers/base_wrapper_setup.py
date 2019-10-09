@@ -97,6 +97,9 @@ class BaseSystemWrapper(abc.ABC):
         repo_exe_abs_path, run_exe_abs_path = \
                                 self._get_repo_run_path_pairs(exe_path_map)[0]
 
+        if os.path.isfile(repo_exe_abs_path + self.used_ext):
+            os.remove(repo_exe_abs_path + self.used_ext)
+
         # set run exe
         shutil.copy2(run_exe_abs_path, repo_exe_abs_path + self.used_ext)
 

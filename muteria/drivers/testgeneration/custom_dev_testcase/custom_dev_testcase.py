@@ -108,6 +108,9 @@ class CustomTestcases(BaseTestcaseTool):
         """
         if timeout is None:
             timeout = self.config.ONE_TEST_EXECUTION_TIMEOUT
+
+        #logging.debug('TIMEOUT: '+str(timeout))
+
         rep_mgr = self.code_builds_factory.repository_manager
 
         wrapper_obj = rep_mgr.get_wrapper_object()

@@ -107,6 +107,8 @@ class TestcasesToolKlee(BaseTestcaseTool):
         if timeout is None:
             timeout = self.config.ONE_TEST_EXECUTION_TIMEOUT
         
+        #logging.debug('TIMEOUT: '+str(timeout))
+
         ERROR_HANDLER.assert_true(len(exe_path_map) == 1, \
                                     "support a single exe for now", __file__)
         ERROR_HANDLER.assert_true(callback_object is None, \

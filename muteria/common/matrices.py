@@ -200,7 +200,8 @@ class RawExecutionMatrix(object):
         2
         """
         ERROR_HANDLER.assert_true(key not in self.keys_set, \
-                                "adding an existing key: "+str(key), __file__)
+                            "adding an existing key: '"+str(key)+\
+                            "', to matrix: " + str(self.filename), __file__)
         self.keys_set.add(key)
         if type(values) in (list, tuple):
             self.dataframe.loc[len(self.dataframe)] = [key] + values

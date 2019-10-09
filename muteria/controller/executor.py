@@ -92,6 +92,7 @@ class CheckpointData(dict):
             if self.criteria_set_pos == seq_id and \
                                     set(self.criteria_set) != set(criteria_set):
                 ERROR_HANDLER.error_exit("cp criteria_set changed", __file__)
+                return True
         return False
     #~ def criteria_set_is_executed()
 
@@ -242,6 +243,7 @@ class Executor(object):
                continue
             
             # If we have a new seq_id, it is another test type loop
+            # NOTE: This switch is written at following steps (tasks...)
             self.cp_data.switchto_new_test_tool_types(seq_id, test_tool_types)
 
             # Actual Execution in the temporary dir (until before finish)
