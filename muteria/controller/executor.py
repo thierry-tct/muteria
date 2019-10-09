@@ -89,9 +89,10 @@ class CheckpointData(dict):
         if self.criteria_set_pos is not None:
             if self.criteria_set_pos > seq_id:
                 return True
-            if self.criteria_set_pos == seq_id and \
-                                    set(self.criteria_set) != set(criteria_set):
-                ERROR_HANDLER.error_exit("cp criteria_set changed", __file__)
+            if self.criteria_set_pos == seq_id:
+                ERROR_HANDLER.assert_true(set(self.criteria_set) \
+                                                        == set(criteria_set), \
+                                        "cp criteria_set changed", __file__)
                 return True
         return False
     #~ def criteria_set_is_executed()
