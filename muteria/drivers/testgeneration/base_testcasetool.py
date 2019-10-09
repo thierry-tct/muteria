@@ -40,6 +40,8 @@ import abc
 import hashlib
 import time
 
+import tqdm
+
 import muteria.common.matrices as common_matrices
 import muteria.common.mix as common_mix
 import muteria.common.fs as common_fs
@@ -322,7 +324,7 @@ class BaseTestcaseTool(abc.ABC):
 
         test_failed_verdicts = {} 
         test_outlog_hash = {} 
-        for testcase in testcases:
+        for testcase in tqdm.tqdm(testcases, leave=False):
             start_time = time.time()
             test_failed, execoutlog_hash = \
                         self._oracle_execute_a_test(testcase, exe_path_map, \

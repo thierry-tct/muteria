@@ -4,6 +4,7 @@ scipy
 matplotlib
 networkx
 gitpython
+tqdm
 #sh # easy subprocess creation
 #enum #(python 2.7)
 
