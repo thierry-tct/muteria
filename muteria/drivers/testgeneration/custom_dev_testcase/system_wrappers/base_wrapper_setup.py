@@ -36,6 +36,11 @@ class BaseSystemWrapper(abc.ABC):
         print("Implement!!!")
     #~ def _get_wrapper_template_string()
 
+    @abc.abstractmethod
+    def _get_timedout_codes(self):
+        print("Implement!!!")
+    #~ def _get_timedout_codes()
+
     # Can override
 
     def __init__(self, repo_mgr):
@@ -71,15 +76,21 @@ class BaseSystemWrapper(abc.ABC):
             ERROR_HANDLER.error_exit("testcase has no log: '" +testcase+ "'."
                                 " repo_exe_abs_path is " + repo_exe_abs_path, \
                                                                     __file__)
+        timedout = []
+
         with open(repo_exe_abs_path + self.outretcode_ext) as f:
             for line in f:
-                tmp.append(line.strip())
+                tmp.append(int(line.strip()))
+                timedout.append(tmp[-1] in self._get_timedout_codes())            
             if len(tmp) == 1:
                 tmp = tmp[0]
+                timedout = timedout[0]
         collected_output.append(tmp)
 
         with open(repo_exe_abs_path + self.outlog_ext) as f:
             collected_output.append(f.read())
+
+        collected_output.append(timedout) 
     #~ def collect_output()
 
     def install_wrapper(self, exe_path_map, collect_output):

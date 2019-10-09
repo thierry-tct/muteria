@@ -383,7 +383,7 @@ class BaseTestcaseTool(abc.ABC):
                                             collect_output=with_outlog_hash)
 
         if with_outlog_hash:
-            retcode, outlog = output_err
+            retcode, outlog, timedout = output_err
             outlog = outlog.encode('utf-8')
             out_len = len(outlog)
             #TODO: Choose to hash or not at runtime (flakiness check)
@@ -392,6 +392,7 @@ class BaseTestcaseTool(abc.ABC):
                 common_matrices.OutputLogData.OUTLOG_LEN: out_len,
                 common_matrices.OutputLogData.OUTLOG_HASH: out_hash_val,
                 common_matrices.OutputLogData.RETURN_CODE: retcode,
+                common_matrices.OutputLogData.TIMEDOUT: timedout,
             }
         else:
             outlog_summary = None

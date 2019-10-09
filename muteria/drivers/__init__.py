@@ -167,7 +167,7 @@ class DriversUtils(object):
     #~ def reverse_meta_element()
 
     ############################ Subprocess Stuffs #########################
-
+ 
     EXEC_TIMED_OUT_RET_CODE = -15
     EXEC_SEGFAULT_OUT_RET_CODE = -11
 
@@ -274,13 +274,16 @@ class DriversUtils(object):
                                 vector_outdata.get_zip_objective_and_data())[0]
 
             ## Compare using output
+            timedout_key = common_matrices.OutputLogData.TIMEDOUT
             key_to_diffs = {}
             for key, key_data in target_outdata.get_zip_objective_and_data():
                 intersect = set(vector_outdata_uniq) & set(key_data)
                 key_to_diffs[key] = (set(vector_outdata_uniq) | \
                                                     set(key_data)) - intersect
                 for elem in intersect:
-                    if key_data[elem] != vector_outdata_uniq[elem]:
+                    if (key_data[elem] != vector_outdata_uniq[elem]) and not(\
+                                            key_data[elem][timedout_key] and \
+                                    vector_outdata_uniq[elem][timedout_key]):
                         key_to_diffs[key].add(elem)
         else:
             # outdata is not set use difference of matrices

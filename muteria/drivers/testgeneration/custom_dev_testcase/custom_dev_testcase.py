@@ -135,6 +135,12 @@ class CustomTestcases(BaseTestcaseTool):
                         post != common_mix.GlobalConstants.COMMAND_FAILURE,\
                                             "after command failed", __file__)
 
+        # abort is test execution error
+        if verdict == common_mix.GlobalConstants.TEST_EXECUTION_ERROR:
+            ERROR_HANDLER.error_exit("Test Execution error in "
+                                "custom_dev_testcase for test: "+testcase,\
+                                                                    __file__)
+
         # wrapper cleanup
         if wrapper_obj is not None:
             if collect_output:

@@ -20,4 +20,9 @@ class SystemWrapper(BaseSystemWrapper):
         with open(wrapper_template_file) as template:
             return template.read()
     #~ def _get_wrapper_template_string()
+
+    def _get_timedout_codes(self):
+        # Timeout codes for GNU timeout
+        return (124, 137)
+    #~ def _get_timedout_codes()
 #~ class SystemWrapper

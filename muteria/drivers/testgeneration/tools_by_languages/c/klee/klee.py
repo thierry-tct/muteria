@@ -5,6 +5,7 @@ import sys
 import glob
 import shutil
 import logging
+import re
 
 import muteria.common.fs as common_fs
 import muteria.common.mix as common_mix
@@ -132,26 +133,61 @@ class TestcasesToolKlee(BaseTestcaseTool):
         args = [local_exe, os.path.join(self.tests_storage_dir, testcase)]
         tmp_env = os.environ.copy()
         #tmp_env.update(env_vars)
+
+        timedout_retcodes = (88,) # taken from klee_replay source code
+        
         tmp_env['KLEE_REPLAY_TIMEOUT'] = str(timeout)
         if collect_output:
             retcode, out, err = DriversUtils.execute_and_get_retcode_out_err(\
                                     prog=prog, args_list=args, env=tmp_env, \
                                                         merge_err_to_out=True)
-            output_err = (retcode, out)
+            out = self._remove_output_noise(out)
+            output_err = (retcode, out, (retcode in timedout_retcodes))
         else:
             retcode, out, err = DriversUtils.execute_and_get_retcode_out_err(\
                                     prog=prog, args_list=args, env=tmp_env, \
                                                     out_on=False, err_on=False)
             output_err = None
 
-        if retcode in (DriversUtils.EXEC_TIMED_OUT_RET_CODE, \
-                                    DriversUtils.EXEC_SEGFAULT_OUT_RET_CODE):
+        if retcode in timedout_retcodes + \
+                                    (DriversUtils.EXEC_SEGFAULT_OUT_RET_CODE,):
             verdict = common_mix.GlobalConstants.FAIL_TEST_VERDICT
         else:
             verdict = common_mix.GlobalConstants.PASS_TEST_VERDICT
 
         return verdict, output_err
     #~ def _execute_a_test()
+
+    def _remove_output_noise(self, out):
+        try:
+            type(self.grep_regex)
+        except AttributeError:
+            self.grep_regex = re.compile("(" + "|".join([\
+                        "^note: (pty|pipe) (master|slave): ",\
+                        "^klee-replay: PTY (MASTER|SLAVE): EXIT STATUS: ", \
+                        "^warning: check_file .*: .* "+\
+                                    "mismatch: [0-9]+ [vV][sS] [0-9]+$" + ")" \
+                        ]))
+
+            self.sed_regex1 = re.compile(" \\([0-9]+\\s+seconds\\)")
+            self.sed_regex2 = re.compile(\
+                        "RUNNING GDB: /usr/bin/gdb --pid [0-9]+ -q --batch")
+
+        res = []
+        for line in out.splitlines():
+            if self.grep_regex.search(line) is None:
+                # none is matched
+                # apply sed
+                res.append(line)
+
+        res = '\n'.join(res)
+
+        res = self.sed_regex1.sub(' ', res)
+        res = self.sed_regex2.sub(\
+                        'RUNNING GDB: /usr/bin/gdb --pid PID -q --batch', res)
+
+        return res
+    #~ def _remove_output_noise()
 
     def _do_generate_tests (self, exe_path_map, outputdir, \
                                         code_builds_factory, max_time=None):

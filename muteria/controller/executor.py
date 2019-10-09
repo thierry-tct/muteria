@@ -623,7 +623,8 @@ class Executor(object):
 
         elif task == checkpoint_tasks.Tasks.AGGREGATED_STATS:
             # Compute the final stats (MS, ...)
-            StatsComputer.compute_stats(self.config, self.head_explorer)
+            StatsComputer.compute_stats(self.config, self.head_explorer, \
+                                                            self.checkpointer)
         #-------------------------------------------------------------------
 
         if not self.cp_data.tasks_obj.task_is_complete(task):

@@ -711,17 +711,19 @@ class ExecutionMatrix(RawExecutionMatrix):
 class OutputLogData(object):
     #OBJECTIVE_ID = "OBJECTIVE_ID"
     #TEST_ID = "TEST_ID"
-    OUTLOG_LEN = "OUTLOG_LEN"
-    OUTLOG_HASH = "OUTLOG_HASH"
-    RETURN_CODE = "RETURN_CODE"
+    OUTLOG_LEN = "OUTLOG_LEN"       # int
+    OUTLOG_HASH = "OUTLOG_HASH"     # str
+    RETURN_CODE = "RETURN_CODE"     # int
+    TIMEDOUT = "TIMEDOUT"           # bool
     #ordered_cols = [OBJECTIVE_ID, TEST_ID, OUTLOG_LEN, OUTLOG_HASH, \
     #                                                            RETURN_CODE]
-    Dat_Keys = {OUTLOG_LEN, OUTLOG_HASH, RETURN_CODE}
+    Dat_Keys = {OUTLOG_LEN, OUTLOG_HASH, RETURN_CODE, TIMEDOUT}
     
     UNCERTAIN_TEST_OUTLOGDATA = {
                 OUTLOG_LEN: common_mix.GlobalConstants.COMMAND_UNCERTAIN,
                 OUTLOG_HASH: common_mix.GlobalConstants.COMMAND_UNCERTAIN,
                 RETURN_CODE: common_mix.GlobalConstants.COMMAND_UNCERTAIN,
+                TIMEDOUT: common_mix.GlobalConstants.COMMAND_UNCERTAIN,
     }
 
     def __init__(self, filename=None):

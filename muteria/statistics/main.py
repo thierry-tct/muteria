@@ -43,10 +43,11 @@ class StatsComputer(object):
     #~ def merge_lmatrix_into_right()
 
     @staticmethod
-    def compute_stats(config, explorer):
+    def compute_stats(config, explorer, checkpointer):
         # get the matrix of each test criterion
         coverages = {}
         total_to = {}
+        number_of_testcases = None
         for c in config.ENABLED_CRITERIA.get_val():
             if explorer.file_exists(fd_structure.CRITERIA_MATRIX[c]):
                 mat_file = explorer.get_existing_file_pathname(\
@@ -57,12 +58,18 @@ class StatsComputer(object):
                 tot = len(row2collist)
                 coverages[c.get_str()] = '{:.2f}'.format(cov * 100.0 / tot)
                 total_to[c.get_str()] = tot
+                if number_of_testcases is None:
+                    number_of_testcases = len(mat.get_nonkey_colname_list)
         
         # JSON
         out_json = {}
+        out_json['TOTAL EXECUTION TIME (s)'] = \
+                                            checkpointer.get_execution_time()
+        out_json['NUMBER OF TESTCASES'] = number_of_testcases
+        out_json['CRITERIA'] = {}
         for c in coverages:
-            out_json[c] = {'coverage': coverages[c], 
-                            '# test objectives': total_to[c]}
+            out_json['CRITERIA'][c] = {'coverage': coverages[c], 
+                                            '# test objectives': total_to[c]}
         common_fs.dumpJSON(out_json, explorer.get_file_pathname(\
                                             fd_structure.STATS_MAIN_FILE_JSON))
 
@@ -72,7 +79,13 @@ class StatsComputer(object):
         report_file = explorer.get_file_pathname(\
                                             fd_structure.STATS_MAIN_FILE_HTML)
         rendered = Template(open(template_file).read()).render( \
-                                {'coverages':coverages, 'total_to':total_to})
+                                {
+                                    'total_execution_time':\
+                                            checkpointer.get_execution_time(),
+                                    'number_of_tescases'; number_of_testcases,
+                                    'coverages':coverages, 
+                                    'total_to':total_to,
+                                })
         with open(report_file, 'w') as f:
             f.write(rendered)
         
