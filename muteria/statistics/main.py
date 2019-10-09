@@ -78,11 +78,33 @@ class StatsComputer(object):
                             os.path.abspath(__file__)), 'summary_report.html')
         report_file = explorer.get_file_pathname(\
                                             fd_structure.STATS_MAIN_FILE_HTML)
+        
+        def format_execution_time(exec_time):
+            n_day = int(exec_time // (24 * 3600))
+            exec_time = exec_time % (24 * 3600)
+            n_hour = int(exec_time // 3600)
+            exec_time %= 3600
+            n_minutes = int(exec_time // 60)
+            exec_time %= 60
+            n_seconds = int(round(exec_time))
+
+            res = ""
+            for val, unit in [(n_day, 'day'), (n_hour, 'hour'), \
+                                (n_minutes, 'minutes'), (n_seconds, 'second')]:
+                if val > 0:
+                    s = ' ' if val == 1 else 's '
+                    res += str(val) + ' ' + unit + s
+            
+            return res
+        #~ def format_execution_time()
+
+        total_exec_time = format_execution_time(\
+                                            checkpointer.get_execution_time())
+
         rendered = Template(open(template_file).read()).render( \
                                 {
-                                    'total_execution_time':\
-                                            checkpointer.get_execution_time(),
-                                    'number_of_tescases'; number_of_testcases,
+                                    'total_execution_time': total_exec_time,
+                                    'number_of_tescases': number_of_testcases,
                                     'coverages':coverages, 
                                     'total_to':total_to,
                                 })
