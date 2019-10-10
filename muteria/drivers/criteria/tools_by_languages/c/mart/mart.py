@@ -64,6 +64,8 @@ class CriteriaToolMart(BaseCriteriaTool):
                     - False: the tool is not installed or do not work
         """
         for prog in ('mart',):
+            if custom_binary_dir is not None:
+                prog = os.path.join(custom_binary_dir, prog)
             if not DriversUtils.check_tool(prog=prog, args_list=['--version'],\
                                                     expected_exit_codes=[1]):
                 return False
@@ -240,6 +242,12 @@ class CriteriaToolMart(BaseCriteriaTool):
         os.mkdir(self.mutant_data)
 
         prog = 'mart'
+        if self.custom_binary_dir is not None:
+            prog = os.path.join(self.custom_binary_dir, prog)
+            ERROR_HANDLER.assert_true(os.path.isfile(prog), \
+                            "The tool {} is missing from the specified dir {}"\
+                                        .format(os.path.basename(prog), \
+                                            self.custom_binary_dir), __file__)
 
         # get llvm compiler path
         ret, out, err = DriversUtils.execute_and_get_retcode_out_err(\

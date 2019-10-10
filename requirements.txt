@@ -5,6 +5,7 @@ matplotlib
 networkx
 gitpython
 tqdm
+#docker # https://docker-py.readthedocs.io/en/stable/index.html
 #sh # easy subprocess creation
 #enum #(python 2.7)
 

@@ -83,6 +83,8 @@ class CriteriaToolGCov(BaseCriteriaTool):
                     - False: the tool is not installed or do not work
         """
         for prog in ('gcc', 'gcov'):
+            if custom_binary_dir is not None:
+                prog = os.path.join(custom_binary_dir, prog)
             if not DriversUtils.check_tool(prog=prog, args_list=['--version'],\
                                                     expected_exit_codes=[0]):
                 return False
@@ -150,6 +152,12 @@ class CriteriaToolGCov(BaseCriteriaTool):
         ''' get gcov files from gcda files into result_dir_tmp
         '''
         prog = 'gcov'
+        if self.custom_binary_dir is not None:
+            prog = os.path.join(self.custom_binary_dir, prog)
+            ERROR_HANDLER.assert_true(os.path.isfile(prog), \
+                            "The tool {} is missing from the specified dir {}"\
+                                        .format(os.path.basename(prog), \
+                                            self.custom_binary_dir), __file__)
 
         cov2flags = {
                     TestCriteria.STATEMENT_COVERAGE: [],
@@ -279,6 +287,12 @@ class CriteriaToolGCov(BaseCriteriaTool):
         os.mkdir(self.gc_files_dir)
 
         prog = 'gcc'
+        if self.custom_binary_dir is not None:
+            prog = os.path.join(self.custom_binary_dir, prog)
+            ERROR_HANDLER.assert_true(os.path.isfile(prog), \
+                            "The tool {} is missing from the specified dir {}"\
+                                        .format(os.path.basename(prog), \
+                                            self.custom_binary_dir), __file__)
 
         flags = ['--coverage', '-fprofile-dir='+self.gc_files_dir, '-O0']
         additionals = ["-fkeep-inline-functions"]

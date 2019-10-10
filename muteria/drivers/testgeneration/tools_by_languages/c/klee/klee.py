@@ -5,7 +5,6 @@ import sys
 import glob
 import shutil
 import logging
-import re
 
 import muteria.common.fs as common_fs
 import muteria.common.mix as common_mix
@@ -14,6 +13,8 @@ from muteria.repositoryandcode.codes_convert_support import CodeFormats
 from muteria.drivers.testgeneration.base_testcasetool import BaseTestcaseTool
 from muteria.drivers.testgeneration.testcases_info import TestcasesInfoObject
 from muteria.drivers import DriversUtils
+from muteria.drivers.testgeneration.testcase_formats.ktest.ktest \
+                                                        import KTestTestFormat
 
 ERROR_HANDLER = common_mix.ErrorHandler
 
@@ -27,11 +28,14 @@ class TestcasesToolKlee(BaseTestcaseTool):
                     - True: the tool is installed and works
                     - False: the tool is not installed or do not work
         """
-        for prog in ('klee', 'klee-replay'):
+        for prog in ('klee',):
+            if custom_binary_dir is not None:
+                prog = os.path.join(custom_binary_dir, prog)
             if not DriversUtils.check_tool(prog=prog, args_list=['--version'],\
                                                     expected_exit_codes=[1]):
                 return False
-        return True
+
+        return KTestTestFormat.installed(custom_binary_dir=custom_binary_dir)
     #~ def installed()
 
     def __init__(self, *args, **kwargs):
@@ -49,12 +53,14 @@ class TestcasesToolKlee(BaseTestcaseTool):
         os.mkdir(self.klee_used_tmp_build_dir)
     #~ def __init__()
 
+    # SHADOW override
     def _get_default_params(self):
         bool_params = {
             '-ignore-solver-failures': None,
             '-allow-external-sym-calls': True, #None,
             '-posix-runtime': True, #None,
-            '-dump-states-on-halt': True, #None, 
+            '-dump-states-on-halt': True, #None,
+            '-only-output-states-covering-new': True 
         }
         key_val_params = {
             '-output-dir': self.tests_storage_dir,
@@ -66,15 +72,57 @@ class TestcasesToolKlee(BaseTestcaseTool):
         }
         return bool_params, key_val_params
     #~ def _get_default_params()
+    
+    # SHADOW override
+    def _get_sym_args(self):
+        # sym args
+        default_sym_args = ['-sym-arg', '5']
+
+        klee_sym_args = default_sym_args
+        uc = self.config.get_tool_user_custom()
+        if uc is not None:
+            post_bc_cmd = uc.POST_TARGET_CMD_ORDERED_FLAGS_LIST
+            if post_bc_cmd is not None:
+                klee_sym_args = []
+                for tup in post_bc_cmd:
+                    klee_sym_args += list(tup)
+        return klee_sym_args
+    #~ def _get_sym_args()
+
+    # SHADOW override
+    def _get_back_llvm_compiler(self):
+        return None #'clang'
+    #~ def _get_back_llvm_compiler()
+
+    # SHADOW override
+    def _call_generation_run(self, runtool, args):
+        # Execute Klee
+        ret, out, err = DriversUtils.execute_and_get_retcode_out_err(\
+                                                                runtool, args)
+
+        if (ret != 0):
+            logging.error(out)
+            logging.error(err)
+            logging.error("\n>> CMD: " + " ".join([runtool]+args) + '\n')
+            ERROR_HANDLER.error_exit("call to klee testgen failed'", __file__)
+    #~ def _call_generation_run()
+
+    ########################################################################
 
     def get_testcase_info_object(self):
         try:
             return self.testcase_info_object
         except AttributeError:
             tc_info_obj = TestcasesInfoObject()
-            for tc in os.listdir(self.tests_storage_dir):
-                if tc.endswith('.ktest'):
-                    tc_info_obj.add_test(tc)
+            cwd = os.getcwd()
+            os.chdir(self.tests_storage_dir)
+            os_walk = os.walk('.')
+            os.chdir(cwd)
+            for root, _, files in os_walk:
+                for f in files:
+                    tc = os.path.normpath(os.path.join(root, f))
+                    if tc.endswith('.ktest'):
+                        tc_info_obj.add_test(tc)
             self.testcase_info_object = tc_info_obj
             return self.testcase_info_object
     #~ def get_testcase_info_object()
@@ -102,7 +150,6 @@ class TestcasesToolKlee(BaseTestcaseTool):
         """ Execute a test given that the executables have been set 
             properly
         """
-        prog = 'klee-replay'
 
         if timeout is None:
             timeout = self.config.ONE_TEST_EXECUTION_TIMEOUT
@@ -131,65 +178,22 @@ class TestcasesToolKlee(BaseTestcaseTool):
                                         also_copy_to_map={repo_exe: local_exe})
             else:
                 shutil.copy2(remote_exe, local_exe)
+                # Use hard link to avoid copying for big files
+                #if os.path.isfile(local_exe):
+                #    os.remove(local_exe)
+                #os.link(remote_exe, local_exe)
 
-        args = [local_exe, os.path.join(self.tests_storage_dir, testcase)]
-        tmp_env = os.environ.copy()
-        #tmp_env.update(env_vars)
+        collected_output = [] if collect_output else None
 
-        timedout_retcodes = (88,) # taken from klee_replay source code
-        
-        tmp_env['KLEE_REPLAY_TIMEOUT'] = str(timeout)
-        if collect_output:
-            retcode, out, err = DriversUtils.execute_and_get_retcode_out_err(\
-                                    prog=prog, args_list=args, env=tmp_env, \
-                                                        merge_err_to_out=True)
-            out = self._remove_output_noise(out)
-            output_err = (retcode, out, (retcode in timedout_retcodes))
-        else:
-            retcode, out, err = DriversUtils.execute_and_get_retcode_out_err(\
-                                    prog=prog, args_list=args, env=tmp_env, \
-                                                    out_on=False, err_on=False)
-            output_err = None
+        verdict = KTestTestFormat.execute_test(local_exe, \
+                            os.path.join(self.tests_storage_dir, testcase), \
+                            env_vars=env_vars, \
+                            timeout=timeout, \
+                            collected_output=collected_output, \
+                            custom_binary_dir=self.custom_binary_dir)
 
-        if retcode in timedout_retcodes + \
-                                    (DriversUtils.EXEC_SEGFAULT_OUT_RET_CODE,):
-            verdict = common_mix.GlobalConstants.FAIL_TEST_VERDICT
-        else:
-            verdict = common_mix.GlobalConstants.PASS_TEST_VERDICT
-
-        return verdict, output_err
+        return verdict, collected_output
     #~ def _execute_a_test()
-
-    def _remove_output_noise(self, out):
-        try:
-            type(self.grep_regex)
-        except AttributeError:
-            self.grep_regex = re.compile("(" + "|".join([\
-                        "^note: (pty|pipe) (master|slave): ",\
-                        "^klee-replay: PTY (MASTER|SLAVE): EXIT STATUS: ", \
-                        "^warning: check_file .*: .* "+\
-                                    "mismatch: [0-9]+ [vV][sS] [0-9]+$" + ")" \
-                        ]))
-
-            self.sed_regex1 = re.compile(" \\([0-9]+\\s+seconds\\)") #+"$")
-            self.sed_regex2 = re.compile(\
-                        "RUNNING GDB: /usr/bin/gdb --pid [0-9]+ -q --batch")
-
-        res = []
-        for line in out.splitlines():
-            if self.grep_regex.search(line) is None:
-                # none is matched
-                # apply sed
-                res.append(line)
-
-        res = '\n'.join(res)
-
-        res = self.sed_regex1.sub(' ', res)
-        res = self.sed_regex2.sub(\
-                        'RUNNING GDB: /usr/bin/gdb --pid PID -q --batch', res)
-
-        return res
-    #~ def _remove_output_noise()
 
     def _do_generate_tests (self, exe_path_map, outputdir, \
                                         code_builds_factory, max_time=None):
@@ -201,8 +205,14 @@ class TestcasesToolKlee(BaseTestcaseTool):
             shutil.rmtree(self.tests_storage_dir)
         
         prog = 'klee'
-        default_sym_args = ['-sym-arg', '5']
-        back_llvm_compiler = None #'clang'
+        if self.custom_binary_dir is not None:
+            prog = os.path.join(self.custom_binary_dir, prog)
+            ERROR_HANDLER.assert_true(os.path.isfile(prog), \
+                            "The tool {} is missing from the specified dir {}"\
+                                        .format(os.path.basename(prog), \
+                                            self.custom_binary_dir), __file__)
+
+        back_llvm_compiler = self._get_back_llvm_compiler() 
         
         rel_path_map = {}
         exes, _ = code_builds_factory.repository_manager.\
@@ -216,9 +226,9 @@ class TestcasesToolKlee(BaseTestcaseTool):
                         src_dest_files_paths_map=rel_path_map,\
                         compiler=back_llvm_compiler, \
                         clean_tmp=True, reconfigure=True)
-        if ret == common_mix.GlobalConstants.TEST_EXECUTION_ERROR:
+        if ret == common_mix.GlobalConstants.COMMAND_FAILURE:
             ERROR_HANDLER.error_exit("Program {}.".format(\
-                                'LLVM built problematic'), __file__)
+                                        'LLVM built problematic'), __file__)
 
         # Update exe_map to reflect bitcode extension
         rel2bitcode = {}
@@ -244,28 +254,12 @@ class TestcasesToolKlee(BaseTestcaseTool):
                 args += [k,str(v)]
         args.append(bitcode_file)
 
-        # sym args
-        klee_sym_args = default_sym_args
-        uc = self.config.get_tool_user_custom()
-        if uc is not None:
-            post_bc_cmd = uc.POST_TARGET_CMD_ORDERED_FLAGS_LIST
-            if post_bc_cmd is not None:
-                klee_sym_args = []
-                for tup in post_bc_cmd:
-                    klee_sym_args += list(tup)
-        args += klee_sym_args
+        args += self._get_sym_args()
 
-        # Execute Klee
-        ret, out, err = DriversUtils.execute_and_get_retcode_out_err(\
-                                                                    prog, args)
-
-        if (ret != 0):
-            logging.error(out)
-            logging.error(err)
-            logging.error("\n>> CMD: " + " ".join([prog]+args) + '\n')
-            ERROR_HANDLER.error_exit("klee failed'", __file__)
+        self._call_generation_run(prog, args)
 
         store_obj = {r: os.path.basename(b) for r,b in rel2bitcode.items()}
         common_fs.dumpJSON(store_obj, self.test_details_file)
     #~ def _do_generate_tests()
+
 #~ class CustomTestcases

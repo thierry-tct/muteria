@@ -59,6 +59,11 @@ class BaseCriteriaTool(abc.ABC):
         ## put the instrumented code into this folder (to be created by user)
         self.instrumented_code_storage_dir = os.path.join(
                         self.criteria_working_dir, "instrumented_code")
+        self.custom_binary_dir = None
+        if self.config.tool_user_custom is not None:
+            self.custom_binary_dir = \
+                        self.config.tool_user_custom.PATH_TO_TOOL_BINARY_DIR
+
         
         # Verify indirect Arguments Variables
         
@@ -92,6 +97,11 @@ class BaseCriteriaTool(abc.ABC):
                                     test_parallel_count=1):
         """
         """
+
+        logging.debug("# Executing meta {}: {} ...".format("criteria" if \
+                                len(criterion_to_matrix) > 1 else "criterion",\
+                                                    list(criterion_to_matrix)))
+
         # get instrumented executables
         criterion2executable_path = \
                                 self.get_instrumented_executable_paths_map( \

@@ -102,6 +102,8 @@ class BaseSystemWrapper(abc.ABC):
 
         # set run exe
         shutil.copy2(run_exe_abs_path, repo_exe_abs_path + self.used_ext)
+        # use link instead of copy to avoid copying large unchanging exes
+        #os.link(run_exe_abs_path, repo_exe_abs_path + self.used_ext)
 
         # backup
         shutil.move(repo_exe_abs_path, repo_exe_abs_path + self.backup_ext)

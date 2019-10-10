@@ -76,6 +76,10 @@ class BaseTestcaseTool(abc.ABC):
                         self.tests_working_dir, "tests_files")
         self.test_oracle_dir = os.path.join(
                         self.tests_working_dir, "test_oracles")
+        self.custom_binary_dir = None
+        if self.config.tool_user_custom is not None:
+            self.custom_binary_dir = \
+                        self.config.tool_user_custom.PATH_TO_TOOL_BINARY_DIR
 
         # Verify indirect Arguments Variables
 
@@ -324,7 +328,7 @@ class BaseTestcaseTool(abc.ABC):
 
         test_failed_verdicts = {} 
         test_outlog_hash = {} 
-        for testcase in tqdm.tqdm(testcases, leave=False):
+        for testcase in tqdm.tqdm(testcases, leave=False, dynamic_ncols=True):
             start_time = time.time()
             test_failed, execoutlog_hash = \
                         self._oracle_execute_a_test(testcase, exe_path_map, \
@@ -406,6 +410,10 @@ class BaseTestcaseTool(abc.ABC):
                             code_builds_factory_override=None, max_time=None):
         '''
         '''
+
+        logging.debug("# Generating tests with {} ...".format(\
+                                        self.config.get_tool_config_alias()))
+
         # @Checkpoint: create a checkpoint handler (for time)
         checkpoint_handler = CheckPointHandler(self.get_checkpointer())
         if checkpoint_handler.is_finished():

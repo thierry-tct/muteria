@@ -15,8 +15,9 @@ def system_test_runner(prog, args_list, test_filename, repo_root_dir,
     try:
         tmp_env = os.environ.copy()
         if env_vars is not None:
-            for e, v in env_vars.items():
-                tmp_env[e] = v
+            #for e, v in env_vars.items():
+            #    tmp_env[e] = v
+            tmp_env.update(env_vars)
         tmp_env[TEST_FILE_NAME_ENV_VAR] = test_filename
         if using_wrapper and timeout is not None:
             tmp_env[TEST_EXECUTION_TIMEOUT_ENV_VAR] = str(timeout)
