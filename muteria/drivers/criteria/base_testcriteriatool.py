@@ -27,6 +27,7 @@ import muteria.common.mix as common_mix
 
 from muteria.drivers.checkpoint_handler import CheckPointHandler
 from muteria.drivers.criteria import TestCriteria
+from muteria.drivers import DriversUtils
 
 ERROR_HANDLER = common_mix.ErrorHandler
 
@@ -312,9 +313,11 @@ class BaseCriteriaTool(abc.ABC):
             else:
                 pos += 1
 
-            #logging.debug(str(element))
-            logging.debug("# Executing {} element {}/{} ...".format(
-                                        criterion.get_str(), pos, num_elems))
+            logging.debug("# Executing {} element {} ({}/{}) ...".format( \
+                                    criterion.get_str(), \
+                                    DriversUtils.make_meta_element(element, \
+                                        self.config.get_tool_config_alias()), \
+                                    pos, num_elems))
 
             # execute element with the given testcases
             element_executable_path = \
