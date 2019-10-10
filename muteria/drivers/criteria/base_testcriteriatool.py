@@ -100,7 +100,7 @@ class BaseCriteriaTool(abc.ABC):
 
         logging.debug("# Executing meta {}: {} ...".format("criteria" if \
                                 len(criterion_to_matrix) > 1 else "criterion",\
-                                                    list(criterion_to_matrix)))
+                                [c.get_str() for c in criterion_to_matrix]))
 
         # get instrumented executables
         criterion2executable_path = \
@@ -571,6 +571,10 @@ class BaseCriteriaTool(abc.ABC):
         '''
             (TODO: support parallelism: per test outdata)
         '''
+
+        logging.debug("# Instrumenting code with {} ...".format(\
+                                        self.config.get_tool_config_alias()))
+
         # FIXME: Support parallelism, then remove the code
         # bellow:
         ERROR_HANDLER.assert_true(parallel_count <= 1, \
