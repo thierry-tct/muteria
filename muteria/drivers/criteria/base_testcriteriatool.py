@@ -312,6 +312,7 @@ class BaseCriteriaTool(abc.ABC):
             else:
                 pos += 1
 
+            #logging.debug(str(element))
             logging.debug("# Executing {} element {}/{} ...".format(
                                         criterion.get_str(), pos, num_elems))
 

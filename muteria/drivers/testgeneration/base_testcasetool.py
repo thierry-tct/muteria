@@ -378,12 +378,12 @@ class BaseTestcaseTool(abc.ABC):
         """
 #        if self.test_oracle_manager.oracle_checks_output():
 #            output_log = self.test_oracle_manager.get_output_log()
+        #logging.debug(str(timeout))
         verdict, output_err = self._execute_a_test(\
                                             testcase,exe_path_map, env_vars,\
                                             callback_object=callback_object, \
                                             timeout=timeout, \
                                             collect_output=with_outlog_hash)
-
         if with_outlog_hash:
             retcode, outlog, timedout = output_err
             outlog = outlog.encode('utf-8')
