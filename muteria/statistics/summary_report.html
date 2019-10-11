@@ -40,12 +40,12 @@
 </center>
 
 <main class="grid">
-  {% for crit in coverages %}
+  {% for crit, crit_cov in coverages|dictsort(true) %}
   <article>
     <div class="text">
       <center>
           <h5> {{ crit }} </h5>
-          <h2>{{ coverages[crit] }}%</h2>
+          <h2>{{ crit_cov }}%</h2>
           <hr>
       </center>
       <p><i># Test Objectives:</i> {{ total_to[crit] }} </p>

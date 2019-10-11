@@ -85,35 +85,37 @@ class KTestTestFormat(object):
 
     # Older version (before klee github commit 88bb205)
     clean_everything_regex = re.compile("(" + "|".join([\
-                        "^EXIT STATUS: ", \
-                        ""+tool+": EXIT STATUS: ", \
-                        ""+tool+": received signal ", \
+                        "^EXIT STATUS: .* \\([0-9]+\\s+seconds\\)$", \
+                        ""+tool+": EXIT STATUS: .* \\([0-9]+\\s+seconds\\)$", \
+                        ""+tool+": received signal [0-9]+\\s+. "+\
+                                            "Killing monitored process(es)$", \
                         "^note: (pty|pipe) (master|slave): ",\
                         ""+tool+": PTY (MASTER|SLAVE): EXIT STATUS: ", \
                         "^warning: check_file .*: .* "+\
                                     "mismatch: [0-9]+ [vV][sS] [0-9]+$" + ")" \
                         "^RUNNING GDB: /usr/bin/gdb --pid [0-9]+ -q --batch", \
-                        "^TIMEOUT: ATTEMPTING GDB EXIT", \
+                        "^TIMEOUT: ATTEMPTING GDB EXIT$", \
                         #"^ERROR: ", \
                         #"^Error: (executable|chroot:) ", \
                         #"^klee_range(\(|:)", \
                         #"^make_symbolic mismatch, different sizes: ", \
                         #"^WARNING: ", \
                         #"^rootdir: ", \
-                        ""+tool+": error: input file ", \
+                        #""+tool+": error: input file ", \
                         ""+tool+": TEST CASE: ", \
                         ""+tool+": ARGS: ", \
                         ]))
     clean_part_regex = re.compile("(" + "|".join([\
-                        "^EXIT STATUS: ", \
-                        ""+tool+": EXIT STATUS: ", \
-                        ""+tool+": received signal ", \
+                        "^EXIT STATUS: .* \\([0-9]+\\s+seconds\\)$", \
+                        ""+tool+": EXIT STATUS: .* \\([0-9]+\\s+seconds\\)$", \
+                        ""+tool+": received signal [0-9]+\\s+. "+\
+                                            "Killing monitored process(es)$", \
                         "^note: (pty|pipe) (master|slave): ",\
                         ""+tool+": PTY (MASTER|SLAVE): EXIT STATUS: ", \
                         "^warning: check_file .*: .* "+\
                                     "mismatch: [0-9]+ [vV][sS] [0-9]+$" + ")" \
                         "^RUNNING GDB: /usr/bin/gdb --pid [0-9]+ -q --batch", \
-                        "^TIMEOUT: ATTEMPTING GDB EXIT", \
+                        "^TIMEOUT: ATTEMPTING GDB EXIT$", \
                         ]))
 
     @classmethod
