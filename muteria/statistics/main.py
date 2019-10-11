@@ -59,7 +59,7 @@ class StatsComputer(object):
                 coverages[c.get_str()] = '{:.2f}'.format(cov * 100.0 / tot)
                 total_to[c.get_str()] = tot
                 if number_of_testcases is None:
-                    number_of_testcases = len(mat.get_nonkey_colname_list)
+                    number_of_testcases = len(mat.get_nonkey_colname_list())
         
         # JSON
         out_json = {}
@@ -104,7 +104,7 @@ class StatsComputer(object):
         rendered = Template(open(template_file).read()).render( \
                                 {
                                     'total_execution_time': total_exec_time,
-                                    'number_of_tescases': number_of_testcases,
+                                    'number_of_testcases': number_of_testcases,
                                     'coverages':coverages, 
                                     'total_to':total_to,
                                 })

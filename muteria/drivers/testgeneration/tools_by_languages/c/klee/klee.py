@@ -116,13 +116,12 @@ class TestcasesToolKlee(BaseTestcaseTool):
             tc_info_obj = TestcasesInfoObject()
             cwd = os.getcwd()
             os.chdir(self.tests_storage_dir)
-            os_walk = os.walk('.')
-            os.chdir(cwd)
-            for root, _, files in os_walk:
+            for root, _, files in os.walk('.'):
                 for f in files:
                     tc = os.path.normpath(os.path.join(root, f))
                     if tc.endswith('.ktest'):
                         tc_info_obj.add_test(tc)
+            os.chdir(cwd)
             self.testcase_info_object = tc_info_obj
             return self.testcase_info_object
     #~ def get_testcase_info_object()

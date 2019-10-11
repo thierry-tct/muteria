@@ -584,7 +584,8 @@ class Executor(object):
             # Merge TMP pass fail and potentially existing pass fail
             StatsComputer.merge_lmatrix_into_right(\
                                                 tmp_matrix_file, matrix_file)
-            StatsComputer.merge_lexecoutput_into_right(\
+            if self.config.GET_PASSFAIL_OUTPUT_SUMMARY:
+                StatsComputer.merge_lexecoutput_into_right(\
                                         tmp_execoutput_file, execoutput_file)
 
             # @Checkpointing
@@ -612,7 +613,9 @@ class Executor(object):
                             outdir_struct.CRITERIA_EXECUTION_OUTPUT[criterion])
                 StatsComputer.merge_lmatrix_into_right(tmp_matrix_file, \
                                                                 matrix_file)
-                StatsComputer.merge_lexecoutput_into_right(\
+                if criterion in self.config.CRITERIA_WITH_OUTPUT_SUMMARY\
+                                                                    .get_val():
+                    StatsComputer.merge_lexecoutput_into_right(\
                                         tmp_execoutput_file, execoutput_file)
 
             # @Checkpointing
