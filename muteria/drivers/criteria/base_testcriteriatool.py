@@ -345,15 +345,16 @@ class BaseCriteriaTool(abc.ABC):
             
             fail_verdicts, exec_outs_by_tests = \
                                     self.meta_test_generation_obj.runtests(\
-                                        may_cov_tests, \
+                                        meta_testcases=may_cov_tests, \
                                         exe_path_map=element_executable_path, \
                                         env_vars=execution_environment_vars, \
                                         stop_on_failure=\
                                                 cover_criteria_elements_once, \
                                         use_recorded_timeout_times=\
                                                             timeout_times, \
+                                        with_outlog_hash=(executionoutput \
+                                                                is not None), \
                                         restart_checkpointer=True)
-
             prioritization_module.feedback(element, fail_verdicts)
 
             fail_verdicts.update({\
@@ -381,6 +382,8 @@ class BaseCriteriaTool(abc.ABC):
         for matrix_row_key, matrix_row_values in list(cp_data[0].items()):
             matrix.add_row_by_key(matrix_row_key, matrix_row_values, \
                                                             serialize=False)
+
+        # TODO: Make the following two instructions atomic                                                    
         # final serialization (in case #Muts not multiple od serialize_period)
         matrix.serialize()
 

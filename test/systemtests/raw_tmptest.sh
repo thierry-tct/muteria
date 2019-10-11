@@ -79,7 +79,7 @@ do
 		cp -rf $clean_data $tmp_workspace || error_exit "failed to copy clean into tmp_workspace"
 	fi
 
-	$python_exe $entry_point $muteria_topdir $workdata_ctrl || error_exit "test failed for $prog_folder"
+	yes | $python_exe $entry_point $muteria_topdir $workdata_ctrl || error_exit "test failed for $prog_folder"
 
 	echo "Press any key to continue (done with $prog_folder)"
 	read x #-t 3 -n 1

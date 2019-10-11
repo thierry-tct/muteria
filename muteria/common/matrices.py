@@ -750,9 +750,11 @@ class OutputLogData(object):
                             type(data_dict) == dict and len(data_dict) > 0, \
                                         "expecting a non empty dict", __file__)
             for o, o_obj in data_dict.items():
+                if len(o_obj) == 0: 
+                    continue
                 ERROR_HANDLER.assert_true(\
-                            type(o_obj) == dict and len(o_obj) > 0, \
-                            "expecting a non empty dict: objective is "+o, \
+                            type(o_obj) == dict, \
+                            "expecting dict for value data: objective is "+o, \
                                                                     __file__)
                 for t, t_obj in o_obj.items():
                     ERROR_HANDLER.assert_true(set(t_obj) == self.Dat_Keys , \
@@ -769,8 +771,7 @@ class OutputLogData(object):
         for objective in intersect_objective:
             self.data[objective].update(data_dict[objective])
         for objective in onlynew_objective:
-            self.data[objective] = \
-                                copy.deepcopy(data_dict[objective])
+            self.data[objective] = copy.deepcopy(data_dict[objective])
         if serialize:
             self.serialize()
     #~ def add_data ()

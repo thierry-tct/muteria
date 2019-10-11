@@ -485,9 +485,7 @@ class MetaTestcaseTool(object):
             fault_test_execution_matrix.add_row_by_key(self.FAULT_MATRIX_KEY, \
                                                 cells_dict, serialize=True)
 
-        if fault_test_execution_execoutput_file is None:
-            meta_test_failedverdicts_outlog[1] = None
-        else:
+        if fault_test_execution_execoutput_file is not None:
             # Load or Create the data object 
             fault_test_execution_execoutput = common_matrices.OutputLogData( \
                                 filename=fault_test_execution_execoutput_file)

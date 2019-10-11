@@ -73,31 +73,68 @@ class KTestTestFormat(object):
 
     tool = 'klee-replay'
 
-    grep_regex = re.compile("(" + "|".join([\
+    # Newer version (after klee github commit 88bb205)
+    # (88bb205e422ee2aaf75594e4e314b21f77f219e3)
+    #clean_everything_regex = re.compile("^KLEE-REPLAY: ")
+    #clean_part_regex = re.compile("(" + "|".join(["^KLEE-REPLAY: NOTE: ",\
+    #                                    "^KLEE-REPLAY: WARNING: ",\
+    #                                    "^KLEE-REPLAY: klee_warning: ",\
+    #                                    "^KLEE-REPLAY: klee_warning_once: ",\
+    #                                    "^KLEE-REPLAY: klee_assume",\
+    #                                    ]))
+
+    # Older version (before klee github commit 88bb205)
+    clean_everything_regex = re.compile("(" + "|".join([\
+                        "^EXIT STATUS: ", \
+                        ""+tool+": EXIT STATUS: ", \
+                        ""+tool+": received signal ", \
                         "^note: (pty|pipe) (master|slave): ",\
-                        "^klee-replay: PTY (MASTER|SLAVE): EXIT STATUS: ", \
+                        ""+tool+": PTY (MASTER|SLAVE): EXIT STATUS: ", \
                         "^warning: check_file .*: .* "+\
                                     "mismatch: [0-9]+ [vV][sS] [0-9]+$" + ")" \
+                        "^RUNNING GDB: /usr/bin/gdb --pid [0-9]+ -q --batch", \
+                        "^TIMEOUT: ATTEMPTING GDB EXIT", \
+                        #"^ERROR: ", \
+                        #"^Error: (executable|chroot:) ", \
+                        #"^klee_range(\(|:)", \
+                        #"^make_symbolic mismatch, different sizes: ", \
+                        #"^WARNING: ", \
+                        #"^rootdir: ", \
+                        ""+tool+": error: input file ", \
+                        ""+tool+": TEST CASE: ", \
+                        ""+tool+": ARGS: ", \
+                        ]))
+    clean_part_regex = re.compile("(" + "|".join([\
+                        "^EXIT STATUS: ", \
+                        ""+tool+": EXIT STATUS: ", \
+                        ""+tool+": received signal ", \
+                        "^note: (pty|pipe) (master|slave): ",\
+                        ""+tool+": PTY (MASTER|SLAVE): EXIT STATUS: ", \
+                        "^warning: check_file .*: .* "+\
+                                    "mismatch: [0-9]+ [vV][sS] [0-9]+$" + ")" \
+                        "^RUNNING GDB: /usr/bin/gdb --pid [0-9]+ -q --batch", \
+                        "^TIMEOUT: ATTEMPTING GDB EXIT", \
                         ]))
 
-    sed_regex1 = re.compile(" \\([0-9]+\\s+seconds\\)") #+"$")
-    sed_regex2 = re.compile(\
-                        "RUNNING GDB: /usr/bin/gdb --pid [0-9]+ -q --batch")
-
     @classmethod
-    def _remove_output_noise(cls, out):
+    def _remove_output_noise(cls, out, clean_everything=True):
         res = []
+        if clean_everything:
+            regex = cls.clean_everything_regex
+        else:
+            regex = cls.clean_part_regex
+
+        if out[-1] == '\n':
+            out = out[:-1]
+            last_char = "\n" 
+        else:
+            last_char = ""
+
         for line in out.splitlines():
-            if cls.grep_regex.search(line) is None:
-                # none is matched
-                # apply sed
+            if regex.search(line) is None:
+                # None is matched
                 res.append(line)
-
-        res = '\n'.join(res)
-
-        res = cls.sed_regex1.sub(' ', res)
-        res = cls.sed_regex2.sub(\
-                        'RUNNING GDB: /usr/bin/gdb --pid PID -q --batch', res)
+        res = '\n'.join(res) + last_char
 
         return res
     #~ def _remove_output_noise()

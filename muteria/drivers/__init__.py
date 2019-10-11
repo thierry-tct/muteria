@@ -270,7 +270,7 @@ class DriversUtils(object):
             vector_outdata = common_matrices.OutputLogData(\
                                             filename=comparing_outdata_file)
 
-            vector_outdata_uniq, _ = list(\
+            _, vector_outdata_uniq = list(\
                                 vector_outdata.get_zip_objective_and_data())[0]
 
             ## Compare using output
@@ -278,8 +278,10 @@ class DriversUtils(object):
             key_to_diffs = {}
             for key, key_data in target_outdata.get_zip_objective_and_data():
                 intersect = set(vector_outdata_uniq) & set(key_data)
-                key_to_diffs[key] = (set(vector_outdata_uniq) | \
-                                                    set(key_data)) - intersect
+                ERROR_HANDLER.assert_true(set(key_data) == intersect, \
+                            "The elements in target must all be in vector",\
+                                                                    __file__)
+                key_to_diffs[key] = set()
                 for elem in intersect:
                     if (key_data[elem] != vector_outdata_uniq[elem]) and not(\
                                             key_data[elem][timedout_key] and \
@@ -297,10 +299,12 @@ class DriversUtils(object):
                         set(vector_active_cols[list(vector_active_cols)[0]])
 
             ## for each row of target matrix, get diff
+            target_matrix_allcol = set(target_matrix.get_nonkey_colname_list())
             key_to_diffs = {}
             for row_key, row_active in target_active_cols_dict.items():
                 key_to_diffs[row_key] = (set(row_active) - vector_active_cols)\
                                     | (vector_active_cols - set(row_active))
+                key_to_diffs[row_key] &= target_matrix_allcol
 
         # Update matrix based on diff
         for key, diffs in key_to_diffs.items():

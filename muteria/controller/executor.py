@@ -541,16 +541,23 @@ class Executor(object):
                             finish_destroy_checkpointer=True)
 
                 # Update matrix if needed to have output diff or such
-                # TODO: add CRITERIA_REQUIRING_OUTDIFF_WITH_PROGRAM to config
                 for crit in criteria_set & set(self.config.\
                                 CRITERIA_REQUIRING_OUTDIFF_WITH_PROGRAM.\
                                                                     get_val()):
                     pf_matrix_file = self.head_explorer.get_file_pathname(\
                                     outdir_struct.TMP_TEST_PASS_FAIL_MATRIX)
+                    if not os.path.isfile(pf_matrix_file):
+                        #In case already did stats
+                        pf_matrix_file = self.head_explorer.get_file_pathname(\
+                                    outdir_struct.TEST_PASS_FAIL_MATRIX)
                     if self.config.GET_PASSFAIL_OUTPUT_SUMMARY.get_val():
                         pf_execoutput_file = \
                                         self.head_explorer.get_file_pathname(\
                                 outdir_struct.TMP_PROGRAM_TESTEXECUTION_OUTPUT)
+                        if not os.path.isfile(pf_execoutput_file):
+                            pf_execoutput_file = \
+                                        self.head_explorer.get_file_pathname(\
+                                outdir_struct.PROGRAM_TESTEXECUTION_OUTPUT)
                     else:
                         pf_execoutput_file = None
                     DriversUtils.update_matrix_to_cover_when_diference(\
