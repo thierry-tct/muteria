@@ -528,7 +528,13 @@ class Executor(object):
                 # Set test oracle
                 self.test_oracle_manager.set_oracle(criteria_on=criteria_set)
 
-                # execute
+                # TODO: make recovery mechanism (like atomic) if execution
+                #           is interrupted after the matrix is written 
+                #           but before checkpoint
+                #       The same goes for after the matrix is written to 
+                #       'update_matrix_to_cover_when_difference'
+
+                # XXX execute
                 self.meta_criteria_tool.runtests_criteria_coverage( \
                             testcases=meta_testcases, \
                             criterion_to_matrix=criterion_to_matrix, \
@@ -560,7 +566,7 @@ class Executor(object):
                                 outdir_struct.PROGRAM_TESTEXECUTION_OUTPUT)
                     else:
                         pf_execoutput_file = None
-                    DriversUtils.update_matrix_to_cover_when_diference(\
+                    DriversUtils.update_matrix_to_cover_when_difference(\
                                                 criterion_to_matrix[crit], \
                                             criterion_to_execoutput[crit], \
                                             pf_matrix_file, pf_execoutput_file)

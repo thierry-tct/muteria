@@ -236,7 +236,7 @@ class DriversUtils(object):
     ############################### Misc ###################################
 
     @classmethod
-    def update_matrix_to_cover_when_diference(cls, \
+    def update_matrix_to_cover_when_difference(cls, \
                                 target_matrix_file, target_outdata_file, \
                                 comparing_vector_file, comparing_outdata_file):
         ERROR_HANDLER.assert_true(target_matrix_file is not None \
@@ -324,5 +324,5 @@ class DriversUtils(object):
                 target_matrix.update_cells(key, values)
 
         target_matrix.serialize()
-    #~ def update_matrix_to_cover_when_diference()
+    #~ def update_matrix_to_cover_when_difference()
 #~class DriversUtils()
