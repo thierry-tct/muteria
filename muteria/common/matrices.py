@@ -727,6 +727,17 @@ class OutputLogData(object):
                 TIMEDOUT: common_mix.GlobalConstants.COMMAND_UNCERTAIN,
     }
 
+    @classmethod
+    def outlogdata_equiv(cls, outlogdata1, outlogdata2):
+        if outlogdata1 == cls.UNCERTAIN_TEST_OUTLOGDATA or \
+                                outlogdata2 == cls.UNCERTAIN_TEST_OUTLOGDATA:
+            return None
+        if outlogdata1 != outlogdata2 and not(\
+                    outlogdata1[cls.TIMEDOUT] and outlogdata2[cls.TIMEDOUT]):
+            return False
+        return True
+    #~ def outlogdata_diff()
+
     def __init__(self, filename=None):
         self.filename = filename
         if self.filename is None or not os.path.isfile(self.filename):

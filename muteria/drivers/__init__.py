@@ -283,9 +283,9 @@ class DriversUtils(object):
                                                                     __file__)
                 key_to_diffs[key] = set()
                 for elem in intersect:
-                    if (key_data[elem] != vector_outdata_uniq[elem]) and not(\
-                                            key_data[elem][timedout_key] and \
-                                    vector_outdata_uniq[elem][timedout_key]):
+                    ol_equiv = common_matrices.OutputLogData.outlogdata_equiv(\
+                                    key_data[elem], vector_outdata_uniq[elem])
+                    if not ol_equiv:
                         key_to_diffs[key].add(elem)
         else:
             # outdata is not set use difference of matrices

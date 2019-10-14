@@ -118,21 +118,24 @@ class BaseTestcaseTool(abc.ABC):
                                         timeout=None, \
                                         use_recorded_timeout_times=None, \
                                         recalculate_execution_times=False, \
-                                        with_outlog_hash=True):
+                                        with_output_summary=True, \
+                                        hash_outlog=True):
         return self._execute_testcase(testcase, exe_path_map, env_vars, \
                                 timeout=timeout, \
                                 use_recorded_timeout_times=\
                                                 use_recorded_timeout_times, \
                                 recalculate_execution_times=\
                                                 recalculate_execution_times, \
-                                with_outlog_hash=with_outlog_hash)
+                                with_output_summary=with_output_summary, \
+                                hash_outlog=hash_outlog)
     #~ def execute_testcase()
 
     def runtests(self, testcases, exe_path_map, env_vars, \
                                 stop_on_failure=False, per_test_timeout=None, \
                                 use_recorded_timeout_times=None, \
                                 recalculate_execution_times=False, \
-                                with_outlog_hash=True, parallel_count=1):
+                                with_output_summary=True, hash_outlog=True, \
+                                parallel_count=1):
         return self._runtests(testcases=testcases, exe_path_map=exe_path_map, \
                                 env_vars=env_vars, \
                                 stop_on_failure=stop_on_failure, \
@@ -141,7 +144,8 @@ class BaseTestcaseTool(abc.ABC):
                                                 use_recorded_timeout_times, \
                                 recalculate_execution_times=\
                                                 recalculate_execution_times, \
-                                with_outlog_hash=with_outlog_hash, \
+                                with_output_summary=with_output_summary, \
+                                hash_outlog=hash_outlog, \
                                 parallel_count=parallel_count)
     #~ def runtests()
                             
@@ -160,21 +164,23 @@ class BaseTestcaseTool(abc.ABC):
                                         timeout=None, \
                                         use_recorded_timeout_times=None, \
                                         recalculate_execution_times=False, \
-                                        with_outlog_hash=True):
+                                        with_output_summary=True, \
+                                        hash_outlog=True):
         callback_func = self._execute_testcase
         cb_obj = self.RepoRuntestsCallbackObject()
         cb_obj.set_post_callback_args((callback_func,
-                                    {
-                                        "testcase": testcase,
-                                        "exe_path_map": exe_path_map,
-                                        "env_vars": env_vars,
-                                        "timeout": timeout,
-                                        "use_recorded_timeout_times":\
-                                                use_recorded_timeout_times, \
-                                        "recalculate_execution_times":\
-                                                recalculate_execution_times, \
-                                        "with_outlog_hash": with_outlog_hash,
-                                    }))
+                                {
+                                    "testcase": testcase,
+                                    "exe_path_map": exe_path_map,
+                                    "env_vars": env_vars,
+                                    "timeout": timeout,
+                                    "use_recorded_timeout_times":\
+                                            use_recorded_timeout_times, \
+                                    "recalculate_execution_times":\
+                                            recalculate_execution_times, \
+                                    "with_output_summary":with_output_summary,\
+                                    "hash_outlog":hash_outlog,
+                                }))
         repo_mgr = self.code_builds_factory.repository_manager
         _, exec_verdict = repo_mgr.custom_read_access(cb_obj)
         # revert exes
@@ -186,23 +192,25 @@ class BaseTestcaseTool(abc.ABC):
                                 stop_on_failure=False, per_test_timeout=None, \
                                 use_recorded_timeout_times=None, \
                                 recalculate_execution_times=False, \
-                                with_outlog_hash=True, parallel_count=1):
+                                with_output_summary=True, hash_outlog=True, \
+                                parallel_count=1):
         callback_func = self._runtests
         cb_obj = self.RepoRuntestsCallbackObject()
         cb_obj.set_post_callback_args((callback_func,
-                                    {
-                                        "testcases": testcases,
-                                        "exe_path_map": exe_path_map,
-                                        "env_vars": env_vars,
-                                        "stop_on_failure": stop_on_failure,
-                                        "per_test_timeout": per_test_timeout,
-                                        "use_recorded_timeout_times":\
-                                                use_recorded_timeout_times, \
-                                        "recalculate_execution_times":\
-                                                recalculate_execution_times, \
-                                        "with_outlog_hash": with_outlog_hash,
-                                        "parallel_count": parallel_count,
-                                    }))
+                                {
+                                    "testcases": testcases,
+                                    "exe_path_map": exe_path_map,
+                                    "env_vars": env_vars,
+                                    "stop_on_failure": stop_on_failure,
+                                    "per_test_timeout": per_test_timeout,
+                                    "use_recorded_timeout_times":\
+                                            use_recorded_timeout_times, \
+                                    "recalculate_execution_times":\
+                                            recalculate_execution_times, \
+                                    "with_output_summary":with_output_summary,\
+                                    "hash_outlog":hash_outlog, \
+                                    "parallel_count": parallel_count,
+                                }))
         repo_mgr = self.code_builds_factory.repository_manager
         _, exec_verdicts = repo_mgr.custom_read_access(cb_obj)
         # revert exes
@@ -214,7 +222,8 @@ class BaseTestcaseTool(abc.ABC):
                                         timeout=None, \
                                         use_recorded_timeout_times=None, \
                                         recalculate_execution_times=False, \
-                                        with_outlog_hash=True):
+                                        with_output_summary=True, \
+                                        hash_outlog=True):
         '''
         Execute a test case with the given executable and 
         say whether it failed
@@ -243,14 +252,15 @@ class BaseTestcaseTool(abc.ABC):
 
 
         self._prepare_executable(exe_path_map, env_vars, \
-                                            collect_output=with_outlog_hash)
+                                            collect_output=with_output_summary)
         self._set_env_vars(env_vars)
 
         start_time = time.time()
         fail_verdict, execoutlog_hash = \
                         self._oracle_execute_a_test(testcase, exe_path_map, \
                                             env_vars, timeout=timeout, \
-                                            with_outlog_hash=with_outlog_hash)
+                                    with_output_summary=with_output_summary, \
+                                                    hash_outlog=hash_outlog)
 
         # Record exec time if not existing
         if recalculate_execution_times:
@@ -259,7 +269,7 @@ class BaseTestcaseTool(abc.ABC):
 
         self._restore_env_vars()
         self._restore_default_executable(exe_path_map, env_vars, \
-                                            collect_output=with_outlog_hash)
+                                            collect_output=with_output_summary)
 
         return fail_verdict, execoutlog_hash
     #~ def _execute_testcase()
@@ -268,7 +278,8 @@ class BaseTestcaseTool(abc.ABC):
                                 stop_on_failure=False, per_test_timeout=None, \
                                 use_recorded_timeout_times=None, \
                                 recalculate_execution_times=False, \
-                                with_outlog_hash=True, parallel_count=1):
+                                with_output_summary=True, hash_outlog=True, \
+                                parallel_count=1):
         '''
         Execute the list of test cases with the given executable and 
         say, for each test case, whether it failed.
@@ -323,7 +334,7 @@ class BaseTestcaseTool(abc.ABC):
 
         # Prepare the exes
         self._prepare_executable(exe_path_map, env_vars, \
-                                            collect_output=with_outlog_hash)
+                                            collect_output=with_output_summary)
         self._set_env_vars(env_vars)
 
         test_failed_verdicts = {} 
@@ -334,7 +345,8 @@ class BaseTestcaseTool(abc.ABC):
                         self._oracle_execute_a_test(testcase, exe_path_map, \
                                         env_vars, \
                                         timeout=per_test_timeout[testcase], \
-                                        with_outlog_hash=with_outlog_hash)
+                                    with_output_summary=with_output_summary, \
+                                        hash_outlog=hash_outlog)
             
             # Record exec time if not existing
             if recalculate_execution_times:
@@ -354,7 +366,7 @@ class BaseTestcaseTool(abc.ABC):
         # Restore back the exes
         self._restore_env_vars()
         self._restore_default_executable(exe_path_map, env_vars, \
-                                            collect_output=with_outlog_hash)
+                                            collect_output=with_output_summary)
 
         if stop_on_failure:
             # Make sure the non executed test has the uncertain value (None)
@@ -368,7 +380,7 @@ class BaseTestcaseTool(abc.ABC):
         # @Checkpoint: Finished (for time)
         checkpoint_handler.set_finished(None)
 
-        if not with_outlog_hash:
+        if not with_output_summary:
             test_outlog_hash = None
 
         return test_failed_verdicts, test_outlog_hash
@@ -376,9 +388,12 @@ class BaseTestcaseTool(abc.ABC):
 
     def _oracle_execute_a_test (self, testcase, exe_path_map, env_vars, \
                                         callback_object=None, timeout=None,
-                                                        with_outlog_hash=True):
+                                with_output_summary=True, hash_outlog=True):
         """ Execute a test and use the specified oracles to check
             Also collect the output
+
+            :param hash_outlog: (bool) Choose to hash or not at runtime 
+                                (flakiness check)
         """
 #        if self.test_oracle_manager.oracle_checks_output():
 #            output_log = self.test_oracle_manager.get_output_log()
@@ -387,13 +402,15 @@ class BaseTestcaseTool(abc.ABC):
                                             testcase,exe_path_map, env_vars,\
                                             callback_object=callback_object, \
                                             timeout=timeout, \
-                                            collect_output=with_outlog_hash)
-        if with_outlog_hash:
+                                            collect_output=with_output_summary)
+        if with_output_summary:
             retcode, outlog, timedout = output_err
             outlog = outlog.encode('utf-8')
             out_len = len(outlog)
-            #TODO: Choose to hash or not at runtime (flakiness check)
-            out_hash_val = hashlib.sha512(outlog).hexdigest()
+            if hash_outlog:
+                out_hash_val = hashlib.sha512(outlog).hexdigest()
+            else:
+                out_hash_val = outlog
             outlog_summary = {
                 common_matrices.OutputLogData.OUTLOG_LEN: out_len,
                 common_matrices.OutputLogData.OUTLOG_HASH: out_hash_val,

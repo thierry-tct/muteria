@@ -42,36 +42,40 @@ class CustomTestcases(BaseTestcaseTool):
                                             timeout=None, \
                                             use_recorded_timeout_times=None, \
                                             recalculate_execution_times=False, \
-                                            with_outlog_hash=True):
+                                            with_output_summary=True, \
+                                            hash_outlog=True):
         return self._in_repo_execute_testcase(testcase=testcase, \
-                                            exe_path_map=exe_path_map, \
-                                            env_vars=env_vars, \
-                                            timeout=timeout, \
-                                            use_recorded_timeout_times=\
-                                                use_recorded_timeout_times, \
-                                            recalculate_execution_times=\
-                                                recalculate_execution_times, \
-                                            with_outlog_hash=with_outlog_hash)
+                                    exe_path_map=exe_path_map, \
+                                    env_vars=env_vars, \
+                                    timeout=timeout, \
+                                    use_recorded_timeout_times=\
+                                        use_recorded_timeout_times, \
+                                    recalculate_execution_times=\
+                                        recalculate_execution_times, \
+                                    with_output_summary=with_output_summary, \
+                                    hash_outlog=hash_outlog)
     #~ def execute_testcase()
 
     def runtests(self, testcases, exe_path_map, env_vars, \
                                 stop_on_failure=False, per_test_timeout=None, \
                                 use_recorded_timeout_times=None, \
                                 recalculate_execution_times=False, \
-                                with_outlog_hash=True, parallel_count=1):
+                                with_output_summary=True, hash_outlog=True, \
+                                parallel_count=1):
         """ Override runtests
         """
         return self._in_repo_runtests(testcases=testcases, \
-                                        exe_path_map=exe_path_map, \
-                                        env_vars=env_vars, \
-                                        stop_on_failure=stop_on_failure, \
-                                        per_test_timeout=per_test_timeout, \
-                                        use_recorded_timeout_times=\
-                                                use_recorded_timeout_times, \
-                                        recalculate_execution_times=\
-                                                recalculate_execution_times, \
-                                        with_outlog_hash=with_outlog_hash, \
-                                        parallel_count=parallel_count)
+                                    exe_path_map=exe_path_map, \
+                                    env_vars=env_vars, \
+                                    stop_on_failure=stop_on_failure, \
+                                    per_test_timeout=per_test_timeout, \
+                                    use_recorded_timeout_times=\
+                                            use_recorded_timeout_times, \
+                                    recalculate_execution_times=\
+                                            recalculate_execution_times, \
+                                    with_output_summary=with_output_summary, \
+                                    hash_outlog=hash_outlog, \
+                                    parallel_count=parallel_count)
     #~ def runtests()
 
     def _prepare_executable(self, exe_path_map, env_vars, \

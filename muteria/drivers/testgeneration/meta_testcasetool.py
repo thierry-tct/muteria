@@ -140,6 +140,8 @@ class MetaTestcaseTool(object):
                                                             "_checkpoints_")
         self.testcases_info_file = \
                 os.path.join(self.tests_working_dir, "testcasesInfos.json")
+        self.flakiness_workdir = \
+                            os.path.join(self.tests_working_dir, "Flakiness")
 
         # Verify Indirect Arguments Variables
 
@@ -246,7 +248,8 @@ class MetaTestcaseTool(object):
                                         timeout=None, \
                                         use_recorded_timeout_times=None, \
                                         recalculate_execution_times=False, \
-                                        with_outlog_hash=True):
+                                        with_output_summary=True, \
+                                        hash_outlog=True):
         '''
         Execute a test case with the given executable and 
         say whether it failed
@@ -278,7 +281,8 @@ class MetaTestcaseTool(object):
                                                 use_recorded_timeout_times, \
                             recalculate_execution_times=\
                                                 recalculate_execution_times, \
-                            with_outlog_hash=with_outlog_hash)
+                            with_output_summary=with_output_summary, \
+                            hash_outlog=hash_outlog)
     #~ def execute_testcase()
 
     def runtests(self, meta_testcases=None, exe_path_map=None, env_vars=None, \
@@ -288,7 +292,8 @@ class MetaTestcaseTool(object):
                         recalculate_execution_times=False, \
                         fault_test_execution_matrix_file=None, \
                         fault_test_execution_execoutput_file=None, \
-                        with_outlog_hash=True, \
+                        with_output_summary=True, \
+                        hash_outlog=True, \
                         test_prioritization_module=None, \
                         parallel_test_count=1, \
                         parallel_test_scheduler=None, \
@@ -309,7 +314,7 @@ class MetaTestcaseTool(object):
                         to store the tests' pass fail execution data
         :param fault_test_execution_execoutput_file: Optional output log file 
                         to store the tests' execution actual output (hashed)
-        :param with_outlog_hash: decide whether to return outlog hash 
+        :param with_output_summary: decide whether to return outlog hash 
         :param test_prioritization_module: Specify the test prioritization
                         module. 
                         (TODO: Implement support)
@@ -419,7 +424,9 @@ class MetaTestcaseTool(object):
                                                 use_recorded_timeout_times, \
                                             recalculate_execution_times=\
                                                 recalculate_execution_times, \
-                                            with_outlog_hash=with_outlog_hash)
+                                            with_output_summary=\
+                                                        with_output_summary, \
+                                            hash_outlog=hash_outlog)
             for testcase in test_failed_verdicts:
                 meta_testcase =  \
                         DriversUtils.make_meta_element(testcase, ttoolalias)
@@ -713,4 +720,72 @@ class MetaTestcaseTool(object):
     def has_checkpointer(self):
         return self.checkpointer is not None
     #~ def has_checkpointer()
+
+    ######################################
+    ############ OTHER FUNCTION ##########
+    ######################################
+    def check_flakiness(self, meta_testcases, repeat_count=2):
+        """
+            Check if tests have flakiness by running multiple times
+        """
+        ERROR_HANDLER.assert_true(repeat_count > 1, "Cannot check flakiness"
+                                    " with less than on repetition", __file__)
+
+        if os.path.isdir(self.flakiness_workdir):
+            shutil.rmtree(self.flakiness_workdir)
+        os.mkdir(self.flakiness_workdir)
+
+        outlog_files = [os.path.join(self.flakiness_workdir, \
+                            str(of)+'-out.json') for of in range(repeat_count)]
+        matrix_files = [os.path.join(self.flakiness_workdir, \
+                            str(of)+'-mat.csv') for of in range(repeat_count)]
+        
+        def run(test_list, hash_outlog):
+            self.runtests(test_list, \
+                        fault_test_execution_matrix_file=matrix_files[rep], \
+                        fault_test_execution_execoutput_file=\
+                                                            outlog_files[rep],\
+                        with_output_summary=True, \
+                        hash_outlog=hash_outlog)
+        #~ def run()
+
+        # Execute with repetition and get output summaries
+        for rep in repeat_count:
+            run(meta_testcases, True)
+
+        # get flaky tests list
+        flaky_tests = set()
+        fix_outdata = common_matrices.OutputLogData(filename=outlog_files[0])
+        fix_outdata = list(fix_outdata.get_zip_objective_and_data())[0][1]
+        for i in range(1, repeat_count):
+            other_outdata = common_matrices.OutputLogData(\
+                                                    filename=outlog_files[i])
+            other_outdata = list(\
+                            other_outdata.get_zip_objective_and_data())[0][1]
+            for test, t_dat_fix in fix_outdata.items():
+                if test in flaky_tests:
+                    continue
+                t_dat_other = other_outdata[test]
+                if not common_matrices.OutputLogData.outlogdata_equiv(\
+                                                    t_dat_fix, t_dat_other):
+                    flaky_tests.add(test)
+
+        ## cleanup
+        for f in outlog_files + matrix_files:
+            if os.path.isfile(f):
+                os.remove(f)
+
+        # get flaky tests outputs
+        if len(flaky_tests) > 0:
+            for rep in repeat_count:
+                run(list(flaky_tests), False)
+            flaky_test_list_file = os.path.join(self.flakiness_workdir, \
+                                                        "flaky_test_list.json")
+            logging.debug("There were some flaky tests (see file {})".format(\
+                                                        flaky_test_list_file))
+            common_fs.dumpJSON(list(flaky_tests), flaky_test_list_file, \
+                                                                pretty=True)
+            return True
+        return False
+    #~ def check_flakiness()
 #~ class MetaTestcaseTool

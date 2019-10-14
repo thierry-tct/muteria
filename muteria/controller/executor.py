@@ -608,6 +608,9 @@ class Executor(object):
             # Cleanup
             self.head_explorer.remove_file_and_get(\
                                     outdir_struct.TMP_TEST_PASS_FAIL_MATRIX)
+            if self.config.GET_PASSFAIL_OUTPUT_SUMMARY:
+                self.head_explorer.remove_file_and_get(\
+                                outdir_struct.TMP_PROGRAM_TESTEXECUTION_OUTPUT)
 
         elif task == checkpoint_tasks.Tasks.CRITERIA_STATS:
             # Make sure that the Matrices dir exists

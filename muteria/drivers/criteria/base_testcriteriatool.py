@@ -352,7 +352,7 @@ class BaseCriteriaTool(abc.ABC):
                                                 cover_criteria_elements_once, \
                                         use_recorded_timeout_times=\
                                                             timeout_times, \
-                                        with_outlog_hash=(executionoutput \
+                                        with_output_summary=(executionoutput \
                                                                 is not None), \
                                         restart_checkpointer=True)
             prioritization_module.feedback(element, fail_verdicts)
