@@ -405,9 +405,9 @@ class BaseTestcaseTool(abc.ABC):
                                             collect_output=with_output_summary)
         if with_output_summary:
             retcode, outlog, timedout = output_err
-            outlog = outlog.encode('utf-8')
             out_len = len(outlog)
             if hash_outlog:
+                outlog = outlog.encode('utf-8')
                 out_hash_val = hashlib.sha512(outlog).hexdigest()
             else:
                 out_hash_val = outlog

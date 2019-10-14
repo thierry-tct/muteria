@@ -81,18 +81,18 @@ class KTestTestFormat(object):
     #                                    "^KLEE-REPLAY: klee_warning: ",\
     #                                    "^KLEE-REPLAY: klee_warning_once: ",\
     #                                    "^KLEE-REPLAY: klee_assume",\
-    #                                    ]))
+    #                                    ]) + ")")
 
     # Older version (before klee github commit 88bb205)
     clean_everything_regex = re.compile("(" + "|".join([\
                         "^EXIT STATUS: .* \\([0-9]+\\s+seconds\\)$", \
                         ""+tool+": EXIT STATUS: .* \\([0-9]+\\s+seconds\\)$", \
                         ""+tool+": received signal [0-9]+\\s+. "+\
-                                            "Killing monitored process(es)$", \
+                                        "Killing monitored process\\(es\\)$", \
                         "^note: (pty|pipe) (master|slave): ",\
                         ""+tool+": PTY (MASTER|SLAVE): EXIT STATUS: ", \
                         "^warning: check_file .*: .* "+\
-                                    "mismatch: [0-9]+ [vV][sS] [0-9]+$" + ")" \
+                                        "mismatch: [0-9]+ [vV][sS] [0-9]+$", \
                         "^RUNNING GDB: /usr/bin/gdb --pid [0-9]+ -q --batch", \
                         "^TIMEOUT: ATTEMPTING GDB EXIT$", \
                         #"^ERROR: ", \
@@ -104,19 +104,19 @@ class KTestTestFormat(object):
                         #""+tool+": error: input file ", \
                         ""+tool+": TEST CASE: ", \
                         ""+tool+": ARGS: ", \
-                        ]))
-    clean_part_regex = re.compile("(" + "|".join([\
+                        ]) + ")")
+    clean_part_regex = re.compile(("(" + "|".join([\
                         "^EXIT STATUS: .* \\([0-9]+\\s+seconds\\)$", \
                         ""+tool+": EXIT STATUS: .* \\([0-9]+\\s+seconds\\)$", \
                         ""+tool+": received signal [0-9]+\\s+. "+\
-                                            "Killing monitored process(es)$", \
+                                        "Killing monitored process\\(es\\)$", \
                         "^note: (pty|pipe) (master|slave): ",\
                         ""+tool+": PTY (MASTER|SLAVE): EXIT STATUS: ", \
                         "^warning: check_file .*: .* "+\
-                                    "mismatch: [0-9]+ [vV][sS] [0-9]+$" + ")" \
+                                        "mismatch: [0-9]+ [vV][sS] [0-9]+$", \
                         "^RUNNING GDB: /usr/bin/gdb --pid [0-9]+ -q --batch", \
                         "^TIMEOUT: ATTEMPTING GDB EXIT$", \
-                        ]))
+                        ]) + ")"))
 
     @classmethod
     def _remove_output_noise(cls, out, clean_everything=True):
@@ -132,10 +132,12 @@ class KTestTestFormat(object):
         else:
             last_char = ""
 
-        for line in out.splitlines():
+        for line in out.encode('utf-8').splitlines():
+            line = line.decode('utf-8')
             if regex.search(line) is None:
                 # None is matched
                 res.append(line)
+
         res = '\n'.join(res) + last_char
 
         return res

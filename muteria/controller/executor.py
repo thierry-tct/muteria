@@ -431,7 +431,8 @@ class Executor(object):
             # Check pass fail
             self.meta_testcase_tool.runtests(meta_testcases=meta_testcases, \
                         stop_on_failure=\
-                                self.config.STOP_TESTS_EXECUTION_ON_FAILURE, \
+                                self.config.STOP_TESTS_EXECUTION_ON_FAILURE\
+                                                                .get_val(), \
                         recalculate_execution_times=True, \
                         fault_test_execution_matrix_file=matrix_file, \
                         fault_test_execution_execoutput_file=execoutput_file, \
@@ -460,8 +461,8 @@ class Executor(object):
                 self.checkpointer.write_checkpoint(self.cp_data.get_json_obj())
 
             self.meta_criteria_tool.instrument_code(criteria_enabled_list=\
-                                        self.config.ENABLED_CRITERIA.get_val(), \
-                                        finish_destroy_checkpointer=False)
+                                    self.config.ENABLED_CRITERIA.get_val(), \
+                                    finish_destroy_checkpointer=False)
 
             # @Checkpointing
             self.cp_data.tasks_obj.set_task_completed(task)
@@ -562,9 +563,9 @@ class Executor(object):
                             finish_destroy_checkpointer=True)
 
                 # Update matrix if needed to have output diff or such
-                for crit in criteria_set & set(self.config.\
-                                CRITERIA_REQUIRING_OUTDIFF_WITH_PROGRAM.\
-                                                                    get_val()):
+                for crit in criteria_set & set(self.config\
+                                .CRITERIA_REQUIRING_OUTDIFF_WITH_PROGRAM\
+                                                                .get_val()):
                     pf_matrix_file = self.head_explorer.get_file_pathname(\
                                     outdir_struct.TMP_TEST_PASS_FAIL_MATRIX)
                     if not os.path.isfile(pf_matrix_file):
@@ -612,7 +613,7 @@ class Executor(object):
             # Merge TMP pass fail and potentially existing pass fail
             StatsComputer.merge_lmatrix_into_right(\
                                                 tmp_matrix_file, matrix_file)
-            if self.config.GET_PASSFAIL_OUTPUT_SUMMARY:
+            if self.config.GET_PASSFAIL_OUTPUT_SUMMARY.get_val():
                 StatsComputer.merge_lexecoutput_into_right(\
                                         tmp_execoutput_file, execoutput_file)
 
@@ -623,7 +624,7 @@ class Executor(object):
             # Cleanup
             self.head_explorer.remove_file_and_get(\
                                     outdir_struct.TMP_TEST_PASS_FAIL_MATRIX)
-            if self.config.GET_PASSFAIL_OUTPUT_SUMMARY:
+            if self.config.GET_PASSFAIL_OUTPUT_SUMMARY.get_val():
                 self.head_explorer.remove_file_and_get(\
                                 outdir_struct.TMP_PROGRAM_TESTEXECUTION_OUTPUT)
 
