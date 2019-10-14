@@ -724,9 +724,10 @@ class MetaTestcaseTool(object):
     ######################################
     ############ OTHER FUNCTION ##########
     ######################################
-    def check_flakiness(self, meta_testcases, repeat_count=2):
+    def check_get_flakiness(self, meta_testcases, repeat_count=2):
         """
             Check if tests have flakiness by running multiple times
+            :return: The list of flaky tests
         """
         ERROR_HANDLER.assert_true(repeat_count > 1, "Cannot check flakiness"
                                     " with less than on repetition", __file__)
@@ -740,7 +741,7 @@ class MetaTestcaseTool(object):
         matrix_files = [os.path.join(self.flakiness_workdir, \
                             str(of)+'-mat.csv') for of in range(repeat_count)]
         
-        def run(test_list, hash_outlog):
+        def run(rep, test_list, hash_outlog):
             self.runtests(test_list, \
                         fault_test_execution_matrix_file=matrix_files[rep], \
                         fault_test_execution_execoutput_file=\
@@ -750,8 +751,8 @@ class MetaTestcaseTool(object):
         #~ def run()
 
         # Execute with repetition and get output summaries
-        for rep in repeat_count:
-            run(meta_testcases, True)
+        for rep in range(repeat_count):
+            run(rep, meta_testcases, True)
 
         # get flaky tests list
         flaky_tests = set()
@@ -777,15 +778,14 @@ class MetaTestcaseTool(object):
 
         # get flaky tests outputs
         if len(flaky_tests) > 0:
-            for rep in repeat_count:
-                run(list(flaky_tests), False)
+            for rep in range(repeat_count):
+                run(rep, list(flaky_tests), False)
             flaky_test_list_file = os.path.join(self.flakiness_workdir, \
                                                         "flaky_test_list.json")
             logging.warning("There were some flaky tests (see file {})".format(\
                                                         flaky_test_list_file))
             common_fs.dumpJSON(list(flaky_tests), flaky_test_list_file, \
                                                                 pretty=True)
-            return True
-        return False
-    #~ def check_flakiness()
+        return list(flaky_tests)
+    #~ def check_get_flakiness()
 #~ class MetaTestcaseTool

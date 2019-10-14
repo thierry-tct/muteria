@@ -369,6 +369,20 @@ class Executor(object):
                     selected_tests.append(meta_test)
 
             # TODO: use the actual selector. For now just use all tests
+
+            # Check for flakiness
+            logging.debug("# Checking for tests flakiness ...")
+            flaky_tests = self.meta_testcase_tool.check_get_flakiness(\
+                                                                selected_tests)
+            if len(flaky_tests) > 0:
+                if self.config.DISCARD_FLAKY_TESTS.get_val():
+                    selected_tests = \
+                                list(set(selected_tests) - set(flaky_tests))
+                else:
+                    ERROR_HANDLER.error_exit("There are Flaky tests!", \
+                                                                    __file__)
+
+            # write the tests
             common_fs.dumpJSON(list(selected_tests), out_file)
 
             # @Checkpointing
@@ -386,7 +400,7 @@ class Executor(object):
             matrix_file = self.head_explorer.get_file_pathname(matrix_file_key)
             execoutput_file_key = \
                                 outdir_struct.TMP_PROGRAM_TESTEXECUTION_OUTPUT
-            if self.config.GET_PASSFAIL_OUTPUT_SUMMARY:
+            if self.config.GET_PASSFAIL_OUTPUT_SUMMARY.get_val():
                 # Make sure that the exec Output dir exists
                 self.head_explorer.get_or_create_and_get_dir(\
                             outdir_struct.RESULTS_TESTEXECUTION_OUTPUTS_DIR)
@@ -414,6 +428,7 @@ class Executor(object):
             # Set test oracle
             self.test_oracle_manager.set_oracle(passfail=True)
             
+            # Check pass fail
             self.meta_testcase_tool.runtests(meta_testcases=meta_testcases, \
                         stop_on_failure=\
                                 self.config.STOP_TESTS_EXECUTION_ON_FAILURE, \
