@@ -781,7 +781,7 @@ class MetaTestcaseTool(object):
                 run(list(flaky_tests), False)
             flaky_test_list_file = os.path.join(self.flakiness_workdir, \
                                                         "flaky_test_list.json")
-            logging.debug("There were some flaky tests (see file {})".format(\
+            logging.warning("There were some flaky tests (see file {})".format(\
                                                         flaky_test_list_file))
             common_fs.dumpJSON(list(flaky_tests), flaky_test_list_file, \
                                                                 pretty=True)
