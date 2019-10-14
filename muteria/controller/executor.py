@@ -379,8 +379,10 @@ class Executor(object):
                     selected_tests = \
                                 list(set(selected_tests) - set(flaky_tests))
                 else:
-                    ERROR_HANDLER.error_exit("There are Flaky tests!", \
+                    ERROR_HANDLER.error_exit("There are Flaky tests!!", \
                                                                     __file__)
+            else:
+                logging.debug("# No Flaky Test :)")
 
             # write the tests
             common_fs.dumpJSON(list(selected_tests), out_file)
