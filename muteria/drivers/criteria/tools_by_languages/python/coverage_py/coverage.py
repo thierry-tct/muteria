@@ -263,7 +263,7 @@ class CriteriaToolCoveragePy(BaseCriteriaTool):
         return res
     #~ def _extract_coverage_data_of_a_test()
 
-    def _do_instrument_code (self, outputdir, exe_path_map, \
+    def _do_instrument_code (self, exe_path_map, \
                                         code_builds_factory, \
                                         enabled_criteria, parallel_count=1):
         # Setup

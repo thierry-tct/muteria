@@ -85,24 +85,58 @@ class TarGz:
 
     open_read_flag = "r:gz"
     open_write_flag = "w:gz"
-    opening_function = tarfile.TarFile
+    opening_function = tarfile.open
 
     is_archive_file = tarfile.is_tarfile
 
     get_element = lambda handle, elem: handle.getmember(elem)
 
     @classmethod
-    def _add_folder_function(cls, handle, in_directory, *args, **kwargs):
+    def _add_fd_function(cls, handle, in_directory, *args, **kwargs):
         handle.add(in_directory, *args, **kwargs)
-    #~ def _add_folder_function()
+    #~ def _add_fd_function()
 
     #################################################################
     ######################## PUBLIC INTERFACE #######################
     #################################################################
 
     @classmethod
+    def get_archive_filename_of(cls, file_dir):
+        return file_dir + cls.archive_ext
+    #~ def get_archive_filename_of()
+
+    @classmethod
     def compressDir (cls, in_directory, out_archive_pathname=None, 
                     remove_in_directory=False):
+
+        ERROR_HANDLER.assert_true(os.path.isdir(in_directory), \
+                                        "invalid in_directory: "+in_directory)
+
+        err_msg = cls._compressFileOrDir(in_directory, out_archive_pathname)
+
+        if remove_in_directory:
+            shutil.rmtree(in_directory)
+
+        return err_msg
+    #~ def compressDir()
+
+    @classmethod
+    def compressFile (cls, in_file, out_archive_pathname=None, 
+                    remove_in_file=False):
+
+        ERROR_HANDLER.assert_true(os.path.isfile(in_file), \
+                                        "invalid in_file: "+in_file)
+
+        err_msg = cls._compressFileOrDir(in_file, out_archive_pathname)
+
+        if remove_in_file:
+            os.remove(in_file)
+
+        return err_msg
+    #~ def compressFile()
+
+    @classmethod
+    def _compressFileOrDir (cls, in_directory, out_archive_pathname=None):
         '''
         Compress (Archive) a directory to save up disk space and inodes
 
@@ -115,9 +149,6 @@ class TarGz:
         :returns: None on success and an error message on failure
         '''
 
-        ERROR_HANDLER.assert_true(os.path.isdir(in_directory), \
-                                        "invalid in_directory: "+in_directory)
-
         if out_archive_pathname is None:
             out_archive_pathname = in_directory + cls.archive_ext
 
@@ -125,8 +156,8 @@ class TarGz:
                                                                     as handle:
             push_dir = os.getcwd()
             os.chdir(os.path.dirname(os.path.abspath(in_directory)))
-            cls._add_folder_function(handle, os.path.basename(in_directory), \
-                                                                arcname='.')
+            cls._add_fd_function(handle, os.path.basename(in_directory)) #, \
+                                                                #arcname='.')
             os.chdir(push_dir)
 
         if not cls.is_archive_file(out_archive_pathname):
@@ -134,14 +165,27 @@ class TarGz:
                                         out_archive_pathname, "is invalid"])
             return errmsg
 
-        if remove_in_directory:
-            shutil.rmtree(in_directory)
-
         return None
-    #~ def compressDir()
+    #~ def _compressFileDir()
 
     @classmethod
     def decompressDir (cls, in_archive_pathname, out_directory=None, 
+                                                    remove_in_archive=False):
+        err_msg = cls._decompressFileOrDir(in_archive_pathname, \
+                                            out_directory, remove_in_archive)
+        return err_msg
+    #~ def decompressDir()
+
+    @classmethod
+    def decompressFile (cls, in_archive_pathname, out_directory=None, 
+                                                    remove_in_archive=False):
+        err_msg = cls._decompressFileOrDir(in_archive_pathname, \
+                                            out_directory, remove_in_archive)
+        return err_msg
+    #~ def decompressFile()
+
+    @classmethod
+    def _decompressFileOrDir (cls, in_archive_pathname, out_directory=None, 
                                                     remove_in_archive=False):
         '''
         Decompress (UnArchive) a directory's tar file.
@@ -157,19 +201,19 @@ class TarGz:
         if (in_archive_pathname.endswith(cls.archive_ext)):
 
             if out_directory is None:
-                out_directory = in_archive_pathname[:-len(cls.archive_ext)]
+                out_directory = os.path.dirname(in_archive_pathname)
 
-            if os.path.isdir(out_directory):
-                shutil.rmtree(out_directory)
+            ERROR_HANDLER.assert_true(os.path.isdir(out_directory), \
+                                    "Extract location is missing", __file__)
 
             with cls.opening_function(in_archive_pathname, cls.open_read_flag)\
                                                                     as handle:
                 handle.extractall(path=out_directory)
             
-            if not os.path.isdir(out_directory):
-                errmsg = " ".join(["The out_directory", out_directory, \
-                                    "is missing after decompress"])
-                return errmsg
+    #        if not os.path.isdir(out_directory):
+    #            errmsg = " ".join(["The out_directory", out_directory, \
+    #                                "is missing after decompress"])
+    #            return errmsg
     #    elif (in_archive_pathname.endswith(".tar")):
     #        if out_directory is None:
     #            out_directory = in_archive_pathname[:-len('.tar')]
@@ -186,11 +230,11 @@ class TarGz:
             os.remove(in_archive_pathname)
 
         return None
-    #~ def decompressDir()
+    #~ def _decompressFileOrDir()
 
     @classmethod
     def extractFromArchive (cls, in_archive_pathname, extract_pathname, \
-                                                out_location, is_folder=False):
+                                        out_location=None, is_folder=False):
         if (in_archive_pathname.endswith(cls.archive_ext)):
 
             if out_location is None:
@@ -278,20 +322,23 @@ class Zip (TarGz):
     get_element = lambda handle, elem: handle.getinfo(elem)
 
     @classmethod
-    def _add_folder_function(cls, handle, in_directory, *args, **kwargs):
+    def _add_fd_function(cls, handle, in_directory, *args, **kwargs):
         # setup file paths variable
         file_paths = []
    
-        # Read all directory, subdirectories and file lists
-        for root, directories, files in os.walk(in_directory):
-            for filename in files:
-                # Create the full filepath by using os module.
-                file_path = os.path.join(root, filename)
-                file_paths.append(file_path)
+        if os.path.isfile(in_directory):
+            file_paths.append(in_directory)
+        else:
+            # Read all directory, subdirectories and file lists
+            for root, directories, files in os.walk(in_directory):
+                for filename in files:
+                    # Create the full filepath by using os module.
+                    file_path = os.path.join(root, filename)
+                    file_paths.append(file_path)
          
         for file_path in file_paths:
             handle.write(file_path, *args, **kwargs)
-    #~ def _add_folder_function()
+    #~ def _add_fd_function()
 
     #######################################################################
     #######################   ADDITIONAL METHOD   #########################

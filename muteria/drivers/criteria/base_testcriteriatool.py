@@ -569,8 +569,8 @@ class BaseCriteriaTool(abc.ABC):
     #~ def _get_criteria_groups()
 
     def instrument_code (self, enabled_criteria, exe_path_map=None, \
-                        outputdir=None, code_builds_factory_override=None, \
-                        parallel_count=1):
+                                code_builds_factory_override=None, \
+                                parallel_count=1):
         '''
             (TODO: support parallelism: per test outdata)
         '''
@@ -591,13 +591,6 @@ class BaseCriteriaTool(abc.ABC):
             ERROR_HANDLER.assert_true(len(enabled_criteria) > 0, \
                                         "no criterion is enabled", __file__)
 
-            if outputdir is None:
-                outputdir = self.instrumented_code_storage_dir
-            
-            if os.path.isdir(outputdir):
-                shutil.rmtree(outputdir)
-            os.mkdir(outputdir)
-
             if code_builds_factory_override is None:
                 code_builds_factory_override = self.code_builds_factory
             
@@ -605,7 +598,7 @@ class BaseCriteriaTool(abc.ABC):
                 exe_path_map = code_builds_factory_override.repository_manager\
                                                             .get_exe_path_map()
 
-            self._do_instrument_code (outputdir=outputdir, \
+            self._do_instrument_code ( \
                             exe_path_map=exe_path_map, \
                             code_builds_factory=code_builds_factory_override, \
                             enabled_criteria=enabled_criteria, \
@@ -722,8 +715,7 @@ class BaseCriteriaTool(abc.ABC):
     #~ def _extract_coverage_data_of_a_test()
 
     @abc.abstractmethod
-    def _do_instrument_code (self, outputdir, exe_path_map, \
-                                        code_builds_factory, \
+    def _do_instrument_code (self, exe_path_map, code_builds_factory, \
                                         enabled_criteria, parallel_count=1):
         print ("!!! Must be implemented in child class !!!")
     #~ def _do_instrument_code()

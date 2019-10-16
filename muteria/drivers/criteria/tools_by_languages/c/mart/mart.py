@@ -34,7 +34,10 @@ class CriteriaToolMart(BaseCriteriaTool):
         self.mutant_data = os.path.join(self.instrumented_code_storage_dir,\
                                                             "mutant_data")
         self.mart_out = os.path.join(self.mutant_data, 'mart-out-0')
-        self.separate_muts_dir = os.path.join(self.mart_out, 'mutants.out')
+        self.separate_muts_folder_name = 'mutants.out'
+        self.separate_muts_dir = os.path.join(self.mart_out, \
+                                                self.separate_muts_folder_name)
+        self.archive_separated = True
     #~ def __init__()
 
     def _get_default_params(self):
@@ -151,8 +154,27 @@ class CriteriaToolMart(BaseCriteriaTool):
                                             has_element(element_id),\
                         "Inexistant mutant id: "+element_id, __file__)
         
-        mut_code = {k:os.path.join(self.separate_muts_dir, element_id, v) for \
-                    k,v in self._get_single_exe_filename(criterion).items()}
+        rel_names = []
+        mut_code = {}
+        for k,v in self._get_single_exe_filename(criterion).items():
+            mut_code[k] = os.path.join(self.separate_muts_dir, element_id, v) 
+            rel_names.append(os.path.join(self.separate_muts_folder_name, \
+                                                                element_id, v))
+        # If archiving
+        if self.archive_separated:
+            archive_path = common_fs.TarGz.get_archive_filename_of(\
+                                                        self.separate_muts_dir)
+            ERROR_HANDLER.assert_true(os.path.isfile(archive_path), \
+                                    "Archived separated mutant file missing",\
+                                    __file__)
+            if os.path.isdir(self.separate_muts_dir):
+                shutil.rmtree(self.separate_muts_dir)
+            # Extract the selected
+            for arch_name in rel_names:
+                err_msg = common_fs.TarGz.extractFromArchive(archive_path, \
+                                                                    arch_name)
+                ERROR_HANDLER.assert_true(err_msg is None, \
+                            "failed to extract, err: "+str(err_msg), __file__)
         return mut_code
     #~ def _get_criterion_element_executable_path()
 
@@ -230,7 +252,7 @@ class CriteriaToolMart(BaseCriteriaTool):
         return res
     #~ def _extract_coverage_data_of_a_test()
 
-    def _do_instrument_code (self, outputdir, exe_path_map, \
+    def _do_instrument_code (self, exe_path_map, \
                                         code_builds_factory, \
                                         enabled_criteria, parallel_count=1):
         # Setup
@@ -298,6 +320,17 @@ class CriteriaToolMart(BaseCriteriaTool):
         bool_param, k_v_params = self._get_default_params()
         if TestCriteria.STRONG_MUTATION in enabled_criteria:
             bool_param['-write-mutants'] = True
+        if k_v_params['-mutant-scope'] is None:
+            src_list_scope_file = os.path.join(self.mutant_data, \
+                                                        'mutation-scope.json')
+            scope_obj = {'Source-Files': [], 'Functions': []}
+            _, src2obj = self.code_builds_factory.repository_manager\
+                                                .get_relative_exe_path_map()
+            for src, _ in src2obj.items():
+                scope_obj['Source-Files'].append(src)
+            if len(scope_obj['Source-Files']) > 0:
+                common_fs.dumpJSON(scope_obj, src_list_scope_file, pretty=True)
+                k_v_params['-mutant-scope'] = src_list_scope_file
 
         args = [bp for bp, en in list(bool_param.items()) if en]
         for k,v in list(k_v_params.items()):
@@ -335,5 +368,11 @@ class CriteriaToolMart(BaseCriteriaTool):
                 store_obj[crit_str][k] = exe_file+'.MetaMu'
         common_fs.dumpJSON(store_obj, self.instrumentation_details)
 
+        # Archive separated if on
+        if self.archive_separated:
+            err_msg = common_fs.TarGz.compressDir(self.separate_muts_dir, \
+                                                    remove_in_directory=True)
+            ERROR_HANDLER.assert_true(err_msg is None,\
+                                "Compression failed: "+str(err_msg), __file__)
     #~ def _do_instrument_code()
 #~ class CriteriaToolMart
