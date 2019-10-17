@@ -5,6 +5,7 @@ set -u
 set -o pipefail
 
 W_TOOL_ABS_NAME="WRAPPER_TEMPLATE_RUN_EXE_ASBSOLUTE_PATH"
+W_DEFAULT_TOOL_ABS_NAME="WRAPPER_TEMPLATE_DEFAULT_EXE_ASBSOLUTE_PATH"
 W_COUNTER_FILE="WRAPPER_TEMPLATE_COUNTER_FILE"
 W_OUTPUT_RETCODE="WRAPPER_TEMPLATE_OUTPUT_RETCODE"
 W_OUTPUT_LOG="WRAPPER_TEMPLATE_OUTPUT_LOG"
@@ -17,9 +18,9 @@ fi
 
 plain_replay() {
     if [ "$W_EXEC_TIMEOUT" != "" ]; then
-        exec /usr/bin/timeout -s 9 $W_EXEC_TIMEOUT $W_TOOL_ABS_NAME "${@:1}"
+        exec /usr/bin/timeout -s 9 $W_EXEC_TIMEOUT $W_DEFAULT_TOOL_ABS_NAME "${@:1}"
     else
-        exec $W_TOOL_ABS_NAME "${@:1}"
+        exec $W_DEFAULT_TOOL_ABS_NAME "${@:1}"
     fi
 }
 

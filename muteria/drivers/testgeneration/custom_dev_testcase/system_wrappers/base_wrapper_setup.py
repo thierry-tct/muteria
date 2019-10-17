@@ -110,6 +110,8 @@ class BaseSystemWrapper(abc.ABC):
 
         # place the wrapper
         match_replacing = {
+            'WRAPPER_TEMPLATE_DEFAULT_EXE_ASBSOLUTE_PATH': \
+                                            repo_exe_abs_path+self.backup_ext,
             'WRAPPER_TEMPLATE_RUN_EXE_ASBSOLUTE_PATH': \
                                             repo_exe_abs_path+self.used_ext,
             'WRAPPER_TEMPLATE_COUNTER_FILE': \

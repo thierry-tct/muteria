@@ -29,6 +29,15 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
         TestcasesToolKlee.__init__(self, *args, **kwargs)
         ERROR_HANDLER.assert_true(self.custom_binary_dir is not None, \
                         "Custom binary dir must be set for shadow", __file__)
+        self.shadow_folder_path = os.sep.join(\
+                                    os.path.abspath(self.custom_binary_dir)\
+                                    .split(os.sep)[:-3])
+        self.llvm_29_compiler_path = os.path.join(self.shadow_folder_path, \
+                                    "kleeDeploy/llvm-2.9/Release+Asserts/bin")
+        self.llvm_gcc_path = os.path.join(self.shadow_folder_path, \
+                                'kleeDeploy/llvm-gcc4.2-2.9-x86_64-linux/bin')
+        self.wllvm_path = os.path.join(self.shadow_folder_path, \
+                                            'kleeDeploy/whole-program-llvm')
     #~ def __init__()
 
     # SHADOW override
@@ -45,7 +54,7 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
             '-no-std-out': True,
         }
         key_val_params = {
-            '-output-dir': self.tests_storage_dir,
+            #'-output-dir': self.tests_storage_dir,
             #'-solver-backend': None,
             '-search': None,
             '-max-memory': None,
@@ -84,20 +93,58 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
 
     # SHADOW should override
     def _get_back_llvm_compiler_path(self):
-        shadow_exe_dir = self.custom_binary_dir
-        return None 
+        return self.llvm_29_compiler_path 
     #~ def _get_back_llvm_compiler_path()
 
     # SHADOW should override
     def _call_generation_run(self, runtool, args):
-        # Execute Klee
-        ret, out, err = DriversUtils.execute_and_get_retcode_out_err(\
-                                                                runtool, args)
+        # Delete any klee-out-*
+        for d in os.listdir(self.tests_working_dir):
+            if d.startswith('klee-out-'):
+                shutil.rmtree(os.path.join(self.tests_working_dir, d))
 
-        if (ret != 0):
-            logging.error(out)
-            logging.error(err)
-            logging.error("\n>> CMD: " + " ".join([runtool]+args) + '\n')
-            ERROR_HANDLER.error_exit("call to klee testgen failed'", __file__)
+        call_shadow_wrapper_file = os.path.join(self.tests_working_dir, \
+                                                                "shadow_wrap")
+        with open(call_shadow_wrapper_file, 'w') as wf:
+            wf.write('#! /bin/bash\n\n')
+            wf.write(' '.join(['exec', runtool] + args + ['"${@:1}"']) + '\n')
+        os.chmod(call_shadow_wrapper_file, 0o775)
+
+        test_list = list(self.code_builds_factory.repository_manager\
+                                                        .get_dev_tests_list())
+
+        # Get list of klee_change, klee_get_true/false locations. TODO
+
+        # Filter only tests that cover those locations, 
+        # if there is stmt coverage matrix TODO
+
+        # TODO: Add meta testcase tool in base and also give acess to matrices
+        # TODO: with access to devtests base tool alias
+
+        # run test
+        for test in test_list:
+            # execute the test using meta_testtool. TODO
+
+            # copy the klee out
+            test_out = os.path.join(self.tests_storage_dir, test)
+            os.mkdir(test_out)
+            for d in glob.glob(self.tests_working_dir+"/klee-out-*"):
+                shutil.move(d, test_out)
+            ERROR_HANDLER.assert_true(len(list(os.listdir(test_out))) > 0, \
+                                "Shadow generated no test for tescase: "+test,\
+                                                                    __file__)
     #~ def _call_generation_run()
+
+    def _do_generate_tests (self, exe_path_map, outputdir, \
+                                        code_builds_factory, max_time=None):
+        sys.path.insert(0, self.llvm_gcc_path)
+        sys.path.insert(0, self.wllvm_path)
+
+        super(TestcasesToolShadowSE, self)._do_generate_tests(\
+                                        exe_path_map, outputdir,
+                                        code_builds_factory, max_time=max_time)
+        
+        sys.path.pop(0)
+        sys.path.pop(0)
+    #~ def _do_generate_tests ()
 #~ class TestcasesToolShadowSE
