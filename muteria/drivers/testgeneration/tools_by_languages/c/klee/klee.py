@@ -89,12 +89,17 @@ class TestcasesToolKlee(BaseTestcaseTool):
         return klee_sym_args
     #~ def _get_sym_args()
 
-    # SHADOW override
+    # SHADOW should override
     def _get_back_llvm_compiler(self):
         return None #'clang'
     #~ def _get_back_llvm_compiler()
 
-    # SHADOW override
+    # SHADOW should override
+    def _get_back_llvm_compiler_path(self):
+        return None 
+    #~ def _get_back_llvm_compiler_path()
+
+    # SHADOW should override
     def _call_generation_run(self, runtool, args):
         # Execute Klee
         ret, out, err = DriversUtils.execute_and_get_retcode_out_err(\
@@ -185,11 +190,11 @@ class TestcasesToolKlee(BaseTestcaseTool):
         collected_output = [] if collect_output else None
 
         verdict = KTestTestFormat.execute_test(local_exe, \
-                            os.path.join(self.tests_storage_dir, testcase), \
-                            env_vars=env_vars, \
-                            timeout=timeout, \
-                            collected_output=collected_output, \
-                            custom_binary_dir=self.custom_binary_dir)
+                        os.path.join(self.tests_storage_dir, testcase), \
+                        env_vars=env_vars, \
+                        timeout=timeout, \
+                        collected_output=collected_output, \
+                        custom_replay_tool_binary_dir=self.custom_binary_dir)
 
         return verdict, collected_output
     #~ def _execute_a_test()
@@ -212,6 +217,7 @@ class TestcasesToolKlee(BaseTestcaseTool):
                                             self.custom_binary_dir), __file__)
 
         back_llvm_compiler = self._get_back_llvm_compiler() 
+        back_llvm_compiler_path = self._get_back_llvm_compiler_path() 
         
         rel_path_map = {}
         exes, _ = code_builds_factory.repository_manager.\
@@ -224,6 +230,7 @@ class TestcasesToolKlee(BaseTestcaseTool):
                         dest_fmt=CodeFormats.LLVM_BITCODE,\
                         src_dest_files_paths_map=rel_path_map,\
                         compiler=back_llvm_compiler, \
+                        llvm_compiler_path=back_llvm_compiler_path, \
                         clean_tmp=True, reconfigure=True)
         if ret == common_mix.GlobalConstants.COMMAND_FAILURE:
             ERROR_HANDLER.error_exit("Program {}.".format(\
@@ -256,6 +263,11 @@ class TestcasesToolKlee(BaseTestcaseTool):
         args += self._get_sym_args()
 
         self._call_generation_run(prog, args)
+
+        # Copy replay tool into test folder
+        klee_replay_pathname = KTestTestFormat.get_test_replay_tool(\
+                        custom_replay_tool_binary_dir=self.custom_binary_dir)
+        shutil.copy2(klee_replay_pathname, self.tests_storage_dir)
 
         store_obj = {r: os.path.basename(b) for r,b in rel2bitcode.items()}
         common_fs.dumpJSON(store_obj, self.test_details_file)

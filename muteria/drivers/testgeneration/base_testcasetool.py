@@ -80,6 +80,10 @@ class BaseTestcaseTool(abc.ABC):
         if self.config.tool_user_custom is not None:
             self.custom_binary_dir = \
                         self.config.tool_user_custom.PATH_TO_TOOL_BINARY_DIR
+            ERROR_HANDLER.assert_true(self.custom_binary_dir is None or \
+                                    os.path.isdir(self.custom_binary_dir), \
+                            "specified custom_binary_dir does not exist", \
+                                                                    __file__)
 
         # Verify indirect Arguments Variables
 

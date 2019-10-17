@@ -1,0 +1,51 @@
+#! /bin/bash
+##########################################
+# Wrapper for coverage computation (help when segmentation fault or infinite loop)
+# Executes the real executable (<exe>.nowrap) under gdb and call __gcov_flush() to get gcov's .gcda file
+# With we still don't have coverage gcda when program killed by 'timeout'. 
+# Therefore, it is better to replace 'timeout xs <executable and args>' by:
+# >> <executable and args> &
+# >> pid=$!
+# >> sleep x
+# >> kill $pid 
+##########################################
+set -u
+
+Ppid=""
+
+transmit()
+{
+#ps T | grep "$(readlink -f $Prog)"
+#    ps T > tmp
+    Ppid=`/usr/bin/printf "$(ps T)\n" | /bin/grep "$absProg $args" | /usr/bin/awk '{print $1" "$5}' | /bin/grep "$absProg$" | /usr/bin/awk '{print $1}'`
+#printf "$(ps T)\n" | grep "$absProg $args" | awk '{print $1" "$5}' | grep "$absProg$" 
+#cat tmp
+#    rm tmp
+#echo intercepted signal, kill $1 $Ppid .
+    /bin/kill -$1 $Ppid
+    exit $((128 + $1))
+}
+
+trap 'transmit 15' SIGTERM
+trap 'transmit 2' SIGINT
+trap 'transmit 3' SIGQUIT
+trap 'transmit 9' SIGKILL               #Actually can't be caught 
+trap 'transmit 1' SIGHUP
+trap 'transmit 2' SIGALRM               #transmit SIGINT instead, because SIGALRM wont flush gcda
+
+Prog="$(/usr/bin/dirname $0)/MUTERIA_PROGRAMEXE_NAME.MUTERIA_COV_NOWRAP_EXT"    #replace 'COV_NOWRAP_EXT' by extension for real executable, when installing wrapper     
+absProg="$(/bin/readlink -f $Prog)"
+args=("${@:-}")
+
+#run with gdb as daemon
+#exec /usr/bin/gdb --batch-silent --quiet --return-child-result -ex "run" -ex "thread apply all call __gcov_flush()"  -ex "thread apply all call exit()" --args $Prog "${args[@]}" 1>&1 2>&2 <&0 & 
+exec /usr/bin/gdb --batch-silent --quiet --return-child-result -ex "run" -ex "thread apply all call __gcov_flush()"  -ex "thread apply all call exit()" --args $Prog "${args[@]}" 1>&1 2>&2 &
+gdbpid=$!
+
+
+wait $gdbpid
+status=$?
+#trap -  SIGINT SIGTERM
+#wait $gdbpid
+#echo
+exit $status

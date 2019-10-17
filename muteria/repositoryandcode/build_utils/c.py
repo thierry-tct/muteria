@@ -26,14 +26,23 @@ def make_build_func(repo_root_dir, exe_rel_paths, compiler, flags_list, clean,\
         tmp_env["CFLAGS"] = " ".join(flags_list)
     
     if reconfigure:
-        args_list = ['clean']
-        retcode, out, _ = DriversUtils.execute_and_get_retcode_out_err(\
-                                prog='make', args_list=args_list, \
-                                env=tmp_env, merge_err_to_out=True)
+        if os.path.isfile('configure'):
+            args_list = ['configure'] 
+            retcode, out, _ = DriversUtils.execute_and_get_retcode_out_err(\
+                                    prog='bash', args_list=args_list, \
+                                    env=tmp_env, merge_err_to_out=True)
+        elif os.path.isfile('CMakeLists.txt'):
+            args_list = [] 
+            retcode, out, _ = DriversUtils.execute_and_get_retcode_out_err(\
+                                    prog='cmake', args_list=args_list, \
+                                    env=tmp_env, merge_err_to_out=True)
+        else:
+            retcode = 0
         if retcode != 0:
             print_err(out, "reconfigure failed")
             os.chdir(cwd)
             return GlobalConstants.COMMAND_FAILURE 
+        clean = True
     if clean:
         args_list = ['clean']
         retcode, out, _ = DriversUtils.execute_and_get_retcode_out_err(\

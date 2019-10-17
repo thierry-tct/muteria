@@ -2,6 +2,7 @@ from __future__ import print_function
 
 import os
 import re
+from distutils.spawn import find_executable
 
 import muteria.common.mix as common_mix
 
@@ -29,15 +30,30 @@ class KTestTestFormat(object):
     #~ def installed()
 
     @classmethod
+    def get_test_replay_tool(cls, custom_replay_tool_binary_dir=None):
+        if custom_replay_tool_binary_dir is None:
+            kr_file = find_executable(cls.tool)
+            ERROR_HANDLER.assert_true(kr_file is not None, \
+                        "Could not fine test replay tool on path", __file__)
+        else:
+            kr_file = os.path.join(custom_replay_tool_binary_dir, cls.tool)
+            ERROR_HANDLER.assert_true(os.path.isfile(kr_file), \
+                                "replay tool not found in custom_binary_dir", \
+                                                                    __file__)
+        return kr_file
+    #~ def get_test_replay_tool()
+
+    @classmethod
     def execute_test(cls, executable_file, test_file, env_vars, timeout=None, \
-                                collected_output=None, custom_binary_dir=None):
+                    collected_output=None, custom_replay_tool_binary_dir=None):
 
         prog = cls.tool
-        if custom_binary_dir is not None:
-            prog = os.path.join(custom_binary_dir, prog)
+        if custom_replay_tool_binary_dir is not None:
+            prog = os.path.join(custom_replay_tool_binary_dir, prog)
             ERROR_HANDLER.assert_true(os.path.isfile(prog), \
                             "The tool {} is missing from the specified dir {}"\
-                            .format(cls.tool, custom_binary_dir), __file__)
+                            .format(cls.tool, custom_replay_tool_binary_dir), \
+                                                                    __file__)
 
         args = [executable_file, test_file]
         tmp_env = os.environ.copy()

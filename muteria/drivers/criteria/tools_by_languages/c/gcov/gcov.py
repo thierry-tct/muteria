@@ -294,7 +294,7 @@ class CriteriaToolGCov(BaseCriteriaTool):
                                         .format(os.path.basename(prog), \
                                             self.custom_binary_dir), __file__)
 
-        flags = ['--coverage', '-fprofile-dir='+self.gc_files_dir, '-O0']
+        flags = ['-g', '--coverage', '-fprofile-dir='+self.gc_files_dir, '-O0']
         additionals = ["-fkeep-inline-functions"]
         
         # get gcc version
