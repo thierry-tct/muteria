@@ -38,15 +38,24 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
             '-allow-external-sym-calls': True, #None,
             '-posix-runtime': True, #None,
             '-dump-states-on-halt': True, #None,
-            '-only-output-states-covering-new': True 
+            #'-only-output-states-covering-new': True 
+            '--zest': True,
+            '--shadow': True,
+            '-emit-all-errors': True,
+            '-no-std-out': True,
         }
         key_val_params = {
             '-output-dir': self.tests_storage_dir,
-            '-solver-backend': None,
+            #'-solver-backend': None,
             '-search': None,
             '-max-memory': None,
             '-max-time': self.config.TEST_GENERATION_MAXTIME,
             '-libc': 'uclibc',
+            '-use-shadow-version': 'product',
+            '-program-name': None, #TODO: CHeck importance
+            '-shadow-allow-allocs': 'true',
+            '-watchdog': 'true',
+            '-shadow-replay-standalone': 'false',
         }
         return bool_params, key_val_params
     #~ def _get_default_params()
@@ -54,16 +63,17 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
     # SHADOW override
     def _get_sym_args(self):
         # sym args
-        default_sym_args = ['-sym-arg', '5']
-
+        default_sym_args = [] #['-sym-arg', '5']
         klee_sym_args = default_sym_args
-        uc = self.config.get_tool_user_custom()
-        if uc is not None:
-            post_bc_cmd = uc.POST_TARGET_CMD_ORDERED_FLAGS_LIST
-            if post_bc_cmd is not None:
-                klee_sym_args = []
-                for tup in post_bc_cmd:
-                    klee_sym_args += list(tup)
+
+        #klee_sym_args = default_sym_args
+        #uc = self.config.get_tool_user_custom()
+        #if uc is not None:
+        #    post_bc_cmd = uc.POST_TARGET_CMD_ORDERED_FLAGS_LIST
+        #    if post_bc_cmd is not None:
+        #        klee_sym_args = []
+        #        for tup in post_bc_cmd:
+        #            klee_sym_args += list(tup)
         return klee_sym_args
     #~ def _get_sym_args()
 

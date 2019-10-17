@@ -113,12 +113,12 @@ class BaseSystemWrapper(abc.ABC):
             'WRAPPER_TEMPLATE_RUN_EXE_ASBSOLUTE_PATH': \
                                             repo_exe_abs_path+self.used_ext,
             'WRAPPER_TEMPLATE_COUNTER_FILE': \
-                                    repo_exe_abs_path+self.counter_ext \
-                                    if collect_output else self.get_dev_null(),
+                                        repo_exe_abs_path+self.counter_ext, \
             'WRAPPER_TEMPLATE_OUTPUT_RETCODE': \
                                     repo_exe_abs_path+self.outretcode_ext \
                                     if collect_output else self.get_dev_null(),
-            'WRAPPER_TEMPLATE_OUTPUT_LOG': repo_exe_abs_path+self.outlog_ext,
+            'WRAPPER_TEMPLATE_OUTPUT_LOG': repo_exe_abs_path+self.outlog_ext \
+                                    if collect_output else self.get_dev_null(),
         }
         wrapper_obj = self._get_wrapper_template_string()
         for match, replace in match_replacing.items():
