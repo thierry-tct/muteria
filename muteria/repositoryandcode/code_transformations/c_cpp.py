@@ -93,11 +93,19 @@ class FromC(ccs.BaseCodeFormatConverter):
                 del kwargs['llvm_compiler_path']
 
             if spec_compiler is not None:
-                bak_llvm_compiler = os.environ['LLVM_COMPILER']
-                os.environ['LLVM_COMPILER'] = spec_compiler
+                if 'LLVM_COMPILER' not in os.environ:
+                    # default to clang
+                    os.environ['LLVM_COMPILER'] = 'clang'
+                    bak_llvm_compiler = None
+                else:
+                    bak_llvm_compiler = os.environ['LLVM_COMPILER']
+                    os.environ['LLVM_COMPILER'] = spec_compiler
             if spec_llvm_compiler_path is not None:
-                bak_llvm_compiler_path = os.environ['LLVM_COMPILER_PATH']
-                os.environ['LLVM_COMPILER_PATH'] = spec_llvm_compiler_path
+                if 'LLVM_COMPILER_PATH' not in os.environ:
+                    bak_llvm_compiler_path = None
+                else:
+                    bak_llvm_compiler_path = os.environ['LLVM_COMPILER_PATH']
+                    os.environ['LLVM_COMPILER_PATH'] = spec_llvm_compiler_path
 
             #1. Ensure wllvm is installed (For now use default llvm compiler)
             has_wllvm = DriversUtils.check_tool('wllvm', ['--version'])
@@ -128,9 +136,13 @@ class FromC(ccs.BaseCodeFormatConverter):
                     os.remove(dest)
 
             if spec_compiler is not None:
-                os.environ['LLVM_COMPILER'] = bak_llvm_compiler
+                if bak_llvm_compiler is not None:
+                    os.environ['LLVM_COMPILER'] = bak_llvm_compiler
+                else:
+                    del os.environ['LLVM_COMPILER']
             if spec_llvm_compiler_path is not None:
-                os.environ['LLVM_COMPILER_PATH'] = bak_llvm_compiler_path
+                if bak_llvm_compiler_path is not None:
+                    os.environ['LLVM_COMPILER_PATH'] = bak_llvm_compiler_path
 
             # Clean build
             kwargs['compiler'] = None
