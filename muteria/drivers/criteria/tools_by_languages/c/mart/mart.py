@@ -70,7 +70,7 @@ class CriteriaToolMart(BaseCriteriaTool):
             if custom_binary_dir is not None:
                 prog = os.path.join(custom_binary_dir, prog)
             if not DriversUtils.check_tool(prog=prog, args_list=['--version'],\
-                                                    expected_exit_codes=[1]):
+                                                    expected_exit_codes=[0,1]):
                 return False
         return True
     #~ def installed()

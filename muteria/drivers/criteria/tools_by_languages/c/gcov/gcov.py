@@ -1,3 +1,5 @@
+""" TODO: call coverage
+"""
 
 from __future__ import print_function
 
@@ -252,7 +254,10 @@ class CriteriaToolGCov(BaseCriteriaTool):
                         parts = line.split()
                         ident = DriversUtils.make_meta_element(parts[1], \
                                                                     last_line)
-                        branch_cov[ident] = int(parts[3])
+                        if parts[2:4] == ('never', 'executed'):
+                            branch_cov[ident] = 0
+                        else:
+                            branch_cov[ident] = int(parts[3])
 
                     elif len(col_split) > 2 and \
                                             re.match(r"^\d+$", col_split[1]):

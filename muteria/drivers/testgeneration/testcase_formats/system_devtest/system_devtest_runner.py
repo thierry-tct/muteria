@@ -7,9 +7,9 @@ from muteria.drivers import DriversUtils
 from muteria.drivers.testgeneration.custom_dev_testcase.system_wrappers \
                 import TEST_FILE_NAME_ENV_VAR, TEST_EXECUTION_TIMEOUT_ENV_VAR
 
-def system_test_runner(prog, args_list, test_filename, repo_root_dir, 
-                                        exe_path_map, env_vars, timeout, \
-                                collected_output=None, using_wrapper=False):
+def system_test_runner(prog, args_list, test_filename, repo_root_dir, \
+                            exe_path_map=None, env_vars=None, timeout=None, \
+                            collected_output=None, using_wrapper=False):
     # TODO: use exe_path_map
 
     try:

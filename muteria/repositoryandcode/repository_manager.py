@@ -167,8 +167,12 @@ class RepositoryManager(object):
             if pre_ret == common_mix.GlobalConstants.COMMAND_SUCCESS:
                 ret = self.dev_test_runner_func(dev_test_name, \
                                         self.repository_rootdir, \
-                                        exe_path_map, env_vars, timeout, \
-                                        collected_output, \
+                                        exe_path_map=exe_path_map, \
+                                        env_vars=(env_vars 
+                                                    if env_vars is not None \
+                                                    else {}), \
+                                        timeout=timeout, \
+                                        collected_output=collected_output, \
                                         using_wrapper=(\
                                                     self.get_wrapper_object() \
                                                                 is not None))
