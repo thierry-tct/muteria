@@ -198,7 +198,11 @@ class CodeBuildsFactory(object):
                                                 "code copy failed", __file__)
                 # copy also
                 for src,dest in also_copy_to_map.items():
-                    shutil.copy2(self.stored_files_mapping[src], dest)
+                    try:
+                        shutil.copy2(self.stored_files_mapping[src], dest)
+                    except PermissionError:
+                        os.remove(dest)
+                        shutil.copy2(self.stored_files_mapping[src], dest)
             else:
                 # build and possibly backup
                 if self.stored_files_mapping is None:

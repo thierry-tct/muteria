@@ -49,7 +49,11 @@ class BaseCallbackObject(abc.ABC):
             if os.path.abspath(abs_src) == os.path.abspath(dest):
                 ERROR_HANDLER.error_exit("src and dest are same (to repo)", \
                                                                     __file__)
-            shutil.copy2(dest, abs_src)
+            try:
+                shutil.copy2(dest, abs_src)
+            except PermissionError:
+                os.remove(abs_src)
+                shutil.copy2(dest, abs_src)
     #~ def _copy_from_repo()
 
     def set_op_retval(self, op_retval):

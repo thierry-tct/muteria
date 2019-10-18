@@ -101,9 +101,15 @@ class BaseSystemWrapper(abc.ABC):
             os.remove(repo_exe_abs_path + self.used_ext)
 
         # set run exe
-        shutil.copy2(run_exe_abs_path, repo_exe_abs_path + self.used_ext)
-        # use link instead of copy to avoid copying large unchanging exes
-        #os.link(run_exe_abs_path, repo_exe_abs_path + self.used_ext)
+        try:
+            shutil.copy2(run_exe_abs_path, repo_exe_abs_path + self.used_ext)
+            # use link instead of copy to avoid copying large unchanging exes
+            #os.link(run_exe_abs_path, repo_exe_abs_path + self.used_ext)
+        except PermissionError:
+            os.remove(repo_exe_abs_path + self.used_ext)
+            shutil.copy2(run_exe_abs_path, repo_exe_abs_path + self.used_ext)
+            # use link instead of copy to avoid copying large unchanging exes
+            #os.link(run_exe_abs_path, repo_exe_abs_path + self.used_ext)
 
         # backup
         shutil.move(repo_exe_abs_path, repo_exe_abs_path + self.backup_ext)
