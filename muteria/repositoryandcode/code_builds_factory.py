@@ -56,7 +56,6 @@ class CodeBuildsFactory(object):
                 self.stored_files_mapping = {k: os.path.join(self.workdir, v) \
                                                         for k,v in tmp.items()}
             else:
-                os.mkdir(self.workdir)
                 count = 0
                 self.stored_files_mapping = {}
                 tmp = {}
@@ -70,6 +69,7 @@ class CodeBuildsFactory(object):
                     self.stored_files_mapping[o] = \
                                         os.path.join(self.workdir, str(count))
                     count += 1
+                os.mkdir(self.workdir)
                 common_fs.dumpJSON(tmp, \
                                 self.stored_files_mapping_file, pretty=True)
         
