@@ -210,21 +210,20 @@ class DriversUtils(object):
                                                         preexec_fn=os.setsid)
         try:
             stdout, stderr = p.communicate(timeout=timeout)
-            # Make sure all children are cleaned
-            os.killpg(p.pid, signal.SIGTERM) 
         except subprocess.TimeoutExpired:
             #p.terminate() # TODO: Chose the signal to send
             os.killpg(p.pid, signal.SIGTERM)
             #p.send_signal(signal.SIGINT) # TODO: Chose the signal to send
             # give 5 seconds to stop
             stopped = False
-            for i in range(5):
+            for _ in range(5):
                 if p.poll() is None:
                     time.sleep(1)
                 else:
                     stopped = True
                     break
             if not stopped:
+                os.killpg(p.pid, signal.SIGKILL)
                 p.kill() # TODO: Chose the signal to send
             stdout, stderr = p.communicate()
         if stdout is not None:
