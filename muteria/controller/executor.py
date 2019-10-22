@@ -130,6 +130,7 @@ class Executor(object):
         self.top_timeline_explorer = top_timeline_explorer
 
         self.head_explorer = self.top_timeline_explorer.get_latest_explorer()
+        # Initialize output structure
         self._initialize_output_structure(cleanstart=\
                                 self.config.EXECUTION_CLEANSTART.get_val())
         if not logging_setup.is_setup():
@@ -159,9 +160,9 @@ class Executor(object):
     def main(self):
         """ Executor entry point
         """
-        # Initialize output structure
-        self._initialize_output_structure(\
-                        cleanstart=self.config.EXECUTION_CLEANSTART.get_val())
+        # Initialize output structure (done in __init__)
+        #self._initialize_output_structure(\
+        #                cleanstart=self.config.EXECUTION_CLEANSTART.get_val())
 
         # Make checkpointer
         self.checkpointer = \
