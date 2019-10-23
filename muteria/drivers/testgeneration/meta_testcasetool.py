@@ -157,6 +157,8 @@ class MetaTestcaseTool(object):
         ## Set the checkpointer
         self.checkpointer = common_fs.CheckpointState(\
                                                 *self._get_checkpoint_files())
+        
+        self.custom_devtest_toolalias = None
 
         # Create the diffent tools
         for idx in range(len(test_tool_config_list)):
@@ -184,6 +186,9 @@ class MetaTestcaseTool(object):
         # Check for custom testcase
         if toolname == CustomTestcases.CUSTOM_TEST_TOOLNAME:
             TestcaseTool = CustomTestcases
+            ERROR_HANDLER.assert_true(self.custom_devtest_toolalias is None, \
+                        "Must specify custom dev tests only once", __file__)
+            self.custom_devtest_toolalias = config.get_tool_config_alias()
         else:
             ERROR_HANDLER.assert_true( \
                 toolname in self.modules_dict[self.language],
@@ -210,7 +215,8 @@ class MetaTestcaseTool(object):
         testcase_tool = TestcaseTool(tool_working_dir, \
                                         self.code_builds_factory, config, \
                                                     self.test_oracle_manager, \
-                                                    tool_checkpointer)
+                                                    tool_checkpointer, \
+                                                    parent_meta_tool=self)
         return testcase_tool
     #~ def _create_testcase_tool()
 
@@ -224,6 +230,10 @@ class MetaTestcaseTool(object):
                             "The following Testcase tools are not installed", \
                             str(non_installed)))
     #~ def check_tools_installed()
+
+    def get_devtest_toolalias(self):
+        return self.custom_devtest_toolalias
+    #~ def get_devtest_toolalias()
 
 
     def clear_working_dir(self):

@@ -108,10 +108,12 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
         with open(call_shadow_wrapper_file, 'w') as wf:
             wf.write('#! /bin/bash\n\n')
             wf.write(' '.join(['exec', runtool] + args + ['"${@:1}"']) + '\n')
+            # TODO: Add gathering of env vars to be used during replay
         os.chmod(call_shadow_wrapper_file, 0o775)
 
         test_list = list(self.code_builds_factory.repository_manager\
                                                         .get_dev_tests_list())
+        devtest_toolalias = self.parent_meta_tool.get_devtest_toolalias()
 
         # Get list of klee_change, klee_get_true/false locations. TODO
 
@@ -122,8 +124,16 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
         # TODO: with access to devtests base tool alias
 
         # run test
+        exes, _ = self.code_builds_factory.repository_manager\
+                                                .get_relative_exe_path_map()
+        ERROR_HANDLER.assert_true(len(exes) == 1, \
+                                            "Must have a single exe", __file__)
+        exe_path_map = {e: call_shadow_wrapper_file for e in exes}
+        env_vars = {}
         for test in test_list:
-            # execute the test using meta_testtool. TODO
+            meta_test = DriversUtils.make_meta_element(test, devtest_toolalias)
+            self.parent_meta_tool.execute_testcase(meta_test, exe_path_map, \
+                                        env_vars, with_output_summary=False)
 
             # copy the klee out
             test_out = os.path.join(self.tests_storage_dir, test)

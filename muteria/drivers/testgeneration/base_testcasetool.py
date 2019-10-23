@@ -56,7 +56,8 @@ class BaseTestcaseTool(abc.ABC):
     '''
 
     def __init__(self, tests_working_dir, code_builds_factory, config, \
-                                            test_oracle_manager, checkpointer):
+                                        test_oracle_manager, checkpointer, \
+                                        parent_meta_tool=None):
         # Set Constants
 
         # Set Direct Arguments Variables
@@ -65,6 +66,7 @@ class BaseTestcaseTool(abc.ABC):
         self.config = config
         self.test_oracle_manager = test_oracle_manager
         self.checkpointer = checkpointer
+        self.parent_meta_tool = parent_meta_tool
 
         # Verify Direct Arguments Variables
         ERROR_HANDLER.assert_true(self.tests_working_dir is not None, \
