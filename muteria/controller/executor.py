@@ -18,8 +18,6 @@ from muteria.repositoryandcode.code_builds_factory import CodeBuildsFactory
 from muteria.drivers import DriversUtils
 from muteria.drivers.testgeneration import TestToolType
 from muteria.drivers.testgeneration.meta_testcasetool import MetaTestcaseTool
-from muteria.drivers.testgeneration.test_oracle_manager import \
-                                                            TestOracleManager
 import muteria.drivers.criteria as criteria_pkg
 from muteria.drivers.criteria.meta_testcriteriatool import MetaCriteriaTool
 
@@ -170,11 +168,9 @@ class Executor(object):
         if self.checkpointer.is_finished():
             return
 
-        self.test_oracle_manager = TestOracleManager(self.config)
-
         # Meta testcases tool
         self.meta_testcase_tool = self._create_meta_test_tool(self.config, \
-                                                    self.test_oracle_manager)
+                                                            self.head_explorer)
         self.meta_testcase_tool.check_tools_installed()
 
         # Meta criteria
@@ -428,9 +424,6 @@ class Executor(object):
 
             meta_testcases = common_fs.loadJSON(test_list_file)
 
-            # Set test oracle
-            self.test_oracle_manager.set_oracle(passfail=True)
-            
             # Check pass fail
             self.meta_testcase_tool.runtests(meta_testcases=meta_testcases, \
                         stop_on_failure=\
@@ -443,9 +436,6 @@ class Executor(object):
                                         self.meta_testexec_optimization_tool, \
                         finish_destroy_checkpointer=False)
             
-            # Unset test oracle
-            self.test_oracle_manager.set_oracle(passfail=False)
-
             # @Checkpointing
             self.cp_data.tasks_obj.set_task_completed(task)
             self.checkpointer.write_checkpoint(self.cp_data.get_json_obj())
@@ -544,9 +534,6 @@ class Executor(object):
                 criterion_to_execoutput = {\
                                 c: execoutput_files[c] for c in criteria_set}
 
-                # Set test oracle
-                self.test_oracle_manager.set_oracle(criteria_on=criteria_set)
-
                 # TODO: make recovery mechanism (like atomic) if execution
                 #           is interrupted after the matrix is written 
                 #           but before checkpoint
@@ -589,9 +576,6 @@ class Executor(object):
                                                 criterion_to_matrix[crit], \
                                             criterion_to_execoutput[crit], \
                                             pf_matrix_file, pf_execoutput_file)
-
-                # Unset test oracle
-                self.test_oracle_manager.set_oracle(criteria_on=None)
 
                 # @Checkpointing
                 self.checkpointer.write_checkpoint(self.cp_data.get_json_obj())
@@ -696,7 +680,7 @@ class Executor(object):
         return repo_mgr
     #~ def create_repo_manager()
 
-    def _create_meta_test_tool(self, config, test_oracle_mgr):
+    def _create_meta_test_tool(self, config, head_explorer):
         # create and return the metatest_tool
         meta_test_tool = MetaTestcaseTool(\
                         language=config.PROGRAMMING_LANGUAGE.get_val(),\
@@ -705,7 +689,7 @@ class Executor(object):
                         code_builds_factory=self.cb_factory,
                         test_tool_config_list=\
                                     config.TESTCASE_TOOLS_CONFIGS.get_val(),\
-                        test_oracle_manager=test_oracle_mgr)
+                        head_explorer=head_explorer)
         return meta_test_tool
     #~ def _create_meta_test_tool()
 

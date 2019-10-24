@@ -112,6 +112,11 @@ class TestcasesToolKlee(BaseTestcaseTool):
             ERROR_HANDLER.error_exit("call to klee testgen failed'", __file__)
     #~ def _call_generation_run()
 
+    # SHADOW should override
+    def _get_testexec_extra_env_vars(self, testcase):
+        return None
+    #~ def _get_testexec_extra_env_vars()
+    
     ########################################################################
 
     def get_testcase_info_object(self):
@@ -188,6 +193,10 @@ class TestcasesToolKlee(BaseTestcaseTool):
                 #os.link(remote_exe, local_exe)
 
         collected_output = [] if collect_output else None
+
+        extra_env = self._get_testexec_extra_env_vars(testcase)
+        if extra_env is not None and len(extra_env) > 0:
+            env_vars = dict(env_vars).update(extra_env)
 
         verdict = KTestTestFormat.execute_test(local_exe, \
                         os.path.join(self.tests_storage_dir, testcase), \

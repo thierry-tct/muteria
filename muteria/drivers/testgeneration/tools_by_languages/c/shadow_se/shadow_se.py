@@ -9,6 +9,10 @@ import re
 
 import muteria.common.fs as common_fs
 import muteria.common.mix as common_mix
+import muteria.common.matrices as common_matrices
+
+import muteria.controller.explorer as fd_structure
+import muteria.drivers.criteria as criteria
 
 from muteria.repositoryandcode.codes_convert_support import CodeFormats
 from muteria.drivers.testgeneration.base_testcasetool import BaseTestcaseTool
@@ -116,12 +120,24 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
         devtest_toolalias = self.parent_meta_tool.get_devtest_toolalias()
 
         # Get list of klee_change, klee_get_true/false locations. TODO
+        klee_change_stmts = [] # TODO: make meta as well
 
         # Filter only tests that cover those locations, 
-        # if there is stmt coverage matrix TODO
+        # if there is stmt coverage matrix 
+        stmt_cov_mat_file = self.head_explorer.get_file_pathname(\
+                            fd_structure.CRITERIA_MATRIX[criteria.TestCriteria\
+                                                        .STATEMENT_COVERAGE])
+        cov_tests = None
+        if os.path.isfile(stmt_cov_mat_file):
+            stmt_cov_mat = common_matrices.ExecutionMatrix(\
+                                                    filename=stmt_cov_mat_file)
+            cov_tests = set()
+            for _, t in stmt_cov_mat.query_active_columns_of_rows(\
+                                    row_key_list=klee_change_stmts).items():
+                cov_tests.add(t)
 
-        # TODO: Add meta testcase tool in base and also give acess to matrices
-        # TODO: with access to devtests base tool alias
+        # tests will be generated in the same dir that has the input .bc file
+        os.mkdir(self.tests_storage_dir)
 
         # run test
         exes, _ = self.code_builds_factory.repository_manager\
@@ -132,18 +148,28 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
         env_vars = {}
         for test in test_list:
             meta_test = DriversUtils.make_meta_element(test, devtest_toolalias)
+            if cov_tests is not None and meta_test not in cov_tests:
+                continue 
             self.parent_meta_tool.execute_testcase(meta_test, exe_path_map, \
                                         env_vars, with_output_summary=False)
 
             # copy the klee out
-            test_out = os.path.join(self.tests_storage_dir, test)
+            test_out = os.path.join(self.tests_storage_dir, \
+                                                    test.replace(os.sep, '_'))
             os.mkdir(test_out)
             for d in glob.glob(self.tests_working_dir+"/klee-out-*"):
                 shutil.move(d, test_out)
             ERROR_HANDLER.assert_true(len(list(os.listdir(test_out))) > 0, \
                                 "Shadow generated no test for tescase: "+test,\
                                                                     __file__)
+
+        # cleanup test dir TODO
     #~ def _call_generation_run()
+
+    # SHADOW should override
+    def _get_testexec_extra_env_vars(self, testcase):
+        return None # TODO: get test env and return
+    #~ def _get_testexec_extra_env_vars()
 
     def _do_generate_tests (self, exe_path_map, outputdir, \
                                         code_builds_factory, max_time=None):

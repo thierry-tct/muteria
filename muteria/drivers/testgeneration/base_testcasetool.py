@@ -56,7 +56,7 @@ class BaseTestcaseTool(abc.ABC):
     '''
 
     def __init__(self, tests_working_dir, code_builds_factory, config, \
-                                        test_oracle_manager, checkpointer, \
+                                        head_explorer, checkpointer, \
                                         parent_meta_tool=None):
         # Set Constants
 
@@ -64,7 +64,7 @@ class BaseTestcaseTool(abc.ABC):
         self.tests_working_dir = tests_working_dir
         self.code_builds_factory = code_builds_factory
         self.config = config
-        self.test_oracle_manager = test_oracle_manager
+        self.head_explorer = head_explorer
         self.checkpointer = checkpointer
         self.parent_meta_tool = parent_meta_tool
 
@@ -76,8 +76,6 @@ class BaseTestcaseTool(abc.ABC):
         ## Generate the tests into this folder (to be created by user)
         self.tests_storage_dir = os.path.join(
                         self.tests_working_dir, "tests_files")
-        self.test_oracle_dir = os.path.join(
-                        self.tests_working_dir, "test_oracles")
         self.custom_binary_dir = None
         if self.config.tool_user_custom is not None:
             self.custom_binary_dir = \
@@ -98,8 +96,6 @@ class BaseTestcaseTool(abc.ABC):
         ## Create dirs
         if not os.path.isdir(self.tests_working_dir):
             self.clear_working_dir()
-
-        self.test_oracle_manager.add_mapping(self, self.test_oracle_dir)
 
         if os.path.isfile(self.test_execution_time_storage_file):
             self.test_execution_time = common_fs.loadJSON(\
@@ -401,8 +397,6 @@ class BaseTestcaseTool(abc.ABC):
             :param hash_outlog: (bool) Choose to hash or not at runtime 
                                 (flakiness check)
         """
-#        if self.test_oracle_manager.oracle_checks_output():
-#            output_log = self.test_oracle_manager.get_output_log()
         #logging.debug(str(timeout))
         verdict, output_err = self._execute_a_test(\
                                             testcase,exe_path_map, env_vars,\
