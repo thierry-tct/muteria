@@ -89,7 +89,7 @@ class BaseCallbackObject(abc.ABC):
 
     @abc.abstractmethod
     def before_command(self):
-        """ This method is executed BEFORE the execution of the the 
+        """ This method is executed BEFORE the execution of the
             corrresponding command.
             :return: (bool) True on success and False on failure
         """
@@ -97,7 +97,7 @@ class BaseCallbackObject(abc.ABC):
 
     @abc.abstractmethod
     def after_command(self):
-        """ This method is executed AFTER the execution of the the 
+        """ This method is executed AFTER the execution of the
             corrresponding command. The execution of the command return 
             the boolean value that is then set in 'self.op_retval' 
             (this is set to None prior execution of the command).

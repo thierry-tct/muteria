@@ -19,6 +19,8 @@ from muteria.drivers.testgeneration.base_testcasetool import BaseTestcaseTool
 from muteria.drivers.testgeneration.testcases_info import TestcasesInfoObject
 from muteria.drivers import DriversUtils
 
+from muteria.repositoryandcode.callback_object import DefaultCallbackObject
+
 from muteria.drivers.testgeneration.tools_by_languages.c.klee.klee \
                                                     import TestcasesToolKlee
 
@@ -109,6 +111,7 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
 
         call_shadow_wrapper_file = os.path.join(self.tests_working_dir, \
                                                                 "shadow_wrap")
+        
         with open(call_shadow_wrapper_file, 'w') as wf:
             wf.write('#! /bin/bash\n\n')
             wf.write(' '.join(['exec', runtool] + args + ['"${@:1}"']) + '\n')
@@ -119,8 +122,22 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
                                                         .get_dev_tests_list())
         devtest_toolalias = self.parent_meta_tool.get_devtest_toolalias()
 
-        # Get list of klee_change, klee_get_true/false locations. TODO
-        klee_change_stmts = [] # TODO: make meta as well
+        # Get list of klee_change, klee_get_true/false locations.
+        klee_change_stmts = []
+        
+        get_lines_callback_obj = self.GetLinesCallbackObject()
+        get_lines_callback_obj.set_pre_callback_args(self.code_builds_factory\
+                                    .repository_manager.revert_src_list_files)
+        get_lines_callback_obj.set_post_callback_args(klee_change_stmts)
+
+        pre_ret, post_ret = self.code_builds_factory.repository_manager\
+                                    .custom_read_access(get_lines_callback_obj)
+        ERROR_HANDLER.assert_true(pre_ret == \
+                                common_mix.GlobalConstants.COMMAND_SUCCESS,\
+                                                    "pre failed", __file__)
+        ERROR_HANDLER.assert_true(post_ret == \
+                                common_mix.GlobalConstants.COMMAND_SUCCESS,\
+                                                    "post failed", __file__)
 
         # Filter only tests that cover those locations, 
         # if there is stmt coverage matrix 
@@ -131,9 +148,23 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
         if os.path.isfile(stmt_cov_mat_file):
             stmt_cov_mat = common_matrices.ExecutionMatrix(\
                                                     filename=stmt_cov_mat_file)
+            meta_stmts = stmt_cov_mat.get_keys()
+            tool_aliases = set()
+            for meta_stmt in meta_stmts:
+                alias, stmt = DriversUtils.reverse_meta_element(meta_stmt)
+                tool_aliases.add(alias)
+            klee_change_meta_stmts = []
+            for alias in tool_aliases:
+                klee_change_meta_stmts += [\
+                                    DriversUtils.make_meta_element(e, alias) \
+                                                    for e in klee_change_stmts]
+            klee_change_meta_stmts = list(set(meta_stmts) & \
+                                                set(klee_change_meta_stmts))
+            ERROR_HANDLER.assert_true(len(klee_change_meta_stmts) > 0, \
+                                        "No test cover the patch", __file__)
             cov_tests = set()
             for _, t in stmt_cov_mat.query_active_columns_of_rows(\
-                                    row_key_list=klee_change_stmts).items():
+                                row_key_list=klee_change_meta_stmts).items():
                 cov_tests.add(t)
 
         # tests will be generated in the same dir that has the input .bc file
@@ -162,9 +193,37 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
             ERROR_HANDLER.assert_true(len(list(os.listdir(test_out))) > 0, \
                                 "Shadow generated no test for tescase: "+test,\
                                                                     __file__)
+            if os.path.islink(os.path.join(self.tests_working_dir, \
+                                                                'klee-last')):
+                os.unlink(os.path.join(self.tests_working_dir, 'klee-last'))
 
         # cleanup test dir TODO
     #~ def _call_generation_run()
+
+    class GetLinesCallbackObject(DefaultCallbackObject):
+        def before_command(self):
+            revert_src_func = self.pre_callback_args
+            revert_src_func()
+            return common_mix.GlobalConstants.COMMAND_SUCCESS
+        #~ def before_command()
+
+        def after_command(self):
+            if self.op_retval == common_mix.GlobalConstants.COMMAND_FAILURE:
+                return common_mix.GlobalConstants.COMMAND_FAILURE
+            m_regex = re.compile('({}|{}|{})'.format('klee_change', \
+                                            'klee_get_true', 'klee_get_false'))
+            matched_lines = set()
+            for src in self.source_files_to_objects:
+                with open(os.path.join(self.repository_rootdir, src)) as f:
+                    for lnum, line in enumerate(f):
+                        if m_regex.search(line) is not None:
+                            matched_lines.add(DriversUtils.make_meta_element(\
+                                                            str(lnum), src))
+            ret_lines = self.post_callback_args
+            ret_lines.extend(matched_lines)
+            return common_mix.GlobalConstants.COMMAND_SUCCESS
+        #~ def after_command()
+    #~ class CopyCallbackObject
 
     # SHADOW should override
     def _get_testexec_extra_env_vars(self, testcase):
