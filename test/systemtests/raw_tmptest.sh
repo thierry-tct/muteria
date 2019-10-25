@@ -77,6 +77,13 @@ do
 		rm -rf $tmp_workspace
 		mkdir $tmp_workspace || error_exit "failed creating tmp_workspace"
 		cp -rf $clean_data $tmp_workspace || error_exit "failed to copy clean into tmp_workspace"
+
+		# Temporary
+		if [ "${WITH_SHADOW:-}" = "on" -a -f mv $tmp_workspace/ctrl/conf_shadow.py ]
+		then
+			mv $tmp_workspace/ctrl/conf_shadow.py $tmp_workspace/ctrl/conf.py 
+			echo "-- Using Shadow !!!"
+		fi
 	fi
 
 	yes | $python_exe $entry_point $muteria_topdir $workdata_ctrl || error_exit "test failed for $prog_folder"
