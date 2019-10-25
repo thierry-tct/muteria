@@ -58,6 +58,9 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
             '--shadow': True,
             '-emit-all-errors': True,
             '-no-std-out': True,
+            '-shadow-allow-allocs': True,
+            '-watchdog': True,
+            '-shadow-replay-standalone': False,
         }
         key_val_params = {
             #'-output-dir': self.tests_storage_dir,
@@ -68,9 +71,6 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
             '-libc': 'uclibc',
             '-use-shadow-version': 'product',
             '-program-name': None, #TODO: CHeck importance
-            '-shadow-allow-allocs': 'true',
-            '-watchdog': 'true',
-            '-shadow-replay-standalone': 'false',
         }
         return bool_params, key_val_params
     #~ def _get_default_params()
@@ -148,7 +148,7 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
         if os.path.isfile(stmt_cov_mat_file):
             stmt_cov_mat = common_matrices.ExecutionMatrix(\
                                                     filename=stmt_cov_mat_file)
-            meta_stmts = stmt_cov_mat.get_keys()
+            meta_stmts = list(stmt_cov_mat.get_keys())
             tool_aliases = set()
             for meta_stmt in meta_stmts:
                 alias, stmt = DriversUtils.reverse_meta_element(meta_stmt)
@@ -165,7 +165,7 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
             cov_tests = set()
             for _, t in stmt_cov_mat.query_active_columns_of_rows(\
                                 row_key_list=klee_change_meta_stmts).items():
-                cov_tests.add(t)
+                cov_tests |= set(t)
 
         # tests will be generated in the same dir that has the input .bc file
         os.mkdir(self.tests_storage_dir)
@@ -218,7 +218,7 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
                     for lnum, line in enumerate(f):
                         if m_regex.search(line) is not None:
                             matched_lines.add(DriversUtils.make_meta_element(\
-                                                            str(lnum), src))
+                                                            str(lnum+1), src))
             ret_lines = self.post_callback_args
             ret_lines.extend(matched_lines)
             return common_mix.GlobalConstants.COMMAND_SUCCESS
@@ -232,14 +232,14 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
 
     def _do_generate_tests (self, exe_path_map, outputdir, \
                                         code_builds_factory, max_time=None):
-        sys.path.insert(0, self.llvm_gcc_path)
-        sys.path.insert(0, self.wllvm_path)
+        env_path_bak = os.environ['PATH']
+        os.environ['PATH'] = os.pathsep.join([self.llvm_gcc_path, \
+                                         self.wllvm_path, os.environ['PATH']])
 
         super(TestcasesToolShadowSE, self)._do_generate_tests(\
                                         exe_path_map, outputdir,
                                         code_builds_factory, max_time=max_time)
-        
-        sys.path.pop(0)
-        sys.path.pop(0)
+
+        os.environ['PATH'] = env_path_bak
     #~ def _do_generate_tests ()
 #~ class TestcasesToolShadowSE
