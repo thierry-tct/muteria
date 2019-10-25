@@ -655,7 +655,7 @@ class MetaTestcaseTool(object):
         if finish_destroy_checkpointer:
             checkpoint_handler.destroy()
     #~ def generate_tests()
-
+    
     def _compute_testcases_info(self, candidate_tool_aliases=None):
         meta_testcase_info_obj = TestcasesInfoObject()
         if candidate_tool_aliases is None:
@@ -673,17 +673,18 @@ class MetaTestcaseTool(object):
         return meta_testcase_info_obj
     #~ def _compute_testcases_info()
     
-    def get_testcase_info_object(self):
+    def get_testcase_info_object(self, candidate_tool_aliases=None):
         tc_info = TestcasesInfoObject()
-        tc_info.load_from_file(self.get_testcase_info_file())
+        tc_info.load_from_file(self.get_testcase_info_file(\
+                                                       candidate_tool_aliases))
         return tc_info
     #~ def get_testcase_info_object()
 
-    def get_testcase_info_file(self):
+    def get_testcase_info_file(self, candidate_tool_aliases=None):
         # Compute and write the testcase info if not present
         # only place where the meta info is written
         if self._testcase_info_is_invalidated():
-            self._compute_testcases_info().write_to_file(\
+            self._compute_testcases_info(candidate_tool_aliases).write_to_file(\
                                     self._unchecked_get_testcase_info_file())
         return self._unchecked_get_testcase_info_file()
     #~ def get_testcase_info_file()

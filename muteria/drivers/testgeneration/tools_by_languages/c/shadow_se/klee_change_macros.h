@@ -24,7 +24,8 @@
     static unsigned int __attribute__ ((noinline)) klee_change(unsigned int x, unsigned int y)
   #endif
     {
-      static char *version_str = getenv("KLEE_CHANGE_RUNTIME_SET_NEW_VERSION");
+      static char * version_str;
+      version_str = getenv("KLEE_CHANGE_RUNTIME_SET_NEW_VERSION");
       if (version_str == NULL)
         return x;
       else

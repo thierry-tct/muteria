@@ -228,8 +228,10 @@ class Executor(object):
         # by testtool type sequence loop
         for seq_id, test_tool_types in enumerate(test_tool_type_sequence):
             
+            logging.info("")
             logging.info("executor: Running for Test tool types = "+\
                                 str([t.get_str() for t in test_tool_types]))
+            logging.info("")
 
             # Was it already checkpointed w.r.t test type seq
             if self.cp_data.test_tool_types_is_executed(\
@@ -354,11 +356,14 @@ class Executor(object):
                 self.cp_data.tasks_obj.set_task_executing(task)
                 self.checkpointer.write_checkpoint(self.cp_data.get_json_obj())
 
-            all_tests = self.meta_testcase_tool.\
-                                    get_testcase_info_object().get_tests_list()
             candidate_aliases = \
                         self.meta_testcase_tool.get_candidate_tools_aliases(\
                                 test_tool_type_list=self.cp_data.test_types)
+
+            all_tests = self.meta_testcase_tool.get_testcase_info_object(\
+                                   candidate_tool_aliases=candidate_aliases)\
+                                                            .get_tests_list()
+
             selected_tests = []
             for meta_test in all_tests:
                 toolalias, _ = DriversUtils.reverse_meta_element(meta_test)
