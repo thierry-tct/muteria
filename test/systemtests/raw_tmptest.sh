@@ -79,9 +79,9 @@ do
 		cp -rf $clean_data $tmp_workspace || error_exit "failed to copy clean into tmp_workspace"
 
 		# Temporary
-		if [ "${WITH_SHADOW:-}" = "on" -a -f mv $tmp_workspace/ctrl/conf_shadow.py ]
+		if [ "${WITH_SHADOW:-}" = "on" -a -f $tmp_workspace/$prog_folder/ctrl/conf_shadow.py ]
 		then
-			mv $tmp_workspace/ctrl/conf_shadow.py $tmp_workspace/ctrl/conf.py 
+			mv $tmp_workspace/$prog_folder/ctrl/conf_shadow.py $tmp_workspace/$prog_folder/ctrl/conf.py | error_exit "failed to set conf to shadow conf"
 			echo "-- Using Shadow !!!"
 		fi
 	fi

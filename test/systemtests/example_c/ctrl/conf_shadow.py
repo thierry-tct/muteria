@@ -2,7 +2,7 @@
 import os
 import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from conf import *
+from _conf import *
 sys.path.pop(0)
 
 import muteria.drivers.testgeneration.tools_by_languages.c.shadow_se\

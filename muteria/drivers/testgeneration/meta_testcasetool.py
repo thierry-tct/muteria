@@ -97,7 +97,7 @@ class MetaTestcaseTool(object):
     #~ def get_toolnames_by_types_by_language()
 
     def __init__(self, language, tests_working_dir, code_builds_factory,
-                                test_tool_config_list, head):
+                                test_tool_config_list, head_explorer):
 
         """ Initialize a meta testcase tool object.
         :type language:
