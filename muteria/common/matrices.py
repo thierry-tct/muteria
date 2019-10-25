@@ -776,7 +776,7 @@ class OutputLogData(object):
         if not override_existing:
             for objective in intersect_objective:
                 ERROR_HANDLER.assert_true(len(set(self.data[objective]) & \
-                                                    data_dict[objective]), \
+                                            set(data_dict[objective])) == 0, \
                             "Override_existing not set but there is overlap", \
                                                                     __file__)            
         for objective in intersect_objective:
