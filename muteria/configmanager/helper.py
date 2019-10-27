@@ -101,13 +101,15 @@ class ConfigurationHelper(object):
         res = None
         try:
             res = importlib.import_module(module_str)
-        except ImportError:
+        except ImportError as ie:
             if must_exist:
-                ERROR_HANDLER.error_exit("Failed to load {} {}.".format(\
-                                                info, module_str), __file__)
-        except SyntaxError:
-            ERROR_HANDLER.error_exit("Syntax error in {} {}.".format(\
-                                                info, module_str), __file__)
+                ERROR_HANDLER.error_exit("{} {} {}. \n {}.".format(\
+			     "Failed to load", info, module_str, str(ie)), \
+                                                                   __file__)
+        except SyntaxError as se:
+            ERROR_HANDLER.error_exit("{} {} {}. \n {}.".format(\
+                            "Syntax error in", info, module_str, str(se)), \
+                                                                   __file__)
         return res
     #~ def _load_raw_conf_from_file()
 
