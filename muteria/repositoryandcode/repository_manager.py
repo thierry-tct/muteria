@@ -309,6 +309,10 @@ class RepositoryManager(object):
         return (pre_ret, post_ret)
     #~ def custom_read_access()
 
+    def get_repository_dir_path(self):
+        return self.repository_rootdir
+    #~ def get_repository_dir_path()
+
     def repo_abs_path(self, relpath):
         return os.path.join(self.repository_rootdir, relpath)
     #~ def repo_abs_path()

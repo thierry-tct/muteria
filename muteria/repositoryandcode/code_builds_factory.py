@@ -45,6 +45,8 @@ class CodeBuildsFactory(object):
         self.stored_files_mapping = None
         self.stored_files_mapping_file = None
         if self.workdir is not None:
+            self.repo_path_saved_file = os.path.join(self.workdir, \
+                                                             "saved_repo_path")
             self.code_conversion_tracker_file = \
                                     os.path.join(self.workdir, "is_converting")
             self.stored_files_mapping_file = \
@@ -186,6 +188,17 @@ class CodeBuildsFactory(object):
                 copy_callback_obj.set_pre_callback_args( \
                                 self.repository_manager.revert_src_list_files)
 
+            new_repo_path = self.repository_manager.get_repository_dir_path()
+            if os.path.isfile(self.repo_path_saved_file):
+                with open(self.repo_path_saved_file) as f:
+                    old_repo_path = f.read().strip()
+                if new_repo_path != old_repo_path: 
+                    # Override potential backup (force rebuild)
+                    files_backed = False
+            else:
+                # Override potential backup (force rebuild)
+                files_backed = False
+
             if files_backed:
                 copy_callback_obj.set_post_callback_args([\
                                 (self.stored_files_mapping, also_copy_to_map),\
@@ -206,12 +219,20 @@ class CodeBuildsFactory(object):
             else:
                 # build and possibly backup
                 if self.stored_files_mapping is None:
-                    co = None
+                    #co = None
+                    copy_callback_obj.set_post_callback_args([\
+                                               ({}, also_copy_to_map), False])
+                    co = copy_callback_obj
                 else:
                     copy_callback_obj.set_post_callback_args([\
                                 (self.stored_files_mapping, also_copy_to_map),\
                                                                         False])
                     co = copy_callback_obj
+
+                    # Save repo path location
+                    with open(self.repo_path_saved_file, 'w') as f:
+                        f.write(new_repo_path)
+
                 pre, ret, post = self.repository_manager.build_code(
                                                             clean_tmp=True, \
                                                             reconfigure=True, \
