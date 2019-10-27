@@ -1,5 +1,6 @@
 import os
 import subprocess
+import logging
 
 from muteria.drivers import DriversUtils
 
@@ -12,7 +13,8 @@ def make_build_func(repo_root_dir, exe_rel_paths, compiler, flags_list, clean,\
 
     def print_err(out, msg):
         out = out.splitlines()
-        print(out, msg)
+        #print(out, msg)
+        logging.error(str(out), msg)
     #~ def print_err()
 
     cwd = os.getcwd()
