@@ -254,7 +254,7 @@ class CriteriaToolGCov(BaseCriteriaTool):
                         parts = line.split()
                         ident = DriversUtils.make_meta_element(parts[1], \
                                                                     last_line)
-                        if parts[2:4] == ('never', 'executed'):
+                        if parts[2:4] == ['never', 'executed']:
                             branch_cov[ident] = 0
                         else:
                             branch_cov[ident] = int(parts[3])

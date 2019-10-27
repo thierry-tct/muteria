@@ -55,7 +55,8 @@ class ErrorHandler(object):
     @classmethod
     def error_exit(cls, err_string=None, call_location=None, error_code=1, \
                                         ask_revert=True, from_assert=False):
-        traceback.print_stack()
+        #traceback.print_stack()
+        logging.error('\n'+''.join(traceback.format_stack()))
         if call_location is not None:
             logging.error("# Error happened in location {}".format(\
                                                             call_location))

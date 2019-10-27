@@ -237,10 +237,15 @@ class CodeBuildsFactory(object):
                                                             clean_tmp=True, \
                                                             reconfigure=True, \
                                                             callback_object=co)
-                if pre == common_mix.GlobalConstants.COMMAND_FAILURE or \
-                        ret == common_mix.GlobalConstants.COMMAND_FAILURE or \
-                        post == common_mix.GlobalConstants.COMMAND_FAILURE:
-                    ERROR_HANDLER.error_exit("default build failed", __file__)
+                if pre == common_mix.GlobalConstants.COMMAND_FAILURE:
+                    ERROR_HANDLER.error_exit("default build failed (pre).", \
+                                                                     __file__)
+                if ret == common_mix.GlobalConstants.COMMAND_FAILURE:
+                    ERROR_HANDLER.error_exit("default build failed (ret).", \
+                                                                     __file__)
+                if post == common_mix.GlobalConstants.COMMAND_FAILURE:
+                    ERROR_HANDLER.error_exit("default build failed (post).", \
+                                                                     __file__)
                 # XXX: Also already copied
         else:
             ERROR_HANDLER.error_exit("TODO: implement baking relevant files")
