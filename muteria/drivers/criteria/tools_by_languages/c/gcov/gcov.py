@@ -150,7 +150,8 @@ class CriteriaToolGCov(BaseCriteriaTool):
     def _collect_temporary_coverage_data(self, criteria_name_list, \
                                             test_execution_verdict, \
                                             used_environment_vars, \
-                                                    result_dir_tmp):
+                                            result_dir_tmp, \
+                                            testcase):
         ''' get gcov files from gcda files into result_dir_tmp
         '''
         prog = 'gcov'
@@ -178,7 +179,7 @@ class CriteriaToolGCov(BaseCriteriaTool):
         
         if len(gcda_files) > 0:
             # TODO: When gcov generate coverage for different files with
-            # same name filename bu located at diferent dir. Avoid override.
+            # same name filename but located at diferent dir. Avoid override.
             # Go where the gcov will be looked for
             cwd = os.getcwd()
             os.chdir(self.gc_files_dir)
@@ -201,6 +202,9 @@ class CriteriaToolGCov(BaseCriteriaTool):
             common_fs.dumpJSON(self._get_gcov_list(), \
                                 os.path.join(result_dir_tmp,\
                                                 self.gcov_files_list_filename))
+        else:
+            ERROR_HANDLER.error_exit(\
+                        "Testcase '{}' did not generate gcda".format(testcase))
     #~ def _collect_temporary_coverage_data()
 
     def _extract_coverage_data_of_a_test(self, enabled_criteria, \

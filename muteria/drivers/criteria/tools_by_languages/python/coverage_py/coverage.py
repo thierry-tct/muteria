@@ -162,7 +162,8 @@ class CriteriaToolCoveragePy(BaseCriteriaTool):
     def _collect_temporary_coverage_data(self, criteria_name_list, \
                                                 test_execution_verdict, \
                                                 used_environment_vars, \
-                                                        result_dir_tmp):
+                                                result_dir_tmp, \
+                                                testcase):
         ''' extract coverage data into json file in result_dir_tmp
         '''
         cov_obj = coverage.Coverage(config_file=self.config_file)

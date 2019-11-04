@@ -158,7 +158,8 @@ class BaseCriteriaTool(abc.ABC):
                 # Collect temporary data into result_dir_tmp
                 self._collect_temporary_coverage_data(\
                                                 cg_criteria, test_verdict, \
-                                                cg_env_vars, result_dir_tmp)
+                                                cg_env_vars, result_dir_tmp, \
+                                                testcase)
 
                 # extract coverage
                 coverage_tmp_data_per_criterion = \
@@ -699,7 +700,8 @@ class BaseCriteriaTool(abc.ABC):
     def _collect_temporary_coverage_data(self, criteria_name_list, \
                                             test_execution_verdict, \
                                             used_environment_vars, \
-                                                    result_dir_tmp):
+                                            result_dir_tmp, \
+                                            testcase):
         '''
         '''
         print ("!!! Must be implemented in child class !!!")
