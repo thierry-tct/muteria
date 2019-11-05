@@ -8,6 +8,7 @@ import logging
 
 import muteria.common.matrices as common_matrices
 import muteria.common.mix as common_mix
+import muteria.common.fs as common_fs
 
 from muteria.drivers.testgeneration.base_testcasetool import BaseTestcaseTool
 from muteria.drivers.testgeneration.testcases_info import TestcasesInfoObject
@@ -28,11 +29,17 @@ class CustomTestcases(BaseTestcaseTool):
         return True
     #~ def installed()
 
+    def __init__(self, *args, **kwargs):
+        BaseTestcaseTool.__init__(self, *args, **kwargs)
+        self.test_list_storage_file = os.path.join(self.tests_storage_dir, \
+                                                            'test_list.json')
+    #~ def __init__()
+
     def get_testcase_info_object(self):
         tc_info_obj = TestcasesInfoObject()
-        dtl = self.code_builds_factory.repository_manager.get_dev_tests_list()
-        ERROR_HANDLER.assert_true(dtl is not None, "invalid dev_test_list", \
-                                                                    __file__)
+        ERROR_HANDLER.assert_true(os.path.isfile(self.test_list_storage_file),\
+                    "No test list file found, di generation occur?", __file__)
+        dtl = common_fs.loadJSON(self.test_list_storage_file)
         for tc in dtl:
             tc_info_obj.add_test(tc)
         return tc_info_obj
@@ -88,6 +95,19 @@ class CustomTestcases(BaseTestcaseTool):
                                                         get_wrapper_object()
         if wrapper_obj is not None:
             wrapper_obj.install_wrapper(exe_path_map, collect_output)
+        else:
+            if exe_path_map is not None:
+                repo_root_dir = self.code_builds_factory.repository_manager\
+                                                    .get_repository_dir_path()
+                for rep_rel_name, abs_name in exe_path_map.items():
+                    rep_abs_name = os.path.join(repo_root_dir, rep_rel_name)
+                    if abs_name is not None and rep_abs_name != abs_name:
+                        # copy to repo
+                        try:
+                            shutil.copy2(abs_name, rep_abs_name)
+                        except PermissionError:
+                            os.remove(rep_abs_name)
+                            shutil.copy2(abs_name, rep_abs_name)
     #~ def _prepare_executable()
 
     def _restore_default_executable(self, exe_path_map, env_vars, \
@@ -102,6 +122,8 @@ class CustomTestcases(BaseTestcaseTool):
                                                         get_wrapper_object()
         if wrapper_obj is not None:
             wrapper_obj.uninstall_wrapper(exe_path_map)
+        else:
+            self.code_builds_factory.set_repo_to_build_default()
     #~ def _restore_default_executable()
 
     def _execute_a_test (self, testcase, exe_path_map, env_vars, \
@@ -159,7 +181,15 @@ class CustomTestcases(BaseTestcaseTool):
 
     def _do_generate_tests (self, exe_path_map, outputdir, \
                                         code_builds_factory, max_time=None):
-        #tc_inf_obj = self.get_testcase_info_object()
-        pass
+        dtl = self.code_builds_factory.repository_manager.get_dev_tests_list()
+        ERROR_HANDLER.assert_true(dtl is not None, "invalid dev_test_list", \
+                                                                    __file__)
+        # TODO: Execute the tests with the counting wrapper
+
+        # TODO: update dtl with counter tests
+
+        # TODO: change test executor to consider the test ID after @
+
+        common_fs.dumpJSON(dtl, self.test_list_storage_file)
     #~ def _do_generate_tests()
 #~ class CustomTestcases

@@ -1,5 +1,6 @@
 import os
 import logging
+import shutil
 
 from muteria.common.mix import GlobalConstants
 from muteria.drivers import DriversUtils
@@ -10,8 +11,6 @@ from muteria.drivers.testgeneration.custom_dev_testcase.system_wrappers \
 def system_test_runner(prog, args_list, test_filename, repo_root_dir, \
                             exe_path_map=None, env_vars=None, timeout=None, \
                             collected_output=None, using_wrapper=False):
-    # TODO: use exe_path_map
-
     try:
         tmp_env = os.environ.copy()
         if env_vars is not None:
