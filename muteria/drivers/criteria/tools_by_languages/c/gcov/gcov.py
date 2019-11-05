@@ -127,7 +127,8 @@ class CriteriaToolGCov(BaseCriteriaTool):
         obj = common_fs.loadJSON(self.instrumentation_details)
         #exes = [p for _, p in list(obj.items())]
         for name in obj:
-            obj[name] = os.path.join(self.instrumented_code_storage_dir, name)
+            obj[name] = os.path.join(self.instrumented_code_storage_dir, \
+                                                                    obj[name])
             
         if using_gdb_wrapper:
             # Using GDB WRAPPER
