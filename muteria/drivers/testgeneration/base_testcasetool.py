@@ -397,6 +397,10 @@ class BaseTestcaseTool(abc.ABC):
             :param hash_outlog: (bool) Choose to hash or not at runtime 
                                 (flakiness check)
         """
+
+        if timeout is None:
+            timeout = self.config.ONE_TEST_EXECUTION_TIMEOUT
+        
         #logging.debug(str(timeout))
         verdict, output_err = self._execute_a_test(\
                                             testcase,exe_path_map, env_vars,\

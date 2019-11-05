@@ -112,12 +112,6 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
         call_shadow_wrapper_file = os.path.join(self.tests_working_dir, \
                                                                 "shadow_wrap")
         
-        with open(call_shadow_wrapper_file, 'w') as wf:
-            wf.write('#! /bin/bash\n\n')
-            wf.write(' '.join(['exec', runtool] + args + ['"${@:1}"']) + '\n')
-            # TODO: Add gathering of env vars to be used during replay
-        os.chmod(call_shadow_wrapper_file, 0o775)
-
         test_list = list(self.code_builds_factory.repository_manager\
                                                         .get_dev_tests_list())
         devtest_toolalias = self.parent_meta_tool.get_devtest_toolalias()
@@ -170,6 +164,32 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
         # tests will be generated in the same dir that has the input .bc file
         os.mkdir(self.tests_storage_dir)
 
+        # obtain candidate tests
+        cand_testpair_list = []
+        for test in test_list:
+            meta_test = DriversUtils.make_meta_element(test, devtest_toolalias)
+            if cov_tests is not None and meta_test not in cov_tests:
+                continue 
+            cand_testpair_list.append((test, meta_test))
+
+        # Adjust the max-time in args
+        ## locate max-time
+        for i, v in enumerate(args):
+            if v in ('-max-time', '--max-time'):
+                args[i+1] = \
+                        str(max(1, float(args[i+1]) / len(cand_testpair_list)))
+                break
+            elif v.startswith('-max-time=') or v.startswith('--max-time='):
+                pre, tmp = v.split('=')
+                tmp = str(max(1, float(tmp) / len(cand_testpair_list)))
+                args[i] = pre + '=' + str(tmp)
+
+        # Set the wrapper
+        with open(call_shadow_wrapper_file, 'w') as wf:
+            wf.write('#! /bin/bash\n\n')
+            wf.write(' '.join(['exec', runtool] + args + ['"${@:1}"']) + '\n')
+        os.chmod(call_shadow_wrapper_file, 0o775)
+
         # run test
         exes, _ = self.code_builds_factory.repository_manager\
                                                 .get_relative_exe_path_map()
@@ -177,10 +197,7 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
                                             "Must have a single exe", __file__)
         exe_path_map = {e: call_shadow_wrapper_file for e in exes}
         env_vars = {}
-        for test in test_list:
-            meta_test = DriversUtils.make_meta_element(test, devtest_toolalias)
-            if cov_tests is not None and meta_test not in cov_tests:
-                continue 
+        for test, meta_test in cand_testpair_list:
             self.parent_meta_tool.execute_testcase(meta_test, exe_path_map, \
                                         env_vars, with_output_summary=False)
 

@@ -41,7 +41,7 @@ class CustomTestcases(BaseTestcaseTool):
     def execute_testcase (self, testcase, exe_path_map, env_vars, \
                                             timeout=None, \
                                             use_recorded_timeout_times=None, \
-                                            recalculate_execution_times=False, \
+                                            recalculate_execution_times=False,\
                                             with_output_summary=True, \
                                             hash_outlog=True):
         return self._in_repo_execute_testcase(testcase=testcase, \

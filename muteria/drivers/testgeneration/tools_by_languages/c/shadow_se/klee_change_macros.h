@@ -25,11 +25,11 @@
   #endif
     {
       static char * version_str;
-      version_str = getenv("KLEE_CHANGE_RUNTIME_SET_NEW_VERSION");
+      version_str = getenv("KLEE_CHANGE_RUNTIME_SET_OLD_VERSION");
       if (version_str == NULL)
-        return x;
-      else
         return y;
+      else
+        return x;
     }
 #endif
 
