@@ -241,14 +241,14 @@ class CompleteConfiguration(object):
 
     ## --- Modifiable (Testcase) ---##
     # use test case oracle as oracle
-    TESTS_ORACLE_TESTS = True
+    #TESTS_ORACLE_TESTS = True
     # Use output of the specified version as oracle, 
     # Pass filepath to repo patch 
-    TESTS_ORACLE_OTHER_VERSION = None
+    #TESTS_ORACLE_OTHER_VERSION = None
     # file path to an executable to use as oracle
-    TESTS_ORACLE_OTHER_EXECUTABLE = None
+    #TESTS_ORACLE_OTHER_EXECUTABLE = None
 
-    TEST_GENERATION_TIMEOUT = 7200.0 # in seconds
+    #TEST_GENERATION_TIMEOUT = 7200.0 # in seconds
     #ONE_TEST_EXECUTION_TIMEOUT = 900.0 # in seconds (Handle inifnite loops)
     # ========================================================#
 
@@ -315,7 +315,7 @@ class CompleteConfiguration(object):
     #######################################################
     #######             Extra parameters             ######
     #######################################################
-    LLVM_TO_NATIVE_LINKING_FLAGS = None
+    #LLVM_TO_NATIVE_LINKING_FLAGS = None
 #~ class CompleteConfiguration
 
 class BaseToolConfig(dict):
@@ -497,7 +497,7 @@ def save_common_default_template(filename=None):
         f.write(header+'\n')
         for row in row_list:
             f.write(row+'\n')
-#~ def save_default_rawconf_template_as()
+#~ def save_common_default_template()
 
 if __name__ == '__main__':
     save_common_default_template()

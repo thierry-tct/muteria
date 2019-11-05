@@ -175,15 +175,15 @@ REPORT_NUMBER_OF_DUPLICATED_TESTS = True
 
 ## --- Modifiable (Testcase) ---##
 # use test case oracle as oracle
-TESTS_ORACLE_TESTS = True
+#TESTS_ORACLE_TESTS = True
 # Use output of the specified version as oracle,
 # Pass filepath to repo patch
-TESTS_ORACLE_OTHER_VERSION = None
+#TESTS_ORACLE_OTHER_VERSION = None
 # file path to an executable to use as oracle
-TESTS_ORACLE_OTHER_EXECUTABLE = None
+#TESTS_ORACLE_OTHER_EXECUTABLE = None
 
-TEST_GENERATION_TIMEOUT = 7200.0 # in seconds
-ONE_TEST_EXECUTION_TIMEOUT = 900.0 # in seconds (Handle inifnite loops)
+#TEST_GENERATION_TIMEOUT = 7200.0 # in seconds
+#ONE_TEST_EXECUTION_TIMEOUT = 900.0 # in seconds (Handle inifnite loops)
 # ========================================================#
 
 # ===================== CRITERIA COVERAGE =====================#
@@ -242,11 +242,11 @@ CRITERIA_EXECUTION_OPTIMIZERS = {
 COVER_CRITERIA_ELEMENTS_ONCE = False
 
 ## --- Modifiable (Code) ---##
-SEPARATED_TEST_EXECUTION_EXTRA_TIMEOUT_TIMES = 60.0 # in seconds
-META_TEST_EXECUTION_EXTRA_TIMEOUT_TIMES = 600.0 # in seconds
+#SEPARATED_TEST_EXECUTION_EXTRA_TIMEOUT_TIMES = 60.0 # in seconds
+#META_TEST_EXECUTION_EXTRA_TIMEOUT_TIMES = 600.0 # in seconds
 # ========================================================#
 
 #######################################################
 #######             Extra parameters             ######
 #######################################################
-LLVM_TO_NATIVE_LINKING_FLAGS = None
+#LLVM_TO_NATIVE_LINKING_FLAGS = None

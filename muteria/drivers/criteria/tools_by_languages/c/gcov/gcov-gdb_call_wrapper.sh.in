@@ -33,8 +33,10 @@ trap 'transmit 9' SIGKILL               #Actually can't be caught
 trap 'transmit 1' SIGHUP
 trap 'transmit 2' SIGALRM               #transmit SIGINT instead, because SIGALRM wont flush gcda
 
-Prog="$(/usr/bin/dirname $0)/MUTERIA_PROGRAMEXE_NAME.MUTERIA_COV_NOWRAP_EXT"    #replace 'COV_NOWRAP_EXT' by extension for real executable, when installing wrapper     
-absProg="$(/bin/readlink -f $Prog)"
+#Prog="$(/usr/bin/dirname $0)/MUTERIA_PROGRAMEXE_NAME.MUTERIA_COV_NOWRAP_EXT"    #replace 'COV_NOWRAP_EXT' by extension for real executable, when installing wrapper     
+#absProg="$(/bin/readlink -f $Prog)"
+
+Prog="MUTERIA_GCOV_PROGRAMEXE_PATHNAME" 
 args=("${@:-}")
 
 #run with gdb as daemon

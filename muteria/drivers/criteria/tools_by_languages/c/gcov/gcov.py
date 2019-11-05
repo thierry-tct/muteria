@@ -31,6 +31,13 @@ class CriteriaToolGCov(BaseCriteriaTool):
         self.gcov_files_list_filename = "gcov_files.json"
         self.gc_files_dir = os.path.join(\
                                         self.criteria_working_dir, "gcno_gcda")
+        self.gcov_gdb_wrapper_template = os.path.join(\
+                                                os.path.dirname(__file__), \
+                                                'gcov-gdb_call_wrapper.sh.in')
+        self.gcov_gdb_wrapper_sh = os.path.join(\
+                                        self.instrumented_code_storage_dir, \
+                                                    "tmp_gcov_gdb_wrapper.sh")
+
         # clean any possible gcda file
         for file_ in self._get_gcda_list():
             os.remove(file_)
@@ -114,12 +121,29 @@ class CriteriaToolGCov(BaseCriteriaTool):
     #~ def _get_separated_instrumentation_criteria()
 
     def get_instrumented_executable_paths_map(self, enabled_criteria):
+        using_gdb_wrapper = True
+
         crit_to_exes_map = {}
         obj = common_fs.loadJSON(self.instrumentation_details)
         #exes = [p for _, p in list(obj.items())]
-        exes = obj
+        for name in obj:
+            obj[name] = os.path.join(self.instrumented_code_storage_dir, name)
+            
+        if using_gdb_wrapper:
+            # Using GDB WRAPPER
+            with open(self.gcov_gdb_wrapper_template) as f:
+                template_str = f.read()
+            single_exe = obj[list(obj)[0]]
+            template_str.replace('MUTERIA_GCOV_PROGRAMEXE_PATHNAME', \
+                                                                    single_exe)
+            with open(self.gcov_gdb_wrapper_sh, 'w') as f:
+                f.write(template_str)
+            shutil.copymode(single_exe, self.gcov_gdb_wrapper_sh)
+            obj[list(obj)[0]] = self.gcov_gdb_wrapper_sh
+
+        exes_map = obj
         for criterion in enabled_criteria:
-            crit_to_exes_map[criterion] = exes
+            crit_to_exes_map[criterion] = exes_map
         return crit_to_exes_map
     #~ def get_instrumented_executable_paths_map()
 
@@ -318,17 +342,21 @@ class CriteriaToolGCov(BaseCriteriaTool):
         
         flags += additionals
         
-        rel_path_map = {}
+        rel_rel_path_map = {}
+        rel_abs_path_map = {}
         exes, _ = code_builds_factory.repository_manager.\
                                                     get_relative_exe_path_map()
+        ERROR_HANDLER.assert_true(len(exes) == 1, \
+                                "Only single exe supported in GCOV", __file__)
         for exe in exes:
             filename = os.path.basename(exe)
-            rel_path_map[exe] = os.path.join(\
+            rel_rel_path_map[exe] = filename
+            rel_abs_path_map[exe] = os.path.join(\
                                 self.instrumented_code_storage_dir, filename)
 
         self.instrument_callback_obj = self.InstrumentCallbackObject()
         self.instrument_callback_obj.set_post_callback_args(\
-                                            (self.gc_files_dir, rel_path_map))
+                                        (self.gc_files_dir, rel_abs_path_map))
         pre_ret, ret, post_ret = code_builds_factory.transform_src_into_dest(\
                         src_fmt=CodeFormats.C_SOURCE,\
                         dest_fmt=CodeFormats.NATIVE_CODE,\
@@ -345,7 +373,7 @@ class CriteriaToolGCov(BaseCriteriaTool):
         # write down the rel_path_map
         ERROR_HANDLER.assert_true(not os.path.isfile(\
                 self.instrumentation_details), "must not exist here", __file__)
-        common_fs.dumpJSON(rel_path_map, self.instrumentation_details)
+        common_fs.dumpJSON(rel_rel_path_map, self.instrumentation_details)
 
     #~ def _do_instrument_code()
 #~ class CriteriaToolGCov
