@@ -242,8 +242,8 @@ CRITERIA_EXECUTION_OPTIMIZERS = {
 COVER_CRITERIA_ELEMENTS_ONCE = False
 
 ## --- Modifiable (Code) ---##
-SEPARATED_TEST_EXECUTION_EXTRA_TIMEOUT = 60.0 # in seconds
-META_TEST_EXECUTION_EXTRA_TIMEOUT = 600.0 # in seconds
+SEPARATED_TEST_EXECUTION_EXTRA_TIMEOUT_TIMES = 60.0 # in seconds
+META_TEST_EXECUTION_EXTRA_TIMEOUT_TIMES = 600.0 # in seconds
 # ========================================================#
 
 #######################################################

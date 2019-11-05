@@ -199,12 +199,12 @@ class CriteriaToolGCov(BaseCriteriaTool):
             for gcda_f in gcda_files:
                 os.remove(gcda_f)
             
-            common_fs.dumpJSON(self._get_gcov_list(), \
+        common_fs.dumpJSON(self._get_gcov_list(), \
                                 os.path.join(result_dir_tmp,\
                                                 self.gcov_files_list_filename))
-        else:
-            ERROR_HANDLER.error_exit(\
-                        "Testcase '{}' did not generate gcda".format(testcase))
+        #else:
+        #    ERROR_HANDLER.error_exit(\
+        #                "Testcase '{}' did not generate gcda".format(testcase))
     #~ def _collect_temporary_coverage_data()
 
     def _extract_coverage_data_of_a_test(self, enabled_criteria, \

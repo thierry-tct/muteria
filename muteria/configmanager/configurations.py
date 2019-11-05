@@ -249,7 +249,7 @@ class CompleteConfiguration(object):
     TESTS_ORACLE_OTHER_EXECUTABLE = None
 
     TEST_GENERATION_TIMEOUT = 7200.0 # in seconds
-    ONE_TEST_EXECUTION_TIMEOUT = 900.0 # in seconds (Handle inifnite loops)
+    #ONE_TEST_EXECUTION_TIMEOUT = 900.0 # in seconds (Handle inifnite loops)
     # ========================================================#
 
     # ===================== CRITERIA COVERAGE =====================#
@@ -308,8 +308,8 @@ class CompleteConfiguration(object):
     COVER_CRITERIA_ELEMENTS_ONCE = False 
 
     ## --- Modifiable (Code) ---##
-    SEPARATED_TEST_EXECUTION_EXTRA_TIMEOUT = 60.0 # in seconds
-    META_TEST_EXECUTION_EXTRA_TIMEOUT = 600.0 # in seconds
+    #SEPARATED_TEST_EXECUTION_EXTRA_TIMEOUT_TIMES = 60.0 # in seconds
+    #META_TEST_EXECUTION_EXTRA_TIMEOUT_TIMES = 600.0 # in seconds
     # ========================================================#
 
     #######################################################
@@ -418,8 +418,8 @@ class TestcaseToolsConfig(BaseToolConfig):
 #~class TestcaseToolsConfig
     
 class CriteriaToolsConfig(BaseToolConfig):
-    SEPARATED_TEST_EXECUTION_EXTRA_TIMEOUT = 1.5 # proportion
-    META_TEST_EXECUTION_EXTRA_TIMEOUT = 100.0 # proportion
+    SEPARATED_TEST_EXECUTION_EXTRA_TIMEOUT_TIMES = 1.5 # proportion
+    META_TEST_EXECUTION_EXTRA_TIMEOUT_TIMES = 100.0 # proportion
 #~class CriteriaToolsConfig
 
 

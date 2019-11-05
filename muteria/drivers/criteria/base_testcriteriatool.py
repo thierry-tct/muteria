@@ -139,7 +139,7 @@ class BaseCriteriaTool(abc.ABC):
                 criterion2metaoutlog_per_test[criterion] = {}
                 a_criterion_has_outlog = True
 
-        timeout_times = self.config.META_TEST_EXECUTION_EXTRA_TIMEOUT
+        timeout_times = self.config.META_TEST_EXECUTION_EXTRA_TIMEOUT_TIMES
 
         # Execute each test and gather the data
         for testcase in testcases:
@@ -306,7 +306,8 @@ class BaseCriteriaTool(abc.ABC):
         ERROR_HANDLER.assert_true(prioritization_module is not None, 
                                         "prioritization module must be passed")
             
-        timeout_times = self.config.SEPARATED_TEST_EXECUTION_EXTRA_TIMEOUT
+        timeout_times = \
+                    self.config.SEPARATED_TEST_EXECUTION_EXTRA_TIMEOUT_TIMES
 
         # main loop for elements execution
         num_elems = len(criteria_element_list)
