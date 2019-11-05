@@ -285,7 +285,10 @@ class TaskOrderingDependency(object):
 
     def set_task_back_as_todo_executing(self, task_name):
         t = self._lookup_task_cell(task_name)
-        self._recursive_set_task_back_as_todo_executing(t)  
+        if not t.is_executing():
+            t.set_executing()
+            for u in t.get_uses():
+                self._recursive_set_task_back_as_todo_untouched(u)
     #~ def set_task_back_as_todo_executing()
 
     def set_task_back_as_todo_untouched(self, task_name):
