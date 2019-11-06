@@ -3,28 +3,70 @@ from __future__ import print_function
 
 import os
 
+import muteria.common.mix as common_mix
+
 from muteria.drivers.testgeneration.custom_dev_testcase.system_wrappers.\
                                 base_wrapper_setup import BaseSystemWrapper, \
                                                 BaseSystemTestSplittingWrapper
+
+ERROR_HANDLER = common_mix.ErrorHandler
 
 class SystemTestSplittingWrapper(BaseSystemTestSplittingWrapper):
     def set_wrapper(self, workdir, exe_path_map):
         """ Return the new exe path map
         """
-        print ("Implement!!!")
+        self.testsplit_wrapper_file = os.path.join(workdir, \
+                                                'test_split_wrapper.sh')
+        self.counting_file = os.path.join(workdir, \
+                                                    'test_split_counter')
+        self.splittest_args = os.path.join(workdir, \
+                                                    'splittests_args')
+        with open(self.testsplit_wrapper_file, 'w') as f:
+            f.write("#! /bin/bash\n")
+            f.write("count=$(/bin/cat {})\n".format(self.counting_file))
+            f.write("count=$(($count + 1))\n")
+            f.write("/bin/echo $count > {}\n".format(self.counting_file))
+            f.write('/bin/echo "${@:1}" >> {}\n'.format(self.splittest_args))
+        os.chmod(self.testsplit_wrapper_file, 0o775)
+
+        new_exe_path_map = dict(exe_path_map)
+        ERROR_HANDLER.assert_true(len(new_exe_path_map) == 1, \
+                                "Only single executable is supported"
+                                + " for wrapper test splitting", __file__)
+        for k in new_exe_path_map:
+            new_exe_path_map[k] = self.testsplit_wrapper_file
+        return new_exe_path_map
     #~ def set_wrapper()
 
-    def switch_to_new_test(self, workdir):
+    def switch_to_new_test(self):
         """ reset the counters
         """
-        print ("Implement!!!")
+        with open(self.counting_file, 'w') as f:
+            f.write('-1\n')
+        if os.path.isfile(self.splittest_args):
+            os.remove(self.splittest_args)
     #~ def switch_to_new_test()
 
-    def collect_data(self, workdir):
+    def collect_data(self):
         """ get number of sub tests and args
         """
-        print ("Implement!!!")
+        ERROR_HANDLER.assert_true(os.path.isfile(self.splittest_args), \
+                            "No args file during wrapper test split", __file__)
+        with open(self.counting_file) as f:
+            n_subtest = int(f.read())
+        with open(self.splittest_args) as f:
+            args = f.read().splitlines()
+        return n_subtest, args
     #~ def collect_data()
+
+    def cleanup(self):
+        """ Clean the temps
+        """
+        for fn in [self.testsplit_wrapper_file, self.counting_file, \
+                                                        self.splittest_args]:
+            if os.path.isfile(fn):
+                os.remove(fn)
+    #~ def cleanup()
 #~ class SystemTestSplittingWrapper
 
 class SystemWrapper(BaseSystemWrapper):

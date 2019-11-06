@@ -199,46 +199,22 @@ class CustomTestcases(BaseTestcaseTool):
                                                                     __file__)
         if self.wrapper_test_splitting:
             # Execute the tests with the counting wrapper
-            testsplit_wrapper_file = os.path.join(self.tests_storage_dir, \
-                                                    'test_split_wrapper.sh')
-            counting_file = os.path.join(self.tests_storage_dir, \
-                                                        'test_split_counter')
-            splittest_args = os.path.join(self.tests_storage_dir, \
-                                                        'splittests_args')
-            with open(testsplit_wrapper_file, 'w') as f:
-                f.write("#! /bin/bash\n")
-                f.write("count=$(/bin/cat {})\n".format(counting_file))
-                f.write("count=$(($count + 1))\n")
-                f.write("/bin/echo $count > {}\n".format(counting_file))
-                f.write('/bin/echo "${@:1}" >> {}\n'.format(splittest_args))
-            os.chmod(testsplit_wrapper_file, 0o775)
-
-            new_exe_path_map = dict(exe_path_map)
-            ERROR_HANDLER.assert_true(len(new_exe_path_map) == 1, \
-                                    "Only single executable is supported"
-                                    + " for wrapper test splitting", __file__)
-            for k in new_exe_path_map:
-                new_exe_path_map[k] = testsplit_wrapper_file
+            split_workdir = os.path.join(self.tests_storage_dir)
+            new_exe_path_map = self.wrapper_obj.get_test_splitting_wrapper()\
+                                                    .set_wrapper(split_workdir)
             for test in dtl:
-                with open(counting_file, 'w') as f:
-                    f.write('-1\n')
-                if os.path.isfile(splittest_args):
-                    os.remove(splittest_args)
+                self.wrapper_obj.get_test_splitting_wrapper()\
+                                            .switch_to_new_test()
                 self._execute_a_test(test, new_exe_path_map, {})
-                ERROR_HANDLER.assert_true(os.path.isfile(splittest_args), \
-                            "No args file during wrapper test split", __file__)
-                with open(counting_file) as f:
-                    n_subtest = int(f.read())
-                with open(splittest_args) as f:
-                    args = f.read().splitlines()
+                n_subtest, args = \
+                                self.wrapper_obj.get_test_splitting_wrapper()\
+                                                                .collect_data()
                 sub_test_list = []
                 for i in range(n_subtest):
                     sub_test_list.append([test+self.splittest_ext+str(i), \
                                         args[i] if i < len(args) else None])
 
-            for fn in [testsplit_wrapper_file, counting_file, splittest_args]:
-                if os.path.isfile(fn):
-                    os.remove(fn)
+            self.wrapper_obj.get_test_splitting_wrapper().cleanup()
 
             # update dtl with counter tests
             dtl = sub_test_list

@@ -27,18 +27,23 @@ class BaseSystemTestSplittingWrapper(abc.ABC):
     #~ def set_wrapper()
 
     @abc.abstractmethod
-    def switch_to_new_test(self, workdir):
+    def switch_to_new_test(self):
         """ reset the counters
         """
         print ("Implement!!!")
     #~ def switch_to_new_test()
 
     @abc.abstractmethod
-    def collect_data(self, workdir):
+    def collect_data(self):
         """ get number of sub tests and args
         """
         print ("Implement!!!")
     #~ def collect_data()
+
+    @abc.abstractmethod
+    def cleanup(self):
+        print ("Implement!!!")
+    #~ def cleanup()
 #~ class BaseSystemTestSplittingWrapper
 
 class BaseSystemWrapper(abc.ABC):
