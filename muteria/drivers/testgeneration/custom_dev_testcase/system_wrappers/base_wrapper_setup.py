@@ -9,8 +9,37 @@ import abc
 
 import muteria.common.mix as common_mix
 
+import muteria.drivers.testgeneration.custom_dev_testcase.system_wrappers as \
+                                                                system_wrappers
+
 ERROR_HANDLER = common_mix.ErrorHandler
 
+class BaseSystemTestSplittingWrapper(abc.ABC):
+    def get_sub_test_id_env_vars(self, subtest_id):
+        return {system_wrappers.TEST_COUNT_ID_ENV_VAR: str(subtest_id)}    
+    #~ def get_sub_test_id_env_vars()
+
+    @abc.abstractmethod
+    def set_wrapper(self, workdir, exe_path_map):
+        """ Return the new exe path map
+        """
+        print ("Implement!!!")
+    #~ def set_wrapper()
+
+    @abc.abstractmethod
+    def switch_to_new_test(self, workdir):
+        """ reset the counters
+        """
+        print ("Implement!!!")
+    #~ def switch_to_new_test()
+
+    @abc.abstractmethod
+    def collect_data(self, workdir):
+        """ get number of sub tests and args
+        """
+        print ("Implement!!!")
+    #~ def collect_data()
+#~ class BaseSystemTestSplittingWrapper
 
 class BaseSystemWrapper(abc.ABC):
     
@@ -41,11 +70,24 @@ class BaseSystemWrapper(abc.ABC):
         print("Implement!!!")
     #~ def _get_timedout_codes()
 
+    ## Wrapper test splitting TODO TODO
+    @abc.abstractmethod
+    def get_test_splitting_wrapper_class(self):
+        print("Implement!!!")
+    #~ def get_sub_test_id_env_vars()
+
     # Can override
 
     def __init__(self, repo_mgr):
         self.repo_mgr = repo_mgr
+        self.test_splitting_wrapper = self.get_test_splitting_wrapper_class()
+        if self.test_splitting_wrapper is not None:
+            self.test_splitting_wrapper = self.test_splitting_wrapper()
     #~ def __init__()
+
+    def get_test_splitting_wrapper(self):
+        return self.test_splitting_wrapper
+    #~ def get_test_splitting_wrapper()
 
     def _get_repo_run_path_pairs(self, exe_path_map):
         ERROR_HANDLER.assert_true(len(exe_path_map) == 1, \

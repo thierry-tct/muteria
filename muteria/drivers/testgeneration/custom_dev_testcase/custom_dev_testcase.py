@@ -33,6 +33,12 @@ class CustomTestcases(BaseTestcaseTool):
         BaseTestcaseTool.__init__(self, *args, **kwargs)
         self.test_list_storage_file = os.path.join(self.tests_storage_dir, \
                                                             'test_list.json')
+        self.wrapper_obj = self.code_builds_factory.repository_manager.\
+                                                        get_wrapper_object()
+        self.splittest_ext = '.splittest@'
+        self.wrapper_test_splitting = (self.wrapper_obj is not None \
+                and self.wrapper_obj.get_test_splitting_wrapper() is not None\
+                and not self.config.TESTS_ORACLE_TESTS)
     #~ def __init__()
 
     def get_testcase_info_object(self):
@@ -40,7 +46,7 @@ class CustomTestcases(BaseTestcaseTool):
         ERROR_HANDLER.assert_true(os.path.isfile(self.test_list_storage_file),\
                     "No test list file found, di generation occur?", __file__)
         dtl = common_fs.loadJSON(self.test_list_storage_file)
-        for tc in dtl:
+        for tc, targs in dtl:
             tc_info_obj.add_test(tc)
         return tc_info_obj
     #~ def get_testcase_info_object()
@@ -91,10 +97,8 @@ class CustomTestcases(BaseTestcaseTool):
         """
         #self.code_builds_factory.copy_into_repository(exe_path_map)
         
-        wrapper_obj = self.code_builds_factory.repository_manager.\
-                                                        get_wrapper_object()
-        if wrapper_obj is not None:
-            wrapper_obj.install_wrapper(exe_path_map, collect_output)
+        if self.wrapper_obj is not None:
+            self.wrapper_obj.install_wrapper(exe_path_map, collect_output)
         else:
             if exe_path_map is not None:
                 repo_root_dir = self.code_builds_factory.repository_manager\
@@ -118,10 +122,8 @@ class CustomTestcases(BaseTestcaseTool):
         """
         #self.code_builds_factory.restore_repository_files(exe_path_map)
         
-        wrapper_obj = self.code_builds_factory.repository_manager.\
-                                                        get_wrapper_object()
-        if wrapper_obj is not None:
-            wrapper_obj.uninstall_wrapper(exe_path_map)
+        if self.wrapper_obj is not None:
+            self.wrapper_obj.uninstall_wrapper(exe_path_map)
         else:
             self.code_builds_factory.set_repo_to_build_default()
     #~ def _restore_default_executable()
@@ -139,8 +141,6 @@ class CustomTestcases(BaseTestcaseTool):
 
         rep_mgr = self.code_builds_factory.repository_manager
 
-        wrapper_obj = rep_mgr.get_wrapper_object()
-
         if collect_output:
             # possibly existing wrapper data logs are 
             # removed during wrapper install
@@ -149,12 +149,25 @@ class CustomTestcases(BaseTestcaseTool):
         else:
             collected_output = None
         
-        pre,verdict,post = rep_mgr.run_dev_test(dev_test_name=testcase, \
+        # change test executor to consider the test ID after @
+        runner_testcase = testcase
+        if self.wrapper_test_splitting:
+            tmp = testcase.split(self.splittest_ext)
+            if len(tmp) > 1:
+                runner_testcase = ''.join(tmp[:-1])
+                subtest_id = tmp[-1]
+                st_env_vars = self.wrapper_obj.get_test_splitting_wrapper()\
+                                        .get_sub_test_id_env_vars(subtest_id)
+                if env_vars is None:
+                    env_vars = {}
+                env_vars.update(st_env_vars)
+
+        pre,verdict,post = rep_mgr.run_dev_test(dev_test_name=runner_testcase,\
                                 exe_path_map=exe_path_map, \
                                 env_vars=env_vars, \
                                 timeout=timeout,\
                                 collected_output=(collected_output \
-                                            if wrapper_obj is None else None),\
+                                    if self.wrapper_obj is None else None),\
                                 callback_object=callback_object)
         ERROR_HANDLER.assert_true(\
                             pre == common_mix.GlobalConstants.COMMAND_SUCCESS,\
@@ -170,11 +183,11 @@ class CustomTestcases(BaseTestcaseTool):
                                                                     __file__)
 
         # wrapper cleanup
-        if wrapper_obj is not None:
+        if self.wrapper_obj is not None:
             if collect_output:
-                wrapper_obj.collect_output(exe_path_map, collected_output, \
-                                                                    testcase)
-            wrapper_obj.cleanup_logs(exe_path_map)
+                self.wrapper_obj.collect_output(\
+                                    exe_path_map, collected_output, testcase)
+            self.wrapper_obj.cleanup_logs(exe_path_map)
 
         return verdict, collected_output
     #~ def _execute_a_test()
@@ -184,11 +197,53 @@ class CustomTestcases(BaseTestcaseTool):
         dtl = self.code_builds_factory.repository_manager.get_dev_tests_list()
         ERROR_HANDLER.assert_true(dtl is not None, "invalid dev_test_list", \
                                                                     __file__)
-        # TODO: Execute the tests with the counting wrapper
+        if self.wrapper_test_splitting:
+            # Execute the tests with the counting wrapper
+            testsplit_wrapper_file = os.path.join(self.tests_storage_dir, \
+                                                    'test_split_wrapper.sh')
+            counting_file = os.path.join(self.tests_storage_dir, \
+                                                        'test_split_counter')
+            splittest_args = os.path.join(self.tests_storage_dir, \
+                                                        'splittests_args')
+            with open(testsplit_wrapper_file, 'w') as f:
+                f.write("#! /bin/bash\n")
+                f.write("count=$(/bin/cat {})\n".format(counting_file))
+                f.write("count=$(($count + 1))\n")
+                f.write("/bin/echo $count > {}\n".format(counting_file))
+                f.write('/bin/echo "${@:1}" >> {}\n'.format(splittest_args))
+            os.chmod(testsplit_wrapper_file, 0o775)
 
-        # TODO: update dtl with counter tests
+            new_exe_path_map = dict(exe_path_map)
+            ERROR_HANDLER.assert_true(len(new_exe_path_map) == 1, \
+                                    "Only single executable is supported"
+                                    + " for wrapper test splitting", __file__)
+            for k in new_exe_path_map:
+                new_exe_path_map[k] = testsplit_wrapper_file
+            for test in dtl:
+                with open(counting_file, 'w') as f:
+                    f.write('-1\n')
+                if os.path.isfile(splittest_args):
+                    os.remove(splittest_args)
+                self._execute_a_test(test, new_exe_path_map, {})
+                ERROR_HANDLER.assert_true(os.path.isfile(splittest_args), \
+                            "No args file during wrapper test split", __file__)
+                with open(counting_file) as f:
+                    n_subtest = int(f.read())
+                with open(splittest_args) as f:
+                    args = f.read().splitlines()
+                sub_test_list = []
+                for i in range(n_subtest):
+                    sub_test_list.append([test+self.splittest_ext+str(i), \
+                                        args[i] if i < len(args) else None])
 
-        # TODO: change test executor to consider the test ID after @
+            for fn in [testsplit_wrapper_file, counting_file, splittest_args]:
+                if os.path.isfile(fn):
+                    os.remove(fn)
+
+            # update dtl with counter tests
+            dtl = sub_test_list
+        else:
+            dtl = [[t, None] for t in dtl]
 
         common_fs.dumpJSON(dtl, self.test_list_storage_file)
     #~ def _do_generate_tests()
