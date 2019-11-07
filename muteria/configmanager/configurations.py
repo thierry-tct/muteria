@@ -416,7 +416,7 @@ class TestcaseToolsConfig(BaseToolConfig):
     def set_one_test_execution_timeout(self, timeout):
         self.ONE_TEST_EXECUTION_TIMEOUT = timeout
     def set_test_oracle_test(self, value):
-        self.TESTS_ORACLE_OTHER_VERSION = value
+        self.TESTS_ORACLE_TESTS = value
 #~class TestcaseToolsConfig
     
 class CriteriaToolsConfig(BaseToolConfig):
