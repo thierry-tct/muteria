@@ -109,7 +109,10 @@ class FromC(ccs.BaseCodeFormatConverter):
 
             #1. Ensure wllvm is installed (For now use default llvm compiler)
             has_wllvm = DriversUtils.check_tool('wllvm', ['--version'])
-            ERROR_HANDLER.assert_true(has_wllvm, 'wllvm not found', __file__)
+            ERROR_HANDLER.assert_true(has_wllvm, 'wllvm not found '\
+                                                '(To install please visit '\
+                            'https://github.com/travitch/whole-program-llvm)', 
+                                                                    __file__)
 
             # tmp['LLVM_COMPILER_PATH'] = ...
             kwargs['compiler'] = 'wllvm'
