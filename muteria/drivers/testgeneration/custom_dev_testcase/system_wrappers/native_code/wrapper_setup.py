@@ -15,6 +15,8 @@ class SystemTestSplittingWrapper(BaseSystemTestSplittingWrapper):
     def set_wrapper(self, workdir, exe_path_map):
         """ Return the new exe path map
         """
+        ERROR_HANDLER.assert_true(os.path.isdir(workdir), "workdir missing", \
+                                                                    __file__)
         self.testsplit_wrapper_file = os.path.join(workdir, \
                                                 'test_split_wrapper.sh')
         self.counting_file = os.path.join(workdir, \
@@ -51,7 +53,8 @@ class SystemTestSplittingWrapper(BaseSystemTestSplittingWrapper):
         """ get number of sub tests and args
         """
         ERROR_HANDLER.assert_true(os.path.isfile(self.splittest_args), \
-                            "No args file during wrapper test split", __file__)
+                            "No args file ({}) during wrapper test split"\
+                                .format(self.splittest_args), __file__)
         with open(self.counting_file) as f:
             n_subtest = int(f.read())
         with open(self.splittest_args) as f:
@@ -68,6 +71,7 @@ class SystemTestSplittingWrapper(BaseSystemTestSplittingWrapper):
                 os.remove(fn)
     #~ def cleanup()
 #~ class SystemTestSplittingWrapper
+
 
 class SystemWrapper(BaseSystemWrapper):
 

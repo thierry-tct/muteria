@@ -192,11 +192,15 @@ class CustomTestcases(BaseTestcaseTool):
         return verdict, collected_output
     #~ def _execute_a_test()
 
-    def _do_generate_tests (self, exe_path_map, outputdir, \
+    def _do_generate_tests (self, exe_path_map, \
                                         code_builds_factory, max_time=None):
         dtl = self.code_builds_factory.repository_manager.get_dev_tests_list()
         ERROR_HANDLER.assert_true(dtl is not None, "invalid dev_test_list", \
                                                                     __file__)
+        if os.path.isdir(self.tests_storage_dir):
+            shutil.rmtree(self.tests_storage_dir)
+        os.mkdir(self.tests_storage_dir)
+
         if self.wrapper_test_splitting:
             # Execute the tests with the counting wrapper
             split_workdir = os.path.join(self.tests_storage_dir)
@@ -205,7 +209,7 @@ class CustomTestcases(BaseTestcaseTool):
             for test in dtl:
                 self.wrapper_obj.get_test_splitting_wrapper()\
                                             .switch_to_new_test()
-                self._execute_a_test(test, new_exe_path_map, {})
+                self.execute_testcase(test, new_exe_path_map, {})
                 n_subtest, args = \
                                 self.wrapper_obj.get_test_splitting_wrapper()\
                                                                 .collect_data()

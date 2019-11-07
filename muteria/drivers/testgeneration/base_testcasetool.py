@@ -449,7 +449,7 @@ class BaseTestcaseTool(abc.ABC):
         return verdict, outlog_summary
     #~ def _oracle_execute_a_test()
 
-    def generate_tests (self, exe_path_map, parallel_count=1, outputdir=None, \
+    def generate_tests (self, exe_path_map, parallel_count=1, \
                             code_builds_factory_override=None, max_time=None):
         '''
         '''
@@ -462,8 +462,7 @@ class BaseTestcaseTool(abc.ABC):
         if checkpoint_handler.is_finished():
             return
 
-        if outputdir is None:
-            outputdir = self.tests_storage_dir
+        outputdir = self.tests_storage_dir
         if code_builds_factory_override is None:
             code_builds_factory_override = self.code_builds_factory
         if os.path.isdir(outputdir):
@@ -477,7 +476,7 @@ class BaseTestcaseTool(abc.ABC):
                 os.remove(self.tests_storage_dir_archive)
 
         os.mkdir(outputdir)
-        self._do_generate_tests (exe_path_map, outputdir=outputdir, \
+        self._do_generate_tests (exe_path_map, \
                             code_builds_factory=code_builds_factory_override, \
                                                             max_time=max_time)
 
@@ -557,7 +556,7 @@ class BaseTestcaseTool(abc.ABC):
     #~ def _execute_a_test()
 
     @abc.abstractmethod
-    def _do_generate_tests (self, exe_path_map, outputdir, \
+    def _do_generate_tests (self, exe_path_map, \
                                         code_builds_factory, max_time=None):
         print ("!!! Must be implemented in child class !!!")
     #~ def _do_generate_tests()

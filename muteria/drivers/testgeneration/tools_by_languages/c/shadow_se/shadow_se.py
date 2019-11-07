@@ -248,14 +248,14 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
         return None # TODO: get test env and return
     #~ def _get_testexec_extra_env_vars()
 
-    def _do_generate_tests (self, exe_path_map, outputdir, \
+    def _do_generate_tests (self, exe_path_map, \
                                         code_builds_factory, max_time=None):
         env_path_bak = os.environ['PATH']
         os.environ['PATH'] = os.pathsep.join([self.llvm_gcc_path, \
                                          self.wllvm_path, os.environ['PATH']])
 
         super(TestcasesToolShadowSE, self)._do_generate_tests(\
-                                        exe_path_map, outputdir,
+                                        exe_path_map, \
                                         code_builds_factory, max_time=max_time)
 
         os.environ['PATH'] = env_path_bak

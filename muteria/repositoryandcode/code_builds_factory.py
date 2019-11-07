@@ -177,7 +177,8 @@ class CodeBuildsFactory(object):
                 # rebuild if failed while building
                 if os.path.isfile(self.code_conversion_tracker_file):
                     for _, savef in self.stored_files_mapping.items():
-                        os.remove(savef)
+                        if os.path.isfile(savef):
+                            os.remove(savef)
 
                 files_backed = os.path.isfile(\
                                     self.stored_files_mapping[\

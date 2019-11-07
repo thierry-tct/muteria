@@ -208,7 +208,7 @@ class TestcasesToolKlee(BaseTestcaseTool):
         return verdict, collected_output
     #~ def _execute_a_test()
 
-    def _do_generate_tests (self, exe_path_map, outputdir, \
+    def _do_generate_tests (self, exe_path_map, \
                                         code_builds_factory, max_time=None):
         # Setup
         if os.path.isdir(self.tests_working_dir):
