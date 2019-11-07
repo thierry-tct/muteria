@@ -249,10 +249,10 @@ class DriversUtils(object):
         comparing_vector = common_matrices.ExecutionMatrix(\
                                                 filename=comparing_vector_file)
 
-        ERROR_HANDLER.assert_true(\
-                            set(target_matrix.get_nonkey_colname_list()) == \
-                            set(comparing_vector.get_nonkey_colname_list()), \
-                                            "Mismatch of columns", __file__)
+        ERROR_HANDLER.assert_true(len(\
+                            set(target_matrix.get_nonkey_colname_list()) - \
+                            set(comparing_vector.get_nonkey_colname_list()) \
+                                     ) == 0, "Mismatch of columns", __file__)
 
         # Get uncertain
         target_uncertain_cols_dict = \

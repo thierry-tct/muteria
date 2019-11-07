@@ -59,6 +59,7 @@ class BaseTestcaseTool(abc.ABC):
                                         head_explorer, checkpointer, \
                                         parent_meta_tool=None):
         # Set Constants
+        self.compress_test_storage_dir = True
 
         # Set Direct Arguments Variables
         self.tests_working_dir = tests_working_dir
@@ -76,6 +77,8 @@ class BaseTestcaseTool(abc.ABC):
         ## Generate the tests into this folder (to be created by user)
         self.tests_storage_dir = os.path.join(
                         self.tests_working_dir, "tests_files")
+        self.tests_storage_dir_archive = os.path.join(
+                        self.tests_working_dir, "tests_files.tar.gz")
         self.custom_binary_dir = None
         if self.config.tool_user_custom is not None:
             self.custom_binary_dir = \
@@ -100,7 +103,26 @@ class BaseTestcaseTool(abc.ABC):
         if os.path.isfile(self.test_execution_time_storage_file):
             self.test_execution_time = common_fs.loadJSON(\
                                         self.test_execution_time_storage_file)
+
+        # decompress potential test storage archive
+        if self.compress_test_storage_dir:
+            if os.path.isfile(self.tests_storage_dir_archive):
+                if os.path.isdir(self.tests_storage_dir):
+                    shutil.rmtree(self.tests_storage_dir)
+                common_fs.TarGz.decompressDir(self.tests_storage_dir_archive)
     #~ def __init__()
+
+    def __del__(self):
+        # remove the decompressed the test storage dir
+        if self.compress_test_storage_dir:
+            if not os.path.isfile(self.tests_storage_dir_archive) \
+                                    and os.path.isdir(self.tests_storage_dir):
+                common_fs.TarGz.compressDir(self.tests_storage_dir, \
+                                            self.tests_storage_dir_archive, \
+                                            remove_in_directory=True)
+            if os.path.isdir(self.tests_storage_dir):
+                shutil.rmtree(self.tests_storage_dir)
+    #~ def __del__()
 
     def clear_working_dir(self):
         if os.path.isdir(self.tests_working_dir):
@@ -446,6 +468,14 @@ class BaseTestcaseTool(abc.ABC):
             code_builds_factory_override = self.code_builds_factory
         if os.path.isdir(outputdir):
             shutil.rmtree(outputdir)
+
+        # If compressing test storage dir, remove archive if working on 
+        # the default test storage dir
+        if self.compress_test_storage_dir \
+                                and not os.path.isdir(self.tests_storage_dir):
+            if os.path.isfile(self.tests_storage_dir_archive):
+                os.remove(self.tests_storage_dir_archive)
+
         os.mkdir(outputdir)
         self._do_generate_tests (exe_path_map, outputdir=outputdir, \
                             code_builds_factory=code_builds_factory_override, \

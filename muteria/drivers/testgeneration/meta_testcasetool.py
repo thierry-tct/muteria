@@ -351,6 +351,9 @@ class MetaTestcaseTool(object):
                  have been executed until the failure
         '''
         
+        ERROR_HANDLER.assert_true(meta_testcases is not None, \
+                                            "Must specify testcases", __file__)
+
         # FIXME: Make sure that the support are implemented for 
         # parallelism and test prioritization. Remove the code bellow 
         # once supported:

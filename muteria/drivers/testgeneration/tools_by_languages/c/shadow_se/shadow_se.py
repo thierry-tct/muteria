@@ -174,15 +174,16 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
 
         # Adjust the max-time in args
         ## locate max-time
-        for i, v in enumerate(args):
-            if v in ('-max-time', '--max-time'):
-                args[i+1] = \
+        if len(cand_testpair_list) > 0:
+            for i, v in enumerate(args):
+                if v in ('-max-time', '--max-time'):
+                    args[i+1] = \
                         str(max(1, float(args[i+1]) / len(cand_testpair_list)))
-                break
-            elif v.startswith('-max-time=') or v.startswith('--max-time='):
-                pre, tmp = v.split('=')
-                tmp = str(max(1, float(tmp) / len(cand_testpair_list)))
-                args[i] = pre + '=' + str(tmp)
+                    break
+                elif v.startswith('-max-time=') or v.startswith('--max-time='):
+                    pre, tmp = v.split('=')
+                    tmp = str(max(1, float(tmp) / len(cand_testpair_list)))
+                    args[i] = pre + '=' + str(tmp)
 
         # Set the wrapper
         with open(call_shadow_wrapper_file, 'w') as wf:
@@ -214,7 +215,7 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
                                                                 'klee-last')):
                 os.unlink(os.path.join(self.tests_working_dir, 'klee-last'))
 
-        # cleanup test dir TODO
+        # cleanup test dir and compress TODO
     #~ def _call_generation_run()
 
     class GetLinesCallbackObject(DefaultCallbackObject):

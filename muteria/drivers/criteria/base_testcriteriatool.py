@@ -309,43 +309,45 @@ class BaseCriteriaTool(abc.ABC):
         timeout_times = \
                     self.config.SEPARATED_TEST_EXECUTION_EXTRA_TIMEOUT_TIMES
 
-        # main loop for elements execution
-        num_elems = len(criteria_element_list)
-        pos = -1 + len(completed_elems)
-        ## prepare the optimizer
-        prioritization_module.reset(self.config.get_tool_config_alias(), \
+        # in case the test list is empty, do nothing
+        if len(testcases) > 0:
+            # main loop for elements execution
+            num_elems = len(criteria_element_list)
+            pos = -1 + len(completed_elems)
+            ## prepare the optimizer
+            prioritization_module.reset(self.config.get_tool_config_alias(), \
                                             criteria_element_list, testcases)
-        while prioritization_module.has_next_test_objective():
-            #pos += 1 # Done bellow in the case where it was not completed
-            element = prioritization_module.get_next_test_objective()
+            while prioritization_module.has_next_test_objective():
+                #pos += 1 # Done bellow in the case where it was not completed
+                element = prioritization_module.get_next_test_objective()
 
-            # @Checkpointing: check if already executed
-            if element in completed_elems:
-                continue
-            else:
-                pos += 1
+                # @Checkpointing: check if already executed
+                if element in completed_elems:
+                    continue
+                else:
+                    pos += 1
 
-            logging.debug("# Executing {} element {} ({}/{}) ...".format( \
+                logging.debug("# Executing {} element {} ({}/{}) ...".format( \
                                     criterion.get_str(), \
                                     DriversUtils.make_meta_element(element, \
                                         self.config.get_tool_config_alias()), \
                                     pos, num_elems))
 
-            # execute element with the given testcases
-            element_executable_path = \
+                # execute element with the given testcases
+                element_executable_path = \
                                 self._get_criterion_element_executable_path(\
                                                             criterion, element)
-            execution_environment_vars = \
+                execution_environment_vars = \
                                 self._get_criterion_element_environment_vars(\
                                                             criterion, element)
-            # run optimizer with all tests of targeting the test objective
-            may_cov_tests = prioritization_module\
-                                    .get_test_execution_optimizer(element)\
-                                    .select_tests(100, is_proportion=True)
+                # run optimizer with all tests of targeting the test objective
+                may_cov_tests = prioritization_module\
+                                        .get_test_execution_optimizer(element)\
+                                        .select_tests(100, is_proportion=True)
 
-            cannot_cov_tests = set(testcases) - set(may_cov_tests)
-            
-            fail_verdicts, exec_outs_by_tests = \
+                cannot_cov_tests = set(testcases) - set(may_cov_tests)
+                
+                fail_verdicts, exec_outs_by_tests = \
                                     self.meta_test_generation_obj.runtests(\
                                         meta_testcases=may_cov_tests, \
                                         exe_path_map=element_executable_path, \
@@ -357,24 +359,25 @@ class BaseCriteriaTool(abc.ABC):
                                         with_output_summary=(executionoutput \
                                                                 is not None), \
                                         restart_checkpointer=True)
-            prioritization_module.feedback(element, fail_verdicts)
+                prioritization_module.feedback(element, fail_verdicts)
 
-            fail_verdicts.update({\
+                fail_verdicts.update({\
                             v: common_mix.GlobalConstants.PASS_TEST_VERDICT \
                                                 for v in cannot_cov_tests})
-            # put in row format for matrix
-            matrix_row_key = element
-            matrix_row_values = {tc:failverdict_to_val_map[fail_verdicts[tc]] \
+                # put in row format for matrix
+                matrix_row_key = element
+                matrix_row_values = \
+                                {tc:failverdict_to_val_map[fail_verdicts[tc]] \
                                                     for tc in fail_verdicts}
-            serialize_on = (pos % serialize_period == 0)
-            cp_data[0][matrix_row_key] = matrix_row_values
+                serialize_on = (pos % serialize_period == 0)
+                cp_data[0][matrix_row_key] = matrix_row_values
 
-            if executionoutput is not None:
-                cp_data[1][element] = exec_outs_by_tests
+                if executionoutput is not None:
+                    cp_data[1][element] = exec_outs_by_tests
 
-            # @Checkpointing: for time
-            if serialize_on and checkpoint_handler is not None:
-                checkpoint_handler.do_checkpoint( \
+                # @Checkpointing: for time
+                if serialize_on and checkpoint_handler is not None:
+                    checkpoint_handler.do_checkpoint( \
                                             func_name=cp_calling_func_name, \
                                             taskid=cp_calling_done_task_id, \
                                             tool=cp_calling_tool, \
@@ -391,7 +394,10 @@ class BaseCriteriaTool(abc.ABC):
 
         # Write the execution output data
         if executionoutput is not None:
-            executionoutput.add_data(cp_data[1], serialize=True)
+            if len(cp_data[1]) > 0:
+                executionoutput.add_data(cp_data[1], serialize=True)
+            else:
+                executionoutput.serialize()
     #~ def _runtest_separate_criterion_program()
 
     def runtests_criteria_coverage (self, testcases, \

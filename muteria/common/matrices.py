@@ -398,9 +398,10 @@ class RawExecutionMatrix(object):
             row_key_list = self.get_keys()
 
         result = {}
-        small_df = self.extract_by_rowkey(row_key_list).dataframe
-        for _, row in small_df.iterrows():
-            result[row[self.key_column_name]] = \
+        if len(row_key_list) > 0:
+            small_df = self.extract_by_rowkey(row_key_list).dataframe
+            for _, row in small_df.iterrows():
+                result[row[self.key_column_name]] = \
                                         [x for x in self.non_key_col_list \
                                         if self.is_active_cell_func(row[x])]
 
@@ -427,10 +428,11 @@ class RawExecutionMatrix(object):
             non_key_col_list = self.non_key_col_list
 
         result = {}
-        small_df = self.extract_by_column(non_key_col_list).dataframe
-        for col in non_key_col_list:
-            result[col] = list( \
-                small_df.loc[small_df[col].apply(self.is_active_cell_func)]\
+        if len(non_key_col_list) > 0:
+            small_df = self.extract_by_column(non_key_col_list).dataframe
+            for col in non_key_col_list:
+                result[col] = list(small_df.loc[\
+                                small_df[col].apply(self.is_active_cell_func)]\
                                                         [self.key_column_name])
 
         return result
@@ -456,9 +458,10 @@ class RawExecutionMatrix(object):
             row_key_list = self.get_keys()
 
         result = {}
-        small_df = self.extract_by_rowkey(row_key_list).dataframe
-        for _, row in small_df.iterrows():
-            result[row[self.key_column_name]] = \
+        if len(row_key_list) > 0:
+            small_df = self.extract_by_rowkey(row_key_list).dataframe
+            for _, row in small_df.iterrows():
+                result[row[self.key_column_name]] = \
                                         [x for x in self.non_key_col_list \
                                         if self.is_inactive_cell_func(row[x])]
 
@@ -485,10 +488,11 @@ class RawExecutionMatrix(object):
             non_key_col_list = self.non_key_col_list
 
         result = {}
-        small_df = self.extract_by_column(non_key_col_list).dataframe
-        for col in non_key_col_list:
-            result[col] = list( \
-                small_df.loc[small_df[col].apply(self.is_inactive_cell_func)]\
+        if len(non_key_col_list) > 0:
+            small_df = self.extract_by_column(non_key_col_list).dataframe
+            for col in non_key_col_list:
+                result[col] = list(small_df.loc[\
+                            small_df[col].apply(self.is_inactive_cell_func)]\
                                                         [self.key_column_name])
 
         return result
@@ -514,9 +518,10 @@ class RawExecutionMatrix(object):
             row_key_list = self.get_keys()
 
         result = {}
-        small_df = self.extract_by_rowkey(row_key_list).dataframe
-        for _, row in small_df.iterrows():
-            result[row[self.key_column_name]] = \
+        if len(row_key_list) > 0:
+            small_df = self.extract_by_rowkey(row_key_list).dataframe
+            for _, row in small_df.iterrows():
+                result[row[self.key_column_name]] = \
                                         [x for x in self.non_key_col_list \
                                         if self.is_uncertain_cell_func(row[x])]
 
@@ -543,10 +548,11 @@ class RawExecutionMatrix(object):
             non_key_col_list = self.non_key_col_list
 
         result = {}
-        small_df = self.extract_by_column(non_key_col_list).dataframe
-        for col in non_key_col_list:
-            result[col] = list( \
-                small_df.loc[small_df[col].apply(self.is_uncertain_cell_func)]\
+        if len(non_key_col_list) > 0:
+            small_df = self.extract_by_column(non_key_col_list).dataframe
+            for col in non_key_col_list:
+                result[col] = list(small_df.loc[\
+                            small_df[col].apply(self.is_uncertain_cell_func)]\
                                                         [self.key_column_name])
 
         return result
