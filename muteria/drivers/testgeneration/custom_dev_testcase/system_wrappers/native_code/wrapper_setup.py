@@ -26,7 +26,7 @@ class SystemTestSplittingWrapper(BaseSystemTestSplittingWrapper):
             f.write("count=$(/bin/cat {})\n".format(self.counting_file))
             f.write("count=$(($count + 1))\n")
             f.write("/bin/echo $count > {}\n".format(self.counting_file))
-            f.write('/bin/echo "${@:1}" >> {}\n'.format(self.splittest_args))
+            f.write('/bin/echo "${{@:1}}" >> {}\n'.format(self.splittest_args))
         os.chmod(self.testsplit_wrapper_file, 0o775)
 
         new_exe_path_map = dict(exe_path_map)

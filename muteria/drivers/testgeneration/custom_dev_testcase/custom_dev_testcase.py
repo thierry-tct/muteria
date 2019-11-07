@@ -201,7 +201,7 @@ class CustomTestcases(BaseTestcaseTool):
             # Execute the tests with the counting wrapper
             split_workdir = os.path.join(self.tests_storage_dir)
             new_exe_path_map = self.wrapper_obj.get_test_splitting_wrapper()\
-                                                    .set_wrapper(split_workdir)
+                                    .set_wrapper(split_workdir, exe_path_map)
             for test in dtl:
                 self.wrapper_obj.get_test_splitting_wrapper()\
                                             .switch_to_new_test()
