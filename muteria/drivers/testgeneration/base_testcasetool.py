@@ -115,12 +115,8 @@ class BaseTestcaseTool(abc.ABC):
     def __del__(self):
         # remove the decompressed the test storage dir
         if self.compress_test_storage_dir:
-            if not os.path.isfile(self.tests_storage_dir_archive) \
+            if os.path.isfile(self.tests_storage_dir_archive) \
                                     and os.path.isdir(self.tests_storage_dir):
-                common_fs.TarGz.compressDir(self.tests_storage_dir, \
-                                            self.tests_storage_dir_archive, \
-                                            remove_in_directory=True)
-            if os.path.isdir(self.tests_storage_dir):
                 shutil.rmtree(self.tests_storage_dir)
     #~ def __del__()
 
@@ -479,6 +475,14 @@ class BaseTestcaseTool(abc.ABC):
         self._do_generate_tests (exe_path_map, \
                             code_builds_factory=code_builds_factory_override, \
                                                             max_time=max_time)
+
+
+        # Compress test storage dir?
+        if self.compress_test_storage_dir:
+            if os.path.isdir(self.tests_storage_dir):
+                common_fs.TarGz.compressDir(self.tests_storage_dir, \
+                                            self.tests_storage_dir_archive, \
+                                            remove_in_directory=True)
 
         # @Checkpoint: Finished (for time)
         checkpoint_handler.set_finished(None)
