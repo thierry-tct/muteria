@@ -203,6 +203,7 @@ class CustomTestcases(BaseTestcaseTool):
 
         if self.wrapper_test_splitting:
             # Execute the tests with the counting wrapper
+            logging.debug("## Splitting tests with wrapper")
             split_workdir = os.path.join(self.tests_storage_dir)
             new_exe_path_map = self.wrapper_obj.get_test_splitting_wrapper()\
                                     .set_wrapper(split_workdir, exe_path_map)

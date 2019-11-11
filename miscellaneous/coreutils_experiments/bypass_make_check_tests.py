@@ -39,7 +39,10 @@ def get_make_check_tests_env_vars(repo_make_check_dir):
             contain_str += "exit $?"
             f.write(contain_str+'\n')
         os.system('chmod +x '+tmp_getenv_hook_sh)
+        cwd = os.getcwd()
+        os.chdir(repo_make_check_dir)
         os.system('make check TESTS='+tmp_getenv_hook_sh)
+        os.chdir(cwd)
         assert os.path.isfile(tmp_getenv_hook_json), "Getting makefile runtest env failed."\
 					" File {} is missing".format(tmp_getenv_hook_json)
         with open(tmp_getenv_hook_json) as f: 
