@@ -44,7 +44,7 @@ class CustomTestcases(BaseTestcaseTool):
     def get_testcase_info_object(self):
         tc_info_obj = TestcasesInfoObject()
         ERROR_HANDLER.assert_true(os.path.isfile(self.test_list_storage_file),\
-                    "No test list file found, di generation occur?", __file__)
+                    "No test list file found, did generation occur?", __file__)
         dtl = common_fs.loadJSON(self.test_list_storage_file)
         for tc, targs in dtl:
             tc_info_obj.add_test(tc)
@@ -208,6 +208,7 @@ class CustomTestcases(BaseTestcaseTool):
             new_exe_path_map = self.wrapper_obj.get_test_splitting_wrapper()\
                                     .set_wrapper(split_workdir, exe_path_map)
             for test in dtl:
+                logging.debug('splitting test '+test) #DBG
                 self.wrapper_obj.get_test_splitting_wrapper()\
                                             .switch_to_new_test()
                 self.execute_testcase(test, new_exe_path_map, {})
@@ -227,5 +228,6 @@ class CustomTestcases(BaseTestcaseTool):
             dtl = [[t, None] for t in dtl]
 
         common_fs.dumpJSON(dtl, self.test_list_storage_file)
+        #ERROR_HANDLER.assert_true(os.path.isfile(self.test_list_storage_file))#DBG
     #~ def _do_generate_tests()
 #~ class CustomTestcases

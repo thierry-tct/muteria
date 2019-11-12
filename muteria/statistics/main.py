@@ -56,7 +56,8 @@ class StatsComputer(object):
                 row2collist = mat.query_active_columns_of_rows()
                 cov = len([k for k,v in row2collist.items() if len(v) > 0])
                 tot = len(row2collist)
-                coverages[c.get_str()] = '{:.2f}'.format(cov * 100.0 / tot)
+                coverages[c.get_str()] = 'n.a.' if tot == 0 else \
+                                          '{:.2f}'.format(cov * 100.0 / tot)
                 total_to[c.get_str()] = tot
                 if number_of_testcases is None:
                     number_of_testcases = len(mat.get_nonkey_colname_list())
