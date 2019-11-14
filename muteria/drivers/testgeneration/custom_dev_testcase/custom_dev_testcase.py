@@ -230,6 +230,6 @@ class CustomTestcases(BaseTestcaseTool):
             dtl = [[t, None] for t in dtl]
 
         common_fs.dumpJSON(dtl, self.test_list_storage_file)
-        ERROR_HANDLER.assert_true(os.path.isfile(self.test_list_storage_file))#DBG
+        #ERROR_HANDLER.assert_true(os.path.isfile(self.test_list_storage_file))
     #~ def _do_generate_tests()
 #~ class CustomTestcases

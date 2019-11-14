@@ -39,6 +39,7 @@ setup(
             "matplotlib",
             "networkx",
             "gitpython",
+            "tqdm",
 
             # SERVER
             "flask",
