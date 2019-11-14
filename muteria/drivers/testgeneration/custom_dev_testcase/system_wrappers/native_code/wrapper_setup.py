@@ -60,7 +60,8 @@ class SystemTestSplittingWrapper(BaseSystemTestSplittingWrapper):
                             "No args file ({}) during wrapper test split"\
                                 .format(self.splittest_args), __file__)
         with open(self.counting_file) as f:
-            n_subtest = int(f.read())
+            max_id = int(f.read())
+            n_subtest = max_id + 1
         with open(self.splittest_args) as f:
             args = f.read().splitlines()
         return n_subtest, args

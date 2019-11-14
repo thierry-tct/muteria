@@ -58,15 +58,16 @@ class CustomTestcases(BaseTestcaseTool):
                                             with_output_summary=True, \
                                             hash_outlog=True):
         return self._in_repo_execute_testcase(testcase=testcase, \
-                                    exe_path_map=exe_path_map, \
-                                    env_vars=env_vars, \
-                                    timeout=timeout, \
-                                    use_recorded_timeout_times=\
-                                        use_recorded_timeout_times, \
-                                    recalculate_execution_times=\
-                                        recalculate_execution_times, \
-                                    with_output_summary=with_output_summary, \
-                                    hash_outlog=hash_outlog)
+                                exe_path_map=exe_path_map, \
+                                env_vars=env_vars, \
+                                timeout=timeout, \
+                                use_recorded_timeout_times=\
+                                    use_recorded_timeout_times, \
+                                recalculate_execution_times=\
+                                    recalculate_execution_times, \
+                                with_output_summary=with_output_summary, \
+                                hash_outlog=hash_outlog, \
+                                copy_exe_to_repo=(self.wrapper_obj is None))
     #~ def execute_testcase()
 
     def runtests(self, testcases, exe_path_map, env_vars, \
@@ -78,17 +79,18 @@ class CustomTestcases(BaseTestcaseTool):
         """ Override runtests
         """
         return self._in_repo_runtests(testcases=testcases, \
-                                    exe_path_map=exe_path_map, \
-                                    env_vars=env_vars, \
-                                    stop_on_failure=stop_on_failure, \
-                                    per_test_timeout=per_test_timeout, \
-                                    use_recorded_timeout_times=\
-                                            use_recorded_timeout_times, \
-                                    recalculate_execution_times=\
-                                            recalculate_execution_times, \
-                                    with_output_summary=with_output_summary, \
-                                    hash_outlog=hash_outlog, \
-                                    parallel_count=parallel_count)
+                                exe_path_map=exe_path_map, \
+                                env_vars=env_vars, \
+                                stop_on_failure=stop_on_failure, \
+                                per_test_timeout=per_test_timeout, \
+                                use_recorded_timeout_times=\
+                                        use_recorded_timeout_times, \
+                                recalculate_execution_times=\
+                                        recalculate_execution_times, \
+                                with_output_summary=with_output_summary, \
+                                hash_outlog=hash_outlog, \
+                                parallel_count=parallel_count, \
+                                copy_exe_to_repo=(self.wrapper_obj is None))
     #~ def runtests()
 
     def _prepare_executable(self, exe_path_map, env_vars, \
@@ -99,7 +101,7 @@ class CustomTestcases(BaseTestcaseTool):
         
         if self.wrapper_obj is not None:
             self.wrapper_obj.install_wrapper(exe_path_map, collect_output)
-        else:
+        '''else:
             if exe_path_map is not None:
                 repo_root_dir = self.code_builds_factory.repository_manager\
                                                     .get_repository_dir_path()
@@ -111,7 +113,7 @@ class CustomTestcases(BaseTestcaseTool):
                             shutil.copy2(abs_name, rep_abs_name)
                         except PermissionError:
                             os.remove(rep_abs_name)
-                            shutil.copy2(abs_name, rep_abs_name)
+                            shutil.copy2(abs_name, rep_abs_name)'''
     #~ def _prepare_executable()
 
     def _restore_default_executable(self, exe_path_map, env_vars, \
@@ -207,6 +209,7 @@ class CustomTestcases(BaseTestcaseTool):
             split_workdir = os.path.join(self.tests_storage_dir)
             new_exe_path_map = self.wrapper_obj.get_test_splitting_wrapper()\
                                     .set_wrapper(split_workdir, exe_path_map)
+            sub_test_list = []
             for test in dtl:
                 logging.debug('splitting test '+test) #DBG
                 self.wrapper_obj.get_test_splitting_wrapper()\
@@ -215,7 +218,6 @@ class CustomTestcases(BaseTestcaseTool):
                 n_subtest, args = \
                                 self.wrapper_obj.get_test_splitting_wrapper()\
                                                                 .collect_data()
-                sub_test_list = []
                 for i in range(n_subtest):
                     sub_test_list.append([test+self.splittest_ext+str(i), \
                                         args[i] if i < len(args) else None])
@@ -228,6 +230,6 @@ class CustomTestcases(BaseTestcaseTool):
             dtl = [[t, None] for t in dtl]
 
         common_fs.dumpJSON(dtl, self.test_list_storage_file)
-        #ERROR_HANDLER.assert_true(os.path.isfile(self.test_list_storage_file))#DBG
+        ERROR_HANDLER.assert_true(os.path.isfile(self.test_list_storage_file))#DBG
     #~ def _do_generate_tests()
 #~ class CustomTestcases

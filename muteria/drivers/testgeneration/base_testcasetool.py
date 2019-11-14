@@ -173,7 +173,8 @@ class BaseTestcaseTool(abc.ABC):
         def after_command(self):
             # Copy the exes into the repo (user must revert)
             exe_path_map = self.post_callback_args[1]['exe_path_map']
-            self._copy_to_repo(exe_path_map, skip_none_dest=True)
+            if self.post_callback_args[2]:
+                self._copy_to_repo(exe_path_map, skip_none_dest=True)
 
             # execute
             res = self.post_callback_args[0](**self.post_callback_args[1])
@@ -185,7 +186,8 @@ class BaseTestcaseTool(abc.ABC):
                                         use_recorded_timeout_times=None, \
                                         recalculate_execution_times=False, \
                                         with_output_summary=True, \
-                                        hash_outlog=True):
+                                        hash_outlog=True, \
+                                        copy_exe_to_repo=True):
         callback_func = self._execute_testcase
         cb_obj = self.RepoRuntestsCallbackObject()
         cb_obj.set_post_callback_args((callback_func,
@@ -200,7 +202,7 @@ class BaseTestcaseTool(abc.ABC):
                                             recalculate_execution_times, \
                                     "with_output_summary":with_output_summary,\
                                     "hash_outlog":hash_outlog,
-                                }))
+                                }, copy_exe_to_repo))
         repo_mgr = self.code_builds_factory.repository_manager
         _, exec_verdict = repo_mgr.custom_read_access(cb_obj)
         # revert exes
@@ -213,7 +215,8 @@ class BaseTestcaseTool(abc.ABC):
                                 use_recorded_timeout_times=None, \
                                 recalculate_execution_times=False, \
                                 with_output_summary=True, hash_outlog=True, \
-                                parallel_count=1):
+                                parallel_count=1, \
+                                copy_exe_to_repo=True):
         callback_func = self._runtests
         cb_obj = self.RepoRuntestsCallbackObject()
         cb_obj.set_post_callback_args((callback_func,
@@ -230,7 +233,7 @@ class BaseTestcaseTool(abc.ABC):
                                     "with_output_summary":with_output_summary,\
                                     "hash_outlog":hash_outlog, \
                                     "parallel_count": parallel_count,
-                                }))
+                                }, copy_exe_to_repo))
         repo_mgr = self.code_builds_factory.repository_manager
         _, exec_verdicts = repo_mgr.custom_read_access(cb_obj)
         # revert exes
@@ -482,7 +485,7 @@ class BaseTestcaseTool(abc.ABC):
             if os.path.isdir(self.tests_storage_dir):
                 common_fs.TarGz.compressDir(self.tests_storage_dir, \
                                             self.tests_storage_dir_archive, \
-                                            remove_in_directory=True)
+                                            remove_in_directory=False)
 
         # @Checkpoint: Finished (for time)
         checkpoint_handler.set_finished(None)
