@@ -157,8 +157,9 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
                                                     for e in klee_change_stmts]
             klee_change_meta_stmts = list(set(meta_stmts) & \
                                                 set(klee_change_meta_stmts))
+
+            cov_tests = set()
             if len(klee_change_meta_stmts) > 0:
-                cov_tests = set()
                 for _, t in stmt_cov_mat.query_active_columns_of_rows(\
                                 row_key_list=klee_change_meta_stmts).items():
                     cov_tests |= set(t)
