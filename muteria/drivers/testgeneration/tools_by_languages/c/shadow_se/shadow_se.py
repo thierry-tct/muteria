@@ -133,6 +133,9 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
                                 common_mix.GlobalConstants.COMMAND_SUCCESS,\
                                                     "post failed", __file__)
 
+        ERROR_HANDLER.assert_true(len(klee_change_stmts) > 0, \
+                        "No klee_change statement in the sources", __file__)
+
         # Filter only tests that cover those locations, 
         # if there is stmt coverage matrix 
         stmt_cov_mat_file = self.head_explorer.get_file_pathname(\
@@ -154,12 +157,14 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
                                                     for e in klee_change_stmts]
             klee_change_meta_stmts = list(set(meta_stmts) & \
                                                 set(klee_change_meta_stmts))
-            ERROR_HANDLER.assert_true(len(klee_change_meta_stmts) > 0, \
-                                        "No test cover the patch", __file__)
-            cov_tests = set()
-            for _, t in stmt_cov_mat.query_active_columns_of_rows(\
+            if len(klee_change_meta_stmts) > 0:
+                cov_tests = set()
+                for _, t in stmt_cov_mat.query_active_columns_of_rows(\
                                 row_key_list=klee_change_meta_stmts).items():
-                cov_tests |= set(t)
+                    cov_tests |= set(t)
+            #else:
+            #    ERROR_HANDLER.assert_true(len(klee_change_meta_stmts) > 0, \
+            #                            "No test covers the patch", __file__)
 
         # tests will be generated in the same dir that has the input .bc file
         os.mkdir(self.tests_storage_dir)
