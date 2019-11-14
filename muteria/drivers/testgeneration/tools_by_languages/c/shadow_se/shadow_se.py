@@ -212,7 +212,15 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
                                                     test.replace(os.sep, '_'))
             os.mkdir(test_out)
             for d in glob.glob(self.tests_working_dir+"/klee-out-*"):
-                shutil.move(d, test_out)
+                try:
+                    shutil.move(d, test_out)
+                except PermissionError:
+                    for root_, dirs_, files_ in os.walk(d):
+                        for sub_d in dirs_:
+                            os.chmod(os.path.join(root_, sub_d), 0o777)
+                        for f_ in files_:
+                            os.chmod(os.path.join(root_, f_), 0o777)
+                    shutil.move(d, test_out)
             ERROR_HANDLER.assert_true(len(list(os.listdir(test_out))) > 0, \
                                 "Shadow generated no test for tescase: "+test,\
                                                                     __file__)
