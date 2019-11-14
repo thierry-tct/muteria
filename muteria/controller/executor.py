@@ -267,6 +267,14 @@ class Executor(object):
                         list(task_set)[0] == checkpoint_tasks.Tasks.FINISHED):
                     break
 
+                # 3. stop if the next task is AGGREGATED_STATS and there 
+                # is still iteration from test_tool_type_sequence
+                if (len(task_set) == 1 \
+                                and list(task_set)[0] == \
+                                    checkpoint_tasks.Tasks.AGGREGATED_STATS \
+                                and seq_id < len(test_tool_type_sequence) - 1):
+                    break
+
                 # (Break flow)
                 # use the rerun from here, only here, stop after here
                 if self.config.RESTART_CURRENT_EXECUTING_META_TASKS.get_val():
