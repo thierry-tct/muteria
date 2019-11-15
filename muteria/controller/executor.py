@@ -338,7 +338,8 @@ class Executor(object):
         elif task == checkpoint_tasks.Tasks.TESTS_GENERATION:
             # @Checkpointing
             if task_untouched:
-                self.meta_testcase_tool.clear_working_dir() 
+                #if self.cp_data.test_types_pos == 0:
+                #    self.meta_testcase_tool.clear_working_dir() 
                 self.cp_data.tasks_obj.set_task_executing(task)
                 self.checkpointer.write_checkpoint(self.cp_data.get_json_obj())
 

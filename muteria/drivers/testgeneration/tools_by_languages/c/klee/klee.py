@@ -5,6 +5,7 @@ import sys
 import glob
 import shutil
 import logging
+import resource
 
 import muteria.common.fs as common_fs
 import muteria.common.mix as common_mix
@@ -101,9 +102,20 @@ class TestcasesToolKlee(BaseTestcaseTool):
 
     # SHADOW should override
     def _call_generation_run(self, runtool, args):
+        # set stack to unlimited
+        stack_ulimit_soft, stack_ulimit_hard = \
+                                    resource.getrlimit(resource.RLIMIT_STACK)
+        if stack_ulimit_soft != -1:
+            resource.setrlimit(resource.RLIMIT_STACK, (-1, stack_ulimit_hard))
+
         # Execute Klee
         ret, out, err = DriversUtils.execute_and_get_retcode_out_err(\
                                                                 runtool, args)
+        
+        # restore stack
+        if stack_ulimit_soft != -1:
+            resource.setrlimit(resource.RLIMIT_STACK, \
+                                        (stack_ulimit_soft, stack_ulimit_hard))
 
         if (ret != 0):
             logging.error(out)

@@ -194,6 +194,7 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
         # Set the wrapper
         with open(call_shadow_wrapper_file, 'w') as wf:
             wf.write('#! /bin/bash\n\n')
+            wf.write('ulimit -s unlimited\n')
             wf.write(' '.join(['exec', runtool] + args + ['"${@:1}"']) + '\n')
         os.chmod(call_shadow_wrapper_file, 0o775)
 
