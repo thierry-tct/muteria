@@ -44,6 +44,8 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
                                 'kleeDeploy/llvm-gcc4.2-2.9-x86_64-linux/bin')
         self.wllvm_path = os.path.join(self.shadow_folder_path, \
                                             'kleeDeploy/whole-program-llvm')
+        self.klee_change_locs_list_file = os.path.join(self.tests_working_dir,\
+                                                    "klee_change_locs.json")
     #~ def __init__()
 
     # SHADOW override
@@ -224,7 +226,8 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
                                                                 'klee-last')):
                 os.unlink(os.path.join(self.tests_working_dir, 'klee-last'))
 
-        # cleanup test dir and compress TODO
+        # store klee_change locs
+        common_fs.dumpJSON(klee_change_stmts, self.klee_change_locs_list_file)
     #~ def _call_generation_run()
 
     class GetLinesCallbackObject(DefaultCallbackObject):

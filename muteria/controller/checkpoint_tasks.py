@@ -53,7 +53,7 @@ class Status(common_mix.EnumAutoName):
 
 class TaskOrderingDependency(object): 
     '''
-    The task dependency structure is following(Teh structure neve change):
+    The task dependency structure is following(The structure neve change):
     ----------------------------------------------------------------------
         TESTS_GENERATION_GUIDANCE --> STARTING
         CRITERIA_GENERATION_GUIDANCE --> STARTING
