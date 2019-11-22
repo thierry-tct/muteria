@@ -214,7 +214,7 @@ class MetaCriteriaTool(object):
     def check_tools_installed(self):
         non_installed = []
         for toolalias, tool_obj in self.criteria_configured_tools.items():
-            if not tool_obj[self.TOOL_OBJ_KEY].installed():
+            if not tool_obj[self.TOOL_OBJ_KEY].tool_installed():
                 non_installed.append(toolalias)
         if len(non_installed) > 0:
             ERROR_HANDLER.error_exit("{}: {}".format(\

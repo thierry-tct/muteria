@@ -629,6 +629,12 @@ class BaseCriteriaTool(abc.ABC):
         return {}
     #~ def _extract_metaoutlog_data_of_a_test()
         
+    def tool_installed (self):
+        """ Check that a tool with given conf is installed
+        """
+        return self.installed(custom_binary_dir=self.custom_binary_dir)
+    #~ def tool_installed ()
+
     #######################################################################
     ##################### Methods to implement ############################
     #######################################################################

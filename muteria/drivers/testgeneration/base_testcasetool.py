@@ -515,6 +515,12 @@ class BaseTestcaseTool(abc.ABC):
         self.env_vars_store = None
     #~ def _restore_env_vars()
 
+    def tool_installed (self):
+        """ Check that a tool with given conf is installed
+        """
+        return self.installed(custom_binary_dir=self.custom_binary_dir)
+    #~ def tool_installed ()
+
     #######################################################################
     ##################### Methods to implement ############################
     #######################################################################
