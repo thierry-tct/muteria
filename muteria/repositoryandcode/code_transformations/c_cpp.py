@@ -92,20 +92,25 @@ class FromC(ccs.BaseCodeFormatConverter):
                 spec_llvm_compiler_path = kwargs['llvm_compiler_path']
                 del kwargs['llvm_compiler_path']
 
+            # If an llvm compiler is specified, 
+            # use it instead of the WLLVM default
             if spec_compiler is not None:
                 if 'LLVM_COMPILER' not in os.environ:
-                    # default to clang
-                    os.environ['LLVM_COMPILER'] = 'clang'
                     bak_llvm_compiler = None
                 else:
                     bak_llvm_compiler = os.environ['LLVM_COMPILER']
-                    os.environ['LLVM_COMPILER'] = spec_compiler
+                os.environ['LLVM_COMPILER'] = spec_compiler
+            else:
+                if 'LLVM_COMPILER' not in os.environ:
+                    # default to clang
+                    os.environ['LLVM_COMPILER'] = 'clang'
+
             if spec_llvm_compiler_path is not None:
                 if 'LLVM_COMPILER_PATH' not in os.environ:
                     bak_llvm_compiler_path = None
                 else:
                     bak_llvm_compiler_path = os.environ['LLVM_COMPILER_PATH']
-                    os.environ['LLVM_COMPILER_PATH'] = spec_llvm_compiler_path
+                os.environ['LLVM_COMPILER_PATH'] = spec_llvm_compiler_path
 
             #1. Ensure wllvm is installed (For now use default llvm compiler)
             has_wllvm = DriversUtils.check_tool('wllvm', ['--version'])
@@ -128,6 +133,7 @@ class FromC(ccs.BaseCodeFormatConverter):
                                         "Build LLVM bitcode failed!", __file__)
 
             # extract bitcode from copied executables and remove non bitcode
+            # TODO: make this happen as post callback of compilation with wllvm
             if file_src_dest_map is not None:
                 for src, dest in list(file_src_dest_map.items()):
                     ret, out, err = \
@@ -146,6 +152,8 @@ class FromC(ccs.BaseCodeFormatConverter):
             if spec_llvm_compiler_path is not None:
                 if bak_llvm_compiler_path is not None:
                     os.environ['LLVM_COMPILER_PATH'] = bak_llvm_compiler_path
+                else:
+                    del os.environ['LLVM_COMPILER_PATH']
 
             # Clean build
             kwargs['compiler'] = None
