@@ -19,7 +19,10 @@ from muteria.drivers.criteria.base_testcriteriatool import BaseCriteriaTool
 from muteria.drivers.criteria import TestCriteria
 from muteria.drivers import DriversUtils
 
-import coverage
+try:
+    import coverage
+except ImportError:
+    pass
 
 ERROR_HANDLER = common_mix.ErrorHandler
 
