@@ -99,6 +99,10 @@ class KTestTestFormat(object):
     def get_replay_test_wrapper_str(cls, exe_env_var, ktest_env_var, \
                                                             timeout_env_var, \
                                         custom_replay_tool_binary_dir=None):
+        # XXX: This is used by shadow to replay generated tests through
+        # executing base dev test used to generate them.
+        # TODO: Let shadow store the mapping between dev test and gen test
+        # TODO: Use the mapping to run tests using the returned wrapper by this function
         prog, args = cls._get_replay_prog_args('${}'.format(exe_env_var), \
                                                 '${}'.format(ktest_env_var), \
                                                custom_replay_tool_binary_dir)
