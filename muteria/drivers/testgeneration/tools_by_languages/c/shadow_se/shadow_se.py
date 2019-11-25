@@ -46,6 +46,9 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
                                             'kleeDeploy/whole-program-llvm')
         self.klee_change_locs_list_file = os.path.join(self.tests_working_dir,\
                                                     "klee_change_locs.json")
+        # decide whether to replay directly the ktest 
+        # or go through the test used during ktest generation
+        self.replay_using_src_test = False
     #~ def __init__()
 
     # SHADOW override
@@ -147,6 +150,14 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
         if os.path.isfile(stmt_cov_mat_file):
             stmt_cov_mat = common_matrices.ExecutionMatrix(\
                                                     filename=stmt_cov_mat_file)
+            # due to possible wrapper test splitting we update test_list here
+            tmp_test_list = []
+            for mt in stmt_cov_mat.get_nonkey_colname_list():
+                alias, t = DriversUtils.reverse_meta_element(mt)
+                if alias == devtest_toolalias:
+                    tmp_test_list.append(t)
+            test_list = tmp_test_list
+
             meta_stmts = list(stmt_cov_mat.get_keys())
             tool_aliases = set()
             for meta_stmt in meta_stmts:

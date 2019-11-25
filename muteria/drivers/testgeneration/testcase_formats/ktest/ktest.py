@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 import os
+import sys
 import re
 from distutils.spawn import find_executable
 
@@ -44,9 +45,8 @@ class KTestTestFormat(object):
     #~ def get_test_replay_tool()
 
     @classmethod
-    def execute_test(cls, executable_file, test_file, env_vars, timeout=None, \
-                    collected_output=None, custom_replay_tool_binary_dir=None):
-
+    def _get_replay_prog_args(cls, executable_file, test_file, \
+                                        custom_replay_tool_binary_dir=None):
         prog = cls.tool
         if custom_replay_tool_binary_dir is not None:
             prog = os.path.join(custom_replay_tool_binary_dir, prog)
@@ -56,14 +56,22 @@ class KTestTestFormat(object):
                                                                     __file__)
 
         args = [executable_file, test_file]
+        return prog, args
+    #~ def _get_replay_prog_args()
+
+    @classmethod
+    def execute_test(cls, executable_file, test_file, env_vars, timeout=None, \
+                    collected_output=None, custom_replay_tool_binary_dir=None):
+
+        prog, args = cls._get_replay_prog_args(executable_file, test_file, \
+                                                custom_replay_tool_binary_dir)
+
         tmp_env = os.environ.copy()
         if env_vars is not None:
             #for e, v in env_vars.items():
             #    tmp_env[e] = v
             tmp_env.update(env_vars)
 
-        timedout_retcodes = (88,) # taken from klee_replay source code
-        
         if timeout is not None:
             tmp_env['KLEE_REPLAY_TIMEOUT'] = str(timeout)
         if collected_output is not None:
@@ -72,13 +80,13 @@ class KTestTestFormat(object):
                                                         merge_err_to_out=True)
             out = cls._remove_output_noise(out)
             collected_output.extend(\
-                                (retcode, out, (retcode in timedout_retcodes)))
+                            (retcode, out, (retcode in cls.timedout_retcodes)))
         else:
             retcode, out, err = DriversUtils.execute_and_get_retcode_out_err(\
                                 prog=prog, args_list=args, env=tmp_env, \
                                                     out_on=False, err_on=False)
 
-        if retcode in timedout_retcodes + \
+        if retcode in cls.timedout_retcodes + \
                                     (DriversUtils.EXEC_SEGFAULT_OUT_RET_CODE,):
             verdict = common_mix.GlobalConstants.FAIL_TEST_VERDICT
         else:
@@ -87,6 +95,38 @@ class KTestTestFormat(object):
         return verdict
     #~ def execute_test()
 
+    @classmethod
+    def get_replay_test_wrapper_str(cls, exe_env_var, ktest_env_var, \
+                                                            timeout_env_var, \
+                                        custom_replay_tool_binary_dir=None):
+        prog, args = cls._get_replay_prog_args('${}'.format(exe_env_var), \
+                                                '${}'.format(ktest_env_var), \
+                                               custom_replay_tool_binary_dir)
+        
+        python_code = ';'.join(['import sys', \
+                'from muteria.drivers.testgeneration' \
+                    + '.testcase_formats.ktest.ktest import KTestTestFormat', \
+                'r = KTestTestFormat._remove_output_noise(sys.stdin.read())', \
+                    'print(r)'])
+
+        bash_timeout_retcode = os.system('timeout 0.1 sleep 1')
+
+        ret_str = "#! /bin/bash\n\n"
+        ret_str += "set -u\nset -o pipefail\n\n"
+        ret_str += "export KLEE_REPLAY_TIMEOUT={}\n".format(timeout_env_var)
+        ret_str += " ".join([prog] + args) + ' 2>&1 | {} -c "{}"\n'.format(\
+                                                sys.executable, python_code)
+        ret_str += "exit_code=$?\n"
+        ret_str += '{} -c "exit(not($exit_code in {}))" && exit_code={}\n'\
+                                                .format(sys.executable, \
+                                                    cls.timedout_retcodes, \
+                                                    bash_timeout_retcode)
+        ret_str += "exit $exit_code\n"
+        return ret_str
+    #~ def get_replay_test_wrapper_str()
+
+    timedout_retcodes = (88,) # taken from klee_replay source code
+        
     tool = 'klee-replay'
 
     # Newer version (after klee github commit 88bb205)

@@ -134,8 +134,13 @@ class BaseSystemWrapper(abc.ABC):
                 timedout = timedout[0]
         collected_output.append(tmp)
 
-        with open(repo_exe_abs_path + self.outlog_ext) as f:
-            collected_output.append(f.read())
+        try:
+            with open(repo_exe_abs_path + self.outlog_ext) as f:
+                collected_output.append(f.read())
+        except UnicodeDecodeError:
+            with open(repo_exe_abs_path + self.outlog_ext, \
+                                                encoding='ISO-8859-1') as f:
+                collected_output.append(f.read())
 
         collected_output.append(timedout) 
     #~ def collect_output()
