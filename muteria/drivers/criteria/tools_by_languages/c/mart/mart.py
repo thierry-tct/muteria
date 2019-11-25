@@ -332,12 +332,31 @@ class CriteriaToolMart(BaseCriteriaTool):
             if len(scope_obj['Source-Files']) > 0:
                 common_fs.dumpJSON(scope_obj, src_list_scope_file, pretty=True)
                 k_v_params['-mutant-scope'] = src_list_scope_file
+        
+        # Consider user custom
+        uc = self.config.get_tool_user_custom()
+        if uc is not None:
+            pre_args = []
+            pre_bc_cmd = uc.PRE_TARGET_CMD_ORDERED_FLAGS_LIST
+            post_args = []
+            post_bc_cmd = uc.POST_TARGET_CMD_ORDERED_FLAGS_LIST
+            for _args, _cmd in [(pre_args, pre_bc_cmd), \
+                                                    (post_args, post_bc_cmd)]:
+                if _cmd is not None:
+                    for tup in _cmd:
+                        if tup[0] in k_v_params:
+                            del k_v_params[tup[0]]
+                        if tup[0] in bool_param:
+                            del bool_param[tup[0]]
+                        _args.extend(list(tup))
 
         args = [bp for bp, en in list(bool_param.items()) if en]
         for k,v in list(k_v_params.items()):
             if v is not None:
                 args += [k,v]
+        args.extend(pre_args)
         args.append(bitcode_file)
+        args.extend(post_args)
         
         # Execute Mart
         cwd = os.getcwd()

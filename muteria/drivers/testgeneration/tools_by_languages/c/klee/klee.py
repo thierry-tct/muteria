@@ -276,6 +276,7 @@ class TestcasesToolKlee(BaseTestcaseTool):
         bitcode_file = rel2bitcode[list(rel2bitcode.keys())[0]]
         
         # klee params
+        # TODO: consider user custom pre (as in mart)
         bool_param, k_v_params = self._get_default_params()
         if max_time is not None:
             k_v_params['-max-time'] = str(max_time)

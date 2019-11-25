@@ -166,7 +166,11 @@ class Executor(object):
         self.checkpointer = \
                     common_fs.CheckpointState(*self._get_checkpoint_files())
         if self.checkpointer.is_finished():
-            return
+            if len(self.config.RE_EXECUTE_FROM_CHECKPOINT_META_TASKS.\
+                                                                get_val()) > 0:
+                self.checkpointer.restart_task()
+            else:
+                return
 
         # Meta testcases tool
         self.meta_testcase_tool = self._create_meta_test_tool(self.config, \
@@ -312,7 +316,11 @@ class Executor(object):
             ERROR_HANDLER.assert_true(len(task_set) == 0, \
                                     "task set must be empty here", __file__)
 
-        self.checkpointer.set_finished()
+        # TODO: make this to be set from the config
+        self.no_set_checkpoint_finished = True
+
+        if not self.no_set_checkpoint_finished:
+            self.checkpointer.set_finished()
     #~ def main()
 
     def get_repo_manager(self):
