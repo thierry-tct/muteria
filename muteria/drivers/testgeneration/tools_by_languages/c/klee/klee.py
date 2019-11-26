@@ -283,8 +283,8 @@ class TestcasesToolKlee(BaseTestcaseTool):
 
         # Consider pre user custom
         uc = self.config.get_tool_user_custom()
+        pre_args = []
         if uc is not None:
-            pre_args = []
             pre_bc_cmd = uc.PRE_TARGET_CMD_ORDERED_FLAGS_LIST
             if pre_bc_cmd is not None:
                 for tup in pre_bc_cmd:

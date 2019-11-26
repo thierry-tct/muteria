@@ -335,10 +335,10 @@ class CriteriaToolMart(BaseCriteriaTool):
         
         # Consider user custom
         uc = self.config.get_tool_user_custom()
+        pre_args = []
+        post_args = []
         if uc is not None:
-            pre_args = []
             pre_bc_cmd = uc.PRE_TARGET_CMD_ORDERED_FLAGS_LIST
-            post_args = []
             post_bc_cmd = uc.POST_TARGET_CMD_ORDERED_FLAGS_LIST
             for _args, _cmd in [(pre_args, pre_bc_cmd), \
                                                     (post_args, post_bc_cmd)]:
