@@ -317,6 +317,16 @@ class CriteriaToolMart(BaseCriteriaTool):
 
         bitcode_file = rel2bitcode[list(rel2bitcode.keys())[0]]
 
+        # make sure that the bitcode file can be compiled to native code
+        ret, out, err = DriversUtils.execute_and_get_retcode_out_err('clang', \
+                                [bitcode_file, '-o', bitcode_file+'.native'])
+        if ret not in (0,):
+            logging.error(out)
+            ERROR_HANDLER.error_exit("'Mart' cannot compile bitcode"
+                            + "into native code, you need to specify"
+                            + "linking flags (based on the above error).", \
+                                                                    __file__)
+
         # mart params
         bool_param, k_v_params = self._get_default_params()
         if TestCriteria.STRONG_MUTATION in enabled_criteria:
