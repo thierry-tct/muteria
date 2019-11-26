@@ -655,11 +655,14 @@ class MetaCriteriaTool(object):
             ctool = self.criteria_configured_tools[ctoolalias]\
                                                             [self.TOOL_OBJ_KEY]
             tool_element_info = ctool.get_criterion_info_object(criterion)
-            old2new_tests = {}
-            for c_elem in tool_element_info.get_elements_list():
-                meta_c_key = DriversUtils.make_meta_element(c_elem, ctoolalias)
-                old2new_tests[c_elem] = meta_c_key
-            meta_criterion_info_obj.update_using(ctoolalias, old2new_tests, \
+            if tool_element_info is not None:
+                old2new_tests = {}
+                for c_elem in tool_element_info.get_elements_list():
+                    meta_c_key = DriversUtils.make_meta_element(\
+                                                            c_elem, ctoolalias)
+                    old2new_tests[c_elem] = meta_c_key
+                meta_criterion_info_obj.update_using(\
+                                                ctoolalias, old2new_tests, \
                                                             tool_element_info)
         return meta_criterion_info_obj
     #~ def _compute_criterion_info()
