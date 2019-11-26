@@ -648,8 +648,9 @@ class MetaCriteriaTool(object):
         meta_criterion_info_obj = CriteriaToInfoObject[criterion]()
         if candidate_tool_aliases is None:
             candidate_tool_aliases = []
-            for _, config in list(self.tools_config_by_criterion_dict.items()):
-                candidate_tool_aliases.append(config.get_tool_config_alias())
+            for _, confs in list(self.tools_config_by_criterion_dict.items()):
+                for c in confs:
+                    candidate_tool_aliases.append(c.get_tool_config_alias())
         for ctoolalias in candidate_tool_aliases:
             ctool = self.criteria_configured_tools[ctoolalias]\
                                                             [self.TOOL_OBJ_KEY]
