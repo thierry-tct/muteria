@@ -686,8 +686,10 @@ class MetaTestcaseTool(object):
     def get_testcase_info_file(self, candidate_tool_aliases=None):
         # Compute and write the testcase info if not present
         # only place where the meta info is written
-        if self._testcase_info_is_invalidated():
-            self._compute_testcases_info(candidate_tool_aliases).write_to_file(\
+
+        ## commented because many stages for test generation
+        #if self._testcase_info_is_invalidated(): 
+        self._compute_testcases_info(candidate_tool_aliases).write_to_file(\
                                     self._unchecked_get_testcase_info_file())
         return self._unchecked_get_testcase_info_file()
     #~ def get_testcase_info_file()

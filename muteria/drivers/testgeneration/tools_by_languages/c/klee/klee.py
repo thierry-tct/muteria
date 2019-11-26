@@ -129,6 +129,10 @@ class TestcasesToolKlee(BaseTestcaseTool):
         return None
     #~ def _get_testexec_extra_env_vars()
     
+    def _get_tool_name(self):
+        return 'klee'
+    #~ def _get_tool_name()
+
     ########################################################################
 
     def get_testcase_info_object(self):
@@ -234,7 +238,7 @@ class TestcasesToolKlee(BaseTestcaseTool):
         if os.path.isdir(self.tests_storage_dir):
             shutil.rmtree(self.tests_storage_dir)
         
-        prog = 'klee'
+        prog = self._get_tool_name()
         if self.custom_binary_dir is not None:
             prog = os.path.join(self.custom_binary_dir, prog)
             ERROR_HANDLER.assert_true(os.path.isfile(prog), \
@@ -314,19 +318,4 @@ class TestcasesToolKlee(BaseTestcaseTool):
         store_obj = {r: os.path.basename(b) for r,b in rel2bitcode.items()}
         common_fs.dumpJSON(store_obj, self.test_details_file)
     #~ def _do_generate_tests()
-
-    def _dir_chmod777(self, dirpath):
-        try:
-            for root_, dirs_, files_ in os.walk(dirpath):
-                for sub_d in dirs_:
-                    os.chmod(os.path.join(root_, sub_d), 0o777)
-                for f_ in files_:
-                    os.chmod(os.path.join(root_, f_), 0o777)
-        except PermissionError:
-            ret,_,_ = DriversUtils.execute_and_get_retcode_out_err('sudo', \
-                                        ['chmod 777 -R {}'.format(dirpath)])
-            ERROR_HANDLER.assert_true(ret == 0, \
-                        "'sudo chmod 777 -R "+dirpath+"' failed (returned "+\
-                                                        str(ret)+")", __file__)
-    #~ def _dir_chmod777()
-#~ class CustomTestcases
+#~ class TestcasesToolKlee

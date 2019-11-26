@@ -521,6 +521,21 @@ class BaseTestcaseTool(abc.ABC):
         return self.installed(custom_binary_dir=self.custom_binary_dir)
     #~ def tool_installed ()
 
+    def _dir_chmod777(self, dirpath):
+        try:
+            for root_, dirs_, files_ in os.walk(dirpath):
+                for sub_d in dirs_:
+                    os.chmod(os.path.join(root_, sub_d), 0o777)
+                for f_ in files_:
+                    os.chmod(os.path.join(root_, f_), 0o777)
+        except PermissionError:
+            ret,_,_ = DriversUtils.execute_and_get_retcode_out_err('sudo', \
+                                        ['chmod 777 -R {}'.format(dirpath)])
+            ERROR_HANDLER.assert_true(ret == 0, \
+                        "'sudo chmod 777 -R "+dirpath+"' failed (returned "+\
+                                                        str(ret)+")", __file__)
+    #~ def _dir_chmod777()
+
     #######################################################################
     ##################### Methods to implement ############################
     #######################################################################

@@ -77,7 +77,11 @@ class BaseCriteriaTool(abc.ABC):
 
     def clear_working_dir(self):
         if os.path.isdir(self.criteria_working_dir):
-            shutil.rmtree(self.criteria_working_dir)
+            try:
+                shutil.rmtree(self.criteria_working_dir)
+            except PermissionError:
+                self._dir_chmod777(self.criteria_working_dir)
+                shutil.rmtree(self.criteria_working_dir)
         os.mkdir(self.criteria_working_dir)
     #~ def clear_working_dir(self):
 
@@ -111,7 +115,11 @@ class BaseCriteriaTool(abc.ABC):
         result_dir_tmp = os.path.join(self.criteria_working_dir, \
                                                 "criteria_meta_result_tmp")
         if os.path.isdir(result_dir_tmp):
-            shutil.rmtree(result_dir_tmp)
+            try:
+                shutil.rmtree(result_dir_tmp)
+            except PermissionError:
+                self._dir_chmod777(result_dir_tmp)
+                shutil.rmtree(result_dir_tmp)
 
         criterion2environment_vars = self._get_criteria_environment_vars( \
                                                             result_dir_tmp, \
@@ -145,7 +153,7 @@ class BaseCriteriaTool(abc.ABC):
         for testcase in testcases:
             for cg_criteria, cg_exe_path_map, cg_env_vars in groups:
                 # Create reult_tmp_dir
-                os.mkdir(result_dir_tmp)
+                os.mkdir(result_dir_tmp, mode=0o777)
 
                 # run testcase
                 test_verdict = self.meta_test_generation_obj.execute_testcase(\
@@ -215,7 +223,11 @@ class BaseCriteriaTool(abc.ABC):
                             
 
                 # remove dir created for temporal storage
-                shutil.rmtree(result_dir_tmp)
+                try:
+                    shutil.rmtree(result_dir_tmp)
+                except PermissionError:
+                    self._dir_chmod777(result_dir_tmp)
+                    shutil.rmtree(result_dir_tmp)
 
         # Write the execution data into the matrices
         # Since for ExecutionMatrix, active is not 0 thus this is direct.
@@ -634,6 +646,21 @@ class BaseCriteriaTool(abc.ABC):
         """
         return self.installed(custom_binary_dir=self.custom_binary_dir)
     #~ def tool_installed ()
+
+    def _dir_chmod777(self, dirpath):
+        try:
+            for root_, dirs_, files_ in os.walk(dirpath):
+                for sub_d in dirs_:
+                    os.chmod(os.path.join(root_, sub_d), 0o777)
+                for f_ in files_:
+                    os.chmod(os.path.join(root_, f_), 0o777)
+        except PermissionError:
+            ret,_,_ = DriversUtils.execute_and_get_retcode_out_err('sudo', \
+                                        ['chmod 777 -R {}'.format(dirpath)])
+            ERROR_HANDLER.assert_true(ret == 0, \
+                        "'sudo chmod 777 -R "+dirpath+"' failed (returned "+\
+                                                        str(ret)+")", __file__)
+    #~ def _dir_chmod777()
 
     #######################################################################
     ##################### Methods to implement ############################

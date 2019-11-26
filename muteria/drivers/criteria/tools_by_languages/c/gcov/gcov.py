@@ -317,8 +317,12 @@ class CriteriaToolGCov(BaseCriteriaTool):
             shutil.rmtree(self.instrumented_code_storage_dir)
         os.mkdir(self.instrumented_code_storage_dir)
         if os.path.isdir(self.gc_files_dir):
-            shutil.rmtree(self.gc_files_dir)
-        os.mkdir(self.gc_files_dir)
+            try:
+                shutil.rmtree(self.gc_files_dir)
+            except PermissionError:
+                self._dir_chmod777(self.gc_files_dir)
+                shutil.rmtree(self.gc_files_dir)
+        os.mkdir(self.gc_files_dir, mode=0o777)
 
         prog = 'gcc'
         if self.custom_binary_dir is not None:

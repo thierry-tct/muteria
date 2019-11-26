@@ -17,6 +17,10 @@ class SystemTestSplittingWrapper(BaseSystemTestSplittingWrapper):
         """
         ERROR_HANDLER.assert_true(os.path.isdir(workdir), "workdir missing", \
                                                                     __file__)
+        # For system tests there might be different users
+        # Make sure that the next files are accessible by anyone
+        os.chmod(workdir, 0o777)
+
         self.testsplit_wrapper_file = os.path.join(workdir, \
                                                 'test_split_wrapper.sh')
         self.counting_file = os.path.join(workdir, \
@@ -57,8 +61,10 @@ class SystemTestSplittingWrapper(BaseSystemTestSplittingWrapper):
         """ get number of sub tests and args
         """
         ERROR_HANDLER.assert_true(os.path.isfile(self.splittest_args), \
-                            "No args file ({}) during wrapper test split"\
-                                .format(self.splittest_args), __file__)
+                            "No args file ({}) during wrapper test split."\
+                                .format(self.splittest_args) + \
+                        "Does the test have permission to write in repo dir?",\
+                                                                     __file__)
         with open(self.counting_file) as f:
             max_id = int(f.read())
             n_subtest = max_id + 1

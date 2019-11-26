@@ -176,7 +176,8 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
                 for _, t in stmt_cov_mat.query_active_columns_of_rows(\
                                 row_key_list=klee_change_meta_stmts).items():
                     cov_tests |= set(t)
-            #else:
+            else:
+                logging.warning('No test covers the patch (SHADOW)!')
             #    ERROR_HANDLER.assert_true(len(klee_change_meta_stmts) > 0, \
             #                            "No test covers the patch", __file__)
 
@@ -218,6 +219,7 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
                                             "Must have a single exe", __file__)
         exe_path_map = {e: call_shadow_wrapper_file for e in exes}
         env_vars = {}
+        self._dir_chmod777(self.tests_storage_dir)
         for test, meta_test in cand_testpair_list:
             self.parent_meta_tool.execute_testcase(meta_test, exe_path_map, \
                                         env_vars, with_output_summary=False)

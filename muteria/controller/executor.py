@@ -670,6 +670,11 @@ class Executor(object):
                                 outdir_struct.TMP_CRITERIA_MATRIX[criterion])
 
         elif task == checkpoint_tasks.Tasks.AGGREGATED_STATS:
+            # Get the test list and criteria element list
+            self.meta_testcase_tool.get_testcase_info_file()
+            for criterion in self.config.ENABLED_CRITERIA:
+                self.meta_criteria_tool.get_criterion_info_file(criterion)
+
             # Compute the final stats (MS, ...)
             StatsComputer.compute_stats(self.config, self.head_explorer, \
                                                             self.checkpointer)
