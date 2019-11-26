@@ -50,11 +50,11 @@ class CriterionElementInfoObject(object):
         for old_elem_name, new_elem_name in list(old2new_elements.items()):
             ERROR_HANDLER.assert_true(\
                         old_element_info_obj.has_element(old_elem_name), \
-                        "Test not present in old_element_info_obj: {}".format(\
+                        "TO not present in old_element_info_obj: {}".format(\
                                                     old_elem_name), __file__)
             
             ERROR_HANDLER.assert_true(not self.has_element(new_elem_name), \
-                            "Test is already present in this: {}".format(\
+                            "TO is already present in this: {}".format(\
                                                     new_elem_name), __file__)
             self.data[self.DATA_KEY][new_elem_name] = \
                         old_element_info_obj.data[self.DATA_KEY][old_elem_name]
