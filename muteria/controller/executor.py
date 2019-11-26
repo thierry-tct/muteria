@@ -165,10 +165,12 @@ class Executor(object):
         # Make checkpointer
         self.checkpointer = \
                     common_fs.CheckpointState(*self._get_checkpoint_files())
+        was_finished = False
         if self.checkpointer.is_finished():
             if len(self.config.RE_EXECUTE_FROM_CHECKPOINT_META_TASKS.\
                                                                 get_val()) > 0:
                 self.checkpointer.restart_task()
+                was_finished = True
             else:
                 return
 
@@ -255,6 +257,9 @@ class Executor(object):
                 # (Break flow)
                 if len(self.config.RE_EXECUTE_FROM_CHECKPOINT_META_TASKS.\
                                                                 get_val()) > 0:
+                    if was_finished:
+                        # XXX: go to the state right before finished is set
+                        self.cp_data.tasks_obj.set_all_tasks_to_completed()
                     for task in self.config\
                                         .RE_EXECUTE_FROM_CHECKPOINT_META_TASKS\
                                         .get_val():
@@ -316,11 +321,7 @@ class Executor(object):
             ERROR_HANDLER.assert_true(len(task_set) == 0, \
                                     "task set must be empty here", __file__)
 
-        # TODO: make this to be set from the config
-        self.no_set_checkpoint_finished = True
-
-        if not self.no_set_checkpoint_finished:
-            self.checkpointer.set_finished()
+        self.checkpointer.set_finished()
     #~ def main()
 
     def get_repo_manager(self):

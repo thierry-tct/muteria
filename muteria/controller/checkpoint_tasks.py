@@ -283,6 +283,13 @@ class TaskOrderingDependency(object):
         return task_set
     #~ def get_next_todo_tasks()
 
+    def set_all_tasks_to_completed(self):
+        task_name_set = self.get_next_todo_tasks()
+        for task_name in task_name_set:
+            t = self._lookup_task_cell(task_name)
+            self._recursive_set_task_as_done(t)
+    #~ def set_all_tasks_to_completed()
+
     def set_task_back_as_todo_executing(self, task_name):
         t = self._lookup_task_cell(task_name)
         if not t.is_executing():
@@ -410,19 +417,26 @@ class TaskOrderingDependency(object):
                                                                     __file__)
     #~ def _recursive_check_deps_are_done()
 
+    def _recursive_set_task_as_done(self, start_node):
+        if not start_node.is_done():
+            start_node.set_done()
+            for u in start_node.get_uses():
+                self._recursive_set_task_as_done(u)
+    #~ def _recursive_set_task_as_done()
+
     def _recursive_set_task_back_as_todo_executing(self, start_node):
         if not start_node.is_executing():
             start_node.set_executing()
             for u in start_node.get_uses():
                 self._recursive_set_task_back_as_todo_executing(u)
-    #~ def _recursive_set_task_back_as_todo_executing
+    #~ def _recursive_set_task_back_as_todo_executing()
 
     def _recursive_set_task_back_as_todo_untouched(self, start_node):
         if not start_node.is_untouched():
             start_node.set_untouched()
             for u in start_node.get_uses():
                 self._recursive_set_task_back_as_todo_untouched(u)
-    #~ def _recursive_set_task_back_as_todo_untouched
+    #~ def _recursive_set_task_back_as_todo_untouched()
 
     def _recursive_get_next_todo_tasks(self, task_set, start_node):
         if start_node.is_done():

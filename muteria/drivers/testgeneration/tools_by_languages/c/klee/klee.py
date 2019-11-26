@@ -281,10 +281,25 @@ class TestcasesToolKlee(BaseTestcaseTool):
         if max_time is not None:
             k_v_params['-max-time'] = str(max_time)
 
+        # Consider pre user custom
+        uc = self.config.get_tool_user_custom()
+        if uc is not None:
+            pre_args = []
+            pre_bc_cmd = uc.PRE_TARGET_CMD_ORDERED_FLAGS_LIST
+            if pre_bc_cmd is not None:
+                for tup in pre_bc_cmd:
+                    if tup[0] in k_v_params:
+                        del k_v_params[tup[0]]
+                    if tup[0] in bool_param:
+                        del bool_param[tup[0]]
+                    pre_args.extend(list(tup))
+
         args = [bp for bp, en in list(bool_param.items()) if en]
         for k,v in list(k_v_params.items()):
             if v is not None:
                 args += [k,str(v)]
+        args.extend(pre_args)
+
         args.append(bitcode_file)
 
         args += self._get_sym_args()
