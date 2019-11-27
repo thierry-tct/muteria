@@ -21,6 +21,7 @@ import glob
 import shutil
 import logging
 import abc
+import tqdm
 
 import muteria.common.matrices as common_matrices
 import muteria.common.mix as common_mix
@@ -150,7 +151,7 @@ class BaseCriteriaTool(abc.ABC):
         timeout_times = self.config.META_TEST_EXECUTION_EXTRA_TIMEOUT_TIMES
 
         # Execute each test and gather the data
-        for testcase in testcases:
+        for testcase in tqdm.tqdm(testcases, leave=False, dynamic_ncols=True):
             for cg_criteria, cg_exe_path_map, cg_env_vars in groups:
                 # Create reult_tmp_dir
                 os.mkdir(result_dir_tmp, mode=0o777)

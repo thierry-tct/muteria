@@ -9,6 +9,10 @@ import resource
 
 import muteria.common.fs as common_fs
 import muteria.common.mix as common_mix
+import muteria.common.matrices as common_matrices
+
+import muteria.drivers.criteria as criteria
+import muteria.controller.explorer as fd_structure
 
 from muteria.repositoryandcode.codes_convert_support import CodeFormats
 from muteria.drivers.testgeneration.base_testcasetool import BaseTestcaseTool
@@ -42,18 +46,12 @@ class TestcasesToolSemu(TestcasesToolKlee):
     #~ def installed()
 
     def __init__(self, *args, **kwargs):
-        BaseTestcaseTool.__init__(self, *args, **kwargs)
-        self.test_details_file = \
-                    os.path.join(self.tests_working_dir, 'test_details.json')
-        self.klee_used_tmp_build_dir = os.path.join(self.tests_working_dir, \
-                                                    'klee_used_tmp_build_dir')
-
-        # mapping between exes, to have a local copy for execution
-        self.repo_exe_to_local_to_remote = {}
-
-        if os.path.isdir(self.klee_used_tmp_build_dir):
-            shutil.rmtree(self.klee_used_tmp_build_dir)
-        os.mkdir(self.klee_used_tmp_build_dir)
+        TestcasesToolKlee.__init__(self, *args, **kwargs)
+        self.cand_muts_file = os.path.join(self.tests_working_dir, \
+                                                        "cand_muts_file.txt")
+        self.sm_mat_file = self.head_explorer.get_file_pathname(\
+                            fd_structure.CRITERIA_MATRIX[criteria.TestCriteria\
+                                                            .STRONG_MUTATION])
     #~ def __init__()
 
     # SHADOW override
@@ -63,16 +61,34 @@ class TestcasesToolSemu(TestcasesToolKlee):
             '-allow-external-sym-calls': True, #None,
             '-posix-runtime': True, #None,
             '-dump-states-on-halt': True, #None,
-            '-only-output-states-covering-new': True 
+            '-only-output-states-covering-new': True,
+            # SEMu 
+            '-semu-disable-statediff-in-testgen': None,
+            '-semu-continue-mindist-out-heuristic': None,
+            '-semu-use-basicblock-for-distance': None,
+            '-semu-forkprocessfor-segv-externalcalls': None,
+            '-semu-testsgen-only-for-critical-diffs': None,
+            '-semu-consider-outenv-for-diffs': None,
         }
         key_val_params = {
             '-output-dir': self.tests_storage_dir,
-            '-solver-backend': None,
-            '-search': None,
+            '-solver-backend': 'z3',
+            '-search': 'bfs',
             '-max-memory': None,
             '-max-time': self.config.TEST_GENERATION_MAXTIME,
             '-libc': 'uclibc',
+            # SEMu 
+            '-semu-mutant-max-fork': None,
+            '-semu-checknum-before-testgen-for-discarded': None,
+            '-semu-mutant-state-continue-proba': None,
+            '-semu-precondition-length': None,
+            '-semu-max-total-tests-gen': None,
+            '-semu-max-tests-gen-per-mutant': None,
         }
+        # XXX: set muts cand list
+        if os.path.isfile(self.sm_mat_file):
+            key_val_params['-semu-candidate-mutants-list-file'] = \
+                                                        self.cand_muts_file
         return bool_params, key_val_params
     #~ def _get_default_params()
     
@@ -80,4 +96,25 @@ class TestcasesToolSemu(TestcasesToolKlee):
         return 'klee-semu'
     #~ def _get_tool_name()
     
+    def _get_input_bitcode_file(self, code_builds_factory, rel_path_map):
+        # TODO: get the meta criterion file from MART. (pass meta criterion tool to test generation?)
+        t_alias2metamu_bc = {}
+
+        ERROR_HANDLER.assert_true(len(t_alias2metamu_bc) == 1, \
+                                "SEMu supports tests generation from"
+                                "a single .bc file for now (todo).", __file__)
+
+        # XXX: get candidate mutants list
+        if os.path.isfile(self.sm_mat_file):
+            sm_mat = common_matrices.ExecutionMatrix(filename=self.sm_mat_file)
+            mut2killing_tests = sm_mat.query_active_columns_of_rows()
+            alive_muts = [m for m, k_t in mut2killing_tests.items() \
+                                                            if len(k_t) == 0]
+            with open(self.cand_muts_file, 'w') as f:
+                for meta_m in alive_muts:
+                    t_alias, m = DriversUtils.reverse_meta_element(meta_m)
+                    if t_alias in t_alias2metamu_bc: # There is a single one
+                        f.write(str(m)+'\n')
+        return t_alias2metamu_bc[list(t_alias2metamu_bc)[0]]
+    #~ def _get_input_bitcode_file()
 #~ class TestcasesToolSemu

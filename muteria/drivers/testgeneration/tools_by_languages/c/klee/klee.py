@@ -44,7 +44,7 @@ class TestcasesToolKlee(BaseTestcaseTool):
         self.test_details_file = \
                     os.path.join(self.tests_working_dir, 'test_details.json')
         self.klee_used_tmp_build_dir = os.path.join(self.tests_working_dir, \
-                                                    'klee_used_tmp_build_dir')
+                                    self._get_tool_name+'_used_tmp_build_dir')
 
         # mapping between exes, to have a local copy for execution
         self.repo_exe_to_local_to_remote = {}
@@ -133,6 +133,35 @@ class TestcasesToolKlee(BaseTestcaseTool):
         return 'klee'
     #~ def _get_tool_name()
 
+    def _get_input_bitcode_file(self, code_builds_factory, rel_path_map):
+        back_llvm_compiler = self._get_back_llvm_compiler() 
+        back_llvm_compiler_path = self._get_back_llvm_compiler_path() 
+        
+        pre_ret, ret, post_ret = code_builds_factory.transform_src_into_dest(\
+                        src_fmt=CodeFormats.C_SOURCE,\
+                        dest_fmt=CodeFormats.LLVM_BITCODE,\
+                        src_dest_files_paths_map=rel_path_map,\
+                        compiler=back_llvm_compiler, \
+                        llvm_compiler_path=back_llvm_compiler_path, \
+                        clean_tmp=True, reconfigure=True)
+        if ret == common_mix.GlobalConstants.COMMAND_FAILURE:
+            ERROR_HANDLER.error_exit("Program {}.".format(\
+                                        'LLVM built problematic'), __file__)
+
+        # Update exe_map to reflect bitcode extension
+        rel2bitcode = {}
+        for r_file, b_file in list(rel_path_map.items()):
+            bc = b_file+'.bc'
+            ERROR_HANDLER.assert_true(os.path.isfile(bc), \
+                                    "Bitcode file not existing: "+bc, __file__)
+            rel2bitcode[r_file] = bc
+
+        ERROR_HANDLER.assert_true(len(rel_path_map) == 1, \
+                            "Support single bitcode module for now", __file__)
+
+        bitcode_file = rel2bitcode[list(rel2bitcode.keys())[0]]
+        return bitcode_file
+    #~ def _get_input_bitcode_file()
     ########################################################################
 
     def get_testcase_info_object(self):
@@ -224,8 +253,16 @@ class TestcasesToolKlee(BaseTestcaseTool):
         return verdict, collected_output
     #~ def _execute_a_test()
 
+    # TODO: Separate bitcode generation into its own function
     def _do_generate_tests (self, exe_path_map, \
                                         code_builds_factory, max_time=None):
+        # Check the passed exe_path_map
+        if exe_path_map is not None:
+            for r_exe, v_exe in exe_path_map.items():
+                ERROR_HANDLER.assert_true(v_exe is None, \
+                            "Klee driver does not use passed exe_path_map", \
+                                                                    __file__)
+
         # Setup
         if os.path.isdir(self.tests_working_dir):
             try:
@@ -246,41 +283,18 @@ class TestcasesToolKlee(BaseTestcaseTool):
                                         .format(os.path.basename(prog), \
                                             self.custom_binary_dir), __file__)
 
-        back_llvm_compiler = self._get_back_llvm_compiler() 
-        back_llvm_compiler_path = self._get_back_llvm_compiler_path() 
-        
         rel_path_map = {}
         exes, _ = code_builds_factory.repository_manager.\
                                                     get_relative_exe_path_map()
         for exe in exes:
             filename = os.path.basename(exe)
             rel_path_map[exe] = os.path.join(self.tests_working_dir, filename)
-        pre_ret, ret, post_ret = code_builds_factory.transform_src_into_dest(\
-                        src_fmt=CodeFormats.C_SOURCE,\
-                        dest_fmt=CodeFormats.LLVM_BITCODE,\
-                        src_dest_files_paths_map=rel_path_map,\
-                        compiler=back_llvm_compiler, \
-                        llvm_compiler_path=back_llvm_compiler_path, \
-                        clean_tmp=True, reconfigure=True)
-        if ret == common_mix.GlobalConstants.COMMAND_FAILURE:
-            ERROR_HANDLER.error_exit("Program {}.".format(\
-                                        'LLVM built problematic'), __file__)
 
-        # Update exe_map to reflect bitcode extension
-        rel2bitcode = {}
-        for r_file, b_file in list(rel_path_map.items()):
-            bc = b_file+'.bc'
-            ERROR_HANDLER.assert_true(os.path.isfile(bc), \
-                                    "Bitcode file not existing: "+bc, __file__)
-            rel2bitcode[r_file] = bc
-
-        ERROR_HANDLER.assert_true(len(rel_path_map) == 1, \
-                            "Support single bitcode module for now", __file__)
-
-        bitcode_file = rel2bitcode[list(rel2bitcode.keys())[0]]
+        # Get bitcode file
+        bitcode_file = self._get_input_bitcode_file(code_builds_factory, \
+                                                                rel_path_map)
         
         # klee params
-        # TODO: consider user custom pre (as in mart)
         bool_param, k_v_params = self._get_default_params()
         if max_time is not None:
             k_v_params['-max-time'] = str(max_time)
