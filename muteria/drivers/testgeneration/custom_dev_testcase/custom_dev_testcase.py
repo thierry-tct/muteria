@@ -194,8 +194,9 @@ class CustomTestcases(BaseTestcaseTool):
         return verdict, collected_output
     #~ def _execute_a_test()
 
-    def _do_generate_tests (self, exe_path_map, \
-                                        code_builds_factory, max_time=None):
+    def _do_generate_tests (self, exe_path_map, code_builds_factory, \
+                                                meta_criteria_tool_obj=None, \
+                                                                max_time=None):
         dtl = self.code_builds_factory.repository_manager.get_dev_tests_list()
         ERROR_HANDLER.assert_true(dtl is not None, "invalid dev_test_list", \
                                                                     __file__)

@@ -96,7 +96,8 @@ class TestcasesToolSemu(TestcasesToolKlee):
         return 'klee-semu'
     #~ def _get_tool_name()
     
-    def _get_input_bitcode_file(self, code_builds_factory, rel_path_map):
+    def _get_input_bitcode_file(self, code_builds_factory, rel_path_map, \
+                                                meta_criteria_tool_obj=None):
         # TODO: get the meta criterion file from MART. (pass meta criterion tool to test generation?)
         t_alias2metamu_bc = {}
 

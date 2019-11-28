@@ -133,7 +133,8 @@ class TestcasesToolKlee(BaseTestcaseTool):
         return 'klee'
     #~ def _get_tool_name()
 
-    def _get_input_bitcode_file(self, code_builds_factory, rel_path_map):
+    def _get_input_bitcode_file(self, code_builds_factory, rel_path_map, \
+                                                meta_criteria_tool_obj=None):
         back_llvm_compiler = self._get_back_llvm_compiler() 
         back_llvm_compiler_path = self._get_back_llvm_compiler_path() 
         
@@ -254,8 +255,9 @@ class TestcasesToolKlee(BaseTestcaseTool):
     #~ def _execute_a_test()
 
     # TODO: Separate bitcode generation into its own function
-    def _do_generate_tests (self, exe_path_map, \
-                                        code_builds_factory, max_time=None):
+    def _do_generate_tests (self, exe_path_map, code_builds_factory, \
+                                                meta_criteria_tool_obj=None, \
+                                                                max_time=None):
         # Check the passed exe_path_map
         if exe_path_map is not None:
             for r_exe, v_exe in exe_path_map.items():
@@ -292,7 +294,8 @@ class TestcasesToolKlee(BaseTestcaseTool):
 
         # Get bitcode file
         bitcode_file = self._get_input_bitcode_file(code_builds_factory, \
-                                                                rel_path_map)
+                                                                rel_path_map, \
+                                meta_criteria_tool_obj=meta_criteria_tool_obj)
         
         # klee params
         bool_param, k_v_params = self._get_default_params()

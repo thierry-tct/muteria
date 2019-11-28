@@ -354,7 +354,8 @@ class Executor(object):
 
             # Generate the tests
             self.meta_testcase_tool.generate_tests(\
-                                test_tool_type_list=self.cp_data.test_types)
+                            meta_criteria_tool_obj=self.meta_criteria_tool, \
+                            test_tool_type_list=self.cp_data.test_types)
 
             # @Checkpointing
             self.cp_data.tasks_obj.set_task_completed(task)

@@ -550,7 +550,9 @@ class MetaTestcaseTool(object):
         return candidate_tools_aliases
     #~ def get_candidate_tools_aliases()
 
-    def generate_tests (self, exe_path_map=None, test_tool_type_list=None, \
+    def generate_tests (self, meta_criteria_tool_obj=None, \
+                                exe_path_map=None, \
+                                test_tool_type_list=None, \
                                 max_time=None, \
                                 test_generation_guidance_obj=None, \
                                 parallel_testgen_count=1, \
@@ -562,6 +564,9 @@ class MetaTestcaseTool(object):
             Note: The caller must explicitely destroy the checkpointer
             after this call succeed, to ensure that a sceduler will not
             re-execute this 
+        :type meta_criteria_tool_obj:
+        :param meta_criteria_tool_obj:
+
         :type exe_path_map:
         :param exe_path_map:
 
@@ -634,7 +639,9 @@ class MetaTestcaseTool(object):
                 # Actual Execution
                 ttool = self.testcases_configured_tools[ttoolalias]\
                                                             [self.TOOL_OBJ_KEY]
-                ttool.generate_tests(exe_path_map, max_time=max_time)
+                ttool.generate_tests(exe_path_map, \
+                            meta_criteria_tool_obj=meta_criteria_tool_obj, \
+                            max_time=max_time)
 
                 # @Checkpoint: Checkpointing
                 checkpoint_handler.do_checkpoint(func_name=cp_func_name, \

@@ -362,7 +362,9 @@ class BaseTestcaseTool(abc.ABC):
 
         test_failed_verdicts = {} 
         test_outlog_hash = {} 
-        for testcase in tqdm.tqdm(testcases, leave=False, dynamic_ncols=True):
+        processbar = tqdm.tqdm(testcases, leave=False, dynamic_ncols=True) 
+        for testcase in processbar: 
+            processbar.set_description("Running Test %s"% testcase)
             start_time = time.time()
             test_failed, execoutlog_hash = \
                         self._oracle_execute_a_test(testcase, exe_path_map, \
@@ -448,7 +450,9 @@ class BaseTestcaseTool(abc.ABC):
         return verdict, outlog_summary
     #~ def _oracle_execute_a_test()
 
-    def generate_tests (self, exe_path_map, parallel_count=1, \
+    def generate_tests (self, exe_path_map, \
+                            meta_criteria_tool_obj=None, \
+                            parallel_count=1, \
                             code_builds_factory_override=None, max_time=None):
         '''
         '''
@@ -477,6 +481,7 @@ class BaseTestcaseTool(abc.ABC):
         os.mkdir(outputdir)
         self._do_generate_tests (exe_path_map, \
                             code_builds_factory=code_builds_factory_override, \
+                            meta_criteria_tool_obj=meta_criteria_tool_obj, \
                                                             max_time=max_time)
 
 
@@ -584,8 +589,9 @@ class BaseTestcaseTool(abc.ABC):
     #~ def _execute_a_test()
 
     @abc.abstractmethod
-    def _do_generate_tests (self, exe_path_map, \
-                                        code_builds_factory, max_time=None):
+    def _do_generate_tests (self, exe_path_map, code_builds_factory, 
+                                        meta_criteria_tool_obj=None, \
+                                        max_time=None):
         print ("!!! Must be implemented in child class !!!")
     #~ def _do_generate_tests()
 #~ class BaseTestcaseTool
