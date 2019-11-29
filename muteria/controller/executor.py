@@ -352,7 +352,27 @@ class Executor(object):
                 self.cp_data.tasks_obj.set_task_executing(task)
                 self.checkpointer.write_checkpoint(self.cp_data.get_json_obj())
 
-            # Generate the tests
+            # Generate the tests without criteria instrumented
+            self.meta_testcase_tool.generate_tests(\
+                            meta_criteria_tool_obj=None, \
+                            test_tool_type_list=self.cp_data.test_types)
+
+            # @Checkpointing
+            self.cp_data.tasks_obj.set_task_completed(task)
+            self.checkpointer.write_checkpoint(self.cp_data.get_json_obj())
+            # Destroy meta test checkpointer
+            self.meta_testcase_tool.get_checkpoint_state_object()\
+                                                        .destroy_checkpoint()
+
+        elif task == checkpoint_tasks.Tasks.TESTS_GENERATION_USING_CRITERIA:
+            # @Checkpointing
+            if task_untouched:
+                #if self.cp_data.test_types_pos == 0:
+                #    self.meta_testcase_tool.clear_working_dir() 
+                self.cp_data.tasks_obj.set_task_executing(task)
+                self.checkpointer.write_checkpoint(self.cp_data.get_json_obj())
+
+            # Generate the tests using criteria
             self.meta_testcase_tool.generate_tests(\
                             meta_criteria_tool_obj=self.meta_criteria_tool, \
                             test_tool_type_list=self.cp_data.test_types)

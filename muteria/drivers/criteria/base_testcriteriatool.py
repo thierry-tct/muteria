@@ -86,6 +86,14 @@ class BaseCriteriaTool(abc.ABC):
         os.mkdir(self.criteria_working_dir)
     #~ def clear_working_dir(self):
 
+    def get_toolname(self):
+        return self.config.get_tool_name()
+    #~ def get_toolname()
+
+    def get_toolalias(self):
+        return self.config.get_tool_config_alias()
+    #~ def get_toolalias()
+
     def get_checkpointer(self):
         return self.checkpointer
     #~ def get_checkpointer()

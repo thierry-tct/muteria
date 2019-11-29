@@ -740,6 +740,14 @@ class MetaCriteriaTool(object):
                         for suffix in ("", ".backup")]
     #~def _get_checkpoint_files()
 
+    def get_criteria_tools_by_name(self, toolname):
+        res = {}
+        for alias, data in self.criteria_configured_tools.items():
+            if data[self.TOOL_OBJ_KEY].get_toolname() == toolname:
+                res[alias] = data[self.TOOL_OBJ_KEY]
+        return res
+    #~ def get_criteria_tools_by_name()
+
     def get_checkpoint_state_object(self):
         return self.checkpointer
     #~ def get_checkpoint_state_object()

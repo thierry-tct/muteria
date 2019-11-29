@@ -631,14 +631,22 @@ class MetaTestcaseTool(object):
 
         # Generate
         for ttoolalias in candidate_tools_aliases:
+            ttool = self.testcases_configured_tools[ttoolalias]\
+                                                            [self.TOOL_OBJ_KEY]
+            # Make sure to execute the right one
+            if meta_criteria_tool_obj is None:
+                if ttool.requires_criteria_instrumented():
+                    continue
+            else:
+                if not ttool.requires_criteria_instrumented():
+                    continue
+
             # Check whether already executed
             if checkpoint_handler.is_to_execute(func_name=cp_func_name, \
                                                 taskid=cp_task_id, \
                                                 tool=ttoolalias):
 
                 # Actual Execution
-                ttool = self.testcases_configured_tools[ttoolalias]\
-                                                            [self.TOOL_OBJ_KEY]
                 ttool.generate_tests(exe_path_map, \
                             meta_criteria_tool_obj=meta_criteria_tool_obj, \
                             max_time=max_time)
@@ -735,6 +743,14 @@ class MetaTestcaseTool(object):
                         "checkpoint.state"+suffix) \
                         for suffix in ("", ".backup")]
     #~ def _get_checkpoint_files()
+
+    def get_test_tools_by_name(self, toolname):
+        res = {}
+        for alias, data in self.testcases_configured_tools.items():
+            if data[self.TOOL_OBJ_KEY].get_toolname() == toolname:
+                res[alias] = data[self.TOOL_OBJ_KEY]
+        return res
+    #~ def get_test_tools_by_name()
 
     def get_checkpoint_state_object(self):
         return self.checkpointer

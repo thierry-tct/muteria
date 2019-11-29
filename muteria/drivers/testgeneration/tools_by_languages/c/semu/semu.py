@@ -98,12 +98,25 @@ class TestcasesToolSemu(TestcasesToolKlee):
     
     def _get_input_bitcode_file(self, code_builds_factory, rel_path_map, \
                                                 meta_criteria_tool_obj=None):
-        # TODO: get the meta criterion file from MART. (pass meta criterion tool to test generation?)
-        t_alias2metamu_bc = {}
+        # XXX: get the meta criterion file from MART.
+        mutant_gen_tool_name = 'mart'
+        mut_tool_alias_to_obj = \
+                            meta_criteria_tool_obj.get_criteri_tools_by_name(\
+                                                        mutant_gen_tool_name)
 
-        ERROR_HANDLER.assert_true(len(t_alias2metamu_bc) == 1, \
+        if len(mut_tool_alias_to_obj) == 0:
+            logging.warning(\
+                        'SEMu requires Mart to generate mutants but none used')
+
+        ERROR_HANDLER.assert_true(len(mut_tool_alias_to_obj) == 1, \
                                 "SEMu supports tests generation from"
                                 "a single .bc file for now (todo).", __file__)
+
+        t_alias2metamu_bc = {}
+        for alias, obj in mut_tool_alias_to_obj.items():
+            dest_bc = rel_path_map[list(rel_path_map)[0]]+'.bc'
+            shutil.copy2(obj.get_test_gen_metamutant_bc(), dest_bc)
+            t_alias2metamu_bc[alias] = dest_bc
 
         # XXX: get candidate mutants list
         if os.path.isfile(self.sm_mat_file):
@@ -118,4 +131,8 @@ class TestcasesToolSemu(TestcasesToolKlee):
                         f.write(str(m)+'\n')
         return t_alias2metamu_bc[list(t_alias2metamu_bc)[0]]
     #~ def _get_input_bitcode_file()
+
+    def requires_criteria_instrumented(self):
+        return True
+    #~ def requires_criteria_instrumented()
 #~ class TestcasesToolSemu
