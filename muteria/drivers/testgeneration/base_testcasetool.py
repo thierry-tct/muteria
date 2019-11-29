@@ -126,6 +126,14 @@ class BaseTestcaseTool(abc.ABC):
         os.mkdir(self.tests_working_dir)
     #~ def clear_working_dir(self):
 
+    def get_toolname(self):
+        return self.config.get_tool_name()
+    #~ def get_toolname()
+
+    def get_toolalias(self):
+        return self.config.get_tool_config_alias()
+    #~ def get_toolalias()
+
     def get_checkpointer(self):
         return self.checkpointer
     #~ def get_checkpointer()
@@ -540,6 +548,10 @@ class BaseTestcaseTool(abc.ABC):
                         "'sudo chmod 777 -R "+dirpath+"' failed (returned "+\
                                                         str(ret)+")", __file__)
     #~ def _dir_chmod777()
+
+    def requires_criteria_instrumented(self):
+        return False
+    #~ def requires_criteria_instrumented()
 
     #######################################################################
     ##################### Methods to implement ############################
