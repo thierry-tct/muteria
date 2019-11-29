@@ -30,19 +30,20 @@ class Tasks(common_mix.EnumAutoName):
 
     TESTS_GENERATION_GUIDANCE = 1 #enum.auto()
     TESTS_GENERATION = 2 #enum.auto()
-    TESTS_EXECUTION_SELECTION_PRIORITIZATION = 3 #enum.auto()
-    PASS_FAIL_TESTS_EXECUTION = 4 #enum.auto()
+    TESTS_GENERATION_USING_CRITERIA = 3 #enum.auto()
+    TESTS_EXECUTION_SELECTION_PRIORITIZATION = 4 #enum.auto()
+    PASS_FAIL_TESTS_EXECUTION = 5 #enum.auto()
 
-    CRITERIA_GENERATION_GUIDANCE = 5 #enum.auto()
-    CRITERIA_GENERATION = 6 #enum.auto()
-    CRITERIA_EXECUTION_SELECTION_PRIORITIZATION = 7 #enum.auto()
-    CRITERIA_TESTS_EXECUTION = 8 #enum.auto()
+    CRITERIA_GENERATION_GUIDANCE = 6 #enum.auto()
+    CRITERIA_GENERATION = 7 #enum.auto()
+    CRITERIA_EXECUTION_SELECTION_PRIORITIZATION = 8 #enum.auto()
+    CRITERIA_TESTS_EXECUTION = 9 #enum.auto()
 
-    PASS_FAIL_STATS = 9 #enum.auto()
-    CRITERIA_STATS = 10 #enum.auto()
-    AGGREGATED_STATS = 11 #enum.auto()
+    PASS_FAIL_STATS = 10 #enum.auto()
+    CRITERIA_STATS = 11 #enum.auto()
+    AGGREGATED_STATS = 12 #enum.auto()
 
-    FINISHED = 12 #enum.auto()
+    FINISHED = 13 #enum.auto()
 #~ class Tasks
 
 class Status(common_mix.EnumAutoName):
@@ -60,7 +61,11 @@ class TaskOrderingDependency(object):
 
         TESTS_GENERATION --> TESTS_GENERATION_GUIDANCE
 
-        TESTS_EXECUTION_SELECTION_PRIORITIZATION --> TESTS_GENERATION
+                                            | TESTS_GENERATION_GUIDANCE
+        TESTS_GENERATION_USING_CRITERIA --> | CRITERIA_GENERATION 
+
+                                                     | TESTS_GENERATION_USING_CRITERIA 
+        TESTS_EXECUTION_SELECTION_PRIORITIZATION --> | TESTS_GENERATION
 
         PASS_FAIL_TESTS_EXECUTION --> TESTS_EXECUTION_SELECTION_PRIORITIZATION
 
@@ -199,9 +204,14 @@ class TaskOrderingDependency(object):
         passfail.add_dependency(t_sp)
 
         # Artifact Generation
+        t_gen_crit = self.Cell(Tasks.TESTS_GENERATION_USING_CRITERIA)
+        t_gen_crit.set_status(task_status_map[Tasks.TESTS_GENERATION_USING_CRITERIA])
+        t_sp.add_dependency(t_gen_crit)
+
         crit_gen = self.Cell(Tasks.CRITERIA_GENERATION)
         crit_gen.set_status(task_status_map[Tasks.CRITERIA_GENERATION])
         ce_sp.add_dependency(crit_gen)
+        t_gen_crit.add_dependency(crit_gen)
 
         t_gen = self.Cell(Tasks.TESTS_GENERATION)
         t_gen.set_status(task_status_map[Tasks.TESTS_GENERATION])
