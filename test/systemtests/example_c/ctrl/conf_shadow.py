@@ -23,7 +23,7 @@ def build_func_shadow(*args, **kwargs):
 
 CODE_BUILDER_FUNCTION = build_func_shadow
 
-# klee tests
+# shadow tests
 shadow_se_test = TestcaseToolsConfig(tooltype=TestToolType.USE_CODE_AND_TESTS, toolname='shadow_se', \
                         tool_user_custom=ToolUserCustom(\
                             PATH_TO_TOOL_BINARY_DIR='/home/shadowvm/shadow/klee-change/Release+Asserts/bin/'
