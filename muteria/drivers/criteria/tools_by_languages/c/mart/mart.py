@@ -406,4 +406,15 @@ class CriteriaToolMart(BaseCriteriaTool):
             ERROR_HANDLER.assert_true(err_msg is None,\
                                 "Compression failed: "+str(err_msg), __file__)
     #~ def _do_instrument_code()
+
+    ## Extra functions for mart
+    def get_test_gen_metamutant_bc(self):
+        crit2file = self.get_instrumented_executable_paths_map(\
+                                            (TestCriteria.STRONG_MUTATION,))
+        sm_map = list(crit2file[TestCriteria.STRONG_MUTATION].items())
+        ERROR_HANDLER.assert_true(len(sm_map) == 1, \
+                                "Expects exactly 1 file for Strong Mutation")
+        exe_name, filepath = sm_map[0]
+        return filepath + '.bc'
+    #~ def get_test_gen_metamutant_bc()
 #~ class CriteriaToolMart

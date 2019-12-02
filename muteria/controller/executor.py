@@ -349,6 +349,9 @@ class Executor(object):
             if task_untouched:
                 #if self.cp_data.test_types_pos == 0:
                 #    self.meta_testcase_tool.clear_working_dir() 
+                if self.meta_testcase_tool.has_checkpointer():
+                    self.meta_testcase_tool.get_checkpoint_state_object()\
+                                                        .destroy_checkpoint()
                 self.cp_data.tasks_obj.set_task_executing(task)
                 self.checkpointer.write_checkpoint(self.cp_data.get_json_obj())
 
@@ -369,6 +372,9 @@ class Executor(object):
             if task_untouched:
                 #if self.cp_data.test_types_pos == 0:
                 #    self.meta_testcase_tool.clear_working_dir() 
+                if self.meta_testcase_tool.has_checkpointer():
+                    self.meta_testcase_tool.get_checkpoint_state_object()\
+                                                        .destroy_checkpoint()
                 self.cp_data.tasks_obj.set_task_executing(task)
                 self.checkpointer.write_checkpoint(self.cp_data.get_json_obj())
 
@@ -391,6 +397,9 @@ class Executor(object):
                                         
             # @Checkpointing
             if task_untouched:
+                if self.meta_testcase_tool.has_checkpointer():
+                    self.meta_testcase_tool.get_checkpoint_state_object()\
+                                                        .destroy_checkpoint()
                 self.head_explorer.remove_file_and_get(out_file_key)
                 self.cp_data.tasks_obj.set_task_executing(task)
                 self.checkpointer.write_checkpoint(self.cp_data.get_json_obj())
@@ -455,6 +464,10 @@ class Executor(object):
                                     
             # @Checkpointing
             if task_untouched:
+                if self.meta_testcase_tool.has_checkpointer():
+                    self.meta_testcase_tool.get_checkpoint_state_object()\
+                                                        .destroy_checkpoint()
+
                 self.head_explorer.remove_file_and_get(matrix_file_key)
                 self.head_explorer.remove_file_and_get(execoutput_file_key)
                 self.meta_testcase_tool.get_checkpoint_state_object()\
@@ -492,6 +505,10 @@ class Executor(object):
         elif task == checkpoint_tasks.Tasks.CRITERIA_GENERATION:
             # @Checkpointing
             if task_untouched:
+                if self.meta_criteria_tool.has_checkpointer():
+                    self.meta_criteria_tool.get_checkpoint_state_object()\
+                                                        .destroy_checkpoint()
+
                 self.meta_criteria_tool.get_checkpoint_state_object()\
                                                         .restart_task()
                 self.cp_data.tasks_obj.set_task_executing(task)
@@ -541,6 +558,10 @@ class Executor(object):
 
             # @Checkpointing
             if task_untouched:
+                if self.meta_criteria_tool.has_checkpointer():
+                    self.meta_criteria_tool.get_checkpoint_state_object()\
+                                                        .destroy_checkpoint()
+
                 for _, matrix_file_key in list(matrix_files_keys.items()):
                     self.head_explorer.remove_file_and_get(matrix_file_key)
                 for _, execoutput_file_key in list(\

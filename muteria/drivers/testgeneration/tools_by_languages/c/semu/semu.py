@@ -101,7 +101,7 @@ class TestcasesToolSemu(TestcasesToolKlee):
         # XXX: get the meta criterion file from MART.
         mutant_gen_tool_name = 'mart'
         mut_tool_alias_to_obj = \
-                            meta_criteria_tool_obj.get_criteri_tools_by_name(\
+                            meta_criteria_tool_obj.get_criteria_tools_by_name(\
                                                         mutant_gen_tool_name)
 
         if len(mut_tool_alias_to_obj) == 0:

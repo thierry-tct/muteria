@@ -44,7 +44,7 @@ class TestcasesToolKlee(BaseTestcaseTool):
         self.test_details_file = \
                     os.path.join(self.tests_working_dir, 'test_details.json')
         self.klee_used_tmp_build_dir = os.path.join(self.tests_working_dir, \
-                                    self._get_tool_name+'_used_tmp_build_dir')
+                                    self._get_tool_name()+'_used_tmp_build_dir')
 
         # mapping between exes, to have a local copy for execution
         self.repo_exe_to_local_to_remote = {}
@@ -296,6 +296,7 @@ class TestcasesToolKlee(BaseTestcaseTool):
         bitcode_file = self._get_input_bitcode_file(code_builds_factory, \
                                                                 rel_path_map, \
                                 meta_criteria_tool_obj=meta_criteria_tool_obj)
+        repo_rel_exe_file = list(rel_path_map)[0]
         
         # klee params
         bool_param, k_v_params = self._get_default_params()
@@ -332,7 +333,7 @@ class TestcasesToolKlee(BaseTestcaseTool):
                         custom_replay_tool_binary_dir=self.custom_binary_dir)
         shutil.copy2(klee_replay_pathname, self.tests_storage_dir)
 
-        store_obj = {r: os.path.basename(b) for r,b in rel2bitcode.items()}
+        store_obj = {repo_rel_exe_file: os.path.basename(bitcode_file)}
         common_fs.dumpJSON(store_obj, self.test_details_file)
     #~ def _do_generate_tests()
 #~ class TestcasesToolKlee
