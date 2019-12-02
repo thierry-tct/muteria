@@ -83,6 +83,10 @@ do
 		then
 			mv $tmp_workspace/$prog_folder/ctrl/conf_shadow.py $tmp_workspace/$prog_folder/ctrl/conf.py | error_exit "failed to set conf to shadow conf"
 			echo "-- Using Shadow !!!"
+		elif [ "${WITH_SEMU:-}" = "on" -a -f $tmp_workspace/$prog_folder/ctrl/conf_semu.py ]
+		then
+			mv $tmp_workspace/$prog_folder/ctrl/conf_semu.py $tmp_workspace/$prog_folder/ctrl/conf.py | error_exit "failed to set conf to semu conf"
+			echo "-- Using Semu !!!"
 		fi
 	fi
 

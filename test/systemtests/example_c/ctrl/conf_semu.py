@@ -12,19 +12,19 @@ import muteria.drivers.testgeneration.tools_by_languages.c.semu.semu \
 semu_test = TestcaseToolsConfig(tooltype=TestToolType.USE_CODE_AND_TESTS, toolname='semu', \
                         tool_user_custom=ToolUserCustom(
                             PRE_TARGET_CMD_ORDERED_FLAGS_LIST=[
-                                ('-semu-disable-statediff-in-testgen'),
-                                ('-semu-continue-mindist-out-heuristic'),
-                                ('-semu-use-basicblock-for-distance'),
+                                #('-semu-disable-statediff-in-testgen'),
+                                #('-semu-continue-mindist-out-heuristic'),
+                                #('-semu-use-basicblock-for-distance'),
                                 ('-semu-forkprocessfor-segv-externalcalls'),
-                                ('-semu-testsgen-only-for-critical-diffs'),
-                                ('-semu-consider-outenv-for-diffs'),
+                                #('-semu-testsgen-only-for-critical-diffs'),
+                                #('-semu-consider-outenv-for-diffs'),
 
-                                ('-semu-mutant-max-fork', '')
-                                ('-semu-checknum-before-testgen-for-discarded', None)
-                                ('-semu-mutant-state-continue-proba', None)
-                                ('-semu-precondition-length', None)
-                                ('-semu-max-total-tests-gen', None)
-                                ('-semu-max-tests-gen-per-mutant', None)
+                                ('-semu-mutant-max-fork', '0'),
+                                ('-semu-checknum-before-testgen-for-discarded', '2'),
+                                ('-semu-mutant-state-continue-proba', '0.25'),
+                                ('-semu-precondition-length', '0'), # start from top
+                                #('-semu-max-total-tests-gen', '1000')
+                                ('-semu-max-tests-gen-per-mutant', '5'),
                             ], 
                             POST_TARGET_CMD_ORDERED_FLAGS_LIST=[('-sym-args', '2', '2', '2')]
                             )
