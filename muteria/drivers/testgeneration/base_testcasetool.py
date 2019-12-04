@@ -442,7 +442,7 @@ class BaseTestcaseTool(abc.ABC):
             retcode, outlog, timedout = output_err
             out_len = len(outlog)
             if hash_outlog:
-                outlog = outlog.encode('utf-8')
+                outlog = outlog.encode('utf-8', 'backslashreplace')
                 out_hash_val = hashlib.sha512(outlog).hexdigest()
             else:
                 out_hash_val = outlog

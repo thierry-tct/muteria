@@ -192,8 +192,8 @@ class KTestTestFormat(object):
         else:
             last_char = ""
 
-        for line in out.encode('utf-8').splitlines():
-            line = line.decode('utf-8')
+        for line in out.encode('utf-8', 'backslashreplace').splitlines():
+            line = line.decode('utf-8', 'backslashreplace')
             if regex.search(line) is None:
                 # None is matched
                 res.append(line)

@@ -227,9 +227,9 @@ class DriversUtils(object):
                 p.kill() # TODO: Chose the signal to send
             stdout, stderr = p.communicate()
         if stdout is not None:
-            stdout = stdout.decode('UTF-8')
+            stdout = stdout.decode('UTF-8', 'backslashreplace')
         if stderr is not None:
-            stderr = stderr.decode('UTF-8')
+            stderr = stderr.decode('UTF-8', 'backslashreplace')
         retcode = p.wait()
         return retcode, stdout, stderr
     #~ def execute_and_get_retcode_out_err()
