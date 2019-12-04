@@ -58,6 +58,7 @@ for criterion in TestCriteria:
     PARTIAL_TMP_CRITERIA_MATRIX[criterion] = \
                                     "partial_tmp_"+criterion.get_str()+".csv"
 TMP_SELECTED_TESTS_LIST = "tmp_selected_test.json"
+TMP_SELECTED_CRITERIA_OBJECTIVES_LIST = "tmp_selected_criteria_objectives.json"
 
 # OUTPUT Hashed
 PROGRAM_TESTEXECUTION_OUTPUT = "program_output.json" 

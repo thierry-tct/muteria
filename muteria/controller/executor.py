@@ -244,9 +244,9 @@ class Executor(object):
                                                     seq_id, test_tool_types):
                 continue
 
-            if len(self.meta_testcase_tool.get_candidate_tools_aliases(\
-                                    test_tool_type_list=test_tool_types)) == 0:
-               continue
+            #if len(self.meta_testcase_tool.get_candidate_tools_aliases(\
+            #                        test_tool_type_list=test_tool_types)) == 0:
+            #   continue
             
             # If we have a new seq_id, it is another test type loop
             # NOTE: This switch is written at following steps (tasks...)
@@ -527,6 +527,9 @@ class Executor(object):
         elif task == checkpoint_tasks.Tasks.\
                                 CRITERIA_EXECUTION_SELECTION_PRIORITIZATION:
             pass #TODO (Maybe could be used someday. for now, just skip it)
+            #TODO: make it as a driver that will implement techniques 
+            # (per tool if needed)
+            
         elif task == checkpoint_tasks.Tasks.CRITERIA_TESTS_EXECUTION:
             # Make sure that the Matrices dir exists
             self.head_explorer.get_or_create_and_get_dir(\
