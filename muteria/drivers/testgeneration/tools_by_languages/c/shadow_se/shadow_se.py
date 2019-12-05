@@ -258,7 +258,8 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
                                             'klee_get_true', 'klee_get_false'))
             matched_lines = set()
             for src in self.source_files_to_objects:
-                with open(os.path.join(self.repository_rootdir, src)) as f:
+                with open(os.path.join(self.repository_rootdir, src), \
+                                                        encoding='UTF-8') as f:
                     for lnum, line in enumerate(f.readlines()):
                         if m_regex.search(line) is not None:
                             matched_lines.add(DriversUtils.make_meta_element(\
