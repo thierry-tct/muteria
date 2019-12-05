@@ -3,6 +3,7 @@ from __future__ import print_function
 import os
 import sys
 import re
+import importlib
 from distutils.spawn import find_executable
 
 import muteria.common.mix as common_mix
@@ -203,4 +204,83 @@ class KTestTestFormat(object):
         return res
     #~ def _remove_output_noise()
 
+    ktest_extension = '.ktest'
+
+    @classmethod
+    def ktest_fdupes(cls, *args, custom_replay_tool_binary_dir=None):
+        """
+        This function computes the fdupes of the klee ktest directories 
+        and ktest files given as arguments. 
+        It requires that the files and directories passed as arguments exist
+
+        :param *args: each argument is either a file or a directory that exists
+
+        :return: returns two values: 
+                - The first is a python list of tuples. 
+                    each tuple represents files that are duplicate with each 
+                    other and ranked by their age (modified time) the oldest 
+                    first (earliest modified to latest modified).
+                - The second is the list of files that are not valid
+                    ktest files.
+        """
+        # import ktest
+        ktt_dir = os.path.dirname(cls.get_test_replay_tool(
+                                        custom_replay_tool_binary_dir=\
+                                                custom_replay_tool_binary_dir))
+        sys.path.insert(0, ktt_dir)
+        ktest_tool = importlib.import_module("ktest-tool")
+        sys.path.pop(0)
+
+        ret_fdupes = []
+        invalid = []
+        file_set = set()
+        for file_dir in args:
+            if os.path.isfile(file_dir):
+                file_set.add(file_dir)
+            elif os.path.isdir(file_dir):
+                # get ktest files recursively
+                for root, directories, filenames in os.walk(file_dir):
+                    for filename in filenames:
+                        if filename.endswith(cls.ktest_extension):
+                            file_set.add(os.path.join(root, filename))
+            else:
+                ERROR_HANDLER.error_exit(\
+                        "Invalid file or dir passed (inexistant): "+file_dir, \
+                                                                    __file__)
+
+        # apply fdupes: load all ktests and strip the non uniform data 
+        # (.bc file used) then compare the remaining data
+        kt2used_dat = {}
+        for kf in file_set:
+            try:
+                b = ktest_tool.KTest.fromfile(kf)
+                kt2used_dat[kf] = (b.args[1:], b.objects)
+            except:
+                invalid.append(kf)
+
+        # do fdupes
+        dup_dict = {}
+        keys = kt2used_dat.keys()
+        for ktest_file in keys:
+            if ktest_file in kt2used_dat:
+                ktest_file_dat = kt2used_dat[ktest_file]
+                del kt2used_dat[ktest_file]
+                for other_file in kt2used_dat:
+                    if kt2used_dat[other_file] == ktest_file_dat:
+                        if ktest_file not in dup_dict:
+                            dup_dict[ktest_file] = []
+                        dup_dict[ktest_file].append(other_file)
+                if ktest_file in dup_dict:
+                    for dup_of_kt_file in dup_dict[ktest_file]:
+                        del kt2used_dat[dup_of_kt_file]
+
+        # Finilize
+        for ktest_file in dup_dict:
+            tmp = [ktest_file] + dup_dict[ktest_file]
+            # sort by decreasing modified age
+            tmp.sort(key=lambda x: os.path.getmtime(x))
+            ret_fdupes.append(tuple(tmp))
+
+        return ret_fdupes, invalid
+    #~ def ktest_fdupes()
 #~ class KTestTestFormat

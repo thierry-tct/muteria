@@ -49,6 +49,9 @@ class TestcasesToolKlee(BaseTestcaseTool):
         # mapping between exes, to have a local copy for execution
         self.repo_exe_to_local_to_remote = {}
 
+        self.keptktest2dupktests = os.path.join(self.tests_working_dir, \
+                                                'kept_to_dup_ktests_map.json')
+
         if os.path.isdir(self.klee_used_tmp_build_dir):
             shutil.rmtree(self.klee_used_tmp_build_dir)
         os.mkdir(self.klee_used_tmp_build_dir)
@@ -175,7 +178,7 @@ class TestcasesToolKlee(BaseTestcaseTool):
             for root, _, files in os.walk('.'):
                 for f in files:
                     tc = os.path.normpath(os.path.join(root, f))
-                    if tc.endswith('.ktest'):
+                    if tc.endswith(KTestTestFormat.ktest_extension):
                         tc_info_obj.add_test(tc)
             os.chdir(cwd)
             self.testcase_info_object = tc_info_obj
@@ -327,6 +330,25 @@ class TestcasesToolKlee(BaseTestcaseTool):
         args += self._get_sym_args()
 
         self._call_generation_run(prog, args)
+
+        # XXX: remove duplicate tests
+        kepttest2duptest_map = {}
+        dup_list, invalid = KTestTestFormat.ktest_fdupes(\
+                                                    self.tests_storage_dir, \
+                        custom_replay_tool_binary_dir=self.custom_binary_dir)
+        if len(invalid) > 0:
+            logging.warning(\
+                        "{} generated ktests are invalid".format(len(invalid)))
+            for kt in invalid:
+                os.remove(kt)
+        for dup_tuple in dup_list:
+            kepttest2duptest_map[os.path.relpath(\
+                            dup_tuple[0], \
+                            self.tests_storage_dir)] = [os.path.relpath(dp) \
+                                                    for dp in dup_tuple[1:]]
+            for df in dup_tuple[1:]:
+                os.remove(df)
+        common_fs.dumpJSON(kepttest2duptest_map, self.keptktest2dupktests)
 
         # Copy replay tool into test folder
         klee_replay_pathname = KTestTestFormat.get_test_replay_tool(\

@@ -288,11 +288,12 @@ class CompleteConfiguration(object):
 
     # criterion: selection tools. Example: SM and TCE of E-SELECTIVE
     CRITERIA_ELEM_SELECTIONS = {
-
+        
     }
 
     ONLY_EXECUTE_SELECTED_CRITERIA_ELEM = True
 
+    MAX_CRITERIA_ELEM_SELECTION_NUM_PERCENT = '100%'
 
     # Criterion: guider dict. ex: {STRONG_MUTATION: Surviving}
     CRITERIA_TESTGEN_GUIDANCE = {

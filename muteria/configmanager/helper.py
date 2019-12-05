@@ -298,6 +298,18 @@ class ConfigurationHelper(object):
             tmp.append(c)
         conf.CRITERIA_REQUIRING_OUTDIFF_WITH_PROGRAM = tmp
         
+        tmp = {}
+        for c, sel_tech in conf.CRITERIA_ELEM_SELECTIONS.items():
+            if not isinstance(c, criteria.TestCriteria):
+                ERROR_HANDLER.assert_true(\
+                            criteria.TestCriteria.has_element_named(c), \
+                        "invalid test criterion in crit elem selection: "+c, \
+                                                                    __file__)
+                c = criteria.TestCriteria[c] 
+            if c not in conf.ENABLED_CRITERIA:
+                continue
+            tmp[c] = sel_tech
+        conf.CRITERIA_ELEM_SELECTIONS = tmp
         
         tmp = []
         for tc in conf.TESTCASE_TOOLS_CONFIGS:
