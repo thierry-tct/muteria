@@ -220,6 +220,7 @@ class TaskOrderingDependency(object):
         t_gguide = self.Cell(Tasks.TESTS_GENERATION_GUIDANCE)
         t_gguide.set_status(task_status_map[Tasks.TESTS_GENERATION_GUIDANCE])
         t_gen.add_dependency(t_gguide)
+        t_gen_crit.add_dependency(t_gguide)
 
         c_gguide = self.Cell(Tasks.CRITERIA_GENERATION_GUIDANCE)
         c_gguide.set_status(task_status_map[Tasks.CRITERIA_GENERATION_GUIDANCE])

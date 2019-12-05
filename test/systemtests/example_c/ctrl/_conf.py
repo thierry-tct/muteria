@@ -61,6 +61,8 @@ DEVELOPER_TESTS_LIST = devtestlist
 # custom devtest
 dev_test = TestcaseToolsConfig(tooltype=TestToolType.USE_ONLY_CODE, toolname='custom_devtests', config_id=0)
 dev_test.set_one_test_execution_timeout(2)
+#dev_test.set_test_oracle_test(True)
+
 
 # klee tests
 klee_test = TestcaseToolsConfig(tooltype=TestToolType.USE_ONLY_CODE, toolname='klee', \
@@ -98,8 +100,7 @@ CRITERIA_EXECUTION_OPTIMIZERS = {
     "STRONG_MUTATION": "SM_OPTIMIZED_BY_WM",
 }
 
-OVER_CRITERIA_ELEMENTS_ONCE = True
+#COVER_CRITERIA_ELEMENTS_ONCE = True
 LOG_DEBUG = True
-
 
 #DISCARD_FLAKY_TESTS = False

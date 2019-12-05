@@ -3,7 +3,7 @@ from __future__ import print_function
 import os
 import sys
 import re
-import importlib
+import imp
 from distutils.spawn import find_executable
 
 import muteria.common.mix as common_mix
@@ -227,9 +227,8 @@ class KTestTestFormat(object):
         ktt_dir = os.path.dirname(cls.get_test_replay_tool(
                                         custom_replay_tool_binary_dir=\
                                                 custom_replay_tool_binary_dir))
-        sys.path.insert(0, ktt_dir)
-        ktest_tool = importlib.import_module("ktest-tool")
-        sys.path.pop(0)
+        ktest_tool = imp.load_source("ktest-tool", \
+                                        os.path.join(ktt_dir, 'ktest-tool'))
 
         ret_fdupes = []
         invalid = []
@@ -260,7 +259,7 @@ class KTestTestFormat(object):
 
         # do fdupes
         dup_dict = {}
-        keys = kt2used_dat.keys()
+        keys = list(kt2used_dat.keys())
         for ktest_file in keys:
             if ktest_file in kt2used_dat:
                 ktest_file_dat = kt2used_dat[ktest_file]

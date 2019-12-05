@@ -66,6 +66,7 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
             '-shadow-allow-allocs': True,
             '-watchdog': True,
             '-shadow-replay-standalone': False,
+            '-shadow-only-symbolic-tests': True,
         }
         key_val_params = {
             #'-output-dir': self.tests_storage_dir,
@@ -258,7 +259,7 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
             matched_lines = set()
             for src in self.source_files_to_objects:
                 with open(os.path.join(self.repository_rootdir, src)) as f:
-                    for lnum, line in enumerate(f):
+                    for lnum, line in enumerate(f.readlines()):
                         if m_regex.search(line) is not None:
                             matched_lines.add(DriversUtils.make_meta_element(\
                                                             str(lnum+1), src))

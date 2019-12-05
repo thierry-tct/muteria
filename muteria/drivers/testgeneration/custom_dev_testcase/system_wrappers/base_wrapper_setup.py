@@ -200,7 +200,8 @@ class BaseSystemWrapper(abc.ABC):
         shutil.move(repo_exe_abs_path + self.backup_ext, repo_exe_abs_path)
 
         # small cleanup
-        os.remove(repo_exe_abs_path + self.used_ext)
+        if os.path.isfile(repo_exe_abs_path + self.used_ext):
+            os.remove(repo_exe_abs_path + self.used_ext)
 
         # cleanup data
         self.cleanup_logs(exe_path_map)

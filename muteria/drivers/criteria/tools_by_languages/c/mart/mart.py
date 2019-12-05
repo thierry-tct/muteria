@@ -103,6 +103,10 @@ class CriteriaToolMart(BaseCriteriaTool):
                 c_exes[k] = os.path.join(self.mart_out, c_exes[k])
 
         for criterion in enabled_criteria:
+            ERROR_HANDLER.assert_true(criterion.get_str() in obj, 
+                            'criterion was not enabled during instrumentation'
+                            ' with Mart: {}. Eneble it and run again'.format(\
+                                                criterion.get_str()), __file__)
             crit_to_exes_map[criterion] = obj[criterion.get_str()]
         return crit_to_exes_map
     #~ def get_instrumented_executable_paths_map()
@@ -117,13 +121,14 @@ class CriteriaToolMart(BaseCriteriaTool):
             #in_mem_tce = os.path.join(self.mart_out, 'equidup-mutantsInfos.json')
 
             mart_inf_obj = common_fs.loadJSON(mart_inf)
-            fduped_obj = common_fs.loadJSON(fdupes)
             #in_mem_tce_obj = common_fs.loadJSON(in_mem_tce)
+            if os.path.isfile(fdupes):
+                fduped_obj = common_fs.loadJSON(fdupes)
 
-            # remove equivalent et duplicates
-            for mid, dups in list(fduped_obj.items()):
-                for d_mid in dups:
-                    del mart_inf_obj[d_mid]
+                # remove equivalent et duplicates
+                for mid, dups in list(fduped_obj.items()):
+                    for d_mid in dups:
+                        del mart_inf_obj[d_mid]
 
             # Add elements
             for mid, info in list(mart_inf_obj.items()):
@@ -331,6 +336,8 @@ class CriteriaToolMart(BaseCriteriaTool):
         bool_param, k_v_params = self._get_default_params()
         if TestCriteria.STRONG_MUTATION in enabled_criteria:
             bool_param['-write-mutants'] = True
+        else:
+            self.archive_separated = False
         if k_v_params['-mutant-scope'] is None:
             src_list_scope_file = os.path.join(self.mutant_data, \
                                                         'mutation-scope.json')
@@ -409,6 +416,9 @@ class CriteriaToolMart(BaseCriteriaTool):
 
     ## Extra functions for mart
     def get_test_gen_metamutant_bc(self):
+        ERROR_HANDLER.assert_true(os.path.isfile(self.instrumentation_details), \
+		 "Are you sure mutant generation with Mart was ran?"
+                 "This is needed before meta mu bc is called", __file__)
         crit2file = self.get_instrumented_executable_paths_map(\
                                             (TestCriteria.STRONG_MUTATION,))
         sm_map = list(crit2file[TestCriteria.STRONG_MUTATION].items())

@@ -291,6 +291,8 @@ class RepositoryManager(object):
         :rtype: any
         """
 
+        self.revert_src_list_files()
+        
         self._set_callback_basics(callback_object)
 
         self.lock.acquire()

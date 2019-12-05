@@ -135,8 +135,8 @@ class CriteriaToolGCov(BaseCriteriaTool):
             with open(self.gcov_gdb_wrapper_template) as f:
                 template_str = f.read()
             single_exe = obj[list(obj)[0]]
-            template_str.replace('MUTERIA_GCOV_PROGRAMEXE_PATHNAME', \
-                                                                    single_exe)
+            template_str = template_str.replace(\
+                                'MUTERIA_GCOV_PROGRAMEXE_PATHNAME', single_exe)
             with open(self.gcov_gdb_wrapper_sh, 'w') as f:
                 f.write(template_str)
             shutil.copymode(single_exe, self.gcov_gdb_wrapper_sh)
