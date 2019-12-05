@@ -157,6 +157,10 @@ def get_outputdir_structure_by_filesdirs():
     TopExecutionDir[TMP_SELECTED_TESTS_LIST] = \
                 TopExecutionDir[EXECUTION_TMP_DIR] + [TMP_SELECTED_TESTS_LIST]
 
+    TopExecutionDir[TMP_SELECTED_CRITERIA_OBJECTIVES_LIST] = \
+                                TopExecutionDir[EXECUTION_TMP_DIR] \
+                                    + [TMP_SELECTED_CRITERIA_OBJECTIVES_LIST]
+
     TopExecutionDir[STATS_MAIN_FILE_HTML] = TopExecutionDir[RESULTS_STATS_DIR]\
                                                     + [STATS_MAIN_FILE_HTML]
 

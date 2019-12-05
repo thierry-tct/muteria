@@ -9,6 +9,7 @@ import logging
 import shutil
 import glob
 import math
+import copy
 import random
 
 import muteria.common.mix as common_mix
@@ -654,6 +655,13 @@ class Executor(object):
                 if len(criteria_set) == 0:
                     continue
 
+                # ensure right criteria
+                used_crit_TO_list_by_crit = copy.deepcopy(crit_TO_list_by_crit)
+                if used_crit_TO_list_by_crit is not None:
+                    todel = set(used_crit_TO_list_by_crit) - criteria_set
+                    for td in todel:
+                        del used_crit_TO_list_by_crit[td]
+
                 # Was it already checkpointed w.r.t criteria set seq
                 if self.cp_data.criteria_set_is_executed(cs_pos, criteria_set):
                     continue
@@ -686,7 +694,7 @@ class Executor(object):
                             criterion_to_executionoutput=\
                                                     criterion_to_execoutput, \
                             criteria_element_list_by_criteria=\
-                                                        crit_TO_list_by_crit,
+                                                    used_crit_TO_list_by_crit,
                             cover_criteria_elements_once=self.config.\
                                     COVER_CRITERIA_ELEMENTS_ONCE.get_val(),\
                             prioritization_module_by_criteria=\
