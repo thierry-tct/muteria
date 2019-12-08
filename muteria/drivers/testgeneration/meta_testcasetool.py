@@ -470,7 +470,7 @@ class MetaTestcaseTool(object):
         # minimum number of tests for parallelism
         ptest_tresh = 5
 
-        if len(candidate_aliases) > 1 and len(meta_testcases) > ptest_tresh \
+        if len(candidate_aliases) > 1 and len(meta_testcases) >= ptest_tresh \
                 and (parallel_test_count is None or parallel_test_count > 1):
             if parallel_test_count is None:
                 paralle_count = min(len(candidate_aliases), \
