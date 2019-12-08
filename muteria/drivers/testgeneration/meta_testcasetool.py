@@ -20,6 +20,8 @@ import glob
 import shutil
 import copy
 import logging
+import multiprocessing
+import joblib
 
 import muteria.common.fs as common_fs
 import muteria.common.matrices as common_matrices
@@ -329,7 +331,8 @@ class MetaTestcaseTool(object):
                         module. 
                         (TODO: Implement support)
         :param parallel_test_count: Specify the number of parallel test
-                        Execution. must be an integer >= 1
+                        Execution. must be an integer >= 1 or None.
+                        When None, the max possible value is used.
         :param parallel_test_scheduler: Specify the function that will
                         handle parallel test scheduling by tool, using
                         the test execution optimizer. 
@@ -418,13 +421,18 @@ class MetaTestcaseTool(object):
             testcases_by_tool[ttoolalias].append(testcase)
             
         found_a_failure = False
+        candidate_aliases = []
         for tpos, ttoolalias in enumerate(testcases_by_tool.keys()):
             # @Checkpoint: Check whether already executed
             if not checkpoint_handler.is_to_execute(func_name=cp_func_name, \
                                                 taskid=cp_task_id, \
                                                 tool=ttoolalias):
                 continue
+            candidate_aliases.append(ttoolalias)
 
+        shared_loc = multiprocessing.RLock()
+
+        def tool_parallel_test_exec(ttoolalias):
             # Actual execution
             ttool = \
                 self.testcases_configured_tools[ttoolalias][self.TOOL_OBJ_KEY]
@@ -440,31 +448,51 @@ class MetaTestcaseTool(object):
                                             with_output_summary=\
                                                         with_output_summary, \
                                             hash_outlog=hash_outlog)
-            for testcase in test_failed_verdicts:
-                meta_testcase =  \
-                        DriversUtils.make_meta_element(testcase, ttoolalias)
-                meta_test_failedverdicts_outlog[0][meta_testcase] = \
+            with shared_loc:
+                for testcase in test_failed_verdicts:
+                    meta_testcase =  DriversUtils.make_meta_element(\
+                                                        testcase, ttoolalias)
+                    meta_test_failedverdicts_outlog[0][meta_testcase] = \
                                                 test_failed_verdicts[testcase]
-                meta_test_failedverdicts_outlog[1][meta_testcase] = \
+                    meta_test_failedverdicts_outlog[1][meta_testcase] = \
                                                     test_execoutput[testcase]
-                if test_failed_verdicts[testcase] == \
+                    if not found_a_failure \
+                                and test_failed_verdicts[testcase] == \
                                 common_mix.GlobalConstants.COMMAND_UNCERTAIN:
-                    found_a_failure = True
+                        found_a_failure = True
 
-            # @Checkpoint: Chekpointing
-            checkpoint_handler.do_checkpoint(func_name=cp_func_name, \
+                # @Checkpoint: Chekpointing
+                checkpoint_handler.do_checkpoint(func_name=cp_func_name, \
                                 taskid=cp_task_id, \
                                 tool=ttoolalias, \
                                 opt_payload=meta_test_failedverdicts_outlog)
 
-            if stop_on_failure and found_a_failure:
-                # @Checkpoint: Chekpointing for remaining tools
-                for rem_tool in list(testcases_by_tool.keys())[tpos+1:]:
-                    checkpoint_handler.do_checkpoint(func_name=cp_func_name, \
+        # minimum number of tests for parallelism
+        ptest_tresh = 5
+
+        if len(candidate_aliases) > 1 and len(meta_testcases) > ptest_tresh \
+                and (parallel_test_count is None or parallel_test_count > 1):
+            if parallel_test_count is None:
+                paralle_count = min(len(candidate_aliases), \
+                                                multiprocessing.cpu_count())
+            else:
+                paralle_count = min(len(candidate_aliases), \
+                                                        parallel_test_count)
+            joblib.Parallel(n_jobs=paralle_count, require='sharedmem')\
+                    (joblib.delayed(tool_parallel_test_exec)(ttoolalias) \
+                        for ttoolalias in candidate_aliases)
+        else:
+            for tpos, ttoolalias in enumerate(candidate_aliases):
+                tool_parallel_test_exec(ttoolalias)
+                if stop_on_failure and found_a_failure:
+                    # @Checkpoint: Chekpointing for remaining tools
+                    for rem_tool in list(testcases_by_tool.keys())[tpos+1:]:
+                        checkpoint_handler.do_checkpoint(\
+                                func_name=cp_func_name, \
                                 taskid=cp_task_id, \
                                 tool=rem_tool, \
                                 opt_payload=meta_test_failedverdicts_outlog)
-                break
+                    break
                                         
         if stop_on_failure:
             # Make sure the non executed test has the uncertain value (None)

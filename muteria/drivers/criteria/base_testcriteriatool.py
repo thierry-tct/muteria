@@ -381,6 +381,7 @@ class BaseCriteriaTool(abc.ABC):
                                                             timeout_times, \
                                         with_output_summary=(executionoutput \
                                                                 is not None), \
+                                        parallel_test_count=None, \
                                         restart_checkpointer=True)
                 prioritization_module.feedback(element, fail_verdicts)
 
