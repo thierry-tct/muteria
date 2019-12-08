@@ -356,15 +356,16 @@ class MetaTestcaseTool(object):
         
         ERROR_HANDLER.assert_true(meta_testcases is not None, \
                                             "Must specify testcases", __file__)
+        ERROR_HANDLER.assert_true(parallel_test_count is None \
+                                        or parallel_test_count >= 1, \
+                                "invalid parallel tests count ({})".format(\
+                                                parallel_test_count), __file__)
 
         # FIXME: Make sure that the support are implemented for 
         # parallelism and test prioritization. Remove the code bellow 
         # once supported:
         ERROR_HANDLER.assert_true(test_prioritization_module is None, \
                         "Must implement test prioritization support here", \
-                                                                    __file__)
-        ERROR_HANDLER.assert_true(parallel_test_count <= 1, \
-                    "Must implement parallel tests execution support here", \
                                                                     __file__)
         ERROR_HANDLER.assert_true(parallel_test_scheduler is None, \
                     "Must implement parallel tests execution support here", \
