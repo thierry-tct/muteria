@@ -420,7 +420,6 @@ class MetaTestcaseTool(object):
                 testcases_by_tool[ttoolalias] = []
             testcases_by_tool[ttoolalias].append(testcase)
             
-        found_a_failure = False
         candidate_aliases = []
         for tpos, ttoolalias in enumerate(testcases_by_tool.keys()):
             # @Checkpoint: Check whether already executed
@@ -433,8 +432,8 @@ class MetaTestcaseTool(object):
         shared_loc = multiprocessing.RLock()
 
         def tool_parallel_test_exec(ttoolalias):
-            global found_a_failure
             # Actual execution
+            found_a_failure=False
             ttool = \
                 self.testcases_configured_tools[ttoolalias][self.TOOL_OBJ_KEY]
             test_failed_verdicts, test_execoutput = ttool.runtests( \
@@ -467,6 +466,7 @@ class MetaTestcaseTool(object):
                                 taskid=cp_task_id, \
                                 tool=ttoolalias, \
                                 opt_payload=meta_test_failedverdicts_outlog)
+            return found_a_failure
         #~ def tool_parallel_test_exec()
 
         # minimum number of tests for parallelism
@@ -485,7 +485,7 @@ class MetaTestcaseTool(object):
                         for ttoolalias in candidate_aliases)
         else:
             for tpos, ttoolalias in enumerate(candidate_aliases):
-                tool_parallel_test_exec(ttoolalias)
+                found_a_failure = tool_parallel_test_exec(ttoolalias)
                 if stop_on_failure and found_a_failure:
                     # @Checkpoint: Chekpointing for remaining tools
                     for rem_tool in list(testcases_by_tool.keys())[tpos+1:]:
