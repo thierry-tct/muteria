@@ -356,10 +356,6 @@ class MetaTestcaseTool(object):
         
         ERROR_HANDLER.assert_true(meta_testcases is not None, \
                                             "Must specify testcases", __file__)
-        ERROR_HANDLER.assert_true(parallel_test_count is None \
-                                        or parallel_test_count >= 1, \
-                                "invalid parallel tests count ({})".format(\
-                                                parallel_test_count), __file__)
 
         # FIXME: Make sure that the support are implemented for 
         # parallelism and test prioritization. Remove the code bellow 
@@ -376,9 +372,10 @@ class MetaTestcaseTool(object):
         if exe_path_map is None:
             exe_path_map = self._get_default_exe_path_map()
 
-        ERROR_HANDLER.assert_true(parallel_test_count > 0, \
-                    "invalid parallel test execution count: {}. {}".format( \
-                                    parallel_test_count, "must be >= 1"))
+        ERROR_HANDLER.assert_true(parallel_test_count is None \
+                                        or parallel_test_count >= 1, \
+                                "invalid parallel tests count ({})".format(\
+                                                parallel_test_count), __file__)
 
         # @Checkpoint: create a checkpoint handler
         cp_func_name = "runtests"
