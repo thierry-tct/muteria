@@ -433,6 +433,7 @@ class MetaTestcaseTool(object):
         shared_loc = multiprocessing.RLock()
 
         def tool_parallel_test_exec(ttoolalias):
+            global found_a_failure
             # Actual execution
             ttool = \
                 self.testcases_configured_tools[ttoolalias][self.TOOL_OBJ_KEY]
@@ -466,6 +467,7 @@ class MetaTestcaseTool(object):
                                 taskid=cp_task_id, \
                                 tool=ttoolalias, \
                                 opt_payload=meta_test_failedverdicts_outlog)
+        #~ def tool_parallel_test_exec()
 
         # minimum number of tests for parallelism
         ptest_tresh = 5
