@@ -40,6 +40,8 @@ setup(
             "networkx",
             "gitpython",
             "tqdm",
+            "joblib",
+            "docker", # https://docker-py.readthedocs.io/en/stable/index.html
 
             # SERVER
             "flask",
