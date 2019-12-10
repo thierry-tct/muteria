@@ -66,7 +66,7 @@ class TestcasesToolSemu(TestcasesToolKlee):
             '-semu-disable-statediff-in-testgen': None,
             '-semu-continue-mindist-out-heuristic': None,
             '-semu-use-basicblock-for-distance': None,
-            '-semu-forkprocessfor-segv-externalcalls': None,
+            '-semu-forkprocessfor-segv-externalcalls': True,
             '-semu-testsgen-only-for-critical-diffs': None,
             '-semu-consider-outenv-for-diffs': None,
         }
@@ -78,12 +78,12 @@ class TestcasesToolSemu(TestcasesToolKlee):
             '-max-time': self.config.TEST_GENERATION_MAXTIME,
             '-libc': 'uclibc',
             # SEMu 
-            '-semu-mutant-max-fork': None,
-            '-semu-checknum-before-testgen-for-discarded': None,
-            '-semu-mutant-state-continue-proba': None,
-            '-semu-precondition-length': None,
+            '-semu-mutant-max-fork': '0', #None,
+            '-semu-checknum-before-testgen-for-discarded': '2', # None,
+            '-semu-mutant-state-continue-proba': '0.25', #None,
+            '-semu-precondition-length': '0', #None,
             '-semu-max-total-tests-gen': None,
-            '-semu-max-tests-gen-per-mutant': None,
+            '-semu-max-tests-gen-per-mutant': '5', # None,
         }
         # XXX: set muts cand list
         if os.path.isfile(self.sm_mat_file):
