@@ -349,7 +349,7 @@ class TestcasesToolKlee(BaseTestcaseTool):
             for df in dup_tuple[1:]:
                 os.remove(df)
         common_fs.dumpJSON(kepttest2duptest_map, self.keptktest2dupktests)
-
+        
         # Copy replay tool into test folder
         klee_replay_pathname = KTestTestFormat.get_test_replay_tool(\
                         custom_replay_tool_binary_dir=self.custom_binary_dir)
