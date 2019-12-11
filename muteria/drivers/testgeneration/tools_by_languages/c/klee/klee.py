@@ -296,6 +296,7 @@ class TestcasesToolKlee(BaseTestcaseTool):
             rel_path_map[exe] = os.path.join(self.tests_working_dir, filename)
 
         # Get bitcode file
+        # TODO: use loop to get multiple time (different bitcodes or others)
         bitcode_file = self._get_input_bitcode_file(code_builds_factory, \
                                                                 rel_path_map, \
                                 meta_criteria_tool_obj=meta_criteria_tool_obj)
