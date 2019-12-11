@@ -98,6 +98,8 @@ class TestcasesToolSemu(TestcasesToolKlee):
     
     def _get_input_bitcode_file(self, code_builds_factory, rel_path_map, \
                                                 meta_criteria_tool_obj=None):
+        # TODO: use loop to get multiple time (different bitcodes or others)
+
         # XXX: get the meta criterion file from MART.
         mutant_gen_tool_name = 'mart'
         mut_tool_alias_to_obj = \
@@ -113,10 +115,23 @@ class TestcasesToolSemu(TestcasesToolKlee):
                                 "a single .bc file for now (todo).", __file__)
 
         t_alias2metamu_bc = {}
+        t_alias2mutantInfos = {}
         for alias, obj in mut_tool_alias_to_obj.items():
             dest_bc = rel_path_map[list(rel_path_map)[0]]+'.bc'
             shutil.copy2(obj.get_test_gen_metamutant_bc(), dest_bc)
             t_alias2metamu_bc[alias] = dest_bc
+            t_alias2mutantInfos[alias] = obj.get_criterion_info_object(None)
+
+        # XXX: get mutants ids by functions
+        mutants_by_funcs = {}
+        single_alias = list(t_alias2mutantInfos)[0]
+        single_tool_obj = t_alias2mutantInfos[single_alias]
+        for mut in single_tool_obj.get_elements_list():
+            func = single_tool_obj.get_element_data(mut)['mutant_function']
+            #meta_mut = DriversUtils.make_meta_element(mut, single_alias)
+            if func not in mutants_by_funcs:
+                mutants_by_funcs[func] = set()
+            mutants_by_funcs[func].add(mut) #meta_mut)
 
         # XXX: get candidate mutants list
         if os.path.isfile(self.sm_mat_file):
@@ -129,6 +144,7 @@ class TestcasesToolSemu(TestcasesToolKlee):
                     t_alias, m = DriversUtils.reverse_meta_element(meta_m)
                     if t_alias in t_alias2metamu_bc: # There is a single one
                         f.write(str(m)+'\n')
+
         return t_alias2metamu_bc[list(t_alias2metamu_bc)[0]]
     #~ def _get_input_bitcode_file()
 

@@ -801,6 +801,13 @@ class Executor(object):
             for criterion in self.config.ENABLED_CRITERIA.get_val():
                 self.meta_criteria_tool.get_criterion_info_file(criterion)
 
+            # Other results
+            other_res = self.head_explorer.get_or_create_and_get_dir(\
+                                            outdir_struct.OTHER_COPIED_RESULTS)
+            flake_dir = self.meta_testcase_tool.get_flakiness_workdir()
+            if os.path.isdir(flake_dir):
+                shutil.copytree(flake_dir, other_res)
+
             # Compute the final stats (MS, ...)
             StatsComputer.compute_stats(self.config, self.head_explorer, \
                                                             self.checkpointer)

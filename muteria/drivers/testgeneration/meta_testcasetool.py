@@ -791,6 +791,10 @@ class MetaTestcaseTool(object):
     ######################################
     ############ OTHER FUNCTION ##########
     ######################################
+    def get_flakiness_workdir(self):
+        return self.flakiness_workdir
+    #~ def get_flakiness_workdir()
+
     def check_get_flakiness(self, meta_testcases, repeat_count=2):
         """
             Check if tests have flakiness by running multiple times

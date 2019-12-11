@@ -37,6 +37,13 @@ class CriterionElementInfoObject(object):
         self.data[self.DATA_KEY][element_name] = kwargs
     #~def add_element ():
 
+    def get_element_data(self, element_name):
+        ERROR_HANDLER.assert_true(self.has_element(element_name), \
+                            "Test is not present in this: {}".format(\
+                                                    element_name), __file__)
+        return self.data[self.DATA_KEY][element_name]
+    #~ def get_element_data()
+
     def has_element(self, element_name):
         return element_name in self.data[self.DATA_KEY]
     #~ def has_element():
