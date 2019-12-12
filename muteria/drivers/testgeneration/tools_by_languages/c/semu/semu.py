@@ -168,7 +168,8 @@ class TestcasesToolSemu(TestcasesToolKlee):
         single_alias = list(t_alias2mutantInfos)[0]
         single_tool_obj = t_alias2mutantInfos[single_alias]
         for mut in single_tool_obj.get_elements_list():
-            func = single_tool_obj.get_element_data(mut)['mutant_function']
+            func = single_tool_obj.get_element_data(mut)[\
+                                                        'mutant_function_name']
             #meta_mut = DriversUtils.make_meta_element(mut, single_alias)
             if func not in self.mutants_by_funcs:
                 self.mutants_by_funcs[func] = set()

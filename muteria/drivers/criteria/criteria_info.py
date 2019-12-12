@@ -100,12 +100,12 @@ class MutantsInfoObject(CriterionElementInfoObject):
     #~ def __init__()
 
     def add_element (self, element_name, mutant_type=None, 
-                            mutant_locs=None, mutant_function=None, **kwargs):
+                        mutant_locs=None, mutant_function_name=None, **kwargs):
         CriterionElementInfoObject.add_element(self, element_name, \
-                                        mutant_type=mutant_type, \
-                                        mutant_srclocs=mutant_locs, \
-                                        mutant_function_name=mutant_function, \
-                                        **kwargs)
+                                    mutant_type=mutant_type, \
+                                    mutant_srclocs=mutant_locs, \
+                                    mutant_function_name=mutant_function_name,\
+                                    **kwargs)
     #~def add_element ():
 
 #~ class MutantsInfoObject(object):

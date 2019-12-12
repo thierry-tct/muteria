@@ -133,9 +133,9 @@ class CriteriaToolMart(BaseCriteriaTool):
             # Add elements
             for mid, info in list(mart_inf_obj.items()):
                 minf_obj.add_element(mid, mutant_type=info['Type'], \
-                                            mutant_locs=info['SrcLoc'], \
-                                            mutant_function=info['FuncName'], \
-                                            IRPosInFunc=info['IRPosInFunc'])
+                                        mutant_locs=info['SrcLoc'], \
+                                        mutant_function_name=info['FuncName'],\
+                                        IRPosInFunc=info['IRPosInFunc'])
             self.mutant_info_object = minf_obj
             return minf_obj
     #~ def get_criterion_info_object()
