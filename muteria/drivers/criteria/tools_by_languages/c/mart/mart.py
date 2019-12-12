@@ -361,10 +361,11 @@ class CriteriaToolMart(BaseCriteriaTool):
                                                     (post_args, post_bc_cmd)]:
                 if _cmd is not None:
                     for tup in _cmd:
-                        if tup[0] in k_v_params:
-                            del k_v_params[tup[0]]
-                        if tup[0] in bool_param:
-                            del bool_param[tup[0]]
+                        key = tup[0][1:] if tup[0].startswith('--') else tup[0]
+                        if key in k_v_params:
+                            del k_v_params[key]
+                        if key in bool_param:
+                            del bool_param[key]
                         _args.extend(list(tup))
 
         args = [bp for bp, en in list(bool_param.items()) if en]

@@ -193,7 +193,7 @@ class DriversUtils(object):
 
     @classmethod
     def execute_and_get_retcode_out_err(cls, prog, args_list=[], \
-                                                env=None, timeout=None, \
+                            env=None, timeout=None, timeout_grace_period=5, \
                             out_on=True, err_on=True, merge_err_to_out=True):
         #print(prog, args_list, env is None, timeout, out_on, err_on, merge_err_to_out)
         tmp_env = os.environ if env is None else env
@@ -214,9 +214,9 @@ class DriversUtils(object):
             #p.terminate() # TODO: Chose the signal to send
             os.killpg(p.pid, signal.SIGTERM)
             #p.send_signal(signal.SIGINT) # TODO: Chose the signal to send
-            # give 5 seconds to stop
+            # give timeout_grace_period seconds to stop
             stopped = False
-            for _ in range(5):
+            for _ in range(timeout_grace_period):
                 if p.poll() is None:
                     time.sleep(1)
                 else:

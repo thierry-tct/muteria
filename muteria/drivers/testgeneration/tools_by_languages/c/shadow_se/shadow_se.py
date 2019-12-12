@@ -215,6 +215,7 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
                     pre, tmp = v.split('=')
                     tmp = str(max(1, float(tmp) / len(cand_testpair_list)))
                     args[i] = pre + '=' + str(tmp)
+                    break
 
         # Set the wrapper
         with open(call_shadow_wrapper_file, 'w') as wf:

@@ -64,15 +64,19 @@ class TestcasesToolKlee(BaseTestcaseTool):
             '-allow-external-sym-calls': True, #None,
             '-posix-runtime': True, #None,
             '-dump-states-on-halt': True, #None,
-            '-only-output-states-covering-new': True 
+            '-only-output-states-covering-new': True,
+            '-use-cex-cache': True,
         }
         key_val_params = {
             '-output-dir': self.tests_storage_dir,
             '-solver-backend': None,
+            '-max-solver-time': None,
             '-search': None,
             '-max-memory': None,
             '-max-time': self.config.TEST_GENERATION_MAXTIME,
             '-libc': 'uclibc',
+            '-max-sym-array-size': '4096',
+            '-max-instruction-time': '10.',
         }
         return bool_params, key_val_params
     #~ def _get_default_params()
@@ -105,6 +109,18 @@ class TestcasesToolKlee(BaseTestcaseTool):
 
     # SHADOW should override
     def _call_generation_run(self, runtool, args):
+        ## locate max-time
+        timeout_grace_period = 600
+        max_time = None
+        for i, v in enumerate(args):
+            if v in ('-max-time', '--max-time'):
+                max_time = float(args[i+1]) + 5 #5 to give time to klee
+                break
+            elif v.startswith('-max-time=') or v.startswith('--max-time='):
+                _, max_time = v.split('=')
+                max_time = float(max_time) + 5  #5 to give time to klee
+                break
+
         # set stack to unlimited
         stack_ulimit_soft, stack_ulimit_hard = \
                                     resource.getrlimit(resource.RLIMIT_STACK)
@@ -113,7 +129,9 @@ class TestcasesToolKlee(BaseTestcaseTool):
 
         # Execute Klee
         ret, out, err = DriversUtils.execute_and_get_retcode_out_err(\
-                                                                runtool, args)
+                                    runtool, args, timeout=max_time, \
+                                    timeout_grace_period=timeout_grace_period)
+                                    #out_on=False, err_on=False)
         
         # restore stack
         if stack_ulimit_soft != -1:
@@ -312,10 +330,11 @@ class TestcasesToolKlee(BaseTestcaseTool):
             pre_bc_cmd = uc.PRE_TARGET_CMD_ORDERED_FLAGS_LIST
             if pre_bc_cmd is not None:
                 for tup in pre_bc_cmd:
-                    if tup[0] in k_v_params:
-                        del k_v_params[tup[0]]
-                    if tup[0] in bool_param:
-                        del bool_param[tup[0]]
+                    key = tup[0][1:] if tup[0].startswith('--') else tup[0]
+                    if key in k_v_params:
+                        del k_v_params[key]
+                    if key in bool_param:
+                        del bool_param[key]
                     pre_args.extend(list(tup))
 
         args = [bp for bp, en in list(bool_param.items()) if en]

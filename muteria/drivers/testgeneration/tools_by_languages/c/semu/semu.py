@@ -65,7 +65,8 @@ class TestcasesToolSemu(TestcasesToolKlee):
             '-allow-external-sym-calls': True, #None,
             '-posix-runtime': True, #None,
             '-dump-states-on-halt': True, #None,
-            '-only-output-states-covering-new': True,
+            '-only-output-states-covering-new': None,
+            '-use-cex-cache': True,
             # SEMu 
             '-semu-disable-statediff-in-testgen': None,
             '-semu-continue-mindist-out-heuristic': None,
@@ -77,10 +78,13 @@ class TestcasesToolSemu(TestcasesToolKlee):
         key_val_params = {
             '-output-dir': self.tests_storage_dir,
             '-solver-backend': 'z3',
+            '-max-solver-time': '300',
             '-search': 'bfs',
             '-max-memory': None,
             '-max-time': self.config.TEST_GENERATION_MAXTIME,
             '-libc': 'uclibc',
+            '-max-sym-array-size': '4096',
+            '-max-instruction-time': '10.',
             # SEMu 
             '-semu-mutant-max-fork': '0', #None,
             '-semu-checknum-before-testgen-for-discarded': '2', # None,
@@ -88,7 +92,10 @@ class TestcasesToolSemu(TestcasesToolKlee):
             '-semu-precondition-length': '0', #None,
             '-semu-max-total-tests-gen': None,
             '-semu-max-tests-gen-per-mutant': '5', # None,
+            '-semu-loop-break-delay': '120.0',
         }
+        key_val_params.update({
+                                })
         # XXX: set muts cand list
         if os.path.isfile(self.sm_mat_file):
             key_val_params['-semu-candidate-mutants-list-file'] = \
@@ -98,8 +105,10 @@ class TestcasesToolSemu(TestcasesToolKlee):
     
     def _call_generation_run(self, runtool, args):
         # use mutants_by_funcs to reorganize target mutants for scalability
+
         # TODO: compute max_mutant_count_per_cluster based on max memory or let user specify
         max_mutant_count_per_cluster = 500
+
         cand_mut_file_bak = self.cand_muts_file + '.bak'
         mut_list = []
         with open(self.cand_muts_file) as f:
@@ -118,6 +127,8 @@ class TestcasesToolSemu(TestcasesToolKlee):
 
         c_dirs = []
         for c_id, clust in enumerate(clusters):
+            logging.debug("SEMU: targeting mutant cluster {}/{} ...".format(\
+                                                        c_id+1, len(clusters)))
             with open(self.cand_muts_file, 'w') as f:
                 for m in clust:
                     f.write(m+'\n')
