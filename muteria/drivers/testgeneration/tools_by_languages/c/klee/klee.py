@@ -257,7 +257,6 @@ class TestcasesToolKlee(BaseTestcaseTool):
         return verdict, collected_output
     #~ def _execute_a_test()
 
-    # TODO: Separate bitcode generation into its own function
     def _do_generate_tests (self, exe_path_map, code_builds_factory, \
                                                 meta_criteria_tool_obj=None, \
                                                                 max_time=None):
@@ -296,7 +295,6 @@ class TestcasesToolKlee(BaseTestcaseTool):
             rel_path_map[exe] = os.path.join(self.tests_working_dir, filename)
 
         # Get bitcode file
-        # TODO: use loop to get multiple time (different bitcodes or others)
         bitcode_file = self._get_input_bitcode_file(code_builds_factory, \
                                                                 rel_path_map, \
                                 meta_criteria_tool_obj=meta_criteria_tool_obj)

@@ -6,6 +6,9 @@ import glob
 import shutil
 import logging
 import resource
+import random
+
+import numpy as np
 
 import muteria.common.fs as common_fs
 import muteria.common.mix as common_mix
@@ -52,6 +55,7 @@ class TestcasesToolSemu(TestcasesToolKlee):
         self.sm_mat_file = self.head_explorer.get_file_pathname(\
                             fd_structure.CRITERIA_MATRIX[criteria.TestCriteria\
                                                             .STRONG_MUTATION])
+        self.mutants_by_funcs = None
     #~ def __init__()
 
     # SHADOW override
@@ -92,14 +96,51 @@ class TestcasesToolSemu(TestcasesToolKlee):
         return bool_params, key_val_params
     #~ def _get_default_params()
     
+    def _call_generation_run(self, runtool, args):
+        # use mutants_by_funcs to reorganize target mutants for scalability
+        # TODO: compute max_mutant_count_per_cluster based on max memory or let user specify
+        max_mutant_count_per_cluster = 500
+        cand_mut_file_bak = self.cand_muts_file + '.bak'
+        mut_list = []
+        with open(self.cand_muts_file) as f:
+            for m in f:
+                ERROR_HANDLER.assert_true(m.isdigit(), "Invalid mutant ID", \
+                                                                    __file__)
+                mut_list.append(m)
+        random.shuffle(mut_list)
+        nclust = int(len(mut_list) / max_mutant_count_per_cluster)
+        if len(mut_list) != max_mutant_count_per_cluster * nclust:
+            nclust += 1
+        clusters = np.array_split(mut_list, nclust)
+        
+        shutil.move(self.cand_muts_file, cand_mut_file_bak)
+
+        c_dirs = []
+        for c_id, clust in enumerate(clusters):
+            with open(self.cand_muts_file, 'w') as f:
+                for m in clust:
+                    f.write(m+'\n')
+
+            super(TestcasesToolSemu, self)._call_generation_run(runtool, args)
+            
+            c_dir = os.path.join(os.path.dirname(self.tests_storage_dir), \
+                                                                    str(c_id))
+            shutil.move(self.tests_storage_dir, c_dir)
+            c_dirs.append(c_dir)
+
+        os.mkdir(self.tests_storage_dir)
+        for c_dir in c_dirs:
+            shutil.move(c_dir, self.tests_storage_dir)
+
+        shutil.move(cand_mut_file_bak, self.cand_muts_file)
+    #~ def _call_generation_run()
+
     def _get_tool_name(self):
         return 'klee-semu'
     #~ def _get_tool_name()
     
     def _get_input_bitcode_file(self, code_builds_factory, rel_path_map, \
                                                 meta_criteria_tool_obj=None):
-        # TODO: use loop to get multiple time (different bitcodes or others)
-
         # XXX: get the meta criterion file from MART.
         mutant_gen_tool_name = 'mart'
         mut_tool_alias_to_obj = \
@@ -123,15 +164,15 @@ class TestcasesToolSemu(TestcasesToolKlee):
             t_alias2mutantInfos[alias] = obj.get_criterion_info_object(None)
 
         # XXX: get mutants ids by functions
-        mutants_by_funcs = {}
+        self.mutants_by_funcs = {}
         single_alias = list(t_alias2mutantInfos)[0]
         single_tool_obj = t_alias2mutantInfos[single_alias]
         for mut in single_tool_obj.get_elements_list():
             func = single_tool_obj.get_element_data(mut)['mutant_function']
             #meta_mut = DriversUtils.make_meta_element(mut, single_alias)
-            if func not in mutants_by_funcs:
-                mutants_by_funcs[func] = set()
-            mutants_by_funcs[func].add(mut) #meta_mut)
+            if func not in self.mutants_by_funcs:
+                self.mutants_by_funcs[func] = set()
+            self.mutants_by_funcs[func].add(mut) #meta_mut)
 
         # XXX: get candidate mutants list
         if os.path.isfile(self.sm_mat_file):
