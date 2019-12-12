@@ -104,6 +104,7 @@ class TestcasesToolSemu(TestcasesToolKlee):
         mut_list = []
         with open(self.cand_muts_file) as f:
             for m in f:
+                m = m.strip()
                 ERROR_HANDLER.assert_true(m.isdigit(), "Invalid mutant ID", \
                                                                     __file__)
                 mut_list.append(m)
