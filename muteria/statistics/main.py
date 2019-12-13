@@ -17,6 +17,14 @@ import muteria.controller.explorer as fd_structure
 
 ERROR_HANDLER = common_mix.ErrorHandler
 
+def get_subsuming_elements(matrix_file):
+    mat = common_matrices.ExecutionMatrix(filename=matrix_file)
+    elem_to_tests = mat.query_active_columns_of_rows()
+    equiv, subs_clusters = stats_algo.getSubsumingMutants(\
+                                        elem_to_tests, clustered=True)
+    return equiv, subs_clusters
+#~ def get_subsuming_elements()
+
 class StatsComputer(object):
     @staticmethod
     def merge_lmatrix_into_right(lmatrix_file, rmatrix_file):
