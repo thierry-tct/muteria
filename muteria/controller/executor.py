@@ -806,7 +806,8 @@ class Executor(object):
                                             outdir_struct.OTHER_COPIED_RESULTS)
             flake_dir = self.meta_testcase_tool.get_flakiness_workdir()
             if os.path.isdir(flake_dir):
-                shutil.copytree(flake_dir, other_res)
+                shutil.copytree(flake_dir, os.path.join(other_res, \
+                                                os.path.basename(flake_dir)))
 
             # Compute the final stats (MS, ...)
             StatsComputer.compute_stats(self.config, self.head_explorer, \
