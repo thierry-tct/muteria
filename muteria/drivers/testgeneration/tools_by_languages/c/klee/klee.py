@@ -274,24 +274,32 @@ class TestcasesToolKlee(BaseTestcaseTool):
         repo_exe = list(exe_path_map.keys())[0]
         local_exe = os.path.join(self.klee_used_tmp_build_dir, repo_exe)
         if repo_exe not in self.repo_exe_to_local_to_remote:
-            if not os.path.isdir(os.path.dirname(local_exe)):
-                os.makedirs(os.path.dirname(local_exe))
-            self.repo_exe_to_local_to_remote[repo_exe] = {local_exe: None}
+            with self.shared_loc:
+                if repo_exe not in self.repo_exe_to_local_to_remote:
+                    if not os.path.isdir(os.path.dirname(local_exe)):
+                        os.makedirs(os.path.dirname(local_exe))
+                    self.repo_exe_to_local_to_remote[repo_exe] = \
+                                                            {local_exe: None}
 
         remote_exe = exe_path_map[repo_exe]
         if remote_exe is None:
             remote_exe = repo_exe
 
         if remote_exe != self.repo_exe_to_local_to_remote[repo_exe][local_exe]:
-            if remote_exe == repo_exe:
-                self.code_builds_factory.set_repo_to_build_default(\
+            with self.shared_loc:
+                if remote_exe != \
+                        self.repo_exe_to_local_to_remote[repo_exe][local_exe]:
+                    if remote_exe == repo_exe:
+                        self.code_builds_factory.set_repo_to_build_default(\
                                         also_copy_to_map={repo_exe: local_exe})
-            else:
-                shutil.copy2(remote_exe, local_exe)
-                # Use hard link to avoid copying for big files
-                #if os.path.isfile(local_exe):
-                #    os.remove(local_exe)
-                #os.link(remote_exe, local_exe)
+                    else:
+                        shutil.copy2(remote_exe, local_exe)
+                        # Use hard link to avoid copying for big files
+                        #if os.path.isfile(local_exe):
+                        #    os.remove(local_exe)
+                        #os.link(remote_exe, local_exe)
+                    self.repo_exe_to_local_to_remote[repo_exe][local_exe] = \
+                                                                    remote_exe
 
         collected_output = [] if collect_output else None
 
@@ -410,4 +418,8 @@ class TestcasesToolKlee(BaseTestcaseTool):
         store_obj = {repo_rel_exe_file: os.path.basename(bitcode_file)}
         common_fs.dumpJSON(store_obj, self.test_details_file)
     #~ def _do_generate_tests()
+
+    def can_run_tests_in_parallel(self):
+        return True
+    #~ def can_run_tests_in_parallel()
 #~ class TestcasesToolKlee

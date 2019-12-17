@@ -39,6 +39,8 @@ import logging
 import abc
 import hashlib
 import time
+import multiprocessing
+import joblib
 
 import tqdm
 
@@ -94,6 +96,7 @@ class BaseTestcaseTool(abc.ABC):
         self.test_execution_time = {}
         self.test_execution_time_storage_file = os.path.join(\
                         self.tests_working_dir, "test_to_execution_time.json")
+        self.shared_loc = multiprocessing.RLock()
 
         # Make Initialization Computation
         ## Create dirs
@@ -371,7 +374,11 @@ class BaseTestcaseTool(abc.ABC):
         test_failed_verdicts = {} 
         test_outlog_hash = {} 
         processbar = tqdm.tqdm(testcases, leave=False, dynamic_ncols=True) 
-        for testcase in processbar: 
+
+        # Parallel stuffs
+        ptest_tresh = 5
+
+        def test_exec_iteration(testcase):
             processbar.set_description("Running Test %s"% testcase)
             start_time = time.time()
             test_failed, execoutlog_hash = \
@@ -382,15 +389,32 @@ class BaseTestcaseTool(abc.ABC):
                                         hash_outlog=hash_outlog)
             
             # Record exec time if not existing
-            if recalculate_execution_times:
-                self.test_execution_time[testcase] = \
+            with self.shared_loc:
+                if recalculate_execution_times:
+                    self.test_execution_time[testcase] = \
                                             1 + int(time.time() - start_time)
 
-            test_failed_verdicts[testcase] = test_failed
-            test_outlog_hash[testcase] = execoutlog_hash
-            if stop_on_failure and test_failed != \
+                test_failed_verdicts[testcase] = test_failed
+                test_outlog_hash[testcase] = execoutlog_hash
+            return test_failed
+        #~ def test_exec_iteration()
+
+        if self.can_run_tests_in_parallel() and len(testcases) >= ptest_tresh \
+                            and (parallel_count is None or parallel_count > 1):
+            if parallel_count is None:
+                paralle_count = min(len(testcases), \
+                                                multiprocessing.cpu_count())
+            else:
+                paralle_count = min(len(testcases), parallel_count)
+            joblib.Parallel(n_jobs=paralle_count, require='sharedmem')\
+                            (joblib.delayed(test_exec_iteration)(testcase) \
+                                                for testcase in processbar)
+        else:
+            for testcase in processbar: 
+                test_failed = test_exec_iteration(testcase)
+                if stop_on_failure and test_failed != \
                                 common_mix.GlobalConstants.PASS_TEST_VERDICT:
-                break
+                    break
         
         if recalculate_execution_times:
             common_fs.dumpJSON(self.test_execution_time, \
@@ -552,6 +576,10 @@ class BaseTestcaseTool(abc.ABC):
     def requires_criteria_instrumented(self):
         return False
     #~ def requires_criteria_instrumented()
+
+    def can_run_tests_in_parallel(self):
+        return False
+    #~ def can_run_tests_in_parallel()
 
     #######################################################################
     ##################### Methods to implement ############################

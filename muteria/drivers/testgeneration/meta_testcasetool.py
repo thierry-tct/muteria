@@ -429,6 +429,8 @@ class MetaTestcaseTool(object):
 
         shared_loc = multiprocessing.RLock()
 
+        next_parallel_count = parallel_test_count
+
         def tool_parallel_test_exec(ttoolalias):
             # Actual execution
             found_a_failure=False
@@ -445,7 +447,8 @@ class MetaTestcaseTool(object):
                                                 recalculate_execution_times, \
                                             with_output_summary=\
                                                         with_output_summary, \
-                                            hash_outlog=hash_outlog)
+                                            hash_outlog=hash_outlog, \
+                                            parallel_count=next_parallel_count)
             with shared_loc:
                 for testcase in test_failed_verdicts:
                     meta_testcase =  DriversUtils.make_meta_element(\
@@ -478,6 +481,7 @@ class MetaTestcaseTool(object):
             else:
                 paralle_count = min(len(candidate_aliases), \
                                                         parallel_test_count)
+                #next_parallel_count = 1
             joblib.Parallel(n_jobs=paralle_count, require='sharedmem')\
                     (joblib.delayed(tool_parallel_test_exec)(ttoolalias) \
                         for ttoolalias in candidate_aliases)
