@@ -210,16 +210,9 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
         # Adjust the max-time in args
         ## locate max-time
         if len(cand_testpair_list) > 0:
-            for i, v in enumerate(args):
-                if v in ('-max-time', '--max-time'):
-                    args[i+1] = \
-                        str(max(1, float(args[i+1]) / len(cand_testpair_list)))
-                    break
-                elif v.startswith('-max-time=') or v.startswith('--max-time='):
-                    pre, tmp = v.split('=')
-                    tmp = str(max(1, float(tmp) / len(cand_testpair_list)))
-                    args[i] = pre + '=' + str(tmp)
-                    break
+            cur_max_time = float(self.get_value_in_arglist(args, 'max-time'))
+            self.set_value_in_arglist(args, 'max-time', \
+                        str(max(1, cur_max_time / len(cand_testpair_list))))
 
         # Set the wrapper
         with open(call_shadow_wrapper_file, 'w') as wf:

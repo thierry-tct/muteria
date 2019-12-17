@@ -107,19 +107,53 @@ class TestcasesToolKlee(BaseTestcaseTool):
         return None 
     #~ def _get_back_llvm_compiler_path()
 
+    @staticmethod
+    def get_value_in_arglist(arglist, flagname):
+        value = None
+        for i, v in enumerate(arglist):
+            if v in ('-'+flagname, '--'+flagname):
+                value = arglist[i+1]
+                break
+            elif v.startswith('-'+flagname+'=') \
+                                            or v.startswith('--'+flagname+'='):
+                _, value = v.split('=')
+                break
+        return value
+    #~ def get_value_in_arglist()
+
+    @staticmethod
+    def set_value_in_arglist(arglist, flagname, value):
+        for i, v in enumerate(arglist):
+            if v in ('-'+flagname, '--'+flagname):
+                arglist[i+1] = value
+                break
+            elif v.startswith('-'+flagname+'=') \
+                                            or v.startswith('--'+flagname+'='):
+                pre, _ = v.split('=')
+                arglist[i] = pre + '=' + str(value)
+                break
+    #~ def set_value_in_arglist()
+
+    @staticmethod
+    def remove_arg_and_value_from_arglist(arglist, flagname):
+        for i, v in enumerate(arglist):
+            if v in ('-'+flagname, '--'+flagname):
+                del arglist[i+1]
+                del arglist[i]
+                break
+            elif v.startswith('-'+flagname+'=') \
+                                            or v.startswith('--'+flagname+'='):
+                del arglist[i]
+                break
+    #~ def remove_arg_and_value_from_arglist()
+
     # SHADOW should override
     def _call_generation_run(self, runtool, args):
         ## locate max-time
         timeout_grace_period = 600
         max_time = None
-        for i, v in enumerate(args):
-            if v in ('-max-time', '--max-time'):
-                max_time = float(args[i+1]) + 5 #5 to give time to klee
-                break
-            elif v.startswith('-max-time=') or v.startswith('--max-time='):
-                _, max_time = v.split('=')
-                max_time = float(max_time) + 5  #5 to give time to klee
-                break
+        cur_max_time = float(self.get_value_in_arglist(args, 'max-time'))
+        max_time = cur_max_time + 5 #5 to give time to klee
 
         # set stack to unlimited
         stack_ulimit_soft, stack_ulimit_hard = \
@@ -347,7 +381,7 @@ class TestcasesToolKlee(BaseTestcaseTool):
 
         args += self._get_sym_args()
 
-        self._call_generation_run(prog, args)
+        self._call_generation_run(prog, list(args))
 
         # XXX: remove duplicate tests
         kepttest2duptest_map = {}

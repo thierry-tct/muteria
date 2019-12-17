@@ -106,8 +106,15 @@ class TestcasesToolSemu(TestcasesToolKlee):
     def _call_generation_run(self, runtool, args):
         # use mutants_by_funcs to reorganize target mutants for scalability
 
-        # TODO: compute max_mutant_count_per_cluster based on max memory or let user specify
-        max_mutant_count_per_cluster = 500
+        max_mutant_count_per_cluster = self.get_value_in_arglist(args, \
+                                        'DRIVER_max_mutant_count_per_cluster')
+        if max_mutant_count_per_cluster is None:
+            # TODO: compute max_mutant_count_per_cluster based on max memory
+            max_mutant_count_per_cluster = 100
+        else:
+            max_mutant_count_per_cluster = float(max_mutant_count_per_cluster)
+            self.remove_arg_and_value_from_arglist(args, \
+                                        'DRIVER_max_mutant_count_per_cluster')
 
         cand_mut_file_bak = self.cand_muts_file + '.bak'
         mut_list = []
@@ -122,6 +129,12 @@ class TestcasesToolSemu(TestcasesToolKlee):
         if len(mut_list) != max_mutant_count_per_cluster * nclust:
             nclust += 1
         clusters = np.array_split(mut_list, nclust)
+
+        # update max-time
+        if len(clusters) > 1:
+            cur_max_time = float(self.get_value_in_arglist(args, 'max-time'))
+            self.set_value_in_arglist(args, 'max-time', \
+                                    str(max(1, cur_max_time / len(clusters))))
         
         shutil.move(self.cand_muts_file, cand_mut_file_bak)
 
