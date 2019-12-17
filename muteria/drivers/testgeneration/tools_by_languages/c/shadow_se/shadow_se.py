@@ -110,7 +110,11 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
 
     # SHADOW should override
     def _get_back_llvm_compiler(self):
-        return "llvm-gcc" #'clang'
+        # this is commented because the newest wllvm does not recognise 
+        # llvm-gcc thus a symlink, named 'clang', to llvm-gcc 
+        # is set in shadow folder
+        #return "llvm-gcc"  
+        return 'clang'
     #~ def _get_back_llvm_compiler()
 
     # SHADOW should override
