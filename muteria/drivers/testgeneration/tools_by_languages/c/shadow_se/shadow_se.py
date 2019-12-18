@@ -212,7 +212,7 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
         if len(cand_testpair_list) > 0:
             cur_max_time = float(self.get_value_in_arglist(args, 'max-time'))
             self.set_value_in_arglist(args, 'max-time', \
-                        str(max(1, cur_max_time / len(cand_testpair_list))))
+                        str(max(60, cur_max_time / len(cand_testpair_list))))
 
         # Set the wrapper
         with open(call_shadow_wrapper_file, 'w') as wf:

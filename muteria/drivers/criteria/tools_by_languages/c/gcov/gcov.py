@@ -130,8 +130,7 @@ class CriteriaToolGCov(BaseCriteriaTool):
             # unless the container is ran with the following arguments:
             #
             # docker run --cap-add=SYS_PTRACE \
-            #               --security-opt seccomp=unconfined \
-            #               --security-opt apparmor=unconfined ...
+            #               --security-opt seccomp=unconfined ...
             #
             # We check that it is fine by testing on echo
             ret, _, _ = DriversUtils.execute_and_get_retcode_out_err(

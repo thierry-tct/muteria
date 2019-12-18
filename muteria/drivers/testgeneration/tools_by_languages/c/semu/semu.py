@@ -124,7 +124,23 @@ class TestcasesToolSemu(TestcasesToolKlee):
                 ERROR_HANDLER.assert_true(m.isdigit(), "Invalid mutant ID", \
                                                                     __file__)
                 mut_list.append(m)
-        random.shuffle(mut_list)
+        if self.mutants_by_funcs is None:
+            random.shuffle(mut_list)
+        else:
+            # make the mutants to be localized in same function as much as
+            # possible
+            # XXX Here the mutant ID are NOT meta but simple IDs
+            this_mutants_by_funcs = {}
+            mut_to_func = {}
+            for f, m_set in self.mutants_by_funcs.items():
+                this_mutants_by_funcs[f] = m_set & set(mut_list)
+                for m in this_mutants_by_funcs[f]:
+                    mut_to_func[m] = f
+            func_to_rank_dec = list(this_mutants_by_funcs.keys())
+            func_to_rank_dec.sort(key=lambda x: len(this_mutants_by_funcs[x], \
+                                                                reversed=True))
+            func_to_rank_dec = {f: r for f, r in enumerate(func_to_rank_dec)}
+            mut_list.sort(key=lambda x: func_to_rank_dec[mut_to_func[x]])
         nclust = int(len(mut_list) / max_mutant_count_per_cluster)
         if len(mut_list) != max_mutant_count_per_cluster * nclust:
             nclust += 1
