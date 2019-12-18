@@ -121,7 +121,10 @@ class CriteriaToolGCov(BaseCriteriaTool):
     #~ def _get_separated_instrumentation_criteria()
 
     def get_instrumented_executable_paths_map(self, enabled_criteria):
-        using_gdb_wrapper = True
+        # use wrapper if gdb is installed
+        using_gdb_wrapper = DriversUtils.check_tool(prog='gdb', \
+                                                    args_list=['--version'], \
+                                                    expected_exit_codes=[0])
 
         crit_to_exes_map = {}
         obj = common_fs.loadJSON(self.instrumentation_details)
