@@ -125,6 +125,24 @@ class CriteriaToolGCov(BaseCriteriaTool):
         using_gdb_wrapper = DriversUtils.check_tool(prog='gdb', \
                                                     args_list=['--version'], \
                                                     expected_exit_codes=[0])
+        if using_gdb_wrapper:
+            # XXX: Docker has issues running programs in Docker, 
+            # unless the container is ran with the following arguments:
+            #
+            # docker run --cap-add=SYS_PTRACE \
+            #               --security-opt seccomp=unconfined \
+            #               --security-opt apparmor=unconfined ...
+            #
+            # We check that it is fine by testing on echo
+            ret, _, _ = DriversUtils.execute_and_get_retcode_out_err(
+                                        prog='gdb', \
+                                        args_list=['--batch-silent', \
+                                                    '--quiet', 
+                                                    '--return-child-result', 
+                                                    '-ex', '"run"', 
+                                                    '--args', 'echo'], \
+                                        out_on=False, err_on=False)
+            using_gdb_wrapper = (ret == 0)
 
         crit_to_exes_map = {}
         obj = common_fs.loadJSON(self.instrumentation_details)
