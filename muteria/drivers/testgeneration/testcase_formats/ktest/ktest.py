@@ -89,6 +89,7 @@ class KTestTestFormat(object):
         else:
             retcode, out, err = DriversUtils.execute_and_get_retcode_out_err(\
                                 prog=prog, args_list=args, env=tmp_env, \
+                                timeout=timeout, timeout_grace_period=5, \
                                                     out_on=False, err_on=False)
 
         if retcode in cls.timedout_retcodes + \
