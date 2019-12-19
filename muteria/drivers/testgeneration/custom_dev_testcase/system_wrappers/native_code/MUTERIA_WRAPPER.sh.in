@@ -28,7 +28,7 @@ plain_replay() {
 # If specified the test file name, only execute, and record, calls from it
 if [ "${MUTERIA_TEST_FILE_NAME_ENV_VAR:-}" != "" ]; then 
     # Check test file match
-    if ! `/bin/ps -o command $$ | /bin/sed 1d | /bin/grep "$MUTERIA_TEST_FILE_NAME_ENV_VAR" > /dev/null` ; then
+    if ! `/bin/ps -o command $(/bin/ps -o ppid $$ | /bin/sed 1d) | /bin/sed 1d | /bin/grep "$MUTERIA_TEST_FILE_NAME_ENV_VAR" > /dev/null` ; then
         plain_replay "${@:1}"
     fi
 fi
