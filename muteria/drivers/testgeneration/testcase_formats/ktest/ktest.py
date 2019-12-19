@@ -75,7 +75,7 @@ class KTestTestFormat(object):
 
         if timeout is not None:
             tmp_env['KLEE_REPLAY_TIMEOUT'] = str(timeout)
-            kt_over = 2 # 1second
+            kt_over = 5 # 1second
             timeout += kt_over
         if collected_output is not None:
             retcode, out, err = DriversUtils.execute_and_get_retcode_out_err(\
