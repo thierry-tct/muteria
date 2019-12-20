@@ -322,16 +322,6 @@ class CriteriaToolMart(BaseCriteriaTool):
 
         bitcode_file = rel2bitcode[list(rel2bitcode.keys())[0]]
 
-        # make sure that the bitcode file can be compiled to native code
-        ret, out, err = DriversUtils.execute_and_get_retcode_out_err('clang', \
-                                [bitcode_file, '-o', bitcode_file+'.native'])
-        if ret not in (0,):
-            logging.error(out)
-            ERROR_HANDLER.error_exit("'Mart' cannot compile bitcode"
-                            + "into native code, you need to specify"
-                            + "linking flags (based on the above error).", \
-                                                                    __file__)
-
         # mart params
         bool_param, k_v_params = self._get_default_params()
         if TestCriteria.STRONG_MUTATION in enabled_criteria:
@@ -351,6 +341,7 @@ class CriteriaToolMart(BaseCriteriaTool):
                 k_v_params['-mutant-scope'] = src_list_scope_file
         
         # Consider user custom
+        extra_linking_flags = ""
         uc = self.config.get_tool_user_custom()
         pre_args = []
         post_args = []
@@ -367,6 +358,10 @@ class CriteriaToolMart(BaseCriteriaTool):
                         if key in bool_param:
                             del bool_param[key]
                         _args.extend(list(tup))
+                        if key == '-linking-flags':
+                            ERROR_HANDLER.assert_true(len(tup) == 2, \
+                                    "invalid linking-flags for mart", __file__)
+                            extra_linking_flags = tup[1]
 
         args = [bp for bp, en in list(bool_param.items()) if en]
         for k,v in list(k_v_params.items()):
@@ -375,6 +370,18 @@ class CriteriaToolMart(BaseCriteriaTool):
         args.extend(pre_args)
         args.append(bitcode_file)
         args.extend(post_args)
+
+        # make sure that the bitcode file can be compiled to native code
+        ret, out, err = DriversUtils.execute_and_get_retcode_out_err('clang', \
+                                [extra_linking_flags, bitcode_file, \
+                                                '-o', bitcode_file+'.native'])
+        if ret not in (0,):
+            logging.error(out)
+            ERROR_HANDLER.error_exit("'Mart' cannot compile bitcode"
+                            + "into native code, you need to specify"
+                            + "linking flags (based on the above error).", \
+                                                                    __file__)
+
         
         # Execute Mart
         cwd = os.getcwd()
