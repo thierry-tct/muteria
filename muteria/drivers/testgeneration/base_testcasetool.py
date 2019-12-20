@@ -48,6 +48,8 @@ import muteria.common.matrices as common_matrices
 import muteria.common.mix as common_mix
 import muteria.common.fs as common_fs
 
+from muteria.drivers import DriversUtils
+
 from muteria.drivers.checkpoint_handler import CheckPointHandler
 from muteria.repositoryandcode.callback_object import DefaultCallbackObject
 
