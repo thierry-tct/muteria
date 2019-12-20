@@ -138,7 +138,7 @@ class TestcasesToolSemu(TestcasesToolKlee):
                     mut_to_func[m] = f
             func_to_rank_dec = list(this_mutants_by_funcs.keys())
             func_to_rank_dec.sort(key=lambda x: len(this_mutants_by_funcs[x]),\
-                                                                reversed=True)
+                                                                reverse=True)
             func_to_rank_dec = {f: r for f, r in enumerate(func_to_rank_dec)}
             mut_list.sort(key=lambda x: func_to_rank_dec[mut_to_func[x]])
         nclust = int(len(mut_list) / max_mutant_count_per_cluster)
