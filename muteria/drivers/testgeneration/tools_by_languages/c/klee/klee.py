@@ -172,11 +172,12 @@ class TestcasesToolKlee(BaseTestcaseTool):
             resource.setrlimit(resource.RLIMIT_STACK, \
                                         (stack_ulimit_soft, stack_ulimit_hard))
 
-        if (ret != 0):
+        if (ret != 0 and ret != DriversUtils.EXEC_TIMED_OUT_RET_CODE):
             logging.error(out)
             logging.error(err)
             logging.error("\n>> CMD: " + " ".join([runtool]+args) + '\n')
-            ERROR_HANDLER.error_exit("call to klee testgen failed'", __file__)
+            ERROR_HANDLER.error_exit("call to klee testgen failed, "
+                                    + "error code is {}".format(ret), __file__)
     #~ def _call_generation_run()
 
     # SHADOW should override
