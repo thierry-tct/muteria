@@ -168,8 +168,10 @@ class DriversUtils(object):
 
     ############################ Subprocess Stuffs #########################
  
-    EXEC_TIMED_OUT_RET_CODE = -15
-    EXEC_SEGFAULT_OUT_RET_CODE = -11
+    # XXX sync timed out signal in retcode with used in execute_and_get...
+    #EXEC_TIMED_OUT_RET_CODE = (-signal.SIGKILL, -signal.SIGTERM,) # < python 3
+    EXEC_TIMED_OUT_RET_CODE = (-signal.SIGKILL.value, -signal.SIGTERM.value,)
+    EXEC_SEGFAULT_OUT_RET_CODE = (-11,)
 
     @classmethod
     def check_tool(cls, prog, args_list=[], expected_exit_codes=[0]):
@@ -230,7 +232,10 @@ class DriversUtils(object):
             stdout = stdout.decode('UTF-8', 'backslashreplace')
         if stderr is not None:
             stderr = stderr.decode('UTF-8', 'backslashreplace')
-        retcode = p.wait()
+        #retcode = p.wait()
+        retcode = p.poll()
+        ERROR_HANDLER.assert_true(retcode is not None, \
+                                "child process still running after timeout")
         return retcode, stdout, stderr
     #~ def execute_and_get_retcode_out_err()
 

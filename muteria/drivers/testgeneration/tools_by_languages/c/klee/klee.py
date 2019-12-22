@@ -172,7 +172,7 @@ class TestcasesToolKlee(BaseTestcaseTool):
             resource.setrlimit(resource.RLIMIT_STACK, \
                                         (stack_ulimit_soft, stack_ulimit_hard))
 
-        if (ret != 0 and ret != DriversUtils.EXEC_TIMED_OUT_RET_CODE):
+        if (ret != 0 and ret not in DriversUtils.EXEC_TIMED_OUT_RET_CODE):
             logging.error(out)
             logging.error(err)
             logging.error("\n>> CMD: " + " ".join([runtool]+args) + '\n')

@@ -73,6 +73,9 @@ class KTestTestFormat(object):
             #    tmp_env[e] = v
             tmp_env.update(env_vars)
 
+        timeout_return_codes = cls.timedout_retcodes + \
+                                        DriversUtils.EXEC_TIMED_OUT_RET_CODE
+
         if timeout is not None:
             tmp_env['KLEE_REPLAY_TIMEOUT'] = str(timeout)
             kt_over = 5 # 1second
@@ -84,17 +87,15 @@ class KTestTestFormat(object):
                                                         merge_err_to_out=True)
             out = cls._remove_output_noise(out)
             collected_output.extend((retcode, out, \
-                                        (retcode in cls.timedout_retcodes or \
-                            retcode == DriversUtils.EXEC_TIMED_OUT_RET_CODE)))
+                                            (retcode in timeout_return_codes)))
         else:
             retcode, out, err = DriversUtils.execute_and_get_retcode_out_err(\
                                 prog=prog, args_list=args, env=tmp_env, \
                                 timeout=timeout, timeout_grace_period=5, \
                                                     out_on=False, err_on=False)
 
-        if retcode in cls.timedout_retcodes + \
-                                    (DriversUtils.EXEC_SEGFAULT_OUT_RET_CODE,\
-                                        DriversUtils.EXEC_TIMED_OUT_RET_CODE):
+        if retcode in timeout_return_codes + \
+                                    DriversUtils.EXEC_SEGFAULT_OUT_RET_CODE:
             verdict = common_mix.GlobalConstants.FAIL_TEST_VERDICT
         else:
             verdict = common_mix.GlobalConstants.PASS_TEST_VERDICT
