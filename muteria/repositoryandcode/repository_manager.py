@@ -338,7 +338,12 @@ class RepositoryManager(object):
         if gitobj is None:
             repo = git_repo(self.repository_rootdir)
             gitobj = repo.git
-        gitobj.checkout('--', file_rel_path)
+        try:    
+            gitobj.checkout('--', file_rel_path)
+        except OSError as e:
+            ERROR_HANDLER.error_exit("git checkout command " + \
+                                    "(-- {}) failed ".format(file_rel_path) + \
+                                    "with error: {}".format(str(e)), __file__)
     #~ def _unlocked_revert_repository_file()
 
     def revert_repository_file (self, file_rel_path, gitobj=None):
@@ -513,7 +518,27 @@ class RepositoryManager(object):
     #~ _setup_repository()
 
     def _get_untracked_and_diffed(self, repo_):
-        res = set(repo_.untracked_files) | set(self._get_diffed(repo_))
+        try:
+            untracked_file_list = repo_.untracked_files
+        except UnicodeDecodeError:
+            # XXX: error in git python
+            non_unicode_files = []
+            non_unicode_dirs = []
+            #for root_, dirs_, files_ in os.walk(repo_.working_tree_dir):
+            #    for sub_d in dirs_:
+            #        os.chmod(os.path.join(root_, sub_d), 0o777)
+            #    for f_ in files_:
+            #        os.chmod(os.path.join(root_, f_), 0o777)
+            if common_mix.confirm_execution("Do you want to delete non "
+                                            "unicode files and dirs?"):
+                # TODO: rename ascii files
+                ERROR_HANDLER.error_exit("TODO: implement get and delete non"
+                                    "unicode file and dir names", __file__)
+            else:
+                ERROR_HANDLER.error_exit("Non unicode file name of untracked "
+                            "files in the repo. Fix it and rerun", __file__)
+            untracked_file_list = repo_.untracked_files
+        res = set(untracked_file_list) | set(self._get_diffed(repo_))
         return res
     #~ def _get_untracked_and_diffed()
 
