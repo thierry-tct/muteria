@@ -234,14 +234,15 @@ class CriteriaToolMart(BaseCriteriaTool):
             cov_res = {
                     m: common_mix.GlobalConstants.ELEMENT_NOTCOVERED_VERDICT\
                                                     for m in mutant_id_set}
-            with open(filename) as f:
-                for line in f:
-                    mut_id = line.strip()
-                    # use if because mart currently do not update WM and MCOV
-                    # after fdupes TCE
-                    if mut_id in mutant_id_set: 
-                        cov_res[mut_id] = \
-                            common_mix.GlobalConstants.ELEMENT_COVERED_VERDICT
+            if os.path.isfile(filename):
+                with open(filename) as f:
+                    for line in f:
+                        mut_id = line.strip()
+                        # use if because mart currently do not update 
+                        # WM and MCOV after fdupes TCE
+                        if mut_id in mutant_id_set: 
+                            cov_res[mut_id] = common_mix.GlobalConstants\
+                                                    .ELEMENT_COVERED_VERDICT
             return cov_res
         #~ def extract_covered()
 
