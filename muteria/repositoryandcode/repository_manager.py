@@ -520,7 +520,7 @@ class RepositoryManager(object):
     def _get_untracked_and_diffed(self, repo_):
         try:
             untracked_file_list = repo_.untracked_files
-        except UnicodeDecodeError:
+        except (UnicodeDecodeError, UnicodeEncodeError):
             # XXX: error in git python
             non_unicode_files = []
             non_unicode_dirs = []
@@ -530,7 +530,7 @@ class RepositoryManager(object):
                     name.encode('ascii').decode('unicode_escape')\
                                                             .encode('latin1')
                     return False
-                except UnicodeDecodeError:
+                except (UnicodeDecodeError, UnicodeEncodeError):
                     return True
             #~ def has_unicode_error()
 
