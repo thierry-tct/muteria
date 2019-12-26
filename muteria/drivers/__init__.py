@@ -161,7 +161,7 @@ class DriversUtils(object):
     @classmethod
     def reverse_meta_element(cls, meta_element):
         parts = meta_element.split(':', 1)
-        assert len(parts) >= 2, "invalibd meta mutant"
+        assert len(parts) >= 2, "invalid meta mutant"
         toolalias, element = parts
         return toolalias, element
     #~ def reverse_meta_element()

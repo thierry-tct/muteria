@@ -524,16 +524,42 @@ class RepositoryManager(object):
             # XXX: error in git python
             non_unicode_files = []
             non_unicode_dirs = []
-            #for root_, dirs_, files_ in os.walk(repo_.working_tree_dir):
-            #    for sub_d in dirs_:
-            #        os.chmod(os.path.join(root_, sub_d), 0o777)
-            #    for f_ in files_:
-            #        os.chmod(os.path.join(root_, f_), 0o777)
+
+            def has_unicode_error(name):
+                try:
+                    name.encode('ascii').decode('unicode_escape')\
+                                                            .encode('latin1')
+                    return False
+                except UnicodeDecodeError:
+                    return True
+            #~ def has_unicode_error()
+
+            for root_, dirs_, files_ in os.walk(repo_.working_tree_dir):
+                for sub_d in dirs_:
+                    sd_path = os.path.join(root_, sub_d)
+                    if has_unicode_error(sd_path):
+                        non_unicode_dirs.append(sd_path)
+                for f_ in files_:
+                    f_path = os.path.join(root_, f_)
+                    if has_unicode_error(f_path):
+                        non_unicode_files.append(f_path)
             if common_mix.confirm_execution("Do you want to delete non "
                                             "unicode files and dirs?"):
-                # TODO: rename ascii files
-                ERROR_HANDLER.error_exit("TODO: implement get and delete non"
-                                    "unicode file and dir names", __file__)
+                # XXX: delete non unicode files
+                for d in non_unicode_dirs:
+                    if os.path.isdir(d):
+                        try:
+                            shutil.rmtree(d)
+                        except PermissionError:
+                            # TODO: avoid using os.system here
+                            os.system('sudo rm -rf {}'.format(d))
+                for f in non_unicode_files:
+                    if os.path.isfile(f):
+                        try:
+                            os.remove(f)
+                        except PermissionError:
+                            # TODO: avoid using os.system here
+                            os.system('sudo rm -f {}'.format(f))
             else:
                 ERROR_HANDLER.error_exit("Non unicode file name of untracked "
                             "files in the repo. Fix it and rerun", __file__)
