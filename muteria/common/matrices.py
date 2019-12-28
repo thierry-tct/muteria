@@ -610,6 +610,7 @@ class RawExecutionMatrix(object):
 
     def update_with_other_matrix(self, other_matrix, \
                                 override_existing=False, allow_missing=False, \
+                                ask_confirmation_with_exist_missing=False, \
                                 serialize=False):
         """ Update this matrix using the other matrix
         :param other_matrix: The matrix to use to update this matrix
@@ -659,7 +660,11 @@ class RawExecutionMatrix(object):
         col_existing = set(self.get_nonkey_colname_list()) & \
                             set(other_matrix.get_nonkey_colname_list())
         if len(row_existing) > 0 and len(col_existing) > 0:
-            ERROR_HANDLER.assert_true(override_existing, \
+            if ask_confirmation_with_exist_missing and override_existing:
+                override_existing = common_mix.confirm_execution(\
+                                            "Some cells are existing, "
+                                            "do you confirm their override?")
+                ERROR_HANDLER.assert_true(override_existing, \
                             "Override_existing not set but there is overlap", \
                                                                     __file__)            
 
@@ -669,6 +674,10 @@ class RawExecutionMatrix(object):
             if len(col_existing) != len(self.get_nonkey_colname_list()) or \
                             len(col_existing) != \
                                 len(other_matrix.get_nonkey_colname_list()):
+                if ask_confirmation_with_exist_missing and allow_missing:
+                    allow_missing = common_mix.confirm_execution(\
+                                            "Some values are missing, "
+                                            "do you confirm their presence?")
                 ERROR_HANDLER.assert_true(allow_missing, \
                                 "allow_missing disable but there are missing",\
                                                                     __file__)

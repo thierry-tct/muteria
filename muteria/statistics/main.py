@@ -33,7 +33,8 @@ class StatsComputer(object):
         else:
             lmatrix = common_matrices.ExecutionMatrix(filename=lmatrix_file)
             rmatrix = common_matrices.ExecutionMatrix(filename=rmatrix_file)
-            rmatrix.update_with_other_matrix(lmatrix)
+            rmatrix.update_with_other_matrix(lmatrix, override_existing=True, \
+                                    ask_confirmation_with_exist_missing=True)
             rmatrix.serialize()
     #~ def merge_lmatrix_into_right()
 
