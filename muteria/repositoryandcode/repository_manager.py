@@ -546,20 +546,24 @@ class RepositoryManager(object):
             if common_mix.confirm_execution("Do you want to delete non "
                                             "unicode files and dirs?"):
                 # XXX: delete non unicode files
-                for d in non_unicode_dirs:
-                    if os.path.isdir(d):
-                        try:
-                            shutil.rmtree(d)
-                        except PermissionError:
-                            # TODO: avoid using os.system here
-                            os.system('sudo rm -rf {}'.format(d))
-                for f in non_unicode_files:
-                    if os.path.isfile(f):
-                        try:
-                            os.remove(f)
-                        except PermissionError:
-                            # TODO: avoid using os.system here
-                            os.system('sudo rm -f {}'.format(f))
+                for fd in non_unicode_dirs + non_unicode_files:
+                    if os.path.isdir(fd):
+                        func = shutil.rmtree
+                    elif os.path.isfile(fd):
+                        func = os.remove
+                    elif os.path.islink(fd):
+                        func = os.unlink
+                    else:
+                        ERROR_HANDLER.error_exit(\
+                                "fd is not file, dir or link: {}".format(fd))
+
+                    try:
+                        func(fd)
+                    except PermissionError:
+                        # TODO: avoid using os.system here
+                        os.system('sudo chmod -R 777 {}'.format(\
+                                                        os.path.dirname(fd)))
+                        func(fd)
                 logging.debug("The following files and dirs were removed: {}"\
                                 .format(non_unicode_files + non_unicode_dirs))
             else:
