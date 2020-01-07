@@ -560,6 +560,8 @@ class RepositoryManager(object):
                         except PermissionError:
                             # TODO: avoid using os.system here
                             os.system('sudo rm -f {}'.format(f))
+                logging.debug("The following files and dirs were removed: {}"\
+                                .format(non_unicode_files + non_unicode_dirs))
             else:
                 ERROR_HANDLER.error_exit("Non unicode file name of untracked "
                             "files in the repo. Fix it and rerun", __file__)
