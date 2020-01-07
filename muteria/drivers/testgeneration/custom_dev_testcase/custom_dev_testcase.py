@@ -180,9 +180,10 @@ class CustomTestcases(BaseTestcaseTool):
 
         # abort is test execution error
         if verdict == common_mix.GlobalConstants.TEST_EXECUTION_ERROR:
-            ERROR_HANDLER.error_exit("Test Execution error in "
-                                "custom_dev_testcase for test: "+testcase,\
-                                                                    __file__)
+            ERROR_HANDLER.assert_true(\
+                                self.config.TEST_EXECUTION_ERROR_AS_FAIL, \
+                                "Test Execution error in custom_dev_testcase" \
+                                    + " for test: "+testcase, __file__)
 
         # wrapper cleanup
         if self.wrapper_obj is not None:

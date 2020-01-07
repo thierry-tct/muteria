@@ -412,12 +412,17 @@ class TestcaseToolsConfig(BaseToolConfig):
     TEST_GENERATION_MAXTIME = 7200.0 # in seconds
     ONE_TEST_EXECUTION_TIMEOUT = 60.0 # in seconds (Handle inifnite loops)
 
+    # consider test execution error as a test failure
+    TEST_EXECUTION_ERROR_AS_FAIL = False
+    
     def set_test_gen_maxtime(self, max_time):
         self.TEST_GENERATION_MAXTIME = max_time
     def set_one_test_execution_timeout(self, timeout):
         self.ONE_TEST_EXECUTION_TIMEOUT = timeout
     def set_test_oracle_test(self, value):
         self.TESTS_ORACLE_TESTS = value
+    def set_test_execution_error_as_failure(self, value):
+        self.TEST_EXECUTION_ERROR_AS_FAIL = value
 #~class TestcaseToolsConfig
     
 class CriteriaToolsConfig(BaseToolConfig):

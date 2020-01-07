@@ -306,7 +306,7 @@ class CriteriaToolMart(BaseCriteriaTool):
                         compiler=back_llvm_compiler, flags_list=['-g'], \
                         clean_tmp=True, reconfigure=True, \
                         llvm_compiler_path=llvm_compiler_path)
-        if ret == common_mix.GlobalConstants.TEST_EXECUTION_ERROR:
+        if ret == common_mix.GlobalConstants.COMMAND_FAILURE: #TEST_EXECUTION_ERROR:
             ERROR_HANDLER.error_exit("Program {}.".format(\
                                 'LLVM (clang) built problematic'), __file__)
 
