@@ -374,11 +374,24 @@ class TestcasesToolKlee(BaseTestcaseTool):
             if pre_bc_cmd is not None:
                 for tup in pre_bc_cmd:
                     key = tup[0][1:] if tup[0].startswith('--') else tup[0]
+                    bool_disabled = False
                     if key in k_v_params:
                         del k_v_params[key]
                     if key in bool_param:
                         del bool_param[key]
-                    pre_args.extend(list(tup))
+                        if len(tup) == 2:
+                            ERROR_HANDLER.assert_true(\
+                                        type(tup[1]) == bool, \
+                                        "bool arg is either enabled or "
+                                    "disabled. val must be bool", __file__)
+                            if not tup[1]:
+                                bool_disabled = True
+                            tup = tup[:1]
+                        else:
+                            ERROR_HANDLER.assert_true(len(tup) == 1, \
+                                    "Invalid bool param: "+key, __file__)
+                    if not bool_disabled:
+                        pre_args.extend(list(tup))
 
         args = [bp for bp, en in list(bool_param.items()) if en]
         for k,v in list(k_v_params.items()):
