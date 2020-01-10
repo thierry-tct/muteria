@@ -74,6 +74,7 @@ class RepositoryManager(object):
     def __init__(self, repository_rootdir, repo_executables_relpaths=None, \
                         dev_test_runner_func=None, code_builder_func=None, \
                         dev_test_program_wrapper=None, \
+                        test_exec_output_cleaner_func=None, \
                         source_files_to_objects=None, dev_tests_list=None, \
                         delete_created_on_revert_as_initial=False, \
                         test_branch_name=DEFAULT_TESTS_BRANCH_NAME):
@@ -86,6 +87,9 @@ class RepositoryManager(object):
         self.dev_test_program_wrapper = dev_test_program_wrapper
         if self.dev_test_program_wrapper is not None:
             self.dev_test_program_wrapper = self.dev_test_program_wrapper(self)
+        self.test_exec_output_cleaner_func = test_exec_output_cleaner_func
+        if self.test_exec_output_cleaner_func is None:
+            self.test_exec_output_cleaner_func = lambda x: x
 
         self.delete_created_on_revert_as_initial = \
                                         delete_created_on_revert_as_initial
@@ -132,6 +136,10 @@ class RepositoryManager(object):
     def get_wrapper_object(self):
         return self.dev_test_program_wrapper
     #~ def get_wrapper_object()
+
+    def get_test_exec_output_cleaner_func (self):
+        return self.test_exec_output_cleaner_func 
+    #~ def get_test_exec_output_cleaner_func()
 
     def should_build(self):
         return (self.code_builder_func is not None)

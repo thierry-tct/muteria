@@ -182,6 +182,8 @@ class CompleteConfiguration(object):
 
     CUSTOM_DEV_TEST_PROGRAM_WRAPPER_CLASS = None
 
+    CUSTOM_TEST_EXECUTION_OUTPUT_CLEANER_FUNCTION = None
+
     # Optional. When not None, the CUSTOM_DEV_TEST_RUNNER is the name of 
     # the function in this file to use
     CUSTOM_DEV_TEST_RUNNER_MODULE = None

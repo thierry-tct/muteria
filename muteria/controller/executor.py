@@ -834,6 +834,9 @@ class Executor(object):
                     dev_test_program_wrapper=\
                             config.CUSTOM_DEV_TEST_PROGRAM_WRAPPER_CLASS.\
                                                                     get_val(),\
+                    test_exec_output_cleaner_func=config\
+                                .CUSTOM_TEST_EXECUTION_OUTPUT_CLEANER_FUNCTION\
+                                .get_val(), \
                     code_builder_func=config.CODE_BUILDER_FUNCTION.get_val(),\
                     source_files_to_objects=\
                         config.TARGET_SOURCE_INTERMEDIATE_CODE_MAP.get_val(),\

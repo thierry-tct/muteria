@@ -466,6 +466,9 @@ class BaseTestcaseTool(abc.ABC):
                                             collect_output=with_output_summary)
         if with_output_summary:
             retcode, outlog, timedout = output_err
+            outlog = self.code_builds_factory\
+                                    .repository_manager\
+                                    .get_test_exec_output_cleaner_func(outlog)
             out_len = len(outlog)
             if hash_outlog:
                 outlog = outlog.encode('utf-8', 'backslashreplace')
