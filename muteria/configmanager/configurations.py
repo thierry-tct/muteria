@@ -182,6 +182,7 @@ class CompleteConfiguration(object):
 
     CUSTOM_DEV_TEST_PROGRAM_WRAPPER_CLASS = None
 
+    # Take the outlog as a string and return the cleaned version
     CUSTOM_TEST_EXECUTION_OUTPUT_CLEANER_FUNCTION = None
 
     # Optional. When not None, the CUSTOM_DEV_TEST_RUNNER is the name of 
