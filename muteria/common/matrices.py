@@ -705,8 +705,8 @@ class RawExecutionMatrix(object):
         ### Update
         k_v_dict = other_matrix._get_key_values_dict(row_existing)
         for key, values in list(k_v_dict.items()):
-            for col in values:
-                self.update_cells(key, values)
+            #for col in values:
+            self.update_cells(key, values)
 
         if serialize:
             self.serialize()
