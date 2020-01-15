@@ -194,7 +194,7 @@ class KTestTestFormat(object):
         else:
             regex = cls.clean_part_regex
 
-        if out[-1] == '\n':
+        if len(out) > 0 and out[-1] == '\n':
             out = out[:-1]
             last_char = "\n" 
         else:
