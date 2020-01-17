@@ -48,7 +48,7 @@ class CriteriaTestExecutionOptimizer(BaseCriteriaTestExecutionOptimizer):
             for to in self.test_objective_ordered_list
         }
         for _, teo in self.test_objective_to_test_execution_optimizer.items():
-            teo.reset(test_list, disable_reset=True)
+            teo.reset(None, test_list, disable_reset=True)
     #~ def reset()
 #~ class CriteriaTestExecutionOptimizer
 
