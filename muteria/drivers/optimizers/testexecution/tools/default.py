@@ -39,5 +39,8 @@ class TestExecutionOptimizer(BaseTestExecutionOptimizer):
         ERROR_HANDLER.assert_true(not self.reset_disabled, "reset is disabled")
         self.test_ordered_list = copy.deepcopy(test_list)
         self.pointer = 0
+
+        if disable_reset and not self.reset_disabled:
+            self.reset_disabled = True
     #~ def reset()
 #~ class TestExecutionOptimizer

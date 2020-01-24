@@ -226,7 +226,7 @@ RUN_PASSING_TESTS_WITH_CRITERIA = [
 
 CRITERIA_RESTRICTION_ENABLED = True  # Enable restricting mutation(scope)
 
-# criterion: selection tools. Example: SM and TCE of E-SELECTIVE
+# criterion: selection tools. Example: SM and TCE or E-SELECTIVE
 CRITERIA_ELEM_SELECTIONS = {
 
 }

@@ -44,8 +44,7 @@ class CriteriaTestExecutionOptimizer(BaseCriteriaTestExecutionOptimizer):
         self.test_objective_ordered_list = copy.deepcopy(test_objective_list)
         self.pointer = 0
         self.test_objective_to_test_execution_optimizer = {
-            to: TestExecutionOptimizer(self.config, self.explorer, \
-                                                        disable_reset=True) \
+            to: TestExecutionOptimizer(self.config, self.explorer) \
             for to in self.test_objective_ordered_list
         }
         for _, teo in self.test_objective_to_test_execution_optimizer.items():
