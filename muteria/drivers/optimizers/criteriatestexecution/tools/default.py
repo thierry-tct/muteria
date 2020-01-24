@@ -35,6 +35,7 @@ class CriteriaTestExecutionOptimizer(BaseCriteriaTestExecutionOptimizer):
                     - True: the tool is installed and works
                     - False: the tool is not installed or do not work
         """
+        return True
     #~ def installed()
 
     def reset (self, toolalias, test_objective_list, test_list, **kwargs):

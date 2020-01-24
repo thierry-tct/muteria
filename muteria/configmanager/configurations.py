@@ -104,6 +104,9 @@ class CompleteConfiguration(object):
     # keepoutput summary for the following criteria (may run slower)
     CRITERIA_WITH_OUTPUT_SUMMARY = []
 
+    # Decides whether to hash the output log
+    HASH_OUTLOG = True
+
     # PARALELISM
     SINGLE_REPO_PARALLELISM = 1 # Max number of parallel exec in a repo dir
 
@@ -289,7 +292,7 @@ class CompleteConfiguration(object):
 
     CRITERIA_RESTRICTION_ENABLED = True  # Enable restricting mutation(scope)
 
-    # criterion: selection tools. Example: SM and TCE of E-SELECTIVE
+    # criterion: selection tools. Example: SM and TCE or E-SELECTIVE
     CRITERIA_ELEM_SELECTIONS = {
         
     }

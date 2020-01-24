@@ -11,6 +11,7 @@ import glob
 import math
 import copy
 import random
+import inspect
 
 import muteria.common.mix as common_mix
 import muteria.common.fs as common_fs
@@ -553,13 +554,8 @@ class Executor(object):
                 if info_obj is None:
                     continue
                 all_to = info_obj.get_elements_list()
-                # make selection
-                if sel_tech != 'DummyRandom':
-                    ERROR_HANDLER.error_exit(\
-                        'only random TO selection supported now!', __file__)
-
-                # make DummyRandom selection
-                sel_count =  self.config\
+                
+                sel_count = self.config\
                             .MAX_CRITERIA_ELEM_SELECTION_NUM_PERCENT.get_val()
                 if type(sel_count) == str:
                     if sel_count.endswith('%'):
@@ -581,11 +577,25 @@ class Executor(object):
                                                                     __file__)
                 ERROR_HANDLER.assert_true(sel_count > 0, \
                                 "selection number must be positive", __file__)
-                if sel_count >= len(all_to):
-                    selected_TO[crit.get_str()] = all_to
+
+                # selection method
+                if inspect.isfunction(sel_tech):
+                    ERROR_HANDLER.assert_true(\
+                                        len(inspect.getargspec().args) == 2, \
+                                        "Selection function must take 2 args "
+                                        "(testobjectivelist, maxselcount)", \
+                                        __file__)
+                    
                 else:
-                    selected_TO[crit.get_str()] = random.sample(all_to, \
-                                                                    sel_count)
+                    if sel_tech != 'DummyRandom':
+                        ERROR_HANDLER.error_exit(\
+                            'only random TO selection supported now!', \
+                                                                    __file__)
+                    # make DummyRandom selection
+                    sel_tech = random.sample
+
+                # make selection
+                selected_TO[crit.get_str()] = sel_tech(all_to, sel_count)
             
             # write down selection
             common_fs.dumpJSON(selected_TO, out_file)
@@ -854,7 +864,8 @@ class Executor(object):
                         code_builds_factory=self.cb_factory,
                         test_tool_config_list=\
                                     config.TESTCASE_TOOLS_CONFIGS.get_val(),\
-                        head_explorer=head_explorer)
+                        head_explorer=head_explorer, \
+                        hash_outlog=config.HASH_OUTLOG.get_val())
         return meta_test_tool
     #~ def _create_meta_test_tool()
 

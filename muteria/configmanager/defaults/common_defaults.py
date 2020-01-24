@@ -38,6 +38,9 @@ GET_PASSFAIL_OUTPUT_SUMMARY = True
 # keepoutput summary for the following criteria (may run slower)
 CRITERIA_WITH_OUTPUT_SUMMARY = []
 
+# Decides whether to hash the output log
+HASH_OUTLOG = True
+
 # PARALELISM
 SINGLE_REPO_PARALLELISM = 1 # Max number of parallel exec in a repo dir
 
@@ -116,6 +119,7 @@ CUSTOM_DEV_TEST_RUNNER_FUNCTION = None
 
 CUSTOM_DEV_TEST_PROGRAM_WRAPPER_CLASS = None
 
+# Take the outlog as a string and return the cleaned version
 CUSTOM_TEST_EXECUTION_OUTPUT_CLEANER_FUNCTION = None
 
 # Optional. When not None, the CUSTOM_DEV_TEST_RUNNER is the name of

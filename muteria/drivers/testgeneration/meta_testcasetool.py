@@ -99,7 +99,8 @@ class MetaTestcaseTool(object):
     #~ def get_toolnames_by_types_by_language()
 
     def __init__(self, language, tests_working_dir, code_builds_factory,
-                                test_tool_config_list, head_explorer):
+                                test_tool_config_list, head_explorer, 
+                                hash_outlog=True):
 
         """ Initialize a meta testcase tool object.
         :type language:
@@ -128,6 +129,7 @@ class MetaTestcaseTool(object):
         self.code_builds_factory = code_builds_factory
         self.test_tool_config_list = test_tool_config_list
         self.head_explorer = head_explorer
+        self.hash_outlog = hash_outlog
 
         # Verify Direct Arguments Variables
         ERROR_HANDLER.assert_true(self.tests_working_dir is not None, \
@@ -261,7 +263,7 @@ class MetaTestcaseTool(object):
                                         use_recorded_timeout_times=None, \
                                         recalculate_execution_times=False, \
                                         with_output_summary=True, \
-                                        hash_outlog=True):
+                                        hash_outlog=None):
         '''
         Execute a test case with the given executable and 
         say whether it failed
@@ -271,6 +273,8 @@ class MetaTestcaseTool(object):
                         the executable to execute with the test
         :param env_vars: dict of environment variables to set before
                         executing the test ({<variable>: <value>})
+        :type hash_outlog: bool
+        :hash_outlog: decide whether to hash the outlog or not
         :returns: pair of:
                 - boolean failed verdict of the test 
                         (True if failed, False otherwise)
@@ -279,6 +283,9 @@ class MetaTestcaseTool(object):
         
         if exe_path_map is None:
             exe_path_map = self._get_default_exe_path_map()
+
+        if hash_outlog is None:
+            hash_outlog = self.hash_outlog
 
         # Find which test tool's the testcase is, then execute
         ttoolalias, testcase = DriversUtils.reverse_meta_element(meta_testcase)
@@ -305,7 +312,7 @@ class MetaTestcaseTool(object):
                         fault_test_execution_matrix_file=None, \
                         fault_test_execution_execoutput_file=None, \
                         with_output_summary=True, \
-                        hash_outlog=True, \
+                        hash_outlog=None, \
                         test_prioritization_module=None, \
                         parallel_test_count=1, \
                         parallel_test_scheduler=None, \
@@ -327,6 +334,8 @@ class MetaTestcaseTool(object):
         :param fault_test_execution_execoutput_file: Optional output log file 
                         to store the tests' execution actual output (hashed)
         :param with_output_summary: decide whether to return outlog hash 
+        :type hash_outlog: bool
+        :hash_outlog: decide whether to hash the outlog or not
         :param test_prioritization_module: Specify the test prioritization
                         module. 
                         (TODO: Implement support)
@@ -371,6 +380,9 @@ class MetaTestcaseTool(object):
         # Check arguments Validity
         if exe_path_map is None:
             exe_path_map = self._get_default_exe_path_map()
+
+        if hash_outlog is None:
+            hash_outlog = self.hash_outlog
 
         ERROR_HANDLER.assert_true(parallel_test_count is None \
                                         or parallel_test_count >= 1, \

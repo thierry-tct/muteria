@@ -22,6 +22,9 @@ import muteria.drivers.testgeneration as testgeneration
 
 import muteria.drivers.optimizers.criteriatestexecution.optimizerdefs as \
                                                                 crit_opt_module
+from muteria.drivers.optimizers.criteriatestexecution\
+                                    .base_criteria_test_execution_optimizer \
+                                    import BaseCriteriaTestExecutionOptimizer
 
 import muteria.configmanager.configurations as configurations
 from muteria.configmanager.configurations import CompleteConfiguration
@@ -346,14 +349,13 @@ class ConfigurationHelper(object):
                 c = criteria.TestCriteria[c] 
             if c not in conf.ENABLED_CRITERIA:
                 continue
-            if not isinstance(opt, crit_opt_module.CriteriaOptimizers):
+            # use base criteria opt to give option to set one own optimizer 
+            # in conf
+            if not isinstance(opt, crit_opt_module.CriteriaOptimizers) and \
+                    not isinstance(opt, BaseCriteriaTestExecutionOptimizer):
                 ERROR_HANDLER.assert_true(crit_opt_module.CriteriaOptimizers.\
                                                     has_element_named(opt), \
                                         "Invalid criterion Optimizer: "+opt)
-                ERROR_HANDLER.assert_true(\
-                                crit_opt_module.CriteriaOptimizers.\
-                                                    has_element_named(opt), \
-                                "invalid test criterion: "+opt)
                 opt = crit_opt_module.CriteriaOptimizers[opt] 
             ERROR_HANDLER.assert_true(\
                             crit_opt_module.check_is_right_optimizer(c, opt), \
