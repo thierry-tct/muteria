@@ -27,7 +27,7 @@ muteria --help
 
 ## Usage
 *Muteria* requires to have the underlying tools installed on the system.
-### Usage example C
+### Usage example C (in Docker container)
 A docker image, with preinstalled tools, can be used to run muteria on a sample C language program.
 The installed tools are: [GNU GCov](https://gcc.gnu.org/onlinedocs/gcc/Gcov.html), [KLEE](https://klee.github.io/), [Shadow](https://srg.doc.ic.ac.uk/projects/shadow/shadow.html), [Mart](https://github.com/thierry-tct/mart), [SEMu](https://github.com/thierry-tct/KLEE-SEMu).
 1. Pull the docker image:
