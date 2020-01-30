@@ -422,7 +422,25 @@ class Executor(object):
                 if toolalias in candidate_aliases:
                     selected_tests.append(meta_test)
 
-            # TODO: use the actual selector. For now just use all tests
+            # XXX use the actual selector. For now just use all tests
+            sel_tech = self.config.TESTCASES_SELECTION.get_val()
+            # selection method
+            if inspect.isfunction(sel_tech):
+                ERROR_HANDLER.assert_true(\
+                                    len(inspect.getargspec().args) == 2, \
+                                    "Test selection function must take 2 args "
+                                    "(testlist, maxselcount)", __file__)
+                
+            else:
+                if sel_tech is not None and sel_tech != 'DummyRandom':
+                    ERROR_HANDLER.error_exit(\
+                        'only random tests selection supported now!', \
+                                                                __file__)
+                # make DummyRandom selection
+                sel_tech = random.sample
+
+            # make selection
+            selected_tests = sel_tech(selected_tests, len(selected_tests))
 
             # Check for flakiness
             logging.debug("# Checking for tests flakiness ...")

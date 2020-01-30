@@ -241,6 +241,8 @@ class CompleteConfiguration(object):
 
     ]
 
+    TESTCASES_SELECTION = None
+
     # Reporting
     REPORT_NUMBER_OF_TESTS_GENERATED = True
     REPORT_NUMBER_OF_DUPLICATED_TESTS = True

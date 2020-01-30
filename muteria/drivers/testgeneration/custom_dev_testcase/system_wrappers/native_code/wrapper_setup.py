@@ -73,8 +73,8 @@ class SystemTestSplittingWrapper(BaseSystemTestSplittingWrapper):
                 args = f.read().splitlines()
         except UnicodeDecodeError:
             with open(self.splittest_args, encoding='ISO-8859-1') as f:
-                args = f.read().encode('utf-8', 'backslashreplace')\
-                                                                .splitlines()
+                #encode('utf-8', 'backslashreplace')
+                args = f.read().splitlines()
         return n_subtest, args
     #~ def collect_data()
 
