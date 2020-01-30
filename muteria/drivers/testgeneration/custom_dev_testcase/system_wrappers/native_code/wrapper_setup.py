@@ -68,8 +68,13 @@ class SystemTestSplittingWrapper(BaseSystemTestSplittingWrapper):
         with open(self.counting_file) as f:
             max_id = int(f.read())
             n_subtest = max_id + 1
-        with open(self.splittest_args) as f:
-            args = f.read().encode('utf-8', 'backslashreplace').splitlines()
+        try:
+            with open(self.splittest_args) as f:
+                args = f.read().splitlines()
+        except UnicodeDecodeError:
+            with open(self.splittest_args, encoding='ISO-8859-1') as f:
+                args = f.read().encode('utf-8', 'backslashreplace')\
+                                                                .splitlines()
         return n_subtest, args
     #~ def collect_data()
 
