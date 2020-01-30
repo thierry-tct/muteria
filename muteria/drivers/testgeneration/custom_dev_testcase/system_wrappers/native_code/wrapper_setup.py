@@ -69,7 +69,7 @@ class SystemTestSplittingWrapper(BaseSystemTestSplittingWrapper):
             max_id = int(f.read())
             n_subtest = max_id + 1
         with open(self.splittest_args) as f:
-            args = f.read().splitlines()
+            args = f.read().encode('utf-8', 'backslashreplace').splitlines()
         return n_subtest, args
     #~ def collect_data()
 
