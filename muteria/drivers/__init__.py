@@ -214,7 +214,9 @@ class DriversUtils(object):
             stdout, stderr = p.communicate(timeout=timeout)
         except subprocess.TimeoutExpired:
             #p.terminate() # TODO: Chose the signal to send
-            os.killpg(p.pid, signal.SIGTERM)
+            group_id = os.getpgid(p.pid)
+            #os.killpg(p.pid, signal.SIGTERM)
+            os.killpg(group_id, signal.SIGTERM)
             #p.send_signal(signal.SIGINT) # TODO: Chose the signal to send
             # give timeout_grace_period seconds to stop
             stopped = False
@@ -225,7 +227,8 @@ class DriversUtils(object):
                     stopped = True
                     break
             if not stopped:
-                os.killpg(p.pid, signal.SIGKILL)
+                #os.killpg(p.pid, signal.SIGKILL)
+                os.killpg(group_id, signal.SIGKILL)
                 p.kill() # TODO: Chose the signal to send
             stdout, stderr = p.communicate()
         if stdout is not None:
