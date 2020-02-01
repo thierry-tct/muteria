@@ -3,6 +3,7 @@ from __future__ import print_function
 import os
 import sys
 import re
+import shutil
 import imp
 from distutils.spawn import find_executable
 
@@ -80,6 +81,26 @@ class KTestTestFormat(object):
             tmp_env['KLEE_REPLAY_TIMEOUT'] = str(timeout)
             kt_over = 5 # 1second
             timeout += kt_over
+        
+        # XXX Back the CWD
+        cwd_bak = os.getcwd()
+
+        # klee-replay may create files or dir. in KLEE version with LLVM-3.4,
+        # those are created in a temporary dir set as <cwd>.temps
+        # XXX XXX. make sure each test has its own
+        test_work_dir = test_file+".execdir"
+        klee_replay_temps = test_work_dir + '.temps'
+        if not os.path.isdir(test_work_dir):
+            os.mkdir(test_work_dir)
+        if os.path.isdir(klee_replay_temps):
+            try:
+                shutil.rmtree(klee_replay_temps)
+            except PermissionError:
+                cls._dir_chmod777(klee_replay_temps)
+                shutil.rmtree(klee_replay_temps)
+        os.chdir(test_work_dir)
+
+        # XXX Execute the ktest
         if collected_output is not None:
             retcode, out, err = DriversUtils.execute_and_get_retcode_out_err(\
                                 prog=prog, args_list=args, env=tmp_env, \
@@ -94,6 +115,9 @@ class KTestTestFormat(object):
                                 timeout=timeout, timeout_grace_period=5, \
                                                     out_on=False, err_on=False)
 
+        # XXX: Go back to previous CWD
+        os.chdir(cwd_bak)
+
         if retcode in timeout_return_codes + \
                                     DriversUtils.EXEC_SEGFAULT_OUT_RET_CODE:
             verdict = common_mix.GlobalConstants.FAIL_TEST_VERDICT
@@ -103,6 +127,22 @@ class KTestTestFormat(object):
         return verdict
     #~ def execute_test()
 
+    @staticmethod
+    def _dir_chmod777(dirpath):
+        try:
+            for root_, dirs_, files_ in os.walk(dirpath):
+                for sub_d in dirs_:
+                    os.chmod(os.path.join(root_, sub_d), 0o777)
+                for f_ in files_:
+                    os.chmod(os.path.join(root_, f_), 0o777)
+        except PermissionError:
+            ret,out,_ = DriversUtils.execute_and_get_retcode_out_err('sudo', \
+                                            ['chmod', '777', '-R', dirpath])
+            ERROR_HANDLER.assert_true(ret == 0, \
+                        "'sudo chmod 777 -R "+dirpath+"' failed (returned "+\
+                                        str(ret)+"), error: "+out, __file__)
+    #~ def _dir_chmod777()
+    
     @classmethod
     def get_replay_test_wrapper_str(cls, exe_env_var, ktest_env_var, \
                                                             timeout_env_var, \
