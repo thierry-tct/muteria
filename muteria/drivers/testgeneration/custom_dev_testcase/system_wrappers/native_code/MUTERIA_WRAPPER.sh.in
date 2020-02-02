@@ -86,12 +86,16 @@ if [ "$COUNTER" = "$MUTERIA_TEST_COUNT_ID_ENV_VAR" ]; then
     LD_PRELOAD=$ld_preload_bak
 
     if [ "$W_EXEC_TIMEOUT" != "" ]; then
-        /usr/bin/timeout --kill-after=30s $W_EXEC_TIMEOUT $W_TOOL_ABS_NAME "${@:1}" 2>&1 | /usr/bin/tee -a "$W_OUTPUT_LOG"
+        #/usr/bin/timeout --kill-after=30s $W_EXEC_TIMEOUT $W_TOOL_ABS_NAME "${@:1}" 2>&1 | /usr/bin/tee -a "$W_OUTPUT_LOG"
+        /usr/bin/timeout --kill-after=30s $W_EXEC_TIMEOUT $W_TOOL_ABS_NAME "${@:1}" > "$W_OUTPUT_LOG" 2>&1
         retcode="$?"
+        #/bin/cat "$W_OUTPUT_LOG"
         /bin/echo "$retcode" >> "$W_OUTPUT_RETCODE" 
     else
-        $W_TOOL_ABS_NAME "${@:1}" 2>&1 | /usr/bin/tee -a "$W_OUTPUT_LOG"
+        #$W_TOOL_ABS_NAME "${@:1}" 2>&1 | /usr/bin/tee -a "$W_OUTPUT_LOG"
+        $W_TOOL_ABS_NAME "${@:1}" > "$W_OUTPUT_LOG" 2>&1
         retcode="$?"
+        #/bin/cat "$W_OUTPUT_LOG"
         /bin/echo "$retcode" >> "$W_OUTPUT_RETCODE" 
     fi
 
