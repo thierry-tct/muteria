@@ -434,6 +434,6 @@ class TestcasesToolKlee(BaseTestcaseTool):
     #~ def _do_generate_tests()
 
     def can_run_tests_in_parallel(self):
-        return False #True
+        return True
     #~ def can_run_tests_in_parallel()
 #~ class TestcasesToolKlee

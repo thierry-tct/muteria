@@ -441,7 +441,37 @@ class MetaTestcaseTool(object):
 
         shared_loc = multiprocessing.RLock()
 
-        next_parallel_count = parallel_test_count
+        parallel_test_count_by_tool = {ta: 1 for ta in candidate_aliases}
+
+        # tool with parallel test exec
+        # TODO: find way to pass parallel count here
+        if parallel_test_count is None:
+            parallel_test_count = min(10, multiprocessing.cpu_count())
+        
+        # use parallel
+        sub_parallel_count = 0 if parallel_test_count is None else \
+                        parallel_test_count - len(parallel_test_count_by_tool)
+        if sub_parallel_count > 0:
+            para_tools = [tt for tt in candidate_aliases if \
+                                self.testcases_configured_tools[ttoolalias]\
+                                [self.TOOL_OBJ_KEY].can_run_tests_in_parallel()
+                        ]
+            para_tools.sort(reverse=True, \
+                                    key=lambda x: len(testcases_by_tool[x]))
+            para_tools_n_tests = sum(\
+                            [len(testcases_by_tool[tt]) for tt in para_tools])
+            
+            used = 0
+            for tt in para_tools:
+                quota = len(testcases_by_tool[tt]) * sub_parallel_count / \
+                                                            para_tools_n_tests
+                parallel_test_count_by_tool[tt] += quota
+                used += quota
+            for tt in para_tools:
+                if used == sub_parallel_count:
+                    break
+                parallel_test_count_by_tool[tt] += 1
+
 
         def tool_parallel_test_exec(ttoolalias):
             # Actual execution
@@ -449,18 +479,19 @@ class MetaTestcaseTool(object):
             ttool = \
                 self.testcases_configured_tools[ttoolalias][self.TOOL_OBJ_KEY]
             test_failed_verdicts, test_execoutput = ttool.runtests( \
-                                            testcases_by_tool[ttoolalias], \
-                                            exe_path_map, env_vars, \
-                                            stop_on_failure, \
-                                            per_test_timeout=per_test_timeout,
-                                            use_recorded_timeout_times=\
-                                                use_recorded_timeout_times, \
-                                            recalculate_execution_times=\
-                                                recalculate_execution_times, \
-                                            with_output_summary=\
-                                                        with_output_summary, \
-                                            hash_outlog=hash_outlog, \
-                                            parallel_count=next_parallel_count)
+                                testcases_by_tool[ttoolalias], \
+                                exe_path_map, env_vars, \
+                                stop_on_failure, \
+                                per_test_timeout=per_test_timeout,
+                                use_recorded_timeout_times=\
+                                    use_recorded_timeout_times, \
+                                recalculate_execution_times=\
+                                    recalculate_execution_times, \
+                                with_output_summary=\
+                                            with_output_summary, \
+                                hash_outlog=hash_outlog, \
+                                parallel_count=\
+                                    parallel_test_count_by_tool[ttoolalias])
             with shared_loc:
                 for testcase in test_failed_verdicts:
                     meta_testcase =  DriversUtils.make_meta_element(\
@@ -486,14 +517,9 @@ class MetaTestcaseTool(object):
         ptest_tresh = 5
 
         if len(candidate_aliases) > 1 and len(meta_testcases) >= ptest_tresh \
-                and (parallel_test_count is None or parallel_test_count > 1):
-            if parallel_test_count is None:
-                paralle_count = min(len(candidate_aliases), \
-                                                multiprocessing.cpu_count())
-            else:
-                paralle_count = min(len(candidate_aliases), \
-                                                        parallel_test_count)
-                #next_parallel_count = 1
+                                        and parallel_test_count is not None \
+                                        and parallel_test_count > 1:
+            paralle_count = min(len(candidate_aliases), parallel_test_count)
             joblib.Parallel(n_jobs=paralle_count, require='sharedmem')\
                     (joblib.delayed(tool_parallel_test_exec)(ttoolalias) \
                         for ttoolalias in candidate_aliases)

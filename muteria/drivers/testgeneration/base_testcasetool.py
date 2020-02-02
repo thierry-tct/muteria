@@ -402,12 +402,8 @@ class BaseTestcaseTool(abc.ABC):
         #~ def test_exec_iteration()
 
         if self.can_run_tests_in_parallel() and len(testcases) >= ptest_tresh \
-                            and (parallel_count is None or parallel_count > 1):
-            if parallel_count is None:
-                paralle_count = min(len(testcases), \
-                                                multiprocessing.cpu_count())
-            else:
-                paralle_count = min(len(testcases), parallel_count)
+                        and parallel_count is not None and parallel_count > 1:
+            paralle_count = min(len(testcases), parallel_count)
             joblib.Parallel(n_jobs=paralle_count, require='sharedmem')\
                             (joblib.delayed(test_exec_iteration)(testcase) \
                                                 for testcase in processbar)
