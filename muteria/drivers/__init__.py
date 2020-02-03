@@ -196,7 +196,8 @@ class DriversUtils(object):
     @classmethod
     def execute_and_get_retcode_out_err(cls, prog, args_list=[], \
                             env=None, timeout=None, timeout_grace_period=5, \
-                            out_on=True, err_on=True, merge_err_to_out=True):
+                            out_on=True, err_on=True, merge_err_to_out=True, \
+                            cwd=None):
         #print(prog, args_list, env is None, timeout, out_on, err_on, merge_err_to_out)
         tmp_env = os.environ if env is None else env
         out = subprocess.PIPE if out_on else subprocess.DEVNULL
@@ -205,7 +206,7 @@ class DriversUtils(object):
         else:
             err = subprocess.DEVNULL
         # use setsid to kill the process group
-        p = subprocess.Popen([prog]+args_list, env=tmp_env, \
+        p = subprocess.Popen([prog]+args_list, env=tmp_env, cwd=cwd, \
                                                             #close_fds=True, \
                                                         stderr=err,\
                                                         stdout=out, 

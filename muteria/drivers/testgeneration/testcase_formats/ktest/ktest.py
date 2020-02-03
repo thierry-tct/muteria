@@ -68,9 +68,6 @@ class KTestTestFormat(object):
         prog, args = cls._get_replay_prog_args(executable_file, test_file, \
                                                 custom_replay_tool_binary_dir)
 
-        # XXX Back the CWD
-        cwd_bak = os.getcwd()
-
         # klee-replay may create files or dir. in KLEE version with LLVM-3.4,
         # those are created in a temporary dir set as <cwd>.temps
         # XXX XXX. make sure each test has its own
@@ -84,7 +81,6 @@ class KTestTestFormat(object):
             except PermissionError:
                 cls._dir_chmod777(klee_replay_temps)
                 shutil.rmtree(klee_replay_temps)
-        os.chdir(test_work_dir)
 
         # XXX Execution setup
         tmp_env = os.environ.copy()
@@ -106,7 +102,7 @@ class KTestTestFormat(object):
             retcode, out, err = DriversUtils.execute_and_get_retcode_out_err(\
                                 prog=prog, args_list=args, env=tmp_env, \
                                 timeout=timeout, timeout_grace_period=5, \
-                                                        merge_err_to_out=True)
+                                merge_err_to_out=True, cwd=test_work_dir)
             out = cls._remove_output_noise(out)
             collected_output.extend((retcode, out, \
                                             (retcode in timeout_return_codes)))
@@ -114,7 +110,8 @@ class KTestTestFormat(object):
             retcode, out, err = DriversUtils.execute_and_get_retcode_out_err(\
                                 prog=prog, args_list=args, env=tmp_env, \
                                 timeout=timeout, timeout_grace_period=5, \
-                                                    out_on=False, err_on=False)
+                                                out_on=False, err_on=False, \
+                                                cwd=test_work_dir)
 
         # XXX: Go back to previous CWD
         if os.path.isdir(klee_replay_temps):
@@ -123,7 +120,6 @@ class KTestTestFormat(object):
             except PermissionError:
                 cls._dir_chmod777(klee_replay_temps)
                 shutil.rmtree(klee_replay_temps)
-        os.chdir(cwd_bak)
 
         if retcode in timeout_return_codes + \
                                     DriversUtils.EXEC_SEGFAULT_OUT_RET_CODE:
