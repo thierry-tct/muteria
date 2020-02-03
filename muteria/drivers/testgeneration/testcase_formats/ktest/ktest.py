@@ -68,20 +68,6 @@ class KTestTestFormat(object):
         prog, args = cls._get_replay_prog_args(executable_file, test_file, \
                                                 custom_replay_tool_binary_dir)
 
-        tmp_env = os.environ.copy()
-        if env_vars is not None:
-            #for e, v in env_vars.items():
-            #    tmp_env[e] = v
-            tmp_env.update(env_vars)
-
-        timeout_return_codes = cls.timedout_retcodes + \
-                                        DriversUtils.EXEC_TIMED_OUT_RET_CODE
-
-        if timeout is not None:
-            tmp_env['KLEE_REPLAY_TIMEOUT'] = str(timeout)
-            kt_over = 5 # 1second
-            timeout += kt_over
-        
         # XXX Back the CWD
         cwd_bak = os.getcwd()
 
@@ -100,6 +86,21 @@ class KTestTestFormat(object):
                 shutil.rmtree(klee_replay_temps)
         os.chdir(test_work_dir)
 
+        # XXX Execution setup
+        tmp_env = os.environ.copy()
+        if env_vars is not None:
+            #for e, v in env_vars.items():
+            #    tmp_env[e] = v
+            tmp_env.update(env_vars)
+
+        timeout_return_codes = cls.timedout_retcodes + \
+                                        DriversUtils.EXEC_TIMED_OUT_RET_CODE
+
+        if timeout is not None:
+            tmp_env['KLEE_REPLAY_TIMEOUT'] = str(timeout)
+            kt_over = 5 # 1second
+            timeout += kt_over
+        
         # XXX Execute the ktest
         if collected_output is not None:
             retcode, out, err = DriversUtils.execute_and_get_retcode_out_err(\
