@@ -463,8 +463,8 @@ class MetaTestcaseTool(object):
             
             used = 0
             for tt in para_tools:
-                quota = len(testcases_by_tool[tt]) * sub_parallel_count / \
-                                                            para_tools_n_tests
+                quota = int(len(testcases_by_tool[tt]) * sub_parallel_count / \
+                                                            para_tools_n_tests)
                 parallel_test_count_by_tool[tt] += quota
                 used += quota
             for tt in para_tools:
