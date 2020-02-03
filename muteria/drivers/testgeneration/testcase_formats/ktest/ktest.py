@@ -116,6 +116,12 @@ class KTestTestFormat(object):
                                                     out_on=False, err_on=False)
 
         # XXX: Go back to previous CWD
+        if os.path.isdir(klee_replay_temps):
+            try:
+                shutil.rmtree(klee_replay_temps)
+            except PermissionError:
+                cls._dir_chmod777(klee_replay_temps)
+                shutil.rmtree(klee_replay_temps)
         os.chdir(cwd_bak)
 
         if retcode in timeout_return_codes + \
