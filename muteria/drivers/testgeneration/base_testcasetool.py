@@ -113,7 +113,11 @@ class BaseTestcaseTool(abc.ABC):
         if self.compress_test_storage_dir:
             if os.path.isfile(self.tests_storage_dir_archive):
                 if os.path.isdir(self.tests_storage_dir):
-                    shutil.rmtree(self.tests_storage_dir)
+                    try:
+                        shutil.rmtree(self.tests_storage_dir)
+                    except PermissionError:
+                        self._dir_chmod777(self.tests_storage_dir)
+                        shutil.rmtree(self.tests_storage_dir)
                 common_fs.TarGz.decompressDir(self.tests_storage_dir_archive)
     #~ def __init__()
 
