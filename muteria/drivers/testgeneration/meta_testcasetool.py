@@ -689,7 +689,8 @@ class MetaTestcaseTool(object):
         # @Checkpoint: create a checkpoint handler
         cp_func_name = "generate_tests"
         if test_tool_type_list is not None:
-            for test_tool_type in sorted(test_tool_type_list):
+            for test_tool_type in sorted(test_tool_type_list, \
+													key=lambda x: x.get_str()):
                 cp_func_name += ":" + test_tool_type.get_str()
         cp_task_id = 1
         checkpoint_handler = CheckPointHandler(\
