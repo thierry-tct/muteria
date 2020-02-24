@@ -47,7 +47,8 @@ class StatsComputer(object):
                                                     filename=lexecoutput_file)
             rexecoutput = common_matrices.OutputLogData(\
                                                     filename=rexecoutput_file)
-            rexecoutput.update_with_other(lexecoutput)
+            rexecoutput.update_with_other(lexecoutput, override_existing=True,\
+                                    ask_confirmation_with_exist_missing=True)
             rexecoutput.serialize()
     #~ def merge_lmatrix_into_right()
 

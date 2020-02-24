@@ -805,8 +805,9 @@ class OutputLogData(object):
     def update_with_other(self, other_execoutput, \
                                     override_existing=False, serialize=False):
         self.add_data(other_execoutput.data, check_all=False, \
-                                        override_existing=override_existing, \
-                                        serialize=serialize)
+                                    override_existing=override_existing, \
+                                    ask_confirmation_with_exist_missing=False
+                                    serialize=serialize)
     #~ def update_with_other_matrix()
 
     def serialize(self):
