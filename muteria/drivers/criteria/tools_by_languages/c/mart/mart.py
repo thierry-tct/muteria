@@ -387,7 +387,7 @@ class CriteriaToolMart(BaseCriteriaTool):
 
         # make sure that the bitcode file can be compiled to native code
         ret, out, err = DriversUtils.execute_and_get_retcode_out_err('clang', \
-                                [extra_linking_flags, bitcode_file, \
+                                extra_linking_flags.split() + [bitcode_file, \
                                                 '-o', bitcode_file+'.native'])
         if ret not in (0,):
             logging.error(out)
