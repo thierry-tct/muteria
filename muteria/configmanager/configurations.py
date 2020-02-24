@@ -38,6 +38,7 @@ class SessionMode(common_mix.EnumAutoName):
     VIEW_MODE = 1
     INTERNAL_MODE = 2
     RESTORE_REPOS_MODE = 3
+    CUSTOM_EXECUTION_MODE = 4
 #~ class SessionMode
 
 class ConfigClasses(common_mix.EnumAutoName):

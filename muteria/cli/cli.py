@@ -89,6 +89,9 @@ class CliUserInterface(object):
             raw_conf['RUN_MODE'] = configurations.SessionMode.VIEW_MODE
         elif args.command == 'internal':
             raw_conf['RUN_MODE'] = configurations.SessionMode.INTERNAL_MODE
+        elif args.command == 'customexec':
+            raw_conf['RUN_MODE'] = \
+                            configurations.SessionMode.CUSTOM_EXECUTION_MODE
         else:
             ERROR_HANDLER.error_exit("must specify a command."
                             " use --help to see available commands", __file__)

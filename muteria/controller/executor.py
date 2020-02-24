@@ -332,6 +332,91 @@ class Executor(object):
         return self.repo_mgr
     #~ def get_repo_manager()
 
+    def custom_execution(self):
+        """ Interact with the user and ask what to do.
+            For execution of tests with custom executable for example
+        """
+        # XXX: check that the normal execution was finished (from checkpointer)
+        self.checkpointer = \
+                    common_fs.CheckpointState(*self._get_checkpoint_files())
+        ERROR_HANDLER.assert_true(self.checkpointer.is_finished(), \
+                        "custom execution must be ran when run is finished", \
+                                                                    __file__)
+
+        mode = None
+        while mode not in ['tests', 'crtiteria_tests']:
+            mode = input (
+                    "> Chose what to execute ('tests' or 'criteria_tests'): ")
+        custom_out = input("> Input the non existing custom output dir: ")
+        ERROR_HANDLER.assert_true(not os.path.isdir(custom_out), \
+                                            "custom_out is existing", __file__)
+        ERROR_HANDLER.assert_true(os.path.isdir(os.path.dirname(custom_out)), \
+                            "parent of custom_out is not existing", __file__)
+        if mode == 'tests':
+            ## read exe
+            exe_map_str = input("> Input existing executable file map to use"
+                        " ({<path in repo>: <used exe path>}): ")
+            exe_map = common_fs.json.loads(exe_map_str)
+            ERROR_HANDLER.assert_true(type(exe_map) == dict, \
+                                                "invalid path map", __file__)
+            for kp, rp in exe_map.items():
+                ERROR_HANDLER.assert_true(os.path.isfile(rp), \
+                            "executable is missing ({}: {})".format(kp, rp), \
+                                                                    __file__)
+            ## read test list
+            testlist_file = input("> Input existing test list file to use: ")
+            ERROR_HANDLER.assert_true(os.path.isfile(testlist_file), \
+                    "test file list not existing ({})".format(testlist_file),\
+                                                                    __file__)
+            with open(testlist_file) as f:
+                testlist = [t.strip() for t in f]
+
+            # XXX execution
+            ## Create meta test tool
+            try:
+                meta_testcase_tool = self.meta_testcase_tool
+            except AttributeError:
+                meta_testcase_tool = self._create_meta_test_tool(self.config, \
+                                                            self.head_explorer)
+                meta_testcase_tool.check_tools_installed()
+            ## create test prioritization tool
+            try:
+                meta_testexec_optimization_tool = \
+                                        self.meta_testexec_optimization_tool
+            except AttributeError:
+                meta_testexec_optimization_tool = \
+                        self._create_meta_testexec_optimization(self.config)
+
+            ## Create outdir
+            os.mkdir(custom_out)
+
+            ## run the tests
+
+            matrix_file_key = outdir_struct.TEST_PASS_FAIL_MATRIX
+            matrix_file = os.path.join(custom_out, matrix_file_key)
+            execoutput_file_key = \
+                                outdir_struct.PROGRAM_TESTEXECUTION_OUTPUT
+            execoutput_file = None
+            if self.config.GET_PASSFAIL_OUTPUT_SUMMARY.get_val():
+                execoutput_file = os.path.join(custom_out, execoutput_file_key)
+
+            self.meta_testcase_tool.runtests(meta_testcases=testlist, \
+                        exe_path_map=exe_map,
+                        stop_on_failure=\
+                                self.config.STOP_TESTS_EXECUTION_ON_FAILURE\
+                                                                .get_val(), \
+                        recalculate_execution_times=False, \
+                        fault_test_execution_matrix_file=matrix_file, \
+                        fault_test_execution_execoutput_file=execoutput_file, \
+                        test_prioritization_module=\
+                                        meta_testexec_optimization_tool, \
+                        finish_destroy_checkpointer=True)
+        elif mode == 'criteria_tests':
+            ERROR_HANDLER.error_exit("To be implemented")
+        else:
+            ERROR_HANDLER.error_exit("invalid mode and bug", __file__)
+    #~ def custom_execution()
+
     def _execute_task(self, task):
         """ TODO: 
                 1. implement the todos here

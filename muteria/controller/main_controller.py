@@ -111,6 +111,10 @@ class MainController (object):
             # XXX Main Execution
             exec_obj = executor.Executor(final_config, top_timeline_explorer)
             exec_obj.main()
+        if mode == configurations.SessionMode.CUSTOM_EXECUTION_MODE:
+            # Custom execution into other folder
+            exec_obj = executor.Executor(final_config, top_timeline_explorer)
+            exec_obj.custom_execution()
         elif mode == configurations.SessionMode.RESTORE_REPOS_MODE:
             # Restore the project repo dir's files that could have been changed.
             # This do not remove the possibly added files or folders
