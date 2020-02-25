@@ -446,7 +446,8 @@ class MetaTestcaseTool(object):
         # tool with parallel test exec
         # TODO: find way to pass parallel count here
         if parallel_test_count is None:
-            parallel_test_count = min(10, multiprocessing.cpu_count())
+            #parallel_test_count = min(10, multiprocessing.cpu_count())
+            parallel_test_count = min(20, 2*multiprocessing.cpu_count())
         
         # use parallel
         sub_parallel_count = 0 if parallel_test_count is None else \
