@@ -454,7 +454,7 @@ class MetaTestcaseTool(object):
                         parallel_test_count - len(parallel_test_count_by_tool)
         if sub_parallel_count > 0:
             para_tools = [tt for tt in candidate_aliases if \
-                                self.testcases_configured_tools[ttoolalias]\
+                                self.testcases_configured_tools[tt]\
                                 [self.TOOL_OBJ_KEY].can_run_tests_in_parallel()
                         ]
             para_tools.sort(reverse=True, \
