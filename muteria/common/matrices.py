@@ -769,7 +769,7 @@ class OutputLogData(object):
         return self.data.items()
     #~ def get_zip_objective_and_data()
 
-    def add_data (self, data_dict, check_all=True, override_existing=False, \ 
+    def add_data (self, data_dict, check_all=True, override_existing=False, \
                                 ask_confirmation_with_exist_missing=False, \
                                                             serialize=False):
         if check_all:
