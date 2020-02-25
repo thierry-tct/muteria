@@ -769,7 +769,8 @@ class OutputLogData(object):
         return self.data.items()
     #~ def get_zip_objective_and_data()
 
-    def add_data (self, data_dict, check_all=True, override_existing=False, 
+    def add_data (self, data_dict, check_all=True, override_existing=False, \ 
+                                ask_confirmation_with_exist_missing=False, \
                                                             serialize=False):
         if check_all:
             ERROR_HANDLER.assert_true(\
@@ -795,6 +796,13 @@ class OutputLogData(object):
                             "Override_existing not set but there is overlap", \
                                                                     __file__)            
         for objective in intersect_objective:
+            if ask_confirmation_with_exist_missing and \
+                                        len(set(self.data[objective]) & \
+                                            set(data_dict[objective])) != 0:
+                ERROR_HANDLER.assert_true(common_mix.confirm_execution(\
+                                            "Some values are existing, "
+                                            "do you confirm their override?"),\
+                             "Existing values were not overriden", __file__)
             self.data[objective].update(data_dict[objective])
         for objective in onlynew_objective:
             self.data[objective] = copy.deepcopy(data_dict[objective])
@@ -803,11 +811,14 @@ class OutputLogData(object):
     #~ def add_data ()
 
     def update_with_other(self, other_execoutput, \
-                                    override_existing=False, serialize=False):
+                                override_existing=False, \
+                                ask_confirmation_with_exist_missing=False, \
+                                serialize=False):
         self.add_data(other_execoutput.data, check_all=False, \
-                                    override_existing=override_existing, \
-                                    ask_confirmation_with_exist_missing=False
-                                    serialize=serialize)
+                                override_existing=override_existing, \
+                                ask_confirmation_with_exist_missing=\
+                                    ask_confirmation_with_exist_missing, \
+                                serialize=serialize)
     #~ def update_with_other_matrix()
 
     def serialize(self):
