@@ -385,7 +385,8 @@ class BaseTestcaseTool(abc.ABC):
         ptest_tresh = 5
 
         def test_exec_iteration(testcase):
-            processbar.set_description("Running Test %s"% testcase)
+            processbar.set_description("Running Test {} (x{})".format(\
+                                                  testcase, parallel_count))
             start_time = time.time()
             test_failed, execoutlog_hash = \
                         self._oracle_execute_a_test(testcase, exe_path_map, \
@@ -407,11 +408,12 @@ class BaseTestcaseTool(abc.ABC):
 
         if self.can_run_tests_in_parallel() and len(testcases) >= ptest_tresh \
                         and parallel_count is not None and parallel_count > 1:
-            paralle_count = min(len(testcases), parallel_count)
-            joblib.Parallel(n_jobs=paralle_count, require='sharedmem')\
+            parallel_count = min(len(testcases), parallel_count)
+            joblib.Parallel(n_jobs=parallel_count, require='sharedmem')\
                             (joblib.delayed(test_exec_iteration)(testcase) \
                                                 for testcase in processbar)
         else:
+            parallel_count = 1 # to be printed in progress
             for testcase in processbar: 
                 test_failed = test_exec_iteration(testcase)
                 if stop_on_failure and test_failed != \
