@@ -48,10 +48,14 @@ class CliUserInterface(object):
                                 help="Get the languages supported partially")
 
         parser_run = subparsers.add_parser('run', \
-                                    help="Execute the tass specified in the"
+                                    help="Execute the tasks specified in the"
                                         " configuration file")
         parser_run.add_argument("--cleanstart", action='store_true', \
                                             help="Clear out dir and restart")
+
+        parser_run = subparsers.add_parser('customexec', \
+                                    help="Make some custom execution AFTER the"
+                                        " main execution is done")
 
         if len(sys.argv)==1:
             parser.print_help(sys.stderr)

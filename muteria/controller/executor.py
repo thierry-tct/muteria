@@ -412,6 +412,64 @@ class Executor(object):
                                         meta_testexec_optimization_tool, \
                         finish_destroy_checkpointer=True)
         elif mode == 'criteria_tests':
+            print ("# This mode is just needed to reexecute tests with"
+                                        "some test criteria test objectives")
+            ## read test criterion
+            criterion = input("> Input the test criterion to use: ")
+            if not isinstance(criterion, criteria_pkg.TestCriteria):
+                ERROR_HANDLER.assert_true(\
+                        criteria_pkg.TestCriteria.has_element_named(\
+                            criterion), "invalid test criterion: "+criterion)
+                criterion = criteria_pkg.TestCriteria[criterion] 
+
+            ## read test list
+            to_test_map_file = input("> Input existing test-objective to test"
+                                                        " map file to use: ")
+            ERROR_HANDLER.assert_true(os.path.isfile(to_test_map_file), \
+                    "test-objective to test map file list not existing ({})".\
+                                        format(to_test_map_file), __file__)
+            to_test_map = common_fs.loadJSON(to_test_map_file)
+
+            # XXX execution
+            ## Create meta test tool
+            try:
+                meta_testcase_tool = self.meta_testcase_tool
+            except AttributeError:
+                meta_testcase_tool = self._create_meta_test_tool(self.config, \
+                                                            self.head_explorer)
+                meta_testcase_tool.check_tools_installed()
+
+            # Meta criteria
+            try:
+                meta_criteria_tool = self.meta_criteria_tool 
+            except AttributeError:
+                meta_criteria_tool = self._create_meta_criteria_tool(\
+                                            self.config, meta_testcase_tool)
+                meta_criteria_tool.check_tools_installed()
+
+            # Criteria optimization
+            try:
+                meta_criteriaexec_optimization_tools = \
+                                    self.meta_criteriaexec_optimization_tools
+            except AttributeError:
+                meta_criteriaexec_optimization_tools = \
+                    self._create_meta_criteriaexec_optimization(self.config)
+
+            ## run TODO
+            for to, test_list in to_test_map.items():
+                meta_criteria_tool.runtests_criteria_coverage( \
+                            testcases=test_list, \
+                            criterion_to_matrix=criterion_to_matrix, \
+                            criterion_to_executionoutput=\
+                                                    criterion_to_execoutput, \
+                            criteria_element_list_by_criteria=\
+                                                    used_crit_TO_list_by_crit,
+                            cover_criteria_elements_once=self.config.\
+                                    COVER_CRITERIA_ELEMENTS_ONCE.get_val(),\
+                            prioritization_module_by_criteria=\
+                                    meta_criteriaexec_optimization_tools,\
+                            finish_destroy_checkpointer=True)
+
             ERROR_HANDLER.error_exit("To be implemented")
         else:
             ERROR_HANDLER.error_exit("invalid mode and bug", __file__)
