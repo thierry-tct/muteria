@@ -348,6 +348,7 @@ class Executor(object):
             mode = input (
                     "> Chose what to execute ('tests' or 'criteria_tests'): ")
         custom_out = input("> Input the non existing custom output dir: ")
+        custom_out = os.path.abspath(custom_out)
         ERROR_HANDLER.assert_true(os.path.isdir(os.path.dirname(custom_out)), \
                             "parent of custom_out is not existing", __file__)
         if mode == 'tests':
