@@ -354,7 +354,6 @@ class Executor(object):
         if mode == 'tests':
             ERROR_HANDLER.assert_true(not os.path.isdir(custom_out), \
                                             "custom_out is existing", __file__)
-            os.mkdir(custom_out)
 
             ## read exe
             exe_map_str = input("> Input existing executable file map to use"
@@ -418,9 +417,6 @@ class Executor(object):
             print ("# This mode is just needed to reexecute tests with"
                                         "some test criteria test objectives")
             
-            if not os.path.isdir(custom_out):
-                os.mkdir(custom_out)
-
             ## read test criterion
             criterion = input("> Input the test criterion to use: ")
             if not isinstance(criterion, criteria_pkg.TestCriteria):
@@ -474,6 +470,10 @@ class Executor(object):
             tmp_matrix_file = os.path.join(custom_out, \
                                 outdir_struct.TMP_CRITERIA_MATRIX[criterion])
             
+            ## Create outdir
+            if not os.path.isdir(custom_out):
+                os.mkdir(custom_out)
+
             for to, test_list in to_test_map.items():
                 if len(test_list) == 0:
                     continue
