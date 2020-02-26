@@ -355,10 +355,11 @@ class Executor(object):
                                 "non existing" if mode == tests_key else ""))
         custom_out = os.path.abspath(custom_out)
         ERROR_HANDLER.assert_true(os.path.isdir(os.path.dirname(custom_out)), \
-                            "parent of custom_out is not existing", __file__)
+                            "parent of custom_out is not existing (" \
+                                +os.path.dirname(custom_out)+')', __file__)
         if mode == tests_key:
             ERROR_HANDLER.assert_true(not os.path.isdir(custom_out), \
-                                            "custom_out is existing", __file__)
+                        "custom_out is existing ("+custom_out+')', __file__)
 
             ## read exe
             exe_map_str = input("> Input existing executable file map to use"
