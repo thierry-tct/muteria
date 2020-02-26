@@ -469,8 +469,9 @@ class Executor(object):
             #        self._create_meta_criteriaexec_optimization(self.config)
             ### WE DO NOT USE CONF OPTIMIZER 
             meta_criteriaexec_optimization_tools = {criterion:
-                    crit_opt_module.CriteriaOptimizers.OPTIMIZED_FROM_DICT(\
-                                self.config, self.head_explorer, criterion, \
+                    crit_opt_module.CriteriaOptimizers\
+                            .OPTIMIZED_FROM_DICT.get_optimizer()(self.config, \
+                                        self.head_explorer, criterion, \
                                                         dictobj=to_test_map)
             }
 
