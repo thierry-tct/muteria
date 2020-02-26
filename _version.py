@@ -1,2 +1,2 @@
 _framework_name = "muteria"
-__version__ = "0.1.87"
+__version__ = "0.1.88"
