@@ -419,14 +419,15 @@ class Executor(object):
                                         "some test criteria test objectives")
             
             ## read test criterion
-            criterion = input("> Input the test criterion to use: ")
+            all_criteria_str = [c.get_str() for c in criteria_pkg.TestCriteria]
+            criterion = input("> Input the test criterion to use "
+                                "(choose from {}): ".format(all_criteria_str))
             if not isinstance(criterion, criteria_pkg.TestCriteria):
                 ERROR_HANDLER.assert_true(\
                         criteria_pkg.TestCriteria.has_element_named(\
                             criterion), \
                         "invalid test criterion ({}). choose from: {}".format(\
-                            criterion, \
-                            [c.get_str() for c in criteria_pkg.TestCriteria]),\
+                            criterion, all_criteria_str),\
                         __file__)
                 criterion = criteria_pkg.TestCriteria[criterion] 
 
