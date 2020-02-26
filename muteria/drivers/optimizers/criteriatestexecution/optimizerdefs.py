@@ -24,6 +24,13 @@ class CriteriaOptimizers(common_mix.EnumAutoName):
                                         ".strongmutation_by_mutantcoverage", \
                                         package=crit_opt.__name__
                                     ).CriteriaTestExecutionOptimizer
+    # Any
+    OPTIMIZED_FROM_DICT = importlib.import_module(".fromdict", \
+                                        package=crit_opt.__name__
+                                    ).CriteriaTestExecutionOptimizer
+    OPTIMIZED_FROM_JSON = importlib.import_module(".fromjson", \
+                                        package=crit_opt.__name__
+                                    ).CriteriaTestExecutionOptimizer
 
     def get_optimizer(self):
         return self.get_field_value()
@@ -41,10 +48,14 @@ def check_is_right_optimizer(criterion, optimizer):
             CriteriaOptimizers.SM_OPTIMIZED_BY_WM,
         }
     }
-
+    generic = [
+        CriteriaOptimizers.NO_OPTIMIZATION,
+        CriteriaOptimizers.OPTIMIZED_FROM_DICT,
+        CriteriaOptimizers.OPTIMIZED_FROM_JSON,
+    ]
     # Check
     if criterion in dat:
-        if optimizer in dat[criterion]:
+        if optimizer in dat[criterion] or optimizer in generic:
             return True
     return False
 #~ def check_right_optimizer()

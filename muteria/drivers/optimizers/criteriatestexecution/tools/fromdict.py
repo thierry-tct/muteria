@@ -65,6 +65,8 @@ class CriteriaTestExecutionOptimizer(BaseCriteriaTestExecutionOptimizer):
             # If None as testlist, use all tests
             if test_of_to[to] is None:
                 test_of_to[to] = test_list
+            else:
+                test_of_to[to] = list(set(test_list) & set(test_of_to[to]))
 
         self.test_objective_ordered_list = copy.deepcopy(test_objective_list)
         self.pointer = 0

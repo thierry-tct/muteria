@@ -465,43 +465,42 @@ class Executor(object):
             #    meta_criteriaexec_optimization_tools = \
             #                        self.meta_criteriaexec_optimization_tools
             #except AttributeError:
-            #    meta_criteriaexec_optimization_tools = \
+            #meta_criteriaexec_optimization_tools = \
             #        self._create_meta_criteriaexec_optimization(self.config)
-            ### WE DO NOT USE OPTIMIZER 
-            meta_criteriaexec_optimization_tools = None
+            ### WE DO NOT USE CONF OPTIMIZER 
+            meta_criteriaexec_optimization_tools = {criterion:
+                    crit_opt_module.CriteriaOptimizers.OPTIMIZED_FROM_DICT(\
+                                self.config, self.head_explorer, criterion, \
+                                                        dictobj=to_test_map)
+            }
 
             ## run 
-            agg_output_file = os.path.join(custom_out, \
-                            outdir_struct.CRITERIA_EXECUTION_OUTPUT[criterion])
-            tmp_output_file = os.path.join(custom_out, \
-                        outdir_struct.TMP_CRITERIA_EXECUTION_OUTPUT[criterion])
-            tmp_matrix_file = os.path.join(custom_out, \
-                                outdir_struct.TMP_CRITERIA_MATRIX[criterion])
+            output_file = os.path.join(custom_out, \
+                        outdir_struct.CRITERIA_EXECUTION_OUTPUT[criterion])
+            matrix_file = os.path.join(custom_out, \
+                                outdir_struct.CRITERIA_MATRIX[criterion])
             
-            ## Create outdir
-            if not os.path.isdir(custom_out):
-                os.mkdir(custom_out)
+            all_test_list = set()
+            for _, test_list in to_test_map.items():
+                all_test_list |= set(test_list)
+            all_test_list = list(all_test_list)
+            if len(all_test_list) != 0:
+                ## Create outdir
+                if not os.path.isdir(custom_out):
+                    os.mkdir(custom_out)
 
-            for to, test_list in to_test_map.items():
-                if len(test_list) == 0:
-                    continue
                 meta_criteria_tool.runtests_criteria_coverage( \
-                            testcases=test_list, \
-                            criterion_to_matrix={criterion: tmp_matrix_file}, \
+                            testcases=all_test_list, \
+                            criterion_to_matrix={criterion: matrix_file}, \
                             criterion_to_executionoutput=\
-                                                {criterion: tmp_output_file}, \
+                                                {criterion: output_file}, \
                             criteria_element_list_by_criteria=\
-                                                        {criterion: [to]}, \
+                                            {criterion: list(to_test_map)}, \
                             cover_criteria_elements_once=self.config.\
                                     COVER_CRITERIA_ELEMENTS_ONCE.get_val(),\
                             prioritization_module_by_criteria=\
                                     meta_criteriaexec_optimization_tools,\
                             finish_destroy_checkpointer=True)
-
-                StatsComputer.merge_lexecoutput_into_right(tmp_output_file, \
-                                                            agg_output_file)
-                os.remove(tmp_output_file)
-                os.remove(tmp_matrix_file)
         else:
             ERROR_HANDLER.error_exit("invalid mode and bug", __file__)
     #~ def custom_execution()
