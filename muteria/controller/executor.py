@@ -346,9 +346,11 @@ class Executor(object):
         tests_key = 'tests'
         criteria_tests_key = 'criteria_tests'
         mode = None
-        while mode not in [tests_key, criteria_tests_key]:
-            mode = input ("> Chose what to execute ({} or {}): ".format(\
+        mode = input ("> Chose what to execute ({} or {}): ".format(\
                                                 tests_key, criteria_tests_key))
+        ERROR_HANDLER.assert_true(mode in [tests_key, criteria_tests_key], \
+                                "Invalid mode entered: " + mode, __file__)
+
         custom_out = input("> Input the {} custom output dir: ".format(\
                                 "non existing" if mode == tests_key else ""))
         custom_out = os.path.abspath(custom_out)
