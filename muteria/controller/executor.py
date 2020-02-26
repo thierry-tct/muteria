@@ -425,7 +425,11 @@ class Executor(object):
             if not isinstance(criterion, criteria_pkg.TestCriteria):
                 ERROR_HANDLER.assert_true(\
                         criteria_pkg.TestCriteria.has_element_named(\
-                            criterion), "invalid test criterion: "+criterion)
+                            criterion), \
+                        "invalid test criterion ({}). choose from: {}".format(\
+                            criterion, \
+                            [c.get_str() for c in criteria_pkg.TestCriteria]),\
+                        __file__)
                 criterion = criteria_pkg.TestCriteria[criterion] 
 
             ## read test list
