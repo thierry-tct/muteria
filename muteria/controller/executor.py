@@ -348,11 +348,13 @@ class Executor(object):
             mode = input (
                     "> Chose what to execute ('tests' or 'criteria_tests'): ")
         custom_out = input("> Input the non existing custom output dir: ")
-        ERROR_HANDLER.assert_true(not os.path.isdir(custom_out), \
-                                            "custom_out is existing", __file__)
         ERROR_HANDLER.assert_true(os.path.isdir(os.path.dirname(custom_out)), \
                             "parent of custom_out is not existing", __file__)
         if mode == 'tests':
+            ERROR_HANDLER.assert_true(not os.path.isdir(custom_out), \
+                                            "custom_out is existing", __file__)
+            os.mkdir(custom_out)
+
             ## read exe
             exe_map_str = input("> Input existing executable file map to use"
                         " ({<path in repo>: <used exe path>}): ")
@@ -414,6 +416,10 @@ class Executor(object):
         elif mode == 'criteria_tests':
             print ("# This mode is just needed to reexecute tests with"
                                         "some test criteria test objectives")
+            
+            if not os.path.isdir(custom_out):
+                os.mkdir(custom_out)
+
             ## read test criterion
             criterion = input("> Input the test criterion to use: ")
             if not isinstance(criterion, criteria_pkg.TestCriteria):
@@ -455,22 +461,34 @@ class Executor(object):
                 meta_criteriaexec_optimization_tools = \
                     self._create_meta_criteriaexec_optimization(self.config)
 
-            ## run TODO
+            ## run 
+            agg_output_file = os.path.join(custom_out, \
+                            outdir_struct.CRITERIA_EXECUTION_OUTPUT[criterion])
+            tmp_output_file = os.path.join(custom_out, \
+                        outdir_struct.TMP_CRITERIA_EXECUTION_OUTPUT[criterion])
+            tmp_matrix_file = os.path.join(custom_out, \
+                                outdir_struct.TMP_CRITERIA_MATRIX[criterion])
+            
             for to, test_list in to_test_map.items():
+                if len(test_list) == 0:
+                    continue
                 meta_criteria_tool.runtests_criteria_coverage( \
                             testcases=test_list, \
-                            criterion_to_matrix=criterion_to_matrix, \
+                            criterion_to_matrix={criterion: tmp_matrix_file}, \
                             criterion_to_executionoutput=\
-                                                    criterion_to_execoutput, \
+                                                {criterion: tmp_output_file}, \
                             criteria_element_list_by_criteria=\
-                                                    used_crit_TO_list_by_crit,
+                                                        {criterion: [to]}, \
                             cover_criteria_elements_once=self.config.\
                                     COVER_CRITERIA_ELEMENTS_ONCE.get_val(),\
                             prioritization_module_by_criteria=\
                                     meta_criteriaexec_optimization_tools,\
                             finish_destroy_checkpointer=True)
 
-            ERROR_HANDLER.error_exit("To be implemented")
+                StatsComputer.merge_lexecoutput_into_right(tmp_output_file, \
+                                                            agg_output_file)
+                os.remove(tmp_output_file)
+                os.remove(tmp_matrix_file)
         else:
             ERROR_HANDLER.error_exit("invalid mode and bug", __file__)
     #~ def custom_execution()
