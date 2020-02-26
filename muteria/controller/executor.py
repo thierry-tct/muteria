@@ -343,16 +343,18 @@ class Executor(object):
                         "custom execution must be ran when run is finished", \
                                                                     __file__)
 
+        tests_key = 'tests'
+        criteria_tests_key = 'criteria_tests'
         mode = None
-        while mode not in ['tests', 'crtiteria_tests']:
-            mode = input (
-                    "> Chose what to execute ('tests' or 'criteria_tests'): ")
+        while mode not in [tests_key, criteria_tests_key]:
+            mode = input ("> Chose what to execute ({} or {}): ".format(\
+                                                tests_key, criteria_tests_key))
         custom_out = input("> Input the {} custom output dir: ".format(\
-                                    "non existing" if mode == "tests" else ""))
+                                "non existing" if mode == tests_key else ""))
         custom_out = os.path.abspath(custom_out)
         ERROR_HANDLER.assert_true(os.path.isdir(os.path.dirname(custom_out)), \
                             "parent of custom_out is not existing", __file__)
-        if mode == 'tests':
+        if mode == tests_key:
             ERROR_HANDLER.assert_true(not os.path.isdir(custom_out), \
                                             "custom_out is existing", __file__)
 
@@ -414,7 +416,7 @@ class Executor(object):
                         test_prioritization_module=\
                                         meta_testexec_optimization_tool, \
                         finish_destroy_checkpointer=True)
-        elif mode == 'criteria_tests':
+        elif mode == criteria_tests_key:
             print ("# This mode is just needed to reexecute tests with"
                                         "some test criteria test objectives")
             
