@@ -463,6 +463,7 @@ class MetaCriteriaTool(object):
                             crit2tool2outhashfile[criterion] is not None,
                             "Bug: log enabled but hidden from tool", __file__)
         ## Actual aggregate
+        logging.debug("saving results ...")
         for criterion in result_matrices:
             result_matrix = result_matrices[criterion]
             result_outloghash = result_outloghashes[criterion]
