@@ -461,12 +461,14 @@ class Executor(object):
                 meta_criteria_tool.check_tools_installed()
 
             # Criteria optimization
-            try:
-                meta_criteriaexec_optimization_tools = \
-                                    self.meta_criteriaexec_optimization_tools
-            except AttributeError:
-                meta_criteriaexec_optimization_tools = \
-                    self._create_meta_criteriaexec_optimization(self.config)
+            #try:
+            #    meta_criteriaexec_optimization_tools = \
+            #                        self.meta_criteriaexec_optimization_tools
+            #except AttributeError:
+            #    meta_criteriaexec_optimization_tools = \
+            #        self._create_meta_criteriaexec_optimization(self.config)
+            ### WE DO NOT USE OPTIMIZER 
+            meta_criteriaexec_optimization_tools = None
 
             ## run 
             agg_output_file = os.path.join(custom_out, \
