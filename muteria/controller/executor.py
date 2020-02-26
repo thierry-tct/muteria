@@ -402,7 +402,7 @@ class Executor(object):
             if self.config.GET_PASSFAIL_OUTPUT_SUMMARY.get_val():
                 execoutput_file = os.path.join(custom_out, execoutput_file_key)
 
-            self.meta_testcase_tool.runtests(meta_testcases=testlist, \
+            meta_testcase_tool.runtests(meta_testcases=testlist, \
                         exe_path_map=exe_map,
                         stop_on_failure=\
                                 self.config.STOP_TESTS_EXECUTION_ON_FAILURE\
