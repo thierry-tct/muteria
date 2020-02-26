@@ -368,7 +368,10 @@ class MetaCriteriaTool(object):
                     criteria_elem_list_by_tool[toolalias][criterion] = None
                 continue
 
-            criteria_elem_list_by_tool[criterion] = {}
+            ERROR_HANDLER.assert_true(\
+                    len(criteria_element_list_by_criteria[criterion]) != 0, \
+                    "Empty criteria element list for criterion "\
+                                            +criterion.get_str(), __file__)
             for crit_elem in criteria_element_list_by_criteria[criterion]:
                 toolalias, elem = DriversUtils.reverse_meta_element(crit_elem)
                 if toolalias not in criteria_elem_list_by_tool:
@@ -379,7 +382,7 @@ class MetaCriteriaTool(object):
 
             ERROR_HANDLER.assert_true(len(set(criteria_elem_list_by_tool) - \
                                 set(self.criteria_configured_tools)) == 0, \
-                                "some tool in data not registered", __file__)
+                                "some tools in data not registered", __file__)
 
         crit2tool2matrixfile = {cv: {} for cv in criterion_to_matrix}
         crit2tool2outhashfile = {cv: {} for cv in criterion_to_executionoutput}
