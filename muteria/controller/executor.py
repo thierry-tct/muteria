@@ -423,17 +423,21 @@ class Executor(object):
                                         "some test criteria test objectives")
             
             ## read test criterion
-            all_criteria_str = [c.get_str() for c in criteria_pkg.TestCriteria]
+            #all_criteria_str = [c.get_str() for c in criteria_pkg.TestCriteria]
+            enabled_criteria = self.config.ENABLED_CRITERIA.get_val()
             criterion = input("> Input the test criterion to use "
-                                "(choose from {}): ".format(all_criteria_str))
+                                "(choose from {}): ".format(enabled_criteria))
             if not isinstance(criterion, criteria_pkg.TestCriteria):
                 ERROR_HANDLER.assert_true(\
                         criteria_pkg.TestCriteria.has_element_named(\
                             criterion), \
                         "invalid test criterion ({}). choose from: {}".format(\
-                            criterion, all_criteria_str),\
+                            criterion, enabled_criteria),\
                         __file__)
                 criterion = criteria_pkg.TestCriteria[criterion] 
+            ERROR_HANDLER.assert_true(criterion in enabled_criteria,
+                        "The chosen criterion is not in the config Enabled"
+                        "criteria", __file__)
 
             ## read test list
             to_test_map_file = input("> Input existing test-objective to test"
@@ -476,8 +480,10 @@ class Executor(object):
             }
 
             ## run 
-            output_file = os.path.join(custom_out, \
-                        outdir_struct.CRITERIA_EXECUTION_OUTPUT[criterion])
+            output_file = None
+            if criterion in self.config.CRITERIA_WITH_OUTPUT_SUMMARY.get_val():
+                output_file = os.path.join(custom_out, \
+                            outdir_struct.CRITERIA_EXECUTION_OUTPUT[criterion])
             matrix_file = os.path.join(custom_out, \
                                 outdir_struct.CRITERIA_MATRIX[criterion])
             
@@ -502,6 +508,29 @@ class Executor(object):
                             prioritization_module_by_criteria=\
                                     meta_criteriaexec_optimization_tools,\
                             finish_destroy_checkpointer=True)
+                
+                os.remove(matrix_file)
+
+                # XXX The matrix is meaningless here
+                # Update matrix if needed to have output diff or such
+                #if criterion in set(self.config\
+                #        .CRITERIA_REQUIRING_OUTDIFF_WITH_PROGRAM.get_val()):
+                #    pf_matrix_file = self.head_explorer.get_file_pathname(\
+                #                    outdir_struct.TEST_PASS_FAIL_MATRIX)
+                #    ERROR_HANDLER.assert_true(os.path.isfile(pf_matrix_file),\
+                #                        "pass-fail matrix missing.", __file__)
+                #    if self.config.GET_PASSFAIL_OUTPUT_SUMMARY.get_val():
+                #        pf_execoutput_file = \
+                #                        self.head_explorer.get_file_pathname(\
+                #                outdir_struct.PROGRAM_TESTEXECUTION_OUTPUT)
+                #        ERROR_HANDLER.assert_true(\
+                #                        os.path.isfile(pf_execoutput_file),\
+                #                        "exec output file missing.", __file__)
+                #    else:
+                #        pf_execoutput_file = None
+                #    DriversUtils.update_matrix_to_cover_when_difference(\
+                #                            matrix_file,  output_file, \
+                #                            pf_matrix_file, pf_execoutput_file)
         else:
             ERROR_HANDLER.error_exit("invalid mode and bug", __file__)
     #~ def custom_execution()
