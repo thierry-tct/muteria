@@ -399,6 +399,9 @@ class BaseTestcaseTool(abc.ABC):
                                     with_output_summary=with_output_summary, \
                                         hash_outlog=hash_outlog)
             
+            #if testcase.endswith('.ktest'):  # DBG - fix hang
+            #    logging.debug("KTEST {} is done".format(testcase))
+
             # Record exec time if not existing
             with self.shared_loc:
                 if recalculate_execution_times:
