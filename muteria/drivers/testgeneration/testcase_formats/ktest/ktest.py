@@ -96,6 +96,9 @@ class KTestTestFormat(object):
             tmp_env['KLEE_REPLAY_TIMEOUT'] = str(timeout)
             kt_over = 5 # 1second
             timeout += kt_over
+        else:
+            # DBG
+            logging.warning("@KTEST: calling ktest execution without timeout.")
         
         # XXX Execute the ktest
         if collected_output is not None:
@@ -135,9 +138,11 @@ class KTestTestFormat(object):
         try:
             for root_, dirs_, files_ in os.walk(dirpath):
                 for sub_d in dirs_:
-                    os.chmod(os.path.join(root_, sub_d), 0o777)
+                    if os.path.isdir(os.path.join(root_, sub_d)):
+                        os.chmod(os.path.join(root_, sub_d), 0o777)
                 for f_ in files_:
-                    os.chmod(os.path.join(root_, f_), 0o777)
+                    if os.path.isfile(os.path.join(root_, f_)):
+                        os.chmod(os.path.join(root_, f_), 0o777)
         except PermissionError:
             ret,out,_ = DriversUtils.execute_and_get_retcode_out_err('sudo', \
                                             ['chmod', '777', '-R', dirpath])

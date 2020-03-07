@@ -494,7 +494,9 @@ class MetaTestcaseTool(object):
 
         def tool_parallel_test_exec(ttoolalias):
             # Actual execution
-            found_a_failure=False
+            found_a_failure = False
+            # Whether the execution was unsuccessful
+            test_error = False
             ttool = \
                 self.testcases_configured_tools[ttoolalias][self.TOOL_OBJ_KEY]
             test_failed_verdicts, test_execoutput = ttool.runtests( \
@@ -521,15 +523,19 @@ class MetaTestcaseTool(object):
                                                     test_execoutput[testcase]
                     if not found_a_failure \
                                 and test_failed_verdicts[testcase] == \
-                                common_mix.GlobalConstants.COMMAND_UNCERTAIN:
+                                common_mix.GlobalConstants.FAIL_TEST_VERDICT:
                         found_a_failure = True
+                    if not test_error \
+                                and test_failed_verdicts[testcase] == \
+                            common_mix.GlobalConstants.TEST_EXECUTION_ERROR:
+                        test_error = True
 
                 # @Checkpoint: Chekpointing
                 checkpoint_handler.do_checkpoint(func_name=cp_func_name, \
                                 taskid=cp_task_id, \
                                 tool=ttoolalias, \
                                 opt_payload=meta_test_failedverdicts_outlog)
-            return found_a_failure
+            return found_a_failure, test_error
         #~ def tool_parallel_test_exec()
 
         cand_alias_joblib = []
@@ -558,7 +564,8 @@ class MetaTestcaseTool(object):
                         for ttoolalias in cand_alias_joblib)
         if len(cand_alias_for) > 0:
             for tpos, ttoolalias in enumerate(cand_alias_for):
-                found_a_failure = tool_parallel_test_exec(ttoolalias)
+                found_a_failure, test_error = \
+                                        tool_parallel_test_exec(ttoolalias)
                 if stop_on_failure and found_a_failure:
                     # @Checkpoint: Chekpointing for remaining tools
                     for rem_tool in list(testcases_by_tool.keys())[tpos+1:]:
@@ -582,7 +589,14 @@ class MetaTestcaseTool(object):
                     
         ERROR_HANDLER.assert_true(len(meta_test_failedverdicts_outlog[0]) == \
                                                         len(meta_testcases), \
-                            "Not all tests have a verdict reported", __file__)
+                    "mismatch between number of tests and reported verdicts:"
+                    + " Tests without verdict are {};".format(\
+                               set(meta_testcases) - \
+                                    set(meta_test_failedverdicts_outlog[0])) \
+                    + " Test not in testlist are {}.".format(\
+                               set(meta_test_failedverdicts_outlog[0]) - \
+                                    set(meta_testcases)), \
+                                                                     __file__)
 
         if fault_test_execution_matrix_file is not None:
             # Load or Create the matrix 

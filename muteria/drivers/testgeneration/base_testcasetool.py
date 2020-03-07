@@ -126,7 +126,11 @@ class BaseTestcaseTool(abc.ABC):
         if self.compress_test_storage_dir:
             if os.path.isfile(self.tests_storage_dir_archive) \
                                     and os.path.isdir(self.tests_storage_dir):
-                shutil.rmtree(self.tests_storage_dir)
+                try:
+                    shutil.rmtree(self.tests_storage_dir)
+                except PermissionError:
+                    self._dir_chmod777(self.tests_storage_dir)
+                    shutil.rmtree(self.tests_storage_dir)
     #~ def __del__()
 
     def clear_working_dir(self):
@@ -393,6 +397,9 @@ class BaseTestcaseTool(abc.ABC):
                                     with_output_summary=with_output_summary, \
                                         hash_outlog=hash_outlog)
             
+            #if testcase.endswith('.ktest'):  # DBG - fix hang
+            #    logging.debug("KTEST {} is done".format(testcase))
+
             # Record exec time if not existing
             with self.shared_loc:
                 if recalculate_execution_times:
@@ -567,9 +574,11 @@ class BaseTestcaseTool(abc.ABC):
         try:
             for root_, dirs_, files_ in os.walk(dirpath):
                 for sub_d in dirs_:
-                    os.chmod(os.path.join(root_, sub_d), 0o777)
+                    if os.path.isdir(os.path.join(root_, sub_d)):
+                        os.chmod(os.path.join(root_, sub_d), 0o777)
                 for f_ in files_:
-                    os.chmod(os.path.join(root_, f_), 0o777)
+                    if os.path.isfile(os.path.join(root_, f_)):
+                        os.chmod(os.path.join(root_, f_), 0o777)
         except PermissionError:
             ret,out,_ = DriversUtils.execute_and_get_retcode_out_err('sudo', \
                                             ['chmod', '777', '-R', dirpath])
