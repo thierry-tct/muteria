@@ -439,6 +439,11 @@ class MetaTestcaseTool(object):
                 continue
             candidate_aliases.append(ttoolalias)
 
+        # minimum number of tests (accross) for parallelism
+        ptest_tresh = 5
+        # minimum number of tests (of the given tool) for tool parallelism
+        sub_ptest_thresh = 3
+
         shared_loc = multiprocessing.RLock()
 
         parallel_test_count_by_tool = {ta: 1 for ta in candidate_aliases}
@@ -452,10 +457,12 @@ class MetaTestcaseTool(object):
         # use parallel
         sub_parallel_count = 0 if parallel_test_count is None else \
                         parallel_test_count - len(parallel_test_count_by_tool)
+        para_tools = []
         if sub_parallel_count > 0:
             para_tools = [tt for tt in candidate_aliases if \
-                                self.testcases_configured_tools[tt]\
-                                [self.TOOL_OBJ_KEY].can_run_tests_in_parallel()
+                            (len(testcases_by_tool[tt]) >= sub_ptest_thresh \
+                              and self.testcases_configured_tools[tt]\
+                               [self.TOOL_OBJ_KEY].can_run_tests_in_parallel())
                         ]
             para_tools.sort(reverse=True, \
                                     key=lambda x: len(testcases_by_tool[x]))
@@ -472,6 +479,17 @@ class MetaTestcaseTool(object):
                 if used == sub_parallel_count:
                     break
                 parallel_test_count_by_tool[tt] += 1
+
+        seq_tools = list(set(candidate_aliases) - set(para_tools))
+
+        # Whether to allow double parallelism with joblib 
+        # (one here, another in base_testcasetool)
+        double_parallel_on = False
+
+        if not double_parallel_on:
+            # the para_tools will run without parallelism, give them all threads
+            for tt in para_tools:
+                parallel_test_count_by_tool[tt] = parallel_test_count
 
 
         def tool_parallel_test_exec(ttoolalias):
@@ -514,18 +532,32 @@ class MetaTestcaseTool(object):
             return found_a_failure
         #~ def tool_parallel_test_exec()
 
-        # minimum number of tests for parallelism
-        ptest_tresh = 5
-
-        if len(candidate_aliases) > 1 and len(meta_testcases) >= ptest_tresh \
+        cand_alias_joblib = []
+        cand_alias_for = []
+        if double_parallel_on:
+            if len(candidate_aliases) > 1 \
+                                     and len(meta_testcases) >= ptest_tresh \
                                         and parallel_test_count is not None \
                                         and parallel_test_count > 1:
-            paralle_count = min(len(candidate_aliases), parallel_test_count)
-            joblib.Parallel(n_jobs=paralle_count, require='sharedmem')\
-                    (joblib.delayed(tool_parallel_test_exec)(ttoolalias) \
-                        for ttoolalias in candidate_aliases)
+                cand_alias_joblib = candidate_aliases
+            else:
+                cand_alias_for = candidate_aliases
         else:
-            for tpos, ttoolalias in enumerate(candidate_aliases):
+            if len(seq_tools) > 1 and len(meta_testcases) >= ptest_tresh \
+                                        and parallel_test_count is not None \
+                                        and parallel_test_count > 1:
+                cand_alias_joblib = seq_tools
+                cand_alias_for = para_tools
+            else:
+                cand_alias_for = seq_tools + para_tools
+        
+        if len(cand_alias_joblib) > 0:
+            parallel_count_ = min(len(cand_alias_joblib), parallel_test_count)
+            joblib.Parallel(n_jobs=parallel_count_, require='sharedmem')\
+                    (joblib.delayed(tool_parallel_test_exec)(ttoolalias) \
+                        for ttoolalias in cand_alias_joblib)
+        if len(cand_alias_for) > 0:
+            for tpos, ttoolalias in enumerate(cand_alias_for):
                 found_a_failure = tool_parallel_test_exec(ttoolalias)
                 if stop_on_failure and found_a_failure:
                     # @Checkpoint: Chekpointing for remaining tools

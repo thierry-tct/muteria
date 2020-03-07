@@ -382,8 +382,6 @@ class BaseTestcaseTool(abc.ABC):
         processbar = tqdm.tqdm(testcases, leave=False, dynamic_ncols=True) 
 
         # Parallel stuffs
-        ptest_tresh = 5
-
         def test_exec_iteration(testcase):
             processbar.set_description("Running Test {} (x{})".format(\
                                                   testcase, parallel_count))
@@ -406,8 +404,8 @@ class BaseTestcaseTool(abc.ABC):
             return test_failed
         #~ def test_exec_iteration()
 
-        if self.can_run_tests_in_parallel() and len(testcases) >= ptest_tresh \
-                        and parallel_count is not None and parallel_count > 1:
+        if self.can_run_tests_in_parallel() and parallel_count is not None \
+                                                    and parallel_count > 1:
             parallel_count = min(len(testcases), parallel_count)
             joblib.Parallel(n_jobs=parallel_count, require='sharedmem')\
                             (joblib.delayed(test_exec_iteration)(testcase) \
