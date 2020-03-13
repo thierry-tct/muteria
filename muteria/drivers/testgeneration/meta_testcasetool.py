@@ -439,6 +439,14 @@ class MetaTestcaseTool(object):
                 continue
             candidate_aliases.append(ttoolalias)
 
+        # parallelism strategies
+        PARA_FULL_DOUBLE = 0
+        PARA_ALT_TOOLS_AND_TESTS = 1
+        PARA_TOOLS_ONLY = 2
+        PARA_TOOLS_TESTS_AS_TOOLS = 3
+
+        parallel_strategy = PARA_TOOLS_ONLY
+
         # minimum number of tests (accross) for parallelism
         ptest_tresh = 5
         # minimum number of tests (of the given tool) for tool parallelism
@@ -457,6 +465,10 @@ class MetaTestcaseTool(object):
         # use parallel
         sub_parallel_count = 0 if parallel_test_count is None else \
                         parallel_test_count - len(parallel_test_count_by_tool)
+
+        cand_alias_joblib = []
+        cand_alias_for = []
+
         para_tools = []
         if sub_parallel_count > 0:
             para_tools = [tt for tt in candidate_aliases if \
@@ -464,32 +476,54 @@ class MetaTestcaseTool(object):
                               and self.testcases_configured_tools[tt]\
                                [self.TOOL_OBJ_KEY].can_run_tests_in_parallel())
                         ]
-            para_tools.sort(reverse=True, \
-                                    key=lambda x: len(testcases_by_tool[x]))
-            para_tools_n_tests = sum(\
+
+            actual_parallel_cond = len(candidate_aliases) > 1 \
+                                     and len(meta_testcases) >= ptest_tresh \
+                                        and parallel_test_count is not None \
+                                        and parallel_test_count > 1
+
+            if parallel_strategy == PARA_ALT_TOOLS_AND_TESTS:
+                # the para_tools will run without parallelism, give them all threads
+                for tt in para_tools:
+                    parallel_test_count_by_tool[tt] = parallel_test_count
+                seq_tools = list(set(candidate_aliases) - set(para_tools))
+                if len(seq_tools) > 1 and actual_parallel_cond:
+                    cand_alias_joblib = seq_tools
+                    cand_alias_for = para_tools
+                else:
+                    cand_alias_for = candidate_aliases
+            elif parallel_strategy == PARA_TOOLS_ONLY:
+                if actual_parallel_cond:
+                    cand_alias_joblib = candidate_aliases
+                else:
+                    cand_alias_for = candidate_aliases
+            elif parallel_strategy == PARA_FULL_DOUBLE:
+                para_tools.sort(reverse=True, \
+                                        key=lambda x: len(testcases_by_tool[x]))
+                para_tools_n_tests = sum(\
                             [len(testcases_by_tool[tt]) for tt in para_tools])
             
-            used = 0
-            for tt in para_tools:
-                quota = int(len(testcases_by_tool[tt]) * sub_parallel_count / \
+                used = 0
+                for tt in para_tools:
+                    quota = int(len(testcases_by_tool[tt]) * sub_parallel_count / \
                                                             para_tools_n_tests)
-                parallel_test_count_by_tool[tt] += quota
-                used += quota
-            for tt in para_tools:
-                if used == sub_parallel_count:
-                    break
-                parallel_test_count_by_tool[tt] += 1
+                    parallel_test_count_by_tool[tt] += quota
+                    used += quota
+                for tt in para_tools:
+                    if used == sub_parallel_count:
+                        break
+                    parallel_test_count_by_tool[tt] += 1
 
-        seq_tools = list(set(candidate_aliases) - set(para_tools))
-
-        # Whether to allow double parallelism with joblib 
-        # (one here, another in base_testcasetool)
-        double_parallel_on = False
-
-        if not double_parallel_on:
-            # the para_tools will run without parallelism, give them all threads
-            for tt in para_tools:
-                parallel_test_count_by_tool[tt] = parallel_test_count
+                if actual_parallel_cond:
+                    cand_alias_joblib = candidate_aliases
+                else:
+                    cand_alias_for = candidate_aliases
+            elif parallel_strategy == PARA_TOOLS_TESTS_AS_TOOLS:
+                # split the tests of one tool and 
+                # make the same tool run multiple times
+                ERROR_HANDLER.error_exit("To Be implemented: same tool many times")
+            else:
+                ERROR_HANDLER.error_exit("Invalid parallel startegy")
 
 
         def tool_parallel_test_exec(ttoolalias):
@@ -515,7 +549,7 @@ class MetaTestcaseTool(object):
                                     parallel_test_count_by_tool[ttoolalias])
             with shared_loc:
                 for testcase in test_failed_verdicts:
-                    meta_testcase =  DriversUtils.make_meta_element(\
+                    meta_testcase = DriversUtils.make_meta_element(\
                                                         testcase, ttoolalias)
                     meta_test_failedverdicts_outlog[0][meta_testcase] = \
                                                 test_failed_verdicts[testcase]
@@ -538,25 +572,6 @@ class MetaTestcaseTool(object):
             return found_a_failure, test_error
         #~ def tool_parallel_test_exec()
 
-        cand_alias_joblib = []
-        cand_alias_for = []
-        if double_parallel_on:
-            if len(candidate_aliases) > 1 \
-                                     and len(meta_testcases) >= ptest_tresh \
-                                        and parallel_test_count is not None \
-                                        and parallel_test_count > 1:
-                cand_alias_joblib = candidate_aliases
-            else:
-                cand_alias_for = candidate_aliases
-        else:
-            if len(seq_tools) > 1 and len(meta_testcases) >= ptest_tresh \
-                                        and parallel_test_count is not None \
-                                        and parallel_test_count > 1:
-                cand_alias_joblib = seq_tools
-                cand_alias_for = para_tools
-            else:
-                cand_alias_for = seq_tools + para_tools
-        
         if len(cand_alias_joblib) > 0:
             parallel_count_ = min(len(cand_alias_joblib), parallel_test_count)
             joblib.Parallel(n_jobs=parallel_count_, require='sharedmem')\

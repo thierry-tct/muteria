@@ -449,6 +449,10 @@ class BaseTestcaseTool(abc.ABC):
         if not with_output_summary:
             test_outlog_hash = None
 
+        ERROR_HANDLER.assert_true(len(testcases) == len(test_failed_verdicts),\
+                  "Mismatch between testcases and test_failed_verdict (BUG)",\
+                                                                     __file__)
+
         return test_failed_verdicts, test_outlog_hash
     #~ def _runtests()
 
