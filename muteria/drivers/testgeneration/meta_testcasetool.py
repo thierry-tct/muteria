@@ -461,43 +461,42 @@ class MetaTestcaseTool(object):
         if parallel_test_count is None:
             #parallel_test_count = min(10, multiprocessing.cpu_count())
             parallel_test_count = min(20, 2*multiprocessing.cpu_count())
-        
-        # use parallel
-        sub_parallel_count = 0 if parallel_test_count is None else \
-                        parallel_test_count - len(parallel_test_count_by_tool)
 
         cand_alias_joblib = []
         cand_alias_for = []
 
         para_tools = []
-        if sub_parallel_count > 0:
-            para_tools = [tt for tt in candidate_aliases if \
+        para_tools = [tt for tt in candidate_aliases if \
                             (len(testcases_by_tool[tt]) >= sub_ptest_thresh \
                               and self.testcases_configured_tools[tt]\
                                [self.TOOL_OBJ_KEY].can_run_tests_in_parallel())
                         ]
 
-            actual_parallel_cond = len(candidate_aliases) > 1 \
+        actual_parallel_cond = len(candidate_aliases) > 1 \
                                      and len(meta_testcases) >= ptest_tresh \
                                         and parallel_test_count is not None \
                                         and parallel_test_count > 1
 
-            if parallel_strategy == PARA_ALT_TOOLS_AND_TESTS:
-                # the para_tools will run without parallelism, give them all threads
-                for tt in para_tools:
-                    parallel_test_count_by_tool[tt] = parallel_test_count
-                seq_tools = list(set(candidate_aliases) - set(para_tools))
-                if len(seq_tools) > 1 and actual_parallel_cond:
-                    cand_alias_joblib = seq_tools
-                    cand_alias_for = para_tools
-                else:
-                    cand_alias_for = candidate_aliases
-            elif parallel_strategy == PARA_TOOLS_ONLY:
-                if actual_parallel_cond:
-                    cand_alias_joblib = candidate_aliases
-                else:
-                    cand_alias_for = candidate_aliases
-            elif parallel_strategy == PARA_FULL_DOUBLE:
+        if parallel_strategy == PARA_ALT_TOOLS_AND_TESTS:
+            # the para_tools will run without parallelism, give them all threads
+            for tt in para_tools:
+                parallel_test_count_by_tool[tt] = parallel_test_count
+            seq_tools = list(set(candidate_aliases) - set(para_tools))
+            if len(seq_tools) > 1 and actual_parallel_cond:
+                cand_alias_joblib = seq_tools
+                cand_alias_for = para_tools
+            else:
+                cand_alias_for = candidate_aliases
+        elif parallel_strategy == PARA_TOOLS_ONLY:
+            if actual_parallel_cond:
+                cand_alias_joblib = candidate_aliases
+            else:
+                cand_alias_for = candidate_aliases
+        elif parallel_strategy == PARA_FULL_DOUBLE:
+            # use parallel
+            sub_parallel_count = 0 if parallel_test_count is None else \
+                        parallel_test_count - len(parallel_test_count_by_tool)
+            if sub_parallel_count > 0:
                 para_tools.sort(reverse=True, \
                                         key=lambda x: len(testcases_by_tool[x]))
                 para_tools_n_tests = sum(\
@@ -514,16 +513,16 @@ class MetaTestcaseTool(object):
                         break
                     parallel_test_count_by_tool[tt] += 1
 
-                if actual_parallel_cond:
-                    cand_alias_joblib = candidate_aliases
-                else:
-                    cand_alias_for = candidate_aliases
-            elif parallel_strategy == PARA_TOOLS_TESTS_AS_TOOLS:
-                # split the tests of one tool and 
-                # make the same tool run multiple times
-                ERROR_HANDLER.error_exit("To Be implemented: same tool many times")
+            if actual_parallel_cond:
+                cand_alias_joblib = candidate_aliases
             else:
-                ERROR_HANDLER.error_exit("Invalid parallel startegy")
+                cand_alias_for = candidate_aliases
+        elif parallel_strategy == PARA_TOOLS_TESTS_AS_TOOLS:
+            # split the tests of one tool and 
+            # make the same tool run multiple times
+            ERROR_HANDLER.error_exit("To Be implemented: same tool many times")
+        else:
+            ERROR_HANDLER.error_exit("Invalid parallel startegy")
 
 
         def tool_parallel_test_exec(ttoolalias):
