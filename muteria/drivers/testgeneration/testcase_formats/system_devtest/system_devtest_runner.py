@@ -41,8 +41,9 @@ def system_test_runner(prog, args_list, test_filename, repo_root_dir, \
             logging.debug("(DBG - Test Output):\n"+out)
     except (ValueError, OSError) as e:
         # ERROR
-        logging.warning("test execution error in system_test_runner (bellow)")
+        logging.warning("\ntest execution error in system_test_runner (bellow)")
         logging.warning(str(e))
+        logging.warning("COMMAND: " + " ".join([prog]+args_list))
         return GlobalConstants.TEST_EXECUTION_ERROR
     
     # Parse the result
