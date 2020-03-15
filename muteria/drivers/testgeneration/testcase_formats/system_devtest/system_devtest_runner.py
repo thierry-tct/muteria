@@ -44,6 +44,9 @@ def system_test_runner(prog, args_list, test_filename, repo_root_dir, \
         logging.warning("\ntest execution error in system_test_runner (bellow)")
         logging.warning(str(e))
         logging.warning("COMMAND: " + " ".join([prog]+args_list))
+        if collected_output is not None:
+            collected_output.append(None)
+            collected_output.append(str(e))
         return GlobalConstants.TEST_EXECUTION_ERROR
     
     # Parse the result
