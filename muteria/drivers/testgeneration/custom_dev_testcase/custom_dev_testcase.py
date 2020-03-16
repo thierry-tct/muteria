@@ -164,19 +164,25 @@ class CustomTestcases(BaseTestcaseTool):
                     env_vars = {}
                 env_vars.update(st_env_vars)
 
-        pre,verdict,post = rep_mgr.run_dev_test(dev_test_name=runner_testcase,\
+        def _inner_exec_test(direct_collect_outlog):
+            pre,verdict,post = rep_mgr.run_dev_test(\
+                                dev_test_name=runner_testcase,\
                                 exe_path_map=exe_path_map, \
                                 env_vars=env_vars, \
                                 timeout=timeout,\
                                 collected_output=(collected_output \
-                                    if self.wrapper_obj is None else None),\
+                                        if direct_collect_outlog else None),\
                                 callback_object=callback_object)
-        ERROR_HANDLER.assert_true(\
+            ERROR_HANDLER.assert_true(\
                             pre == common_mix.GlobalConstants.COMMAND_SUCCESS,\
                                             "before command failed", __file__)
-        ERROR_HANDLER.assert_true(\
+            ERROR_HANDLER.assert_true(\
                         post != common_mix.GlobalConstants.COMMAND_FAILURE,\
                                             "after command failed", __file__)
+            return verdict
+        #~ def _inner_exec_test()
+
+        verdict = _inner_exec_test(self.wrapper_obj is None)
 
         # abort is test execution error
         if verdict == common_mix.GlobalConstants.TEST_EXECUTION_ERROR:
@@ -184,9 +190,20 @@ class CustomTestcases(BaseTestcaseTool):
                                 self.config.TEST_EXECUTION_ERROR_AS_FAIL, \
                                 "Test Execution error in custom_dev_testcase" \
                                     + " for test: "+testcase, __file__)
-
+            # Avoid no log error by getting the actual test execution error
+            if self.wrapper_obj is not None:
+                # Rerun the test by getting direct execution output
+                self.wrapper_obj.cleanup_logs(exe_path_map)
+                verdict = _inner_exec_test(True)
+                # Make sure we still have test error (no flakiness)
+                ERROR_HANDLER.assert_true(verdict == \
+                            common_mix.GlobalConstants.TEST_EXECUTION_ERROR, \
+                        "Flakiness in test {} please rerun!".format(testcase),\
+                                                                      __file__)
+                self.wrapper_obj.cleanup_logs(exe_path_map)
+            
         # wrapper cleanup
-        if self.wrapper_obj is not None:
+        elif self.wrapper_obj is not None:
             if collect_output:
                 self.wrapper_obj.collect_output(\
                                     exe_path_map, collected_output, testcase)
