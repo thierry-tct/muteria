@@ -36,17 +36,25 @@ def system_test_runner(prog, args_list, test_filename, repo_root_dir, \
                                 timeout=timeout, merge_err_to_out=True)
             collected_output.append(retcode)
             collected_output.append(out)
+            collected_output.append(retcode in DriversUtils.EXEC_TIMED_OUT_RET_CODE)
 
         if dbg_log_execution_out:
             logging.debug("(DBG - Test Output):\n"+out)
-    except (ValueError, OSError) as e:
+    #except (ValueError, OSError) as os_e:
+    except OSError as os_e:
         # ERROR
         logging.warning("\ntest execution error in system_test_runner (bellow)")
-        logging.warning(str(e))
+        logging.warning(str(os_e))
         logging.warning("COMMAND: " + " ".join([prog]+args_list))
         if collected_output is not None:
             collected_output.append(None)
-            collected_output.append(str(e))
+            collected_output.append(str(os_e))
+            collected_output.append(False)
+        return GlobalConstants.TEST_EXECUTION_ERROR
+    except ValueError as v_e:
+        logging.warning("\ntest execution valueerror in system_test_runner (bellow)")
+        logging.warning(str(v_e))
+        logging.warning("COMMAND: " + " ".join([prog]+args_list))
         return GlobalConstants.TEST_EXECUTION_ERROR
     
     # Parse the result
