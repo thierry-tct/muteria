@@ -349,6 +349,7 @@ class RepositoryManager(object):
         try:    
             gitobj.checkout('--', file_rel_path)
         except OSError as e:
+            logging.error("ENV is: \n {} \n".format(os.environ))
             ERROR_HANDLER.error_exit("git checkout command " + \
                                     "(-- {}) failed ".format(file_rel_path) + \
                                     "with error: {}".format(str(e)), __file__)
