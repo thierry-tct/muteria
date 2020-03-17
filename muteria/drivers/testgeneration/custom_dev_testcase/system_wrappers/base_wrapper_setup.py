@@ -116,32 +116,50 @@ class BaseSystemWrapper(abc.ABC):
             os.remove(repo_exe_abs_path + self.outlog_ext)
     #~ def cleanup(repo_exe_abs_path):
 
-    def collect_output(self, exe_path_map, collected_output, testcase):
+    def collect_output(self, exe_path_map, collected_output, testcase, \
+                                                   max_allowed_outlog_bytes):
         repo_exe_abs_path, _ = self._get_repo_run_path_pairs(exe_path_map)[0]
+        o_logfile = repo_exe_abs_path + self.outlog_ext
+        o_retcodefile = repo_exe_abs_path + self.outretcode_ext
+
         tmp = []
-        if not os.path.isfile(repo_exe_abs_path + self.outretcode_ext):
+        if not os.path.isfile(o_retcodefile):
             ERROR_HANDLER.error_exit("testcase has no log: '" +testcase+ "'."
                                 " repo_exe_abs_path is " + repo_exe_abs_path, \
                                                                     __file__)
         timedout = []
 
-        with open(repo_exe_abs_path + self.outretcode_ext) as f:
+        with open(o_retcodefile) as f:
             for line in f:
                 tmp.append(int(line.strip()))
                 timedout.append(tmp[-1] in self._get_timedout_codes())            
             if len(tmp) == 1:
                 tmp = tmp[0]
                 timedout = timedout[0]
+        # return code
         collected_output.append(tmp)
 
-        try:
-            with open(repo_exe_abs_path + self.outlog_ext) as f:
-                collected_output.append(f.read())
-        except UnicodeDecodeError:
-            with open(repo_exe_abs_path + self.outlog_ext, \
-                                                encoding='ISO-8859-1') as f:
-                collected_output.append(f.read())
+        # Outlog
+        if os.path.getsize(o_logfile) > max_allowed_outlog_bytes:
+            collected_output.append((os.path.getsize(o_logfile), None))
+        else:
+            try:
+                with open(o_logfile) as f:
+                    collected_output.append(f.read())
+            except UnicodeDecodeError:
+                try:
+                    with open(o_logfile, encoding='ISO-8859-1') as f:
+                        collected_output.append(f.read())
+                except MemoryError:
+                    ERROR_HANDLER.error_exit("The available system memory is lower"
+                                 "Than the maximum allowed out log file size. "
+                                 "Try increasing the system memory", __file__)
+            except MemoryError:
+                ERROR_HANDLER.error_exit("The available system memory is lower"
+                                 "Than the maximum allowed out log file size. "
+                                 "Try increasing the system memory", __file__)
 
+        # Timeout flag
         collected_output.append(timedout) 
     #~ def collect_output()
 

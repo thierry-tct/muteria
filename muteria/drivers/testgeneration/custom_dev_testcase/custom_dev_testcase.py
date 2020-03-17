@@ -205,8 +205,9 @@ class CustomTestcases(BaseTestcaseTool):
         # wrapper cleanup
         elif self.wrapper_obj is not None:
             if collect_output:
-                self.wrapper_obj.collect_output(\
-                                    exe_path_map, collected_output, testcase)
+                self.wrapper_obj.collect_output(exe_path_map, \
+                                  collected_output, testcase, \
+                                  self.config.OUTLOG_MAX_ALLOWED_BYTES_SIZE)
             self.wrapper_obj.cleanup_logs(exe_path_map)
 
         return verdict, collected_output

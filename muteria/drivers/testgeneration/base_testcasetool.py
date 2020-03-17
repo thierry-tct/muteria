@@ -477,15 +477,23 @@ class BaseTestcaseTool(abc.ABC):
                                             collect_output=with_output_summary)
         if with_output_summary:
             retcode, outlog, timedout = output_err
-            outlog = self.code_builds_factory\
+            # case where the log exeeded the max alowed ytes size
+            if type(outlog) in (tuple, list):
+                ERROR_HANDLER.assert_true(len(outlog) == 2, \
+                    "Invalid tuple outlog. Expecting length followed by value",\
+                                                                      __file__)
+                out_len, out_hash_val = outlog
+            else:
+                outlog = self.code_builds_factory\
                                 .repository_manager\
                                 .get_test_exec_output_cleaner_func()(outlog)
-            out_len = len(outlog)
-            if hash_outlog:
-                outlog = outlog.encode('utf-8', 'backslashreplace')
-                out_hash_val = hashlib.sha512(outlog).hexdigest()
-            else:
-                out_hash_val = outlog
+                out_len = len(outlog)
+                if hash_outlog:
+                    outlog = outlog.encode('utf-8', 'backslashreplace')
+                    out_hash_val = hashlib.sha512(outlog).hexdigest()
+                else:
+                    out_hash_val = outlog
+
             outlog_summary = {
                 common_matrices.OutputLogData.OUTLOG_LEN: out_len,
                 common_matrices.OutputLogData.OUTLOG_HASH: out_hash_val,

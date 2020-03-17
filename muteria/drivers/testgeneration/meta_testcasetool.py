@@ -899,7 +899,8 @@ class MetaTestcaseTool(object):
         return self.flakiness_workdir
     #~ def get_flakiness_workdir()
 
-    def check_get_flakiness(self, meta_testcases, repeat_count=2):
+    def check_get_flakiness(self, meta_testcases, repeat_count=2, \
+                                              get_flaky_tests_outputs=True):
         """
             Check if tests have flakiness by running multiple times
             :return: The list of flaky tests
@@ -952,7 +953,7 @@ class MetaTestcaseTool(object):
                 os.remove(f)
 
         # get flaky tests outputs
-        if len(flaky_tests) > 0:
+        if get_flaky_tests_outputs and len(flaky_tests) > 0:
             for rep in range(repeat_count):
                 run(rep, list(flaky_tests), False)
             flaky_test_list_file = os.path.join(self.flakiness_workdir, \

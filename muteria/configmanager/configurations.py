@@ -424,6 +424,13 @@ class TestcaseToolsConfig(BaseToolConfig):
     # consider test execution error as a test failure
     TEST_EXECUTION_ERROR_AS_FAIL = False
     
+    # If the outlog is too big, we have MemoryError when 
+    # trying to load. Above this set limit, consider
+    # The log as oversized, as thought there is a 
+    # problem in the program.
+    # Default is 8 GB
+    OUTLOG_MAX_ALLOWED_BYTES_SIZE = 8 * (1024 ** 3) 
+    
     def set_test_gen_maxtime(self, max_time):
         self.TEST_GENERATION_MAXTIME = max_time
     def set_one_test_execution_timeout(self, timeout):
@@ -432,6 +439,8 @@ class TestcaseToolsConfig(BaseToolConfig):
         self.TESTS_ORACLE_TESTS = value
     def set_test_execution_error_as_failure(self, value):
         self.TEST_EXECUTION_ERROR_AS_FAIL = value
+    def set_outlog_max_allowed_bytes_size(self, value):
+        self.OUTLOG_MAX_ALLOWED_BYTES_SIZE = value
 #~class TestcaseToolsConfig
     
 class CriteriaToolsConfig(BaseToolConfig):
