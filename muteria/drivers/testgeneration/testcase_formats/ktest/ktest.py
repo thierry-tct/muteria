@@ -296,7 +296,7 @@ class KTestTestFormat(object):
                         ERROR_HANDLER.error_exit(\
                                     "Invalid exit status {}".format(ls[-1]), \
                                                                  __file__)
-                elif ls[-2] == 'ÓUT' and ls[-3] == 'TIMED':
+                elif ls[-1] == 'OUT' and ls[-2] == 'TIMED':
                     # Case where klee-replay call to gdb fails to attach process
                     retcode = cls.timedout_retcodes[0]
                     # klee-replay may pu another exit status
