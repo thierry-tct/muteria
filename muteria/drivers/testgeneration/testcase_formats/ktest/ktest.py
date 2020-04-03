@@ -283,9 +283,10 @@ class KTestTestFormat(object):
         for line in out.encode('utf-8', 'backslashreplace').splitlines():
             line = line.decode('utf-8', 'backslashreplace')
             if status_regex.search(line) is not None:
-                ERROR_HANDLER.assert_true(not found_exit_status,
-                                "Exit status found multiple times in output", \
-                                                                      __file__)
+                #ERROR_HANDLER.assert_true(not found_exit_status,
+                #                "Exit status found multiple times in output", \
+                #                                                      __file__)
+                found_exit_status = True
                 line = status_regex.sub("\g<2>", line)
                 ls = line.split()
                 if ls[-2] == 'ABNORMAL':
