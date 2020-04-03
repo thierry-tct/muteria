@@ -99,22 +99,35 @@ class KTestTestFormat(object):
         else:
             # DBG
             logging.warning("@KTEST: calling ktest execution without timeout.")
+
+        # XXX Get the parsing regexes to use
+        retcode, out, err = DriversUtils.execute_and_get_retcode_out_err(\
+                                prog=prog, args_list=['--help'], \
+                                merge_err_to_out=True)
+        clean_regex, status_regex = cls._get_regexes(out, clean_everything=True)
         
         # XXX Execute the ktest
-        if collected_output is not None:
-            retcode, out, err = DriversUtils.execute_and_get_retcode_out_err(\
+        #if collected_output is not None:
+        retcode, out, err = DriversUtils.execute_and_get_retcode_out_err(\
                                 prog=prog, args_list=args, env=tmp_env, \
                                 timeout=timeout, timeout_grace_period=5, \
                                 merge_err_to_out=True, cwd=test_work_dir)
-            out = cls._remove_output_noise(out)
-            collected_output.extend((retcode, out, \
+        out, exit_status = cls._remove_output_noise(out, clean_regex, \
+                                                                status_regex)
+        # In klee-replay, when exit_status here is not None, retcode is 0
+        # When there is an issue, like timeout, exit_status is None and
+        # retcode has the ode of the issue 
+        if exit_status is None:
+            exit_status = retcode
+        if collected_output is not None:
+            collected_output.extend((exit_status, out, \
                                             (retcode in timeout_return_codes)))
-        else:
-            retcode, out, err = DriversUtils.execute_and_get_retcode_out_err(\
-                                prog=prog, args_list=args, env=tmp_env, \
-                                timeout=timeout, timeout_grace_period=5, \
-                                                out_on=False, err_on=False, \
-                                                cwd=test_work_dir)
+        #else:
+        #    retcode, out, err = DriversUtils.execute_and_get_retcode_out_err(\
+        #                        prog=prog, args_list=args, env=tmp_env, \
+        #                        timeout=timeout, timeout_grace_period=5, \
+        #                                        out_on=False, err_on=False, \
+        #                                        cwd=test_work_dir)
 
         # XXX: Go back to previous CWD
         if os.path.isdir(klee_replay_temps):
@@ -166,7 +179,7 @@ class KTestTestFormat(object):
         python_code = ';'.join(['import sys', \
                 'from muteria.drivers.testgeneration' \
                     + '.testcase_formats.ktest.ktest import KTestTestFormat', \
-                'r = KTestTestFormat._remove_output_noise(sys.stdin.read())', \
+                'r, e_s = KTestTestFormat._remove_output_noise(sys.stdin.read())', \
                     'print(r)'])
 
         bash_timeout_retcode = os.system('timeout 0.1 sleep 1')
@@ -191,18 +204,22 @@ class KTestTestFormat(object):
 
     # Newer version (after klee github commit 88bb205)
     # (88bb205e422ee2aaf75594e4e314b21f77f219e3)
-    #clean_everything_regex = re.compile("^KLEE-REPLAY: ")
-    #clean_part_regex = re.compile("(" + "|".join(["^KLEE-REPLAY: NOTE: ",\
-    #                                    "^KLEE-REPLAY: WARNING: ",\
-    #                                    "^KLEE-REPLAY: klee_warning: ",\
-    #                                    "^KLEE-REPLAY: klee_warning_once: ",\
-    #                                    "^KLEE-REPLAY: klee_assume",\
-    #                                    ]) + ")")
+    clean_everything_regex_new = re.compile("^KLEE-REPLAY: ")
+    clean_part_regex_new = re.compile("(" + "|".join(["^KLEE-REPLAY: NOTE: ",\
+                                        "^KLEE-REPLAY: WARNING: ",\
+                                        "^KLEE-REPLAY: klee_warning: ",\
+                                        "^KLEE-REPLAY: klee_warning_once: ",\
+                                        "^KLEE-REPLAY: klee_assume",\
+                                        ]) + ")")
+    status_regex_new = re.compile("^(KLEE-REPLAY: NOTE:\\s+)(EXIT STATUS: .*?)"+\
+                                                "(\\s+\\([0-9]+\\s+seconds\\))$")
 
+    # the option "--keep-replay-dir" was added on klee github commit 5b1214a, right after commit 88bb205
+    # So we will use that option to decide whether to use old or new regex
     # Older version (before klee github commit 88bb205)
-    clean_everything_regex = re.compile("(" + "|".join([\
-                        "^EXIT STATUS: .* \\([0-9]+\\s+seconds\\)$", \
-                        ""+tool+": EXIT STATUS: .* \\([0-9]+\\s+seconds\\)$", \
+    clean_everything_regex_old = re.compile("(" + "|".join([\
+                        #"^EXIT STATUS: .* \\([0-9]+\\s+seconds\\)$", \
+                        #""+tool+": EXIT STATUS: .* \\([0-9]+\\s+seconds\\)$", \
                         ""+tool+": received signal [0-9]+\\s+. "+\
                                         "Killing monitored process\\(es\\)$", \
                         "^note: (pty|pipe) (master|slave): ",\
@@ -221,9 +238,9 @@ class KTestTestFormat(object):
                         ""+tool+": TEST CASE: ", \
                         ""+tool+": ARGS: ", \
                         ]) + ")")
-    clean_part_regex = re.compile(("(" + "|".join([\
-                        "^EXIT STATUS: .* \\([0-9]+\\s+seconds\\)$", \
-                        ""+tool+": EXIT STATUS: .* \\([0-9]+\\s+seconds\\)$", \
+    clean_part_regex_old = re.compile(("(" + "|".join([\
+                        #"^EXIT STATUS: .* \\([0-9]+\\s+seconds\\)$", \
+                        #""+tool+": EXIT STATUS: .* \\([0-9]+\\s+seconds\\)$", \
                         ""+tool+": received signal [0-9]+\\s+. "+\
                                         "Killing monitored process\\(es\\)$", \
                         "^note: (pty|pipe) (master|slave): ",\
@@ -233,30 +250,59 @@ class KTestTestFormat(object):
                         "^RUNNING GDB: /usr/bin/gdb --pid [0-9]+ -q --batch", \
                         "^TIMEOUT: ATTEMPTING GDB EXIT$", \
                         ]) + ")"))
+    status_regex_old = re.compile("^("+tool+":\\s+)?(EXIT STATUS: .*?)(\\s+\\([0-9]+\\s+seconds\\))?$")
 
     @classmethod
-    def _remove_output_noise(cls, out, clean_everything=True):
-        res = []
-        if clean_everything:
-            regex = cls.clean_everything_regex
+    def _get_regexes(cls, out, clean_everything=True):
+        if '--keep-replay-dir' in out:
+            clean_regex = cls.clean_everything_regex_new if clean_everything \
+                                                  else cls.clean_part_regex_new
+            status_regex = cls.status_regex_new
         else:
-            regex = cls.clean_part_regex
-
+            clean_regex = cls.clean_everything_regex_old if clean_everything \
+                                                  else cls.clean_part_regex_old
+            status_regex = cls.status_regex_old
+        
+        return clean_regex, status_regex
+    #~ def _get_regexes()
+        
+    @classmethod
+    def _remove_output_noise(cls, out, clean_regex, status_regex):
+        res = []
+        
         if len(out) > 0 and out[-1] == '\n':
             out = out[:-1]
             last_char = "\n" 
         else:
             last_char = ""
 
+        # If not None, must be an integer
+        exit_status = None
+
+        found_exist_status = False
         for line in out.encode('utf-8', 'backslashreplace').splitlines():
             line = line.decode('utf-8', 'backslashreplace')
-            if regex.search(line) is None:
+            if status_regex.search(line) is not None:
+                ERROR_HANDLER.assert_true(not found_exit_status,
+                                "Exit status found multiple times in output", \
+                                                                      __file__)
+                line = status_regex.sub("\g<2>", line)
+                ls = line.split()
+                if ls[-2] == 'ABNORMAL':
+                    try:
+                        exit_status = int(ls[-1])
+                    except ValueError:
+                        ERROR_HANDLER.error_exit(\
+                                    "Invalid exit status {}".format(ls[-1]), \
+                                                                 __file__)
+                res.append("@MUTERIA.KLEE-REPLAY: "+line)
+            elif clean_regex.search(line) is None:
                 # None is matched
                 res.append(line)
 
         res = '\n'.join(res) + last_char
 
-        return res
+        return res, exit_status
     #~ def _remove_output_noise()
 
     ktest_extension = '.ktest'
