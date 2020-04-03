@@ -112,8 +112,8 @@ class KTestTestFormat(object):
                                 prog=prog, args_list=args, env=tmp_env, \
                                 timeout=timeout, timeout_grace_period=5, \
                                 merge_err_to_out=True, cwd=test_work_dir)
-        out, exit_status = cls._remove_output_noise(out, clean_regex, \
-                                                                status_regex)
+        retcode, out, exit_status = cls._remove_output_noise(retcode, out, \
+                                                  clean_regex, status_regex)
         # In klee-replay, when exit_status here is not None, retcode is 0
         # When there is an issue, like timeout, exit_status is None and
         # retcode has the ode of the issue 
@@ -267,7 +267,7 @@ class KTestTestFormat(object):
     #~ def _get_regexes()
         
     @classmethod
-    def _remove_output_noise(cls, out, clean_regex, status_regex):
+    def _remove_output_noise(cls, retcode, out, clean_regex, status_regex):
         res = []
         
         if len(out) > 0 and out[-1] == '\n':
@@ -283,9 +283,9 @@ class KTestTestFormat(object):
         for line in out.encode('utf-8', 'backslashreplace').splitlines():
             line = line.decode('utf-8', 'backslashreplace')
             if status_regex.search(line) is not None:
-                #ERROR_HANDLER.assert_true(not found_exit_status,
-                #                "Exit status found multiple times in output", \
-                #                                                      __file__)
+                ERROR_HANDLER.assert_true(not found_exit_status,
+                                "Exit status found multiple times in output", \
+                                                                      __file__)
                 found_exit_status = True
                 line = status_regex.sub("\g<2>", line)
                 ls = line.split()
@@ -296,6 +296,11 @@ class KTestTestFormat(object):
                         ERROR_HANDLER.error_exit(\
                                     "Invalid exit status {}".format(ls[-1]), \
                                                                  __file__)
+                elif ls[-2] == 'ÓUT' and ls[-3] == 'TIMED':
+                    # Case where klee-replay call to gdb fails to attach process
+                    retcode = cls.timedout_retcodes[0]
+                    # klee-replay may pu another exit status
+                    found_exit_status = False
                 res.append("@MUTERIA.KLEE-REPLAY: "+line)
             elif clean_regex.search(line) is None:
                 # None is matched
@@ -303,7 +308,7 @@ class KTestTestFormat(object):
 
         res = '\n'.join(res) + last_char
 
-        return res, exit_status
+        return retcode, res, exit_status
     #~ def _remove_output_noise()
 
     ktest_extension = '.ktest'
