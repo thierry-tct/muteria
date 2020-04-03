@@ -121,7 +121,8 @@ class KTestTestFormat(object):
             exit_status = retcode
         if collected_output is not None:
             collected_output.extend((exit_status, out, \
-                                            (retcode in timeout_return_codes)))
+                                     (retcode in timeout_return_codes or \
+                            retcode in DriversUtils.EXEC_TIMED_OUT_RET_CODE)))
         #else:
         #    retcode, out, err = DriversUtils.execute_and_get_retcode_out_err(\
         #                        prog=prog, args_list=args, env=tmp_env, \
@@ -298,7 +299,8 @@ class KTestTestFormat(object):
                                                                  __file__)
                 elif ls[-1] == 'OUT' and ls[-2] == 'TIMED':
                     # Case where klee-replay call to gdb fails to attach process
-                    retcode = cls.timedout_retcodes[0]
+                    if retcode == 0:
+                        retcode = cls.timedout_retcodes[0]
                     # klee-replay may pu another exit status
                     found_exit_status = False
                 res.append("@MUTERIA.KLEE-REPLAY: "+line)
