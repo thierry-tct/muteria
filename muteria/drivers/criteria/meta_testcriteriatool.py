@@ -599,7 +599,7 @@ class MetaCriteriaTool(object):
 
             ERROR_HANDLER.assert_true(len(set(criteria_enabled_list) - \
                             set(self.tools_config_by_criterion_dict)) == 0, \
-                        "Passed matrice output are more than toll specified", \
+                        "Passed matrice output are more than tool specified", \
                                                                     __file__)
 
         tool2criteria = self._get_tool2criteria(criteria_enabled_list)
