@@ -279,7 +279,7 @@ class KTestTestFormat(object):
         # If not None, must be an integer
         exit_status = None
 
-        found_exist_status = False
+        found_exit_status = False
         for line in out.encode('utf-8', 'backslashreplace').splitlines():
             line = line.decode('utf-8', 'backslashreplace')
             if status_regex.search(line) is not None:
