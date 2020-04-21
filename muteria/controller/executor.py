@@ -631,7 +631,7 @@ class Executor(object):
             # selection method
             if inspect.isfunction(sel_tech):
                 ERROR_HANDLER.assert_true(\
-                                    len(inspect.getargspec().args) == 2, \
+                                    len(inspect.getargspec(sel_tech).args) == 2, \
                                     "Test selection function must take 2 args "
                                     "(testlist, maxselcount)", __file__)
                 
