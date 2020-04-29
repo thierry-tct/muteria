@@ -1,4 +1,3 @@
-
 from __future__ import print_function
 
 import itertools
@@ -8,7 +7,8 @@ def getCoupledMutants (mutants_to_killingtests, failingtests, istwoways=False):
     failingtests = set(failingtests)
     for m in mutants_to_killingtests:
         if len(set(mutants_to_killingtests[m]) - failingtests) == 0:
-            if istwoways and len(failingtests) != len(mutants_to_killingtests[m]):
+            if istwoways and len(failingtests) \
+                                            != len(mutants_to_killingtests[m]):
                 continue
             coupled.append(m)
     return coupled
@@ -98,7 +98,8 @@ def getCommonSetsSizes_venn (setsElemsDict, setsize_from=None,
         setsize_to = len(setsElemsDict)
     ordered_keys = list(setsElemsDict)
     for setsize in range(setsize_from, setsize_to+1):
-        for set_pos in itertools.combinations(range(len(ordered_keys)), setsize):
+        for set_pos in itertools.combinations(range(len(ordered_keys)), \
+                                                                    setsize):
             name_key = name_delim.join([ordered_keys[i] for i in set_pos])
             assert name_key not in res_set
             res_set[name_key] = None 
@@ -114,7 +115,8 @@ def getCommonSetsSizes_venn (setsElemsDict, setsize_from=None,
                 not_common[name_key] = {}
                 for i in set_pos:
                     name_i = ordered_keys[i]
-                    extra_tmp = list(set(setsElemsDict[name_i]) - res_set[name_key])
+                    extra_tmp = list(set(setsElemsDict[name_i]) \
+                                                        - res_set[name_key])
                     if len(extra_tmp) > 0:
                         not_common[name_key][name_i] = extra_tmp
 
