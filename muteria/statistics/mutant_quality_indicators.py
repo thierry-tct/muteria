@@ -48,7 +48,7 @@ def getSubsumingMutants (mutant_kill_matrix_file, clustered=True, \
 
 def getHardToKillMutants (mutant_kill_matrix_file, threshold=0.05, \
                                                         selected_tests=None):
-    """ Return the list of hard to kill mutant (kill by less than threshold
+    """ Return the pair of kill ratio and list of hard to kill mutant (kill by less than threshold
         proportion of test, 0 < threshold < 1 ).
     """
 
@@ -72,14 +72,14 @@ def getHardToKillMutants (mutant_kill_matrix_file, threshold=0.05, \
     for mut, killtests in mutants_to_killing_tests.items():
         killratio[mut] = len(killtests) * 1.0 / len(all_tests)
 
-    return [mut for mut, h in killratio.items() if h <= threshold]
+    return killratio, [mut for mut, h in killratio.items() if h <= threshold]
 #~ def getHardToKillMutants ()
 
 def getHardToPropagateMutants (strong_mutant_kill_matrix_file, \
                                 weak_mutant_kill_matrix_file, \
                                 threshold=0.25, \
                                 selected_tests=None):
-    """ Return the list of hard to propagate mutant 
+    """ Return the pair of propagation ratio and list of hard to propagate mutant 
         (strongly killed by less than threshold proportion of test
         that weakly kill them, 0 < threshold < 1 ).
     """
@@ -125,5 +125,5 @@ def getHardToPropagateMutants (strong_mutant_kill_matrix_file, \
         else:
             dualkillratio[mut] = len(sm_killtests) * 1.0 / len(wm_killtests)
 
-    return [mut for mut, h in dualkillratio.items() if h <= threshold]
+    return dualkillratio, [mut for mut, h in dualkillratio.items() if h <= threshold]
 #~ def getHardToPropagateMutants ()
