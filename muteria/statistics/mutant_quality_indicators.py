@@ -19,7 +19,7 @@ def _filter_out_tests (all_tests, selected_tests, mutants_to_killing_tests):
             "Some specified tests are not in the matrix ({})".format(\
                                                 tests_diff), __file__)
     
-    for mut, killtests in enumerate(mutants_to_killing_tests):
+    for mut, killtests in mutants_to_killing_tests.items():
         mutants_to_killing_tests[mut] = \
                                     list(set(killtests) & selected_tests)
 #~ def _filter_out_tests()
@@ -69,10 +69,10 @@ def getHardToKillMutants (mutant_kill_matrix_file, threshold=0.05, \
         all_tests = selected_tests
     
     killratio = {}
-    for mut, killtests in enumerate(mutants_to_killing_tests):
+    for mut, killtests in mutants_to_killing_tests.items():
         killratio[mut] = len(killtests) * 1.0 / len(all_tests)
 
-    return [mut for mut, h in enumerate(killratio) if h <= threshold]
+    return [mut for mut, h in killratio.items() if h <= threshold]
 #~ def getHardToKillMutants ()
 
 def getHardToPropagateMutants (strong_mutant_kill_matrix_file, \
@@ -118,12 +118,12 @@ def getHardToPropagateMutants (strong_mutant_kill_matrix_file, \
         all_tests = selected_tests
     
     dualkillratio = {}
-    for mut, sm_killtests in enumerate(sm_mutants_to_killing_tests):
+    for mut, sm_killtests in sm_mutants_to_killing_tests.items():
         wm_killtests = wm_mutants_to_killing_tests[mut]
         if len(wm_killtests) == 0:
             dualkillratio[mut] = 1
         else:
             dualkillratio[mut] = len(sm_killtests) * 1.0 / len(wm_killtests)
 
-    return [mut for mut, h in enumerate(dualkillratio) if h <= threshold]
+    return [mut for mut, h in dualkillratio.items() if h <= threshold]
 #~ def getHardToPropagateMutants ()
