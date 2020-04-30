@@ -33,7 +33,7 @@ def getSubsumingMutants (mutants_to_killingtests, clustered=True):
         return equivalent_mutants, subsuming_mutants_clusters
     
     # make sure that the tests killing are sets
-    if type(mutants_to_killingtests[mutants_to_killingtests.keys()[0]]) != set:
+    if type(mutants_to_killingtests[list(mutants_to_killingtests.keys())[0]]) != set:
         mutants_to_killingtests = {m: set(mutants_to_killingtests[m]) \
                                             for m in mutants_to_killingtests}
 
