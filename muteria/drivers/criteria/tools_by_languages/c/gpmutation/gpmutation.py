@@ -121,16 +121,8 @@ class CriteriaToolGPMutation(BaseCriteriaTool):
         except AttributeError:
             minf_obj = MutantsInfoObject()
 
-            gpmutation_inf_obj = {}
-            for h_fault in os.listdir(self.separate_muts_dir):
-                h_hault_dir = os.path.join(self.separate_muts_dir, h_fault)
-                for mut_code in os.listdir(h_hault_dir):
-                    mut_id = os.path.join(h_fault, mut_code)
-                    gpmutation_inf_obj[mut_id] = {
-                                                    'Type': None,
-                                                    'SrcLoc': None,
-                                                    'FuncName': None,
-                                                }
+            gpmutation_inf_obj = common_fs.loadJSON(os.path.join(
+                                    self.gpmutation_out, "mutantsInfo.json"))
 
             # Add elements
             for mid, info in list(gpmutation_inf_obj.items()):
@@ -285,7 +277,6 @@ class CriteriaToolGPMutation(BaseCriteriaTool):
         if os.path.isdir(self.mutant_data):
             shutil.rmtree(self.mutant_data)
         os.mkdir(self.mutant_data)
-        os.mkdir(self.gpmutation_out)
 
         prog = 'gpmutation'
         if self.custom_binary_dir is not None:
