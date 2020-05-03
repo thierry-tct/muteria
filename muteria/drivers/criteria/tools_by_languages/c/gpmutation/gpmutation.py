@@ -167,7 +167,7 @@ class CriteriaToolGPMutation(BaseCriteriaTool):
         mut_code = {}
         with open(self.instrumentation_details) as f:
             map_keys = f.readlines()
-            ERROR_HANDLER.assert_true(len(map_keys) == 0, \
+            ERROR_HANDLER.assert_true(len(map_keys) == 1, \
                             "only one executable supported for now", __file__)
             map_key = map_keys[0].strip()
         mut_code[map_key] = os.path.join(self.separate_muts_dir, element_id, \
@@ -295,7 +295,14 @@ class CriteriaToolGPMutation(BaseCriteriaTool):
                                         .format(os.path.basename(prog), \
                                             self.custom_binary_dir), __file__)
 
-        args=[self.separate_muts_dir]
+        exes, _ = code_builds_factory.repository_manager.\
+                                                    get_relative_exe_path_map()
+
+        ERROR_HANDLER.assert_true(len(exes) == 1, \
+                                        "Support only a singe exe", __file__)
+
+        gpmutation_subj = os.path.basename(exes[0])
+        args=[gpmutation_subj, self.separate_muts_dir]
 
         # Execute GPMutation
         ret, out, err = DriversUtils.execute_and_get_retcode_out_err(\
@@ -310,9 +317,6 @@ class CriteriaToolGPMutation(BaseCriteriaTool):
         ERROR_HANDLER.assert_true(not os.path.isfile(\
                 self.instrumentation_details), "must not exist here", __file__)
         
-        exes, _ = code_builds_factory.repository_manager.\
-                                                    get_relative_exe_path_map()
-
         with open (self.instrumentation_details, 'w') as f:
             for exe in exes:
                 f.write(exe+'\n')
