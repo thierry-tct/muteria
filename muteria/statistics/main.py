@@ -82,7 +82,8 @@ class StatsComputer(object):
             out_json['CRITERIA'][c] = {'coverage': coverages[c], 
                                             '# test objectives': total_to[c]}
         common_fs.dumpJSON(out_json, explorer.get_file_pathname(\
-                                            fd_structure.STATS_MAIN_FILE_JSON))
+                                        fd_structure.STATS_MAIN_FILE_JSON), \
+                                     pretty=True)
 
         # HTML
         template_file = os.path.join(os.path.dirname(\
