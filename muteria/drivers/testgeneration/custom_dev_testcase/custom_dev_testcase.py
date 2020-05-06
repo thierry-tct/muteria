@@ -47,7 +47,7 @@ class CustomTestcases(BaseTestcaseTool):
                     "No test list file found, did generation occur?", __file__)
         dtl = common_fs.loadJSON(self.test_list_storage_file)
         for tc, targs in dtl:
-            tc_info_obj.add_test(tc)
+            tc_info_obj.add_test(tc, testargs=targs)
         return tc_info_obj
     #~ def get_testcase_info_object()
 
