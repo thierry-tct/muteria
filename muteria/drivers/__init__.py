@@ -316,6 +316,9 @@ class DriversUtils(object):
                                     | (vector_active_cols - set(row_active))
                 key_to_diffs[row_key] &= target_matrix_allcol
 
+        # Clear matrix to inactive
+        target_matrix.clear_cells_to_value(target_matrix.getInactiveCellVal())
+        
         # Update matrix based on diff
         for key, diffs in key_to_diffs.items():
             # gather the uncertain and set to uncertain
