@@ -177,6 +177,28 @@ class RawExecutionMatrix(object):
 
     #def raw_delete_row(self):
 
+    def clear_cells_to_value(self, value):
+        """ clear the matrix values to a given value
+        :param value: cell value type
+        :return: nothing
+            
+        Example:
+        >>> nc = ['a', 'b', 'c']
+        >>> mat = ExecutionMatrix(non_key_col_list=nc)
+        >>> mat.add_row_by_key('k', [1, 2, 3])
+        >>> mat.add_row_by_key('r', [3, 2, 3])
+        >>> mat.add_row_by_key('w', [1, 0, 3])
+        >>> mat.clear_cells_to_value(0)
+        >>> mat._get_key_values_dict(['k']) == {'k': {'a':0,'b':0,'c':0}}
+        True
+        >>> mat._get_key_values_dict(['r']) == {'r': {'a':0,'b':0,'c':0}}
+        True
+        >>> mat._get_key_values_dict(['w']) == {'w': {'a':0,'b':0,'c':0}}
+        True
+        """
+        self.dataframe[list(self.get_nonkey_colname_list())] = value
+        
+    
     def add_row_by_key(self, key, values, serialize=True):
         """ add a row to the matrix
         :param key: The key to add
