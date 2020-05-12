@@ -67,6 +67,8 @@ class TestcasesToolSemu(TestcasesToolKlee):
             '-dump-states-on-halt': True, #None,
             '-only-output-states-covering-new': None,
             '-use-cex-cache': True,
+          
+            '-only-replay-seeds': None, # Useful to set this is using seeds
             # SEMu 
             '-semu-disable-statediff-in-testgen': None,
             '-semu-continue-mindist-out-heuristic': None,
@@ -85,6 +87,8 @@ class TestcasesToolSemu(TestcasesToolKlee):
             '-libc': 'uclibc',
             '-max-sym-array-size': '4096',
             '-max-instruction-time': '10.',
+          
+            '-seed-out-dir': None, # Newer klee is #'-seed-dir': None,
             # SEMu 
             '-semu-mutant-max-fork': '0', #None,
             '-semu-checknum-before-testgen-for-discarded': '2', # None,
@@ -104,6 +108,18 @@ class TestcasesToolSemu(TestcasesToolKlee):
     #~ def _get_default_params()
     
     def _call_generation_run(self, runtool, args):
+        # If seed-dir is set, ensure that only-replay-seeds is set 
+        # (semu requires it for now)
+        seed_dir_key = 'seed-out-dir' #'seed-dir'
+        only_replay_seeds_flag = '-only-replay-seeds'
+        if self.get_value_in_arglist(args, seed_dir_key) is not None:
+            if only_replay_seeds_flag not in args and \
+                                  '-'+only_replay_seeds_flag not in args: 
+                logging.warning("SEMu requires '-only-replay-seeds' flag to"
+                                " be set when using seeds. Muteria set it"
+                                "autmatically")
+                args.insert(0, only_replay_seeds_flag)
+                
         # use mutants_by_funcs to reorganize target mutants for scalability
 
         max_mutant_count_per_cluster = self.get_value_in_arglist(args, \
