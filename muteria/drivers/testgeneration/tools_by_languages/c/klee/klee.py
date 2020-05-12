@@ -153,7 +153,7 @@ class TestcasesToolKlee(BaseTestcaseTool):
         timeout_grace_period = 600
         max_time = None
         cur_max_time = float(self.get_value_in_arglist(args, 'max-time'))
-        max_time = cur_max_time + 5 #5 to give time to klee
+        max_time = cur_max_time + 10 #10 to give time to klee
 
         # set stack to unlimited
         stack_ulimit_soft, stack_ulimit_hard = \
@@ -172,7 +172,8 @@ class TestcasesToolKlee(BaseTestcaseTool):
             resource.setrlimit(resource.RLIMIT_STACK, \
                                         (stack_ulimit_soft, stack_ulimit_hard))
 
-        if (ret != 0 and ret not in DriversUtils.EXEC_TIMED_OUT_RET_CODE):
+        if (ret != 0 and ret not in DriversUtils.EXEC_TIMED_OUT_RET_CODE \
+                and not out.rstrip().endswith(": ctrl-c detected, exiting.")):
             logging.error(out)
             logging.error(err)
             logging.error("\n>> CMD: " + " ".join([runtool]+args) + '\n')
