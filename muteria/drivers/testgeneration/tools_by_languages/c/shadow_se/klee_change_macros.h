@@ -19,10 +19,31 @@
   // IMPORTANT: this function is actually not called but klee run a special function when klee_change is encountered in the program: This is just used for compilation-linking purpose.
   #if defined __x86_64__ && !defined __ILP32__  
     //static unsigned long int __attribute__ ((noinline)) klee_change(unsigned long int x, unsigned long int y)
-    static unsigned long long __attribute__ ((noinline)) klee_change(unsigned long long x, unsigned long long y)
+    typedef unsigned long long my_large_type;
   #else
-    static unsigned int __attribute__ ((noinline)) klee_change(unsigned int x, unsigned int y)
+    typedef unsigned long my_large_type;
   #endif
+
+  #ifdef MUTERIA_FOR_SEMU_TEST_GENERATION
+    extern unsigned long klee_semu_GenMu_Mutant_ID_Selector = 2;
+    void __attribute__ ((noinline)) __attribute__(( unused )) klee_semu_GenMu_Mutant_ID_Selector_Func(
+                                                                unsigned long start, unsigned long end) {}
+    void __attribute__ ((noinline)) __attribute__(( unused )) klee_semu_GenMu_Post_Mutation_Point_Func(
+                                                                unsigned long start, unsigned long end) {}
+    static my_large_type __attribute__ ((noinline)) klee_change(my_large_type x, my_large_type y)
+    {
+      switch (klee_semu_GenMu_Mutant_ID_Selector) {
+        case 1:
+          y = x;
+          break;
+        default:
+          break;
+      }
+      klee_semu_GenMu_Post_Mutation_Point_Func()
+      return y;
+    }
+  #else
+    static my_large_type __attribute__ ((noinline)) klee_change(my_large_type x, my_large_type y)
     {
       static char * version_str;
       version_str = getenv("KLEE_CHANGE_RUNTIME_SET_OLD_VERSION");
@@ -31,6 +52,7 @@
       else
         return x;
     }
+  #endif
 #endif
 
 // RESOLVE_KLEE_CHANGE: 

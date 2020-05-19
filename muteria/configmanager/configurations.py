@@ -388,6 +388,10 @@ class ToolUserCustom(dict):
     # analyzed program (target) in command line order POST_TARGET go after. 
     PRE_TARGET_CMD_ORDERED_FLAGS_LIST = None
     POST_TARGET_CMD_ORDERED_FLAGS_LIST = None
+    # Driver specific config. Helpful when a tool need to get data from another
+    # Or produce data for another (Example SEMu neding data from Mart)
+    # This should be defined in the tool as DriverConfig<Tool> class
+    DRIVER_CONFIG = None
 
     def __init__(self, **kwargs):
         for k in kwargs:

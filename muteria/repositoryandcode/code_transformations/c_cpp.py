@@ -157,6 +157,7 @@ class FromC(ccs.BaseCodeFormatConverter):
 
             # Clean build
             kwargs['compiler'] = None
+            kwargs['flags_list'] = None
             pre_ret, ret, post_ret = repository_manager.build_code(**kwargs)
 
         if (dest_fmt == ccs.CodeFormats.OBJECT_FILE):

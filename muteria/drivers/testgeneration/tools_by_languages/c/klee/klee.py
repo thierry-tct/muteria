@@ -107,6 +107,11 @@ class TestcasesToolKlee(BaseTestcaseTool):
         return None 
     #~ def _get_back_llvm_compiler_path()
 
+    # SEMu may override
+    def _get_compile_flags_list(self):
+        return None
+    #~ def _get_compile_flags_list()
+
     @staticmethod
     def get_value_in_arglist(arglist, flagname):
         value = None
@@ -194,6 +199,7 @@ class TestcasesToolKlee(BaseTestcaseTool):
                                                 meta_criteria_tool_obj=None):
         back_llvm_compiler = self._get_back_llvm_compiler() 
         back_llvm_compiler_path = self._get_back_llvm_compiler_path() 
+        compile_flags_list = self._get_compile_flags_list
         
         pre_ret, ret, post_ret = code_builds_factory.transform_src_into_dest(\
                         src_fmt=CodeFormats.C_SOURCE,\
@@ -201,7 +207,8 @@ class TestcasesToolKlee(BaseTestcaseTool):
                         src_dest_files_paths_map=rel_path_map,\
                         compiler=back_llvm_compiler, \
                         llvm_compiler_path=back_llvm_compiler_path, \
-                        clean_tmp=True, reconfigure=True)
+                        clean_tmp=True, reconfigure=True, \
+                        flags_list=compile_flags_list)
         if ret == common_mix.GlobalConstants.COMMAND_FAILURE:
             ERROR_HANDLER.error_exit("Program {}.".format(\
                                         'LLVM built problematic'), __file__)

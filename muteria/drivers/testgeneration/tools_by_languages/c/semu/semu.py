@@ -26,6 +26,9 @@ from muteria.drivers.testgeneration.testcase_formats.ktest.ktest \
 from muteria.drivers.testgeneration.tools_by_languages.c.klee.klee \
                                                     import TestcasesToolKlee
 
+import muteria.drivers.testgeneration.tools_by_languages.c.semu.driver_config \
+                                                        as driver_config_pkg
+
 ERROR_HANDLER = common_mix.ErrorHandler
 
 class TestcasesToolSemu(TestcasesToolKlee):
@@ -50,6 +53,15 @@ class TestcasesToolSemu(TestcasesToolKlee):
 
     def __init__(self, *args, **kwargs):
         TestcasesToolKlee.__init__(self, *args, **kwargs)
+        
+        self.driver_config = self.config.get_tool_user_custom().DRIVER_CONFIG
+        if self.driver_config is None:
+            self.driver_config = driver_config_pkg.DriverConfigSemu()
+        else:
+            ERROR_HANDLER.assert_true(isinstance(self.driver_config, \
+                                        driver_config_pkg.DriverConfigSemu),\
+                                            "invalid driver config", __file__)
+
         self.cand_muts_file = os.path.join(self.tests_working_dir, \
                                                         "cand_muts_file.txt")
         self.sm_mat_file = self.head_explorer.get_file_pathname(\
@@ -122,15 +134,8 @@ class TestcasesToolSemu(TestcasesToolKlee):
                 
         # use mutants_by_funcs to reorganize target mutants for scalability
 
-        max_mutant_count_per_cluster = self.get_value_in_arglist(args, \
-                                        'DRIVER_max_mutant_count_per_cluster')
-        if max_mutant_count_per_cluster is None:
-            # TODO: compute max_mutant_count_per_cluster based on max memory
-            max_mutant_count_per_cluster = 100
-        else:
-            max_mutant_count_per_cluster = float(max_mutant_count_per_cluster)
-            self.remove_arg_and_value_from_arglist(args, \
-                                        'DRIVER_max_mutant_count_per_cluster')
+        max_mutant_count_per_cluster = \
+                        self.driver_config.get_max_mutant_count_per_cluster()
 
         cand_mut_file_bak = self.cand_muts_file + '.bak'
         mut_list = []
@@ -196,6 +201,10 @@ class TestcasesToolSemu(TestcasesToolKlee):
         return 'klee-semu'
     #~ def _get_tool_name()
     
+    def _get_compile_flags_list(self):
+        return ['-DMUTERIA_FOR_SEMU_TEST_GENERATION']
+    #~ def _get_compile_flags_list()
+
     def _get_input_bitcode_file(self, code_builds_factory, rel_path_map, \
                                                 meta_criteria_tool_obj=None):
         # XXX: get the meta criterion file from MART.
@@ -224,6 +233,9 @@ class TestcasesToolSemu(TestcasesToolKlee):
         self.mutants_by_funcs = {}
         single_alias = list(t_alias2mutantInfos)[0]
         single_tool_obj = t_alias2mutantInfos[single_alias]
+
+        cand_muts = list(single_tool_obj.get_elements_list())
+        
         for mut in single_tool_obj.get_elements_list():
             func = single_tool_obj.get_element_data(mut)[\
                                                         'mutant_function_name']
@@ -233,16 +245,22 @@ class TestcasesToolSemu(TestcasesToolKlee):
             self.mutants_by_funcs[func].add(mut) #meta_mut)
 
         # XXX: get candidate mutants list
-        if os.path.isfile(self.sm_mat_file):
-            sm_mat = common_matrices.ExecutionMatrix(filename=self.sm_mat_file)
+        if self.driver_config.get_target_only_live_mutants() \
+                                        and os.path.isfile(self.sm_mat_file):
+            sm_mat = common_matrices.ExecutionMatrix(\
+                                                filename=self.sm_mat_file)
             mut2killing_tests = sm_mat.query_active_columns_of_rows()
             alive_muts = [m for m, k_t in mut2killing_tests.items() \
-                                                            if len(k_t) == 0]
-            with open(self.cand_muts_file, 'w') as f:
-                for meta_m in alive_muts:
-                    t_alias, m = DriversUtils.reverse_meta_element(meta_m)
-                    if t_alias in t_alias2metamu_bc: # There is a single one
-                        f.write(str(m)+'\n')
+                                                        if len(k_t) == 0]
+            cand_muts = []
+            for meta_m in alive_muts:
+                t_alias, m = DriversUtils.reverse_meta_element(meta_m)
+                if t_alias in t_alias2metamu_bc: # There is a single one
+                    cand_muts.append(m)
+
+        with open(self.cand_muts_file, 'w') as f:
+            for m in cand_muts:
+                f.write(str(m)+'\n')
 
         return t_alias2metamu_bc[list(t_alias2metamu_bc)[0]]
     #~ def _get_input_bitcode_file()
