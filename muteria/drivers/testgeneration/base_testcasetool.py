@@ -606,6 +606,12 @@ class BaseTestcaseTool(abc.ABC):
     def can_run_tests_in_parallel(self):
         return False
     #~ def can_run_tests_in_parallel()
+    
+    def get_test_format_class (self):
+        """ Can be useful for test fdupes
+        """
+        return None
+    # def get_test_format_class ()
 
     #######################################################################
     ##################### Methods to implement ############################

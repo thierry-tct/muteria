@@ -147,7 +147,11 @@ class ConvertCollectKtestsSeeds:
             common_fs.TarGz.compressDir(dest_dir, remove_in_directory=True)
     #~ def generate_seeds_from_various_ktests()
 
-    def get_ktests_sym_args(self, ktests_dir, compressed=True):
+    def get_ktests_sym_args(self, ktests_dir, compressed=True, \
+                                                        merging_sym_args=None):
+        """ get sym args, if not there, create from ktests
+            merge the obtained sym args with merging_sym_args (TODO)
+        """
         if compressed:
             tmp_ar = ktests_dir
             ktests_dir = ktests_dir[:-len(self.tar_gz)]
@@ -162,7 +166,7 @@ class ConvertCollectKtestsSeeds:
 
         datfile = os.path.join(ktests_dir, self.test2semudirMapFile)
         ERROR_HANDLER.assert_true(os.path.isfile(datfile), \
-                    "datfile {} is missing".format(self.test2semudirMapFile), \
+                    "datfile {} is missing (TODO: Generate and merge)".format(self.test2semudirMapFile), \
                                                                     __file__)
         
         dat = common_fs.loadJSON(datfile)
@@ -1218,6 +1222,7 @@ class ConvertCollectKtestsSeeds:
                     outdict['max'] = int(tz[-2])
                     outdict['size'] = int(tz[-1])
                 return outdict
+            #~ def getSymArgvParams()
 
 
             assert commonArgs_zest is not None and commonArgs_klee is not None

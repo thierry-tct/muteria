@@ -419,4 +419,52 @@ class KTestTestFormat(object):
 
         return ret_fdupes, invalid
     #~ def ktest_fdupes()
+
+    @staticmethod
+    def get_dir (ktest_fullpath, cand_folders):
+        for fold in cand_folders:
+            if ktest_fullpath.startswith(fold):
+                return fold
+        ERROR_HANDLER.error_exit(\
+                "Not candidate folder found in {} for ktest {}".format(\
+                                cand_folders, ktest_fullpath), __file__)
+    #~ def get_dir ()
+
+    @staticmethod
+    def cross_tool_fdupes(*testtools):
+        clusters = {}
+        testdir2ttalias = {}
+        for tt in testtools:
+            custom_bin = tt.custom_binary_dir
+            clusters[custom_bin].append(tt.get_ktests_dir())
+            testdir2ttalias[tt.get_ktests_dir()] = \
+                                            tt.config.get_tool_config_alias()
+
+        kepttest2duptest_map = {}
+        test2keptdup = {}
+        for custom_bin, folders in clusters.items():
+            dup_list, invalid = KTestTestFormat.ktest_fdupes(*folders, \
+                                    custom_replay_tool_binary_dir=custom_bin)
+            ERROR_HANDLER.assert_true(len(invalid) == 0, \
+                                "there should be no invalid here", __file__)
+
+            # get fdupes with metatests
+            # TODO: check that each result of relpath is really a test
+            for dup_tuple in dup_list:
+                k_dir = KTestTestFormat.get_dir(dup_tuple[0], folders)
+                key = os.path.relpath(dup_tuple[0], k_dir)
+                key = DriversUtils.make_meta_element(key, \
+                                                        testdir2ttalias[k_dir])
+                kepttest2duptest_map[key] = []
+                test2keptdup[key] = key
+                for dp in dup_tuple[1:]:
+                    v_dir = KTestTestFormat.get_dir(dp, folders)
+                    val = os.path.relpath(dp, v_dir)
+                    val = DriversUtils.make_meta_element(val, \
+                                                        testdir2ttalias[v_dir])
+                    kepttest2duptest_map[key].append(val)
+                    test2keptdup[val] = key
+        
+        return kepttest2duptest_map, test2keptdup
+    #~ def cross_tool_fdupes()
 #~ class KTestTestFormat

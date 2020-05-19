@@ -16,6 +16,8 @@ from muteria.drivers.testgeneration.testcases_info import TestcasesInfoObject
 from muteria.drivers import DriversUtils
 from muteria.drivers.testgeneration.testcase_formats.ktest.ktest \
                                                         import KTestTestFormat
+from muteria.drivers.testgeneration.testcase_formats.ktest.utils \
+                                            import ConvertCollectKtestsSeeds
 import muteria.drivers.testgeneration.tools_by_languages.c.klee.driver_config \
                                                         as driver_config_pkg
 
@@ -98,11 +100,11 @@ class TestcasesToolKlee(BaseTestcaseTool):
     #~ def _get_default_params()
     
     # SHADOW override
-    def _get_sym_args(self):
+    def _get_sym_args(self, cfg_args):
         # sym args
         default_sym_args = ['-sym-arg', '5']
 
-        klee_sym_args = default_sym_args
+        klee_sym_args = None
         uc = self.config.get_tool_user_custom()
         if uc is not None:
             post_bc_cmd = uc.POST_TARGET_CMD_ORDERED_FLAGS_LIST
@@ -110,6 +112,20 @@ class TestcasesToolKlee(BaseTestcaseTool):
                 klee_sym_args = []
                 for tup in post_bc_cmd:
                     klee_sym_args += list(tup)
+
+        # Use seeds's (merge with the specified insdead of override)            
+        seed_dir = self.get_value_in_arglist(cfg_args, self.SEED_DIR_ARG_NAME)
+        if seed_dir is not None:
+            cv = ConvertCollectKtestsSeeds(\
+                                    custom_binary_dir=self.custom_binary_dir)
+            klee_sym_args = cv.get_ktests_sym_args(seed_dir, \
+                                        compressed=seed_dir.endswith(\
+                                            ConvertCollectKtestsSeeds.tar_gz),\
+                                            merging_sym_args=klee_sym_args)
+
+        if klee_sym_args is None:
+            klee_sym_args = default_sym_args
+
         return klee_sym_args
     #~ def _get_sym_args()
 
@@ -438,7 +454,7 @@ class TestcasesToolKlee(BaseTestcaseTool):
 
         args.append(bitcode_file)
 
-        args += self._get_sym_args()
+        args += self._get_sym_args(args)
 
         self._call_generation_run(prog, list(args))
 
@@ -451,32 +467,24 @@ class TestcasesToolKlee(BaseTestcaseTool):
                 seed_dir = os.path.normpath(os.path.abspath(seed_dir))
                 folders.append(seed_dir)
 
-        def get_dir (ktest_fullpath, cand_folders):
-            for fold in cand_folders:
-                if ktest_fullpath.startswith(fold):
-                    return fold
-            ERROR_HANDLER.error_exit(\
-                    "Not candidate folder found in {} for ktest {}".format(\
-                                    cand_folders, ktest_fullpath), __file__)
-        #~ def get_dir ()
-
         dup_list, invalid = KTestTestFormat.ktest_fdupes(*folders, \
                         custom_replay_tool_binary_dir=self.custom_binary_dir)
         if len(invalid) > 0:
             logging.warning(\
                         "{} generated ktests are invalid".format(len(invalid)))
             for kt in invalid:
-                if get_dir(kt, folders) == self.tests_storage_dir:
+                if KTestTestFormat.get_dir(kt, folders) == \
+                                                        self.tests_storage_dir:
                     os.remove(kt)
         for dup_tuple in dup_list:
-            kepttest2duptest_map[os.path.relpath(\
-                            dup_tuple[0], \
-                            get_dir(dup_tuple[0], folders))] = [
-                                                    os.path.relpath(dp, \
-                                                        get_dir(dp, folders)) \
+            key = os.path.relpath(dup_tuple[0], \
+                                KTestTestFormat.get_dir(dup_tuple[0], folders))
+            kepttest2duptest_map[key] = [os.path.relpath(dp, \
+                                        KTestTestFormat.get_dir(dp, folders)) \
                                                 for dp in dup_tuple[1:]]
             for df in dup_tuple[1:]:
-                if get_dir(kt, folders) == self.tests_storage_dir:
+                if KTestTestFormat.get_dir(kt, folders) == \
+                                                        self.tests_storage_dir:
                     os.remove(df)
         common_fs.dumpJSON(kepttest2duptest_map, self.keptktest2dupktests)
         
@@ -489,7 +497,15 @@ class TestcasesToolKlee(BaseTestcaseTool):
         common_fs.dumpJSON(store_obj, self.test_details_file)
     #~ def _do_generate_tests()
 
+    def get_ktests_dir(self):
+        return self.tests_storage_dir
+    #~ def get_ktests_dir()
+
     def can_run_tests_in_parallel(self):
         return True
     #~ def can_run_tests_in_parallel()
+
+    def get_test_format_class (self):
+        return KTestTestFormat
+    # def get_test_format_class ()
 #~ class TestcasesToolKlee

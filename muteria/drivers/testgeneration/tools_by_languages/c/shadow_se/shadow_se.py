@@ -102,7 +102,7 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
     #~ def _get_default_params()
     
     # SHADOW override
-    def _get_sym_args(self):
+    def _get_sym_args(self, cfg_args):
         # sym args
         default_sym_args = [] #['-sym-arg', '5']
         klee_sym_args = default_sym_args

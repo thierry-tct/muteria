@@ -144,6 +144,8 @@ class MetaTestcaseTool(object):
                                                             "_checkpoints_")
         self.testcases_info_file = \
                 os.path.join(self.tests_working_dir, "testcasesInfos.json")
+        self.duplicated_tests_info_file = os.path.join(self.tests_working_dir,\
+                                            "duplicatedTestcasesInfos.json")
         self.flakiness_workdir = \
                             os.path.join(self.tests_working_dir, "Flakiness")
 
@@ -163,6 +165,11 @@ class MetaTestcaseTool(object):
                                                 *self._get_checkpoint_files())
         
         self.custom_devtest_toolalias = None
+
+        # Keep the duplicate test so that they are executed only once
+        # TODO: load from file(above), if not compute and store (in different func). in runtests, check that tests are here
+        # make sure that every test is is present, if not recompute.
+        self.tests_duplicates_map = None
 
         # Create the diffent tools
         for idx in range(len(test_tool_config_list)):
