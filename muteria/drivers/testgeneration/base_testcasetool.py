@@ -66,7 +66,7 @@ class BaseTestcaseTool(abc.ABC):
         self.compress_test_storage_dir = True
 
         # Set Direct Arguments Variables
-        self.tests_working_dir = tests_working_dir
+        self.tests_working_dir = os.path.normpath(tests_working_dir)
         self.code_builds_factory = code_builds_factory
         self.config = config
         self.head_explorer = head_explorer

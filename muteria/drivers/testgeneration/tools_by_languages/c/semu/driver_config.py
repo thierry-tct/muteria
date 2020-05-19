@@ -1,15 +1,19 @@
 import muteria.common.mix as common_mix
 ERROR_HANDLER = common_mix.ErrorHandler
 
+from muteria.drivers.testgeneration.tools_by_languages.c.klee.driver_config \
+                                                        import DriverConfigKlee
+
 class MetaMuSource(common_mix.EnumAutoName):
     MART = 'mart'
     ANNOTATION = 'manual_annotation'
 #~ class MetaMuSource
 
-class DriverConfigSemu:
+class DriverConfigSemu(DriverConfigKlee):
     def __init__(self, max_mutant_count_per_cluster=100,
                         meta_mutant_source=MetaMuSource.MART,
-                        target_only_live_mutants=True):
+                        target_only_live_mutants=True, **kwargs):
+        DriverConfigKlee.__init__(self, **kwargs)
         ERROR_HANDLER.assert_true(max_mutant_count_per_cluster > 0, \
                         "max_mutant_count_per_cluster must be > 0", __file__)
         ERROR_HANDLER.assert_true(MetaMuSource.is_valid(meta_mutant_source), \

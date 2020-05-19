@@ -16,10 +16,14 @@ from muteria.drivers.testgeneration.testcases_info import TestcasesInfoObject
 from muteria.drivers import DriversUtils
 from muteria.drivers.testgeneration.testcase_formats.ktest.ktest \
                                                         import KTestTestFormat
+import muteria.drivers.testgeneration.tools_by_languages.c.klee.driver_config \
+                                                        as driver_config_pkg
 
 ERROR_HANDLER = common_mix.ErrorHandler
 
 class TestcasesToolKlee(BaseTestcaseTool):
+
+    SEED_DIR_ARG_NAME = 'seed-out-dir' #Newer klee is #'seed-dir'
 
     @classmethod
     def installed(cls, custom_binary_dir=None):
@@ -41,6 +45,15 @@ class TestcasesToolKlee(BaseTestcaseTool):
 
     def __init__(self, *args, **kwargs):
         BaseTestcaseTool.__init__(self, *args, **kwargs)
+
+        self.driver_config = self.config.get_tool_user_custom().DRIVER_CONFIG
+        if self.driver_config is None:
+            self.driver_config = driver_config_pkg.DriverConfigKlee()
+        else:
+            ERROR_HANDLER.assert_true(isinstance(self.driver_config, \
+                                        driver_config_pkg.DriverConfigKlee),\
+                                            "invalid driver config", __file__)
+
         self.test_details_file = \
                     os.path.join(self.tests_working_dir, 'test_details.json')
         self.klee_used_tmp_build_dir = os.path.join(self.tests_working_dir, \
@@ -51,6 +64,9 @@ class TestcasesToolKlee(BaseTestcaseTool):
 
         self.keptktest2dupktests = os.path.join(self.tests_working_dir, \
                                                 'kept_to_dup_ktests_map.json')
+
+        self.gen_tests_no_dup_with_seeds = \
+                        self.driver_config.get_gen_tests_no_dup_with_seeds ()
 
         if os.path.isdir(self.klee_used_tmp_build_dir):
             shutil.rmtree(self.klee_used_tmp_build_dir)
@@ -428,21 +444,40 @@ class TestcasesToolKlee(BaseTestcaseTool):
 
         # XXX: remove duplicate tests
         kepttest2duptest_map = {}
-        dup_list, invalid = KTestTestFormat.ktest_fdupes(\
-                                                    self.tests_storage_dir, \
+        folders = [self.tests_storage_dir]
+        if self.gen_tests_no_dup_with_seeds:
+            seed_dir = self.get_value_in_arglist(args, self.SEED_DIR_ARG_NAME)
+            if seed_dir is not None:
+                seed_dir = os.path.normpath(os.path.abspath(seed_dir))
+                folders.append(seed_dir)
+
+        def get_dir (ktest_fullpath, cand_folders):
+            for fold in cand_folders:
+                if ktest_fullpath.startswith(fold):
+                    return fold
+            ERROR_HANDLER.error_exit(\
+                    "Not candidate folder found in {} for ktest {}".format(\
+                                    cand_folders, ktest_fullpath), __file__)
+        #~ def get_dir ()
+
+        dup_list, invalid = KTestTestFormat.ktest_fdupes(*folders, \
                         custom_replay_tool_binary_dir=self.custom_binary_dir)
         if len(invalid) > 0:
             logging.warning(\
                         "{} generated ktests are invalid".format(len(invalid)))
             for kt in invalid:
-                os.remove(kt)
+                if get_dir(kt, folders) == self.tests_storage_dir:
+                    os.remove(kt)
         for dup_tuple in dup_list:
             kepttest2duptest_map[os.path.relpath(\
                             dup_tuple[0], \
-                            self.tests_storage_dir)] = [os.path.relpath(dp) \
-                                                    for dp in dup_tuple[1:]]
+                            get_dir(dup_tuple[0], folders))] = [
+                                                    os.path.relpath(dp, \
+                                                        get_dir(dp, folders)) \
+                                                for dp in dup_tuple[1:]]
             for df in dup_tuple[1:]:
-                os.remove(df)
+                if get_dir(kt, folders) == self.tests_storage_dir:
+                    os.remove(df)
         common_fs.dumpJSON(kepttest2duptest_map, self.keptktest2dupktests)
         
         # Copy replay tool into test folder

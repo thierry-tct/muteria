@@ -100,7 +100,7 @@ class TestcasesToolSemu(TestcasesToolKlee):
             '-max-sym-array-size': '4096',
             '-max-instruction-time': '10.',
           
-            '-seed-out-dir': None, # Newer klee is #'-seed-dir': None,
+            '-'+self.SEED_DIR_ARG_NAME: None, 
             # SEMu 
             '-semu-mutant-max-fork': '0', #None,
             '-semu-checknum-before-testgen-for-discarded': '2', # None,
@@ -122,7 +122,7 @@ class TestcasesToolSemu(TestcasesToolKlee):
     def _call_generation_run(self, runtool, args):
         # If seed-dir is set, ensure that only-replay-seeds is set 
         # (semu requires it for now)
-        seed_dir_key = 'seed-out-dir' #'seed-dir'
+        seed_dir_key = self.SEED_DIR_ARG_NAME
         only_replay_seeds_flag = '-only-replay-seeds'
         if self.get_value_in_arglist(args, seed_dir_key) is not None:
             if only_replay_seeds_flag not in args and \
