@@ -170,6 +170,7 @@ class MetaTestcaseTool(object):
         # TODO: load from file(above), if not compute and store (in different func). in runtests, check that tests are here
         # make sure that every test is is present, if not recompute.
         self.tests_duplicates_map = None
+        self._update_tests_duplicates_map()
 
         # Create the diffent tools
         for idx in range(len(test_tool_config_list)):
@@ -241,6 +242,33 @@ class MetaTestcaseTool(object):
                             "The following Testcase tools are not installed", \
                             str(non_installed)))
     #~ def check_tools_installed()
+
+    def _update_tests_duplicates_map(self, recompute=False):
+        if os.path.isfile(self.duplicated_tests_info_file) and not recompute:
+            return common_fs.loadJSON(self.duplicated_tests_info_file)
+
+        groups = {}
+        for _, dat in self.testcases_configured_tools.items():
+            tobj = dat[self.TOOL_OBJ_KEY]
+            fmt = tobj.get_test_format_class()
+            if fmt is None:
+                continue
+            if fmt not in groups:
+                groups[fmt] = []
+            groups[fmt].append(tobj)
+
+        self.tests_duplicates_map = {}
+        # for each group do fdupes and merge all
+        for fmt, tt_list in groups.items():
+            if len(tt_list) > 1:
+                kepttest2duptest_map, test2keptdup = \
+                                                fmt.cross_tool_fdupes(*tt_list)
+                self.tests_duplicates_map.update(test2keptdup)
+        
+        if os.path.isdir(os.path.dirname(self.duplicated_tests_info_file)):
+            common_fs.dumpJSON(self.tests_duplicates_map, \
+                                self.duplicated_tests_info_file, pretty=True)
+    #~ def _update_tests_duplicates_map()
 
     def get_devtest_toolalias(self):
         return self.custom_devtest_toolalias
@@ -429,6 +457,17 @@ class MetaTestcaseTool(object):
                                                 len(set(meta_testcases)), \
                                         "not all tests are unique", __file__)
 
+        # For fdupes
+        if len(self.tests_duplicates_map) > 0:
+            meta_testcases_backup = meta_testcases
+            meta_testcases = set(meta_testcases)
+            dups_remove_meta_testcases = meta_testcases & \
+                                                set(self.tests_duplicates_map)
+            dup_toadd_test = {self.tests_duplicates_map[v] for v in \
+                                dups_remove_meta_testcases} - meta_testcases
+            meta_testcases = (meta_testcases - dups_remove_meta_testcases) \
+                                                            | dup_toadd_test
+
         testcases_by_tool = {}
         for meta_testcase in meta_testcases:
             ttoolalias, testcase = \
@@ -511,8 +550,8 @@ class MetaTestcaseTool(object):
             
                 used = 0
                 for tt in para_tools:
-                    quota = int(len(testcases_by_tool[tt]) * sub_parallel_count / \
-                                                            para_tools_n_tests)
+                    quota = int(len(testcases_by_tool[tt]) * \
+                                    sub_parallel_count / para_tools_n_tests)
                     parallel_test_count_by_tool[tt] += quota
                     used += quota
                 for tt in para_tools:
@@ -618,6 +657,19 @@ class MetaTestcaseTool(object):
                                set(meta_test_failedverdicts_outlog[0]) - \
                                     set(meta_testcases)), \
                                                                      __file__)
+
+        # For fdupes
+        if len(self.tests_duplicates_map) > 0:
+            meta_testcases = meta_testcases_backup
+            for i in (0,1):
+                for mtest in dups_remove_meta_testcases:
+                    # add to results
+                    meta_test_failedverdicts_outlog[i][mtest] = copy.deepcopy(\
+                                        meta_test_failedverdicts_outlog[i]\
+                                            [self.tests_duplicates_map[mtest]])
+                for mtest in dup_toadd_test:
+                    # remove from results
+                    del meta_test_failedverdicts_outlog[i][mtest]
 
         if fault_test_execution_matrix_file is not None:
             # Load or Create the matrix 
@@ -797,6 +849,7 @@ class MetaTestcaseTool(object):
 
         # Invalidate any existing testcase info so it can be recomputed
         self._invalidate_testcase_info()
+        self._update_tests_duplicates_map(recompute=True)
 
         # @Checkpoint: Finished
         detailed_exectime = {}

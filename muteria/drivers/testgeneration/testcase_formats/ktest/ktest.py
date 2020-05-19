@@ -436,9 +436,12 @@ class KTestTestFormat(object):
         testdir2ttalias = {}
         for tt in testtools:
             custom_bin = tt.custom_binary_dir
-            clusters[custom_bin].append(tt.get_ktests_dir())
-            testdir2ttalias[tt.get_ktests_dir()] = \
-                                            tt.config.get_tool_config_alias()
+            kt_dir = tt.get_ktests_dir()
+            if not os.path.isdir(kt_dir):
+                # test generation did not yet take place
+                continue
+            clusters[custom_bin].append(kt_dir)
+            testdir2ttalias[kt_dir] = tt.config.get_tool_config_alias()
 
         kepttest2duptest_map = {}
         test2keptdup = {}
@@ -456,7 +459,6 @@ class KTestTestFormat(object):
                 key = DriversUtils.make_meta_element(key, \
                                                         testdir2ttalias[k_dir])
                 kepttest2duptest_map[key] = []
-                test2keptdup[key] = key
                 for dp in dup_tuple[1:]:
                     v_dir = KTestTestFormat.get_dir(dp, folders)
                     val = os.path.relpath(dp, v_dir)
