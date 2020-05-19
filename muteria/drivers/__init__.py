@@ -194,8 +194,8 @@ class DriversUtils(object):
     #~ def check_tool()
 
     @classmethod
-    def execute_and_get_retcode_out_err(cls, prog, args_list=[], \
-                            env=None, timeout=None, timeout_grace_period=5, \
+    def execute_and_get_retcode_out_err(cls, prog, args_list=[], env=None, \
+                            stdin=None, timeout=None, timeout_grace_period=5, \
                             out_on=True, err_on=True, merge_err_to_out=True, \
                             cwd=None):
         #print(prog, args_list, env is None, timeout, out_on, err_on, merge_err_to_out)
@@ -208,8 +208,9 @@ class DriversUtils(object):
         # use setsid to kill the process group
         p = subprocess.Popen([prog]+args_list, env=tmp_env, cwd=cwd, \
                                                             #close_fds=True, \
-                                                        stderr=err,\
-                                                        stdout=out, 
+                                                        stdin=stdin, \
+                                                        stderr=err, \
+                                                        stdout=out, \
                                                         preexec_fn=os.setsid)
         try:
             stdout, stderr = p.communicate(timeout=timeout)

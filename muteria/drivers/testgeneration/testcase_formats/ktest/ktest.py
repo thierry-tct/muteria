@@ -5,6 +5,8 @@ import sys
 import re
 import shutil
 import imp
+import logging
+import filecmp
 from distutils.spawn import find_executable
 
 import muteria.common.mix as common_mix
@@ -62,8 +64,9 @@ class KTestTestFormat(object):
     #~ def _get_replay_prog_args()
 
     @classmethod
-    def execute_test(cls, executable_file, test_file, env_vars, timeout=None, \
-                    collected_output=None, custom_replay_tool_binary_dir=None):
+    def execute_test(cls, executable_file, test_file, env_vars, stdin=None, \
+                                        timeout=None, collected_output=None, \
+                                        custom_replay_tool_binary_dir=None):
 
         prog, args = cls._get_replay_prog_args(executable_file, test_file, \
                                                 custom_replay_tool_binary_dir)
@@ -104,12 +107,14 @@ class KTestTestFormat(object):
         retcode, out, err = DriversUtils.execute_and_get_retcode_out_err(\
                                 prog=prog, args_list=['--help'], \
                                 merge_err_to_out=True)
-        clean_regex, status_regex = cls._get_regexes(out, clean_everything=True)
+        clean_regex, status_regex = cls._get_regexes(out, \
+                                                        clean_everything=True)
         
         # XXX Execute the ktest
         #if collected_output is not None:
         retcode, out, err = DriversUtils.execute_and_get_retcode_out_err(\
                                 prog=prog, args_list=args, env=tmp_env, \
+                                stdin=stdin, \
                                 timeout=timeout, timeout_grace_period=5, \
                                 merge_err_to_out=True, cwd=test_work_dir)
         retcode, out, exit_status = cls._remove_output_noise(retcode, out, \
@@ -159,7 +164,7 @@ class KTestTestFormat(object):
                         os.chmod(os.path.join(root_, f_), 0o777)
         except PermissionError:
             ret,out,_ = DriversUtils.execute_and_get_retcode_out_err('sudo', \
-                                            ['chmod', '777', '-R', dirpath])
+                                    args_list=['chmod', '777', '-R', dirpath])
             ERROR_HANDLER.assert_true(ret == 0, \
                         "'sudo chmod 777 -R "+dirpath+"' failed (returned "+\
                                         str(ret)+"), error: "+out, __file__)
@@ -180,7 +185,7 @@ class KTestTestFormat(object):
         python_code = ';'.join(['import sys', \
                 'from muteria.drivers.testgeneration' \
                     + '.testcase_formats.ktest.ktest import KTestTestFormat', \
-                'r, e_s = KTestTestFormat._remove_output_noise(sys.stdin.read())', \
+            'r, e_s = KTestTestFormat._remove_output_noise(sys.stdin.read())',\
                     'print(r)'])
 
         bash_timeout_retcode = os.system('timeout 0.1 sleep 1')
@@ -212,15 +217,17 @@ class KTestTestFormat(object):
                                         "^KLEE-REPLAY: klee_warning_once: ",\
                                         "^KLEE-REPLAY: klee_assume",\
                                         ]) + ")")
-    status_regex_new = re.compile("^(KLEE-REPLAY: NOTE:\\s+)(EXIT STATUS: .*?)"+\
-                                                "(\\s+\\([0-9]+\\s+seconds\\))$")
+    status_regex_new = re.compile(\
+                                "^(KLEE-REPLAY: NOTE:\\s+)(EXIT STATUS: .*?)"+\
+                                            "(\\s+\\([0-9]+\\s+seconds\\))$")
 
-    # the option "--keep-replay-dir" was added on klee github commit 5b1214a, right after commit 88bb205
+    # the option "--keep-replay-dir" was added on klee github commit 5b1214a, 
+    # right after commit 88bb205
     # So we will use that option to decide whether to use old or new regex
     # Older version (before klee github commit 88bb205)
     clean_everything_regex_old = re.compile("(" + "|".join([\
                         #"^EXIT STATUS: .* \\([0-9]+\\s+seconds\\)$", \
-                        #""+tool+": EXIT STATUS: .* \\([0-9]+\\s+seconds\\)$", \
+                        #""+tool+": EXIT STATUS: .* \\([0-9]+\\s+seconds\\)$",\
                         ""+tool+": received signal [0-9]+\\s+. "+\
                                         "Killing monitored process\\(es\\)$", \
                         "^note: (pty|pipe) (master|slave): ",\
@@ -251,7 +258,8 @@ class KTestTestFormat(object):
                         "^RUNNING GDB: /usr/bin/gdb --pid [0-9]+ -q --batch", \
                         "^TIMEOUT: ATTEMPTING GDB EXIT$", \
                         ]) + ")"))
-    status_regex_old = re.compile("^("+tool+":\\s+)?(EXIT STATUS: .*?)(\\s+\\([0-9]+\\s+seconds\\))?$")
+    status_regex_old = re.compile("^("+tool+\
+                    ":\\s+)?(EXIT STATUS: .*?)(\\s+\\([0-9]+\\s+seconds\\))?$")
 
     @classmethod
     def _get_regexes(cls, out, clean_everything=True):
@@ -314,6 +322,7 @@ class KTestTestFormat(object):
     #~ def _remove_output_noise()
 
     ktest_extension = '.ktest'
+    STDIN_KTEST_DATA_FILE = "muteria-stdin-ktest-data"
 
     @classmethod
     def ktest_fdupes(cls, *args, custom_replay_tool_binary_dir=None):
@@ -359,12 +368,22 @@ class KTestTestFormat(object):
         # apply fdupes: load all ktests and strip the non uniform data 
         # (.bc file used) then compare the remaining data
         kt2used_dat = {}
+        kt2stdin = {}
         for kf in file_set:
             try:
                 b = ktest_tool.KTest.fromfile(kf)
                 kt2used_dat[kf] = (b.args[1:], b.objects)
             except:
                 invalid.append(kf)
+
+            # STDIN
+            stdin_file = os.path.join(os.path.dirname(kf), \
+                                                    cls.STDIN_KTEST_DATA_FILE)
+            if os.path.isfile(stdin_file) \
+                                        and os.path.getsize(stdin_file) > 0:
+                kt2stdin[kf] = stdin_file
+            else:
+                kt2stdin[kf] = None
 
         # do fdupes
         dup_dict = {}
@@ -375,9 +394,18 @@ class KTestTestFormat(object):
                 del kt2used_dat[ktest_file]
                 for other_file in kt2used_dat:
                     if kt2used_dat[other_file] == ktest_file_dat:
-                        if ktest_file not in dup_dict:
-                            dup_dict[ktest_file] = []
-                        dup_dict[ktest_file].append(other_file)
+                        # compare stdin
+                        if kt2stdin[ktest_file] == kt2stdin[other_file] or \
+                                (kt2stdin[ktest_file] is not None \
+                                        and kt2stdin[other_file] is not None \
+                                        and filecmp.cmp(kt2stdin[ktest_file], \
+                                                        kt2stdin[other_file], 
+                                                        shallow=False)):
+                            if ktest_file not in dup_dict:
+                                dup_dict[ktest_file] = []
+                            dup_dict[ktest_file].append(other_file)
+
+                # remove all dupicates from candidates
                 if ktest_file in dup_dict:
                     for dup_of_kt_file in dup_dict[ktest_file]:
                         del kt2used_dat[dup_of_kt_file]

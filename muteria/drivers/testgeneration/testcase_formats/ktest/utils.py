@@ -35,8 +35,7 @@ class FileShortNames:
         return self.ShortNames[self.pos-1]
 #~ class FileShortNames:
 
-class ConvertKtests:
-    STDIN_KTEST_DATA_FILE = "stdin-ktest-data"
+class ConvertCollectKtestsSeeds:
     tar_gz = ".tar.gz"
     test2semudirMapFile = "test2semudirMapFile.json"
 
@@ -464,7 +463,7 @@ class ConvertKtests:
                 # shadow-zesti have problem with stdin, \
                 #use our hack on wrapper to capture that
                 stdin_file = os.path.join(os.path.dirname(filename), \
-                                                    self.STDIN_KTEST_DATA_FILE)
+                                        KTestTestFormat.STDIN_KTEST_DATA_FILE)
                 ERROR_HANDLER.assert_true(os.path.isfile(stdin_file), \
                         "The stdin exported in wrapper is missing for test: "\
                         + filename, __file__)
@@ -1411,4 +1410,4 @@ class ConvertKtests:
 
         return commonArgs, name2ktestMap
     #~ def _mergeZestiAndKleeKTests ()
-#~ class ConvertKtests
+#~ class ConvertCollectKtestsSeeds

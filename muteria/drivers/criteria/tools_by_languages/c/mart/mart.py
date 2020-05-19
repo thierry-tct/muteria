@@ -280,7 +280,7 @@ class CriteriaToolMart(BaseCriteriaTool):
 
         # get llvm compiler path
         ret, out, err = DriversUtils.execute_and_get_retcode_out_err(\
-                                                        prog, ['--version'])
+                                                prog, args_list=['--version'])
         llvm_compiler_path = None
         for line in out.splitlines():
             line = line.strip()
@@ -401,7 +401,7 @@ class CriteriaToolMart(BaseCriteriaTool):
         cwd = os.getcwd()
         os.chdir(self.mutant_data)
         ret, out, err = DriversUtils.execute_and_get_retcode_out_err(\
-                                                                    prog, args)
+                                                        prog, args_list=args)
         os.chdir(cwd)
 
         if (ret != 0):

@@ -297,7 +297,7 @@ class CriteriaToolGPMutation(BaseCriteriaTool):
 
         # Execute GPMutation
         ret, out, err = DriversUtils.execute_and_get_retcode_out_err(\
-                                                                    prog, args)
+                                                        prog, args_list=args)
         if (ret != 0):
             logging.error(out)
             logging.error(err)

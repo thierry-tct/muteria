@@ -138,7 +138,7 @@ class FromC(ccs.BaseCodeFormatConverter):
                 for src, dest in list(file_src_dest_map.items()):
                     ret, out, err = \
                             DriversUtils.execute_and_get_retcode_out_err( \
-                                                        "extract-bc", [dest])
+                                                "extract-bc", args_list=[dest])
                     ERROR_HANDLER.assert_true(ret == 0, \
                                         '{}. \n# OUT: {}\n# ERR: {}'.format(\
                                     'extract-bc failed', out, err), __file__)

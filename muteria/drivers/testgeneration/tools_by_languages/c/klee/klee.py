@@ -168,7 +168,7 @@ class TestcasesToolKlee(BaseTestcaseTool):
 
         # Execute Klee
         ret, out, err = DriversUtils.execute_and_get_retcode_out_err(\
-                                    runtool, args, timeout=max_time, \
+                                    runtool, args_list=args, timeout=max_time,\
                                     timeout_grace_period=timeout_grace_period)
                                     #out_on=False, err_on=False)
         
@@ -316,12 +316,25 @@ class TestcasesToolKlee(BaseTestcaseTool):
         if extra_env is not None and len(extra_env) > 0:
             env_vars = dict(env_vars).update(extra_env)
 
+        # get stdin if exists
+        stdin_file = os.path.join(self.tests_storage_dir, \
+                                        os.path.dirname(testcase), \
+                                        KTestTestFormat.STDIN_KTEST_DATA_FILE)
+        if os.path.isfile(stdin_file) and os.path.getsize(stdin_file) > 0:
+            stdin = open(stdin_file)
+        else:
+            stdin = None
+
         verdict = KTestTestFormat.execute_test(local_exe, \
                         os.path.join(self.tests_storage_dir, testcase), \
                         env_vars=env_vars, \
+                        stdin=stdin, \
                         timeout=timeout, \
                         collected_output=collected_output, \
                         custom_replay_tool_binary_dir=self.custom_binary_dir)
+        
+        if stdin is not None:
+            stdin.close()
 
         return verdict, collected_output
     #~ def _execute_a_test()

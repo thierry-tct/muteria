@@ -21,11 +21,24 @@ from muteria.drivers.criteria.base_testcriteriatool import BaseCriteriaTool
 from muteria.drivers.criteria import TestCriteria
 from muteria.drivers import DriversUtils
 
+import muteria.drivers.criteria.tools_by_languages.c.gcov.driver_config \
+                                                        as driver_config_pkg
+
+
 ERROR_HANDLER = common_mix.ErrorHandler
 
 class CriteriaToolGCov(BaseCriteriaTool):
     def __init__(self, *args, **kwargs):
         BaseCriteriaTool.__init__(self, *args, **kwargs)
+
+        self.driver_config = self.config.get_tool_user_custom().DRIVER_CONFIG
+        if self.driver_config is None:
+            self.driver_config = driver_config_pkg.DriverConfigGCov()
+        else:
+            ERROR_HANDLER.assert_true(isinstance(self.driver_config, \
+                                        driver_config_pkg.DriverConfigGCov),\
+                                            "invalid driver config", __file__)
+
         self.instrumentation_details = os.path.join(\
                     self.instrumented_code_storage_dir, '.instru.meta.json')
         self.gcov_files_list_filename = "gcov_files.json"
@@ -243,13 +256,14 @@ class CriteriaToolGCov(BaseCriteriaTool):
             # delete gcda
             for gcda_f in gcda_files:
                 os.remove(gcda_f)
-            
+        elif not self.driver_config.get_allow_missing_coverage():
+            ERROR_HANDLER.error_exit(\
+                    "Testcase '{}' did not generate gcda, {}".format(\
+                        testcase, "when allow missing coverage is disabled"))
+
         common_fs.dumpJSON(self._get_gcov_list(), \
                                 os.path.join(result_dir_tmp,\
                                                 self.gcov_files_list_filename))
-        #else:
-        #    ERROR_HANDLER.error_exit(\
-        #                "Testcase '{}' did not generate gcda".format(testcase))
     #~ def _collect_temporary_coverage_data()
 
     def _extract_coverage_data_of_a_test(self, enabled_criteria, \
@@ -357,7 +371,7 @@ class CriteriaToolGCov(BaseCriteriaTool):
         
         # get gcc version
         ret, out, err = DriversUtils.execute_and_get_retcode_out_err(\
-                                                        prog, ['-dumpversion'])
+                                            prog, args_list=['-dumpversion'])
         ERROR_HANDLER.assert_true(ret == 0, "'gcc -dumpversion' failed'")
         
         # if version > 6.5

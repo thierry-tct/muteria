@@ -670,7 +670,7 @@ class BaseCriteriaTool(abc.ABC):
                         os.chmod(os.path.join(root_, f_), 0o777)
         except PermissionError:
             ret,_,_ = DriversUtils.execute_and_get_retcode_out_err('sudo', \
-                                        ['chmod 777 -R {}'.format(dirpath)])
+                                args_list=['chmod 777 -R {}'.format(dirpath)])
             ERROR_HANDLER.assert_true(ret == 0, \
                         "'sudo chmod 777 -R "+dirpath+"' failed (returned "+\
                                                         str(ret)+")", __file__)

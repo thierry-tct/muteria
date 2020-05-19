@@ -25,6 +25,8 @@ from muteria.drivers.testgeneration.tools_by_languages.c.klee.klee \
                                                     import TestcasesToolKlee
 import muteria.drivers.testgeneration.tools_by_languages.c.shadow_se.\
                                             driver_config as driver_config_pkg
+from muteria.drivers.testgeneration.testcase_formats.ktest.ktest \
+                                                        import KTestTestFormat
 
 ERROR_HANDLER = common_mix.ErrorHandler
 
@@ -80,12 +82,15 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
             '-no-std-out': True,
             '-shadow-allow-allocs': True,
             '-watchdog': True,
+            # XXX Enable this for seed collection
             '-shadow-replay-standalone': False,
             '-shadow-only-symbolic-tests': True,
+            '-dont-simplify': None,
         }
         key_val_params = {
             #'-output-dir': self.tests_storage_dir,
             #'-solver-backend': None,
+            '-max-solver-time': None,
             '-search': None,
             '-max-memory': None,
             '-max-time': self.config.TEST_GENERATION_MAXTIME,
@@ -222,8 +227,30 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
         # Set the wrapper
         with open(call_shadow_wrapper_file, 'w') as wf:
             wf.write('#! /bin/bash\n\n')
+            wf.write('set -u\n')
+            wf.write('set -o pipefail\n\n')
             wf.write('ulimit -s unlimited\n')
-            wf.write(' '.join(['exec', runtool] + args + ['"${@:1}"']) + '\n')
+            #wf.write(' '.join(['exec', runtool] + args + ['"${@:1}"']) + '\n')
+            wf.write('\nstdindata="{}/klee-last/{}"\n'.format(\
+                                                    self.tests_working_dir, \
+                                        KTestTestFormat.STDIN_KTEST_DATA_FILE))
+            wf.write('tmpstdindata="{}/{}"\n\n'.format(self.tests_working_dir,\
+                                        KTestTestFormat.STDIN_KTEST_DATA_FILE))
+            wf.write('if [ -t 0 ] # check if stdin do not exist\n')
+            wf.write('then\n')
+            wf.write(' '.join(['\t(', runtool] + args + \
+                                    ['"${@:1}"', ') ; EXIT_CODE=$?', '\n']))
+            wf.write('\t/usr/bin/touch $tmpstdindata\n')
+
+            wf.write('else\n')
+            wf.write('\t(/bin/cat - > $tmpstdindata ) || EXIT_CODE=1\n')
+            wf.write(' '.join(['\t(', '/bin/cat $tmpstdindata | ', runtool] \
+                            + args + ['"${@:1}"', ') ; EXIT_CODE=$?', '\n']))
+            wf.write('fi\n\n')
+            wf.write('/bin/mv $tmpstdindata $stdindata || EXIT_CODE=2\n')
+            wf.write('\n# Provoke "unbound variable" if KLEE fails\n')
+            wf.write('# Preserve the KLEE exit code\n')
+            wf.write('exit $EXIT_CODE\n')
         os.chmod(call_shadow_wrapper_file, 0o775)
 
         # run test
