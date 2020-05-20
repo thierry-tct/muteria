@@ -95,6 +95,7 @@ class TestcasesToolKlee(BaseTestcaseTool):
             '-libc': 'uclibc',
             '-max-sym-array-size': '4096',
             '-max-instruction-time': '10.',
+            '-'+self.SEED_DIR_ARG_NAME: None, 
         }
         return bool_params, key_val_params
     #~ def _get_default_params()
@@ -120,8 +121,7 @@ class TestcasesToolKlee(BaseTestcaseTool):
                                     custom_binary_dir=self.custom_binary_dir)
             klee_sym_args = cv.get_ktests_sym_args(seed_dir, \
                                         compressed=seed_dir.endswith(\
-                                            ConvertCollectKtestsSeeds.tar_gz),\
-                                            merging_sym_args=klee_sym_args)
+                                            ConvertCollectKtestsSeeds.tar_gz))
 
         if klee_sym_args is None:
             klee_sym_args = default_sym_args

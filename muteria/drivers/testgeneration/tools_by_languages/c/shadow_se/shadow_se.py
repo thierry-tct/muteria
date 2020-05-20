@@ -85,6 +85,7 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
             # XXX Enable this for seed collection
             '-shadow-replay-standalone': False,
             '-shadow-only-symbolic-tests': True,
+            '-only-output-states-covering-new': None,
             '-dont-simplify': None,
         }
         key_val_params = {

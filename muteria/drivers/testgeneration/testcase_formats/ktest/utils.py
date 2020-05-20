@@ -45,9 +45,9 @@ class ConvertCollectKtestsSeeds:
     #~ def __init__ ()
 
     def generate_seeds_from_various_ktests (self, dest_dir, \
-                                        src_old_shadow_zesti_ktest_dir, \
-                                        src_new_klee_ktest_dir=None, \
-                                        compress_dest=True):
+                                            src_old_shadow_zesti_ktest_dir, \
+                                            src_new_klee_ktest_dir=None, \
+                                            compress_dest=True):
         """
         """
 
@@ -63,8 +63,13 @@ class ConvertCollectKtestsSeeds:
         tmpdir = os.path.join(dest_dir, '.tmp')
         os.mkdir(tmpdir)
 
+        ERROR_HANDLER.assert_true(src_old_shadow_zesti_ktest_dir is not None \
+                                    or src_new_klee_ktest_dir is not None, \
+                                    "at least one src must be set", __file__)
+
         # decompress shadow_zesti ktest dir if compressed
-        if src_old_shadow_zesti_ktest_dir.endswith(self.tar_gz):
+        if src_old_shadow_zesti_ktest_dir is not None and \
+                        src_old_shadow_zesti_ktest_dir.endswith(self.tar_gz):
             # decompress
             tmp_ar = src_old_shadow_zesti_ktest_dir
             src_old_shadow_zesti_ktest_dir = \
@@ -147,10 +152,8 @@ class ConvertCollectKtestsSeeds:
             common_fs.TarGz.compressDir(dest_dir, remove_in_directory=True)
     #~ def generate_seeds_from_various_ktests()
 
-    def get_ktests_sym_args(self, ktests_dir, compressed=True, \
-                                                        merging_sym_args=None):
+    def get_ktests_sym_args(self, ktests_dir, compressed=True):
         """ get sym args, if not there, create from ktests
-            merge the obtained sym args with merging_sym_args (TODO)
         """
         if compressed:
             tmp_ar = ktests_dir
@@ -166,7 +169,7 @@ class ConvertCollectKtestsSeeds:
 
         datfile = os.path.join(ktests_dir, self.test2semudirMapFile)
         ERROR_HANDLER.assert_true(os.path.isfile(datfile), \
-                    "datfile {} is missing (TODO: Generate and merge)".format(self.test2semudirMapFile), \
+                    "datfile {} is missing".format(self.test2semudirMapFile), \
                                                                     __file__)
         
         dat = common_fs.loadJSON(datfile)
