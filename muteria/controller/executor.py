@@ -1029,15 +1029,21 @@ class Executor(object):
 
         elif task == checkpoint_tasks.Tasks.AGGREGATED_STATS:
             # Get the test list and criteria element list
-            self.meta_testcase_tool.get_testcase_info_file()
+            test_info_file = self.meta_testcase_tool.get_testcase_info_file()
+            criteria_info_files = {}
             for criterion in self.config.ENABLED_CRITERIA.get_val():
-                self.meta_criteria_tool.get_criterion_info_file(criterion)
+                f = self.meta_criteria_tool.get_criterion_info_file(criterion)
+                criteria_info_files[criteria_set_sequence.get_str()] = f
 
             # Other results
             other_res = self.head_explorer.get_or_create_and_get_dir(\
                                             outdir_struct.OTHER_COPIED_RESULTS)
             flake_dir = self.meta_testcase_tool.get_flakiness_workdir()
             if os.path.isdir(flake_dir):
+                shutil.copy2(test_info_file, other_res)
+                for c,f in criteria_info_files.items():
+                    f_name = c + '_' + os.path.basename(f)
+                    shutil.copy2(f, os.path.join(other_res, f_name))
                 shutil.copytree(flake_dir, os.path.join(other_res, \
                                                 os.path.basename(flake_dir)))
 
