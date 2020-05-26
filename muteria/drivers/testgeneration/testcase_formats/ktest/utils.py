@@ -12,6 +12,8 @@ import muteria.common.fs as common_fs
 
 ERROR_HANDLER = common_mix.ErrorHandler
 
+from muteria.drivers import DriversUtils
+
 from muteria.drivers.testgeneration.testcase_formats.ktest.ktest import \
                                                                 KTestTestFormat
 
@@ -146,6 +148,13 @@ class ConvertCollectKtestsSeeds:
 
         # delete tmpdir
         shutil.rmtree(tmpdir)
+
+        # Fdupes the seedDir.
+        cmd_ret = DriversUtils.execute_and_get_retcode_out_err(prog='fdupes',
+                                        args_list=['-r', '-d', '-N', dest_dir],
+                                                    out_on=False, err_on=False)
+        ERROR_HANDLER.assert_true (cmd_ret == 0, "fdupes failed on SeedDir", \
+                                                                    __file__)
 
         # compress destdir
         if compress_dest:

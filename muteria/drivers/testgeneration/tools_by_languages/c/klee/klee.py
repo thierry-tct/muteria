@@ -18,6 +18,8 @@ from muteria.drivers.testgeneration.testcase_formats.ktest.ktest \
                                                         import KTestTestFormat
 from muteria.drivers.testgeneration.testcase_formats.ktest.utils \
                                             import ConvertCollectKtestsSeeds
+from muteria.drivers.testgeneration.tools_by_languages.c.klee.driver_config \
+                                                        import DriverConfigKlee
 import muteria.drivers.testgeneration.tools_by_languages.c.klee.driver_config \
                                                         as driver_config_pkg
 

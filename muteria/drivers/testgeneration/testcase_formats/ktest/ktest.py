@@ -446,27 +446,41 @@ class KTestTestFormat(object):
         kepttest2duptest_map = {}
         test2keptdup = {}
         for custom_bin, folders in clusters.items():
-            dup_list, invalid = KTestTestFormat.ktest_fdupes(*folders, \
-                                    custom_replay_tool_binary_dir=custom_bin)
-            ERROR_HANDLER.assert_true(len(invalid) == 0, \
-                                "there should be no invalid here", __file__)
-
-            # get fdupes with metatests
-            # TODO: check that each result of relpath is really a test
-            for dup_tuple in dup_list:
-                k_dir = KTestTestFormat.get_dir(dup_tuple[0], folders)
-                key = os.path.relpath(dup_tuple[0], k_dir)
-                key = DriversUtils.make_meta_element(key, \
-                                                        testdir2ttalias[k_dir])
-                kepttest2duptest_map[key] = []
-                for dp in dup_tuple[1:]:
-                    v_dir = KTestTestFormat.get_dir(dp, folders)
-                    val = os.path.relpath(dp, v_dir)
-                    val = DriversUtils.make_meta_element(val, \
-                                                        testdir2ttalias[v_dir])
-                    kepttest2duptest_map[key].append(val)
-                    test2keptdup[val] = key
+            
+            tmp_kepttest2duptest_map, tmp_test2keptdup = \
+                            KTestTestFormat.cross_folder_fdupes(custom_bin, \
+                                                    folders, testdir2ttalias)
+            kepttest2duptest_map.update(tmp_kepttest2duptest_map)
+            test2keptdup.update(tmp_test2keptdup)
         
         return kepttest2duptest_map, test2keptdup
     #~ def cross_tool_fdupes()
+
+    @staticmethod
+    def cross_folder_fdupes(custom_bin, folders, folder2alias):
+        dup_list, invalid = KTestTestFormat.ktest_fdupes(*folders, \
+                                custom_replay_tool_binary_dir=custom_bin)
+        ERROR_HANDLER.assert_true(len(invalid) == 0, \
+                            "there should be no invalid here", __file__)
+
+        kepttest2duptest_map= {}
+        test2keptdup = {}
+        # get fdupes with metatests
+        # TODO: check that each result of relpath is really a test
+        for dup_tuple in dup_list:
+            k_dir = KTestTestFormat.get_dir(dup_tuple[0], folders)
+            key = os.path.relpath(dup_tuple[0], k_dir)
+            key = DriversUtils.make_meta_element(key, \
+                                                    folder2alias[k_dir])
+            kepttest2duptest_map[key] = []
+            for dp in dup_tuple[1:]:
+                v_dir = KTestTestFormat.get_dir(dp, folders)
+                val = os.path.relpath(dp, v_dir)
+                val = DriversUtils.make_meta_element(val, \
+                                                    folder2alias[v_dir])
+                kepttest2duptest_map[key].append(val)
+                test2keptdup[val] = key
+        
+        return kepttest2duptest_map, test2keptdup
+    #~ def cross_folder_fdupes()
 #~ class KTestTestFormat
