@@ -21,8 +21,8 @@ from muteria.drivers.criteria.base_testcriteriatool import BaseCriteriaTool
 from muteria.drivers.criteria import TestCriteria
 from muteria.drivers import DriversUtils
 
-import muteria.drivers.criteria.tools_by_languages.c.gcov.driver_config \
-                                                        as driver_config_pkg
+from muteria.drivers.criteria.tools_by_languages.c.gcov.driver_config \
+                                                        import DriverConfigGCov
 
 
 ERROR_HANDLER = common_mix.ErrorHandler
@@ -33,10 +33,10 @@ class CriteriaToolGCov(BaseCriteriaTool):
 
         self.driver_config = self.config.get_tool_user_custom().DRIVER_CONFIG
         if self.driver_config is None:
-            self.driver_config = driver_config_pkg.DriverConfigGCov()
+            self.driver_config = DriverConfigGCov()
         else:
             ERROR_HANDLER.assert_true(isinstance(self.driver_config, \
-                                        driver_config_pkg.DriverConfigGCov),\
+                                        DriverConfigGCov),\
                                             "invalid driver config", __file__)
 
         self.instrumentation_details = os.path.join(\
