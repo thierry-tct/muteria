@@ -23,8 +23,8 @@ from muteria.repositoryandcode.callback_object import DefaultCallbackObject
 
 from muteria.drivers.testgeneration.tools_by_languages.c.klee.klee \
                                                     import TestcasesToolKlee
-import muteria.drivers.testgeneration.tools_by_languages.c.shadow_se.\
-                                            driver_config as driver_config_pkg
+from muteria.drivers.testgeneration.tools_by_languages.c.shadow_se.\
+                                        driver_config import DriverConfigShadow
 from muteria.drivers.testgeneration.testcase_formats.ktest.ktest \
                                                         import KTestTestFormat
 
@@ -42,10 +42,10 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
 
         self.driver_config = self.config.get_tool_user_custom().DRIVER_CONFIG
         if self.driver_config is None:
-            self.driver_config = driver_config_pkg.DriverConfigShadow()
+            self.driver_config = DriverConfigShadow()
         else:
             ERROR_HANDLER.assert_true(isinstance(self.driver_config, \
-                                        driver_config_pkg.DriverConfigShadow),\
+                                            DriverConfigShadow),\
                                             "invalid driver config", __file__)
 
         self.shadow_folder_path = os.sep.join(\

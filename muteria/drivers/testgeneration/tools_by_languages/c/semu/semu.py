@@ -26,8 +26,8 @@ from muteria.drivers.testgeneration.testcase_formats.ktest.ktest \
 from muteria.drivers.testgeneration.tools_by_languages.c.klee.klee \
                                                     import TestcasesToolKlee
 
-import muteria.drivers.testgeneration.tools_by_languages.c.semu.driver_config \
-                                                        as driver_config_pkg
+from muteria.drivers.testgeneration.tools_by_languages.c.semu.driver_config \
+                                        import DriverConfigSemu, MetaMuSource
 
 ERROR_HANDLER = common_mix.ErrorHandler
 
@@ -56,10 +56,10 @@ class TestcasesToolSemu(TestcasesToolKlee):
         
         self.driver_config = self.config.get_tool_user_custom().DRIVER_CONFIG
         if self.driver_config is None:
-            self.driver_config = driver_config_pkg.DriverConfigSemu()
+            self.driver_config = DriverConfigSemu()
         else:
             ERROR_HANDLER.assert_true(isinstance(self.driver_config, \
-                                        driver_config_pkg.DriverConfigSemu),\
+                                            DriverConfigSemu),\
                                             "invalid driver config", __file__)
 
         self.cand_muts_file = os.path.join(self.tests_working_dir, \
@@ -207,15 +207,25 @@ class TestcasesToolSemu(TestcasesToolKlee):
 
     def _get_input_bitcode_file(self, code_builds_factory, rel_path_map, \
                                                 meta_criteria_tool_obj=None):
-        # XXX: get the meta criterion file from MART.
-        mutant_gen_tool_name = 'mart'
+        meta_mu_src = self.driver_config.get_meta_mutant_source()
+
+        # XXX Case of manual annotation
+        if meta_mu_src == MetaMuSource.ANNOTATION:
+            return super(TestcasesToolSemu, self)._get_input_bitcode_file(\
+                                        code_builds_factory, rel_path_map, \
+                                meta_criteria_tool_obj=meta_criteria_tool_obj)
+        
+        # XXX: Case of other mutation tools like Mart
+        # get the meta criterion file from MART or any compatible tool.
+        mutant_gen_tool_name = meta_mu_src.get_field_value()
         mut_tool_alias_to_obj = \
                             meta_criteria_tool_obj.get_criteria_tools_by_name(\
                                                         mutant_gen_tool_name)
 
         if len(mut_tool_alias_to_obj) == 0:
             logging.warning(\
-                        'SEMu requires Mart to generate mutants but none used')
+                'SEMu requires {} to generate mutants but none used'.format(\
+                                                        mutant_gen_tool_name))
 
         ERROR_HANDLER.assert_true(len(mut_tool_alias_to_obj) == 1, \
                                 "SEMu supports tests generation from"
