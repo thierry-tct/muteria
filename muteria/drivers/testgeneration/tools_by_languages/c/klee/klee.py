@@ -48,7 +48,10 @@ class TestcasesToolKlee(BaseTestcaseTool):
     def __init__(self, *args, **kwargs):
         BaseTestcaseTool.__init__(self, *args, **kwargs)
 
-        self.driver_config = self.config.get_tool_user_custom().DRIVER_CONFIG
+        self.driver_config = None
+        if self.config.get_tool_user_custom() is not None:
+            self.driver_config = \
+                            self.config.get_tool_user_custom().DRIVER_CONFIG
         if self.driver_config is None:
             self.driver_config = DriverConfigKlee()
         else:

@@ -40,7 +40,10 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
         ERROR_HANDLER.assert_true(self.custom_binary_dir is not None, \
                         "Custom binary dir must be set for shadow", __file__)
 
-        self.driver_config = self.config.get_tool_user_custom().DRIVER_CONFIG
+        self.driver_config = None
+        if self.config.get_tool_user_custom() is not None:
+            self.driver_config = \
+                            self.config.get_tool_user_custom().DRIVER_CONFIG
         if self.driver_config is None:
             self.driver_config = DriverConfigShadow()
         else:
