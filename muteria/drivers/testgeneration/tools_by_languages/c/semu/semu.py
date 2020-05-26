@@ -275,9 +275,11 @@ class TestcasesToolSemu(TestcasesToolKlee):
         return t_alias2metamu_bc[list(t_alias2metamu_bc)[0]]
     #~ def _get_input_bitcode_file()
 
-    def fdupeGeneratedTest (mfi_ktests_dir_top, mfi_ktests_dir, semuoutputs, seeds_dir=None):
+    def fdupeGeneratedTest (self, mfi_ktests_dir_top, mfi_ktests_dir, \
+                                                semuoutputs, seeds_dir=None):
         # Implement and use (see run.py in Semu Analysis)
         # TODO, implement this
+        ERROR_HANDLER.error_exit("TODO: implement fdupesGeneratedTest")
     #~ def fdupeGeneratedTest ()
 
     def requires_criteria_instrumented(self):
