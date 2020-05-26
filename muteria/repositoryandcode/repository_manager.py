@@ -253,6 +253,11 @@ class RepositoryManager(object):
         if self.code_builder_func is None:
             ERROR_HANDLER.error_exit(\
                     "code_builder_func cannot be none when called", __file__)
+        
+        if flags_list is not None:
+            ERROR_HANDLER.assert_true(type(flags_list) in (list, tuple), \
+                    "Invalid flags_list ({}). expecting list or tuple".format(\
+                                                        flags_list), __file__)
 
         pre_ret = common_mix.GlobalConstants.COMMAND_SUCCESS
         post_ret = common_mix.GlobalConstants.COMMAND_UNCERTAIN

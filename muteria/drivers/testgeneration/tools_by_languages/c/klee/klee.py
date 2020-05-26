@@ -234,7 +234,7 @@ class TestcasesToolKlee(BaseTestcaseTool):
                                                 meta_criteria_tool_obj=None):
         back_llvm_compiler = self._get_back_llvm_compiler() 
         back_llvm_compiler_path = self._get_back_llvm_compiler_path() 
-        compile_flags_list = self._get_compile_flags_list
+        compile_flags_list = self._get_compile_flags_list()
         
         pre_ret, ret, post_ret = code_builds_factory.transform_src_into_dest(\
                         src_fmt=CodeFormats.C_SOURCE,\
