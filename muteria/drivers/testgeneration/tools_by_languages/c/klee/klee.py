@@ -20,8 +20,6 @@ from muteria.drivers.testgeneration.testcase_formats.ktest.utils \
                                             import ConvertCollectKtestsSeeds
 from muteria.drivers.testgeneration.tools_by_languages.c.klee.driver_config \
                                                         import DriverConfigKlee
-import muteria.drivers.testgeneration.tools_by_languages.c.klee.driver_config \
-                                                        as driver_config_pkg
 
 ERROR_HANDLER = common_mix.ErrorHandler
 
@@ -52,10 +50,10 @@ class TestcasesToolKlee(BaseTestcaseTool):
 
         self.driver_config = self.config.get_tool_user_custom().DRIVER_CONFIG
         if self.driver_config is None:
-            self.driver_config = driver_config_pkg.DriverConfigKlee()
+            self.driver_config = DriverConfigKlee()
         else:
             ERROR_HANDLER.assert_true(isinstance(self.driver_config, \
-                                        driver_config_pkg.DriverConfigKlee),\
+                                        DriverConfigKlee),\
                                             "invalid driver config", __file__)
 
         self.test_details_file = \
