@@ -8,7 +8,7 @@ class DriverConfigKlee:
         self.no_duptest_with_seed = no_duptest_with_seed
     #~ def __init__()
 
-    def get_no_duptest_with_seed(self):
+    def get_gen_tests_no_dup_with_seeds (self):
         return self.no_duptest_with_seed
-    #~ def get_no_duptest_with_seed()
+    #~ def get_gen_tests_no_dup_with_seeds()
 #~ class DriverConfigKlee
