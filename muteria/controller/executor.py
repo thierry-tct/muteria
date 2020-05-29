@@ -1033,7 +1033,8 @@ class Executor(object):
             criteria_info_files = {}
             for criterion in self.config.ENABLED_CRITERIA.get_val():
                 f = self.meta_criteria_tool.get_criterion_info_file(criterion)
-                criteria_info_files[criterion.get_str()] = f
+                if f is not None:
+                    criteria_info_files[criterion.get_str()] = f
 
             # Other results
             other_res = self.head_explorer.get_or_create_and_get_dir(\
