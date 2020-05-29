@@ -727,7 +727,8 @@ class Executor(object):
                                                         .destroy_checkpoint()
 
         elif task == checkpoint_tasks.Tasks.CRITERIA_GENERATION_GUIDANCE:
-            pass #TODO (Maybe could be used someday. for now, just skip it)
+            if self.config.ENABLED_CRITERIA.get_val():
+                pass #TODO (Maybe could be used someday. for now, just skip it)
         elif task == checkpoint_tasks.Tasks.CRITERIA_GENERATION:
             # @Checkpointing
             if task_untouched:
@@ -740,19 +741,21 @@ class Executor(object):
                 self.cp_data.tasks_obj.set_task_executing(task)
                 self.checkpointer.write_checkpoint(self.cp_data.get_json_obj())
 
-            self.meta_criteria_tool.instrument_code(criteria_enabled_list=\
+            if self.config.ENABLED_CRITERIA.get_val():
+                self.meta_criteria_tool.instrument_code(criteria_enabled_list=\
                                     self.config.ENABLED_CRITERIA.get_val(), \
                                     finish_destroy_checkpointer=False)
 
             # @Checkpointing
             self.cp_data.tasks_obj.set_task_completed(task)
             self.checkpointer.write_checkpoint(self.cp_data.get_json_obj())
-            # Destroy meta test checkpointer
-            self.meta_criteria_tool.get_checkpoint_state_object()\
+            if self.config.ENABLED_CRITERIA.get_val():
+                # Destroy meta test checkpointer
+                self.meta_criteria_tool.get_checkpoint_state_object()\
                                                         .destroy_checkpoint()
         elif task == checkpoint_tasks.Tasks.\
                                 CRITERIA_EXECUTION_SELECTION_PRIORITIZATION:
-            pass #TODO (Maybe could be used someday. for now, just skip it)
+            #pass #TODO (Maybe could be used someday. for now, just skip it)
             #TODO: make it as a driver that will implement techniques 
             # (per tool if needed)
             out_file_key = outdir_struct.TMP_SELECTED_CRITERIA_OBJECTIVES_LIST
@@ -767,60 +770,65 @@ class Executor(object):
                 self.cp_data.tasks_obj.set_task_executing(task)
                 self.checkpointer.write_checkpoint(self.cp_data.get_json_obj())
 
-            selected_TO = {crit.get_str(): None \
+            if self.config.ENABLED_CRITERIA.get_val():
+
+                selected_TO = {crit.get_str(): None \
                             for crit in self.config.ENABLED_CRITERIA.get_val()}
-            for crit, sel_tech in \
+                for crit, sel_tech in \
                         self.config.CRITERIA_ELEM_SELECTIONS.get_val().items():
-                info_obj = self.meta_criteria_tool\
+                    info_obj = self.meta_criteria_tool\
                                             .get_criterion_info_object(crit)
-                if info_obj is None:
-                    continue
-                all_to = info_obj.get_elements_list()
-                
-                sel_count = self.config\
+                    if info_obj is None:
+                        continue
+                    all_to = info_obj.get_elements_list()
+                    
+                    sel_count = self.config\
                             .MAX_CRITERIA_ELEM_SELECTION_NUM_PERCENT.get_val()
-                if type(sel_count) == str:
-                    if sel_count.endswith('%'):
-                        sel_count = float(sel_count[:-1])
-                        ERROR_HANDLER.assert_true(sel_count > 0 \
-                                                    and sel_count <= 100, \
-                                "invalid selection percentage ({})".format(\
-                                                        sel_count), __file__)
-                        sel_count = int(math.ceil(\
+                    if type(sel_count) == str:
+                        if sel_count.endswith('%'):
+                            sel_count = float(sel_count[:-1])
+                            ERROR_HANDLER.assert_true(sel_count > 0 \
+                                                        and sel_count <= 100, \
+                                        "invalid selection percentage ({})"\
+                                                .format(sel_count), __file__)
+                            sel_count = int(math.ceil(\
                                             len(all_to) * sel_count / 100.0))
+                        else:
+                            ERROR_HANDLER.assert_true(sel_count.isdigit(), \
+                                            'invalid selection number ({})'\
+                                                .format(sel_count), __file__)
+                            sel_count = int(sel_count)
                     else:
-                        ERROR_HANDLER.assert_true(sel_count.isdigit(), \
-                            'invalid selection number ({})'.format(sel_count),\
-                                                                    __file__)
-                        sel_count = int(sel_count)
-                else:
-                    ERROR_HANDLER.assert_true(type(sel_count) == int, \
-                            "invalid selection number ({})".format(sel_count),\
-                                                                    __file__)
-                ERROR_HANDLER.assert_true(sel_count > 0, \
+                        ERROR_HANDLER.assert_true(type(sel_count) == int, \
+                                "invalid selection number ({})".format(\
+                                                        sel_count), __file__)
+                    ERROR_HANDLER.assert_true(sel_count > 0, \
                                 "selection number must be positive", __file__)
 
-                # selection method
-                if inspect.isfunction(sel_tech):
-                    ERROR_HANDLER.assert_true(\
+                    # selection method
+                    if inspect.isfunction(sel_tech):
+                        ERROR_HANDLER.assert_true(\
                                         len(inspect.getargspec().args) == 2, \
                                         "Selection function must take 2 args "
                                         "(testobjectivelist, maxselcount)", \
-                                        __file__)
-                    
-                else:
-                    if sel_tech != 'DummyRandom':
-                        ERROR_HANDLER.error_exit(\
-                            'only random TO selection supported now!', \
+                                            __file__)
+                        
+                    else:
+                        if sel_tech != 'DummyRandom':
+                            ERROR_HANDLER.error_exit(\
+                                'only random TO selection supported now!', \
                                                                     __file__)
-                    # make DummyRandom selection
-                    sel_tech = random.sample
+                        # make DummyRandom selection
+                        sel_tech = random.sample
 
-                # make selection
-                selected_TO[crit.get_str()] = sel_tech(all_to, sel_count)
-            
-            # write down selection
-            common_fs.dumpJSON(selected_TO, out_file)
+                    # make selection
+                    selected_TO[crit.get_str()] = sel_tech(all_to, sel_count)
+                
+                # write down selection
+                common_fs.dumpJSON(selected_TO, out_file)
+            # @Checkpointing
+            self.cp_data.tasks_obj.set_task_completed(task)
+            self.checkpointer.write_checkpoint(self.cp_data.get_json_obj())
 
         elif task == checkpoint_tasks.Tasks.CRITERIA_TESTS_EXECUTION:
             # Make sure that the Matrices dir exists
@@ -867,99 +875,107 @@ class Executor(object):
                 self.cp_data.tasks_obj.set_task_executing(task)
                 self.checkpointer.write_checkpoint(self.cp_data.get_json_obj())
 
-            # XXX: Criteria element execution selection loading
-            crit_TO_list_by_crit = None
-            if self.config.ONLY_EXECUTE_SELECTED_CRITERIA_ELEM.get_val():
-                criteria_TO_sel_file = self.head_explorer.get_file_pathname(\
-                        outdir_struct.TMP_SELECTED_CRITERIA_OBJECTIVES_LIST)
-                raw_crit2to_list = common_fs.loadJSON(criteria_TO_sel_file)
-                crit_TO_list_by_crit = {}
-                for crit in self.config.ENABLED_CRITERIA.get_val():
-                    crit_TO_list_by_crit[crit] = \
+            if self.config.ENABLED_CRITERIA.get_val():
+                # XXX: Criteria element execution selection loading
+                crit_TO_list_by_crit = None
+                if self.config.ONLY_EXECUTE_SELECTED_CRITERIA_ELEM.get_val():
+                    criteria_TO_sel_file = \
+                            self.head_explorer.get_file_pathname(outdir_struct\
+                                        .TMP_SELECTED_CRITERIA_OBJECTIVES_LIST)
+                    raw_crit2to_list = common_fs.loadJSON(criteria_TO_sel_file)
+                    crit_TO_list_by_crit = {}
+                    for crit in self.config.ENABLED_CRITERIA.get_val():
+                        crit_TO_list_by_crit[crit] = \
                                             raw_crit2to_list[crit.get_str()]
 
-            # Get sequence
-            criteria_set_sequence = self.config.CRITERIA_SEQUENCE.get_val()
-            #if criteria_set_sequence is None:
-            #    criteria_set_sequence = criteria_pkg.CRITERIA_SEQUENCE
-            for cs_pos, criteria_set in enumerate(criteria_set_sequence):
-                criteria_set &= set(matrix_files)
-                if len(criteria_set) == 0:
-                    continue
+                # Get sequence
+                criteria_set_sequence = self.config.CRITERIA_SEQUENCE.get_val()
+                #if criteria_set_sequence is None:
+                #    criteria_set_sequence = criteria_pkg.CRITERIA_SEQUENCE
+                for cs_pos, criteria_set in enumerate(criteria_set_sequence):
+                    criteria_set &= set(matrix_files)
+                    if len(criteria_set) == 0:
+                        continue
 
-                # ensure right criteria
-                used_crit_TO_list_by_crit = copy.deepcopy(crit_TO_list_by_crit)
-                if used_crit_TO_list_by_crit is not None:
-                    todel = set(used_crit_TO_list_by_crit) - criteria_set
-                    for td in todel:
-                        del used_crit_TO_list_by_crit[td]
+                    # ensure right criteria
+                    used_crit_TO_list_by_crit = \
+                                            copy.deepcopy(crit_TO_list_by_crit)
+                    if used_crit_TO_list_by_crit is not None:
+                        todel = set(used_crit_TO_list_by_crit) - criteria_set
+                        for td in todel:
+                            del used_crit_TO_list_by_crit[td]
 
-                # Was it already checkpointed w.r.t criteria set seq
-                if self.cp_data.criteria_set_is_executed(cs_pos, criteria_set):
-                    continue
-                
-                # If we have a new criteria set id
-                self.cp_data.switchto_new_criteria_set(cs_pos, criteria_set)
+                    # Was it already checkpointed w.r.t criteria set seq
+                    if self.cp_data.criteria_set_is_executed(\
+                                                        cs_pos, criteria_set):
+                        continue
+                    
+                    # If we have a new criteria set id
+                    self.cp_data.switchto_new_criteria_set(\
+                                                        cs_pos, criteria_set)
 
-                # get matrices by criteria
-                test_list_file = self.head_explorer.get_file_pathname(\
+                    # get matrices by criteria
+                    test_list_file = self.head_explorer.get_file_pathname(\
                                         outdir_struct.TMP_SELECTED_TESTS_LIST)
-                meta_testcases = common_fs.loadJSON(test_list_file)
-                
-                criterion_to_matrix = {\
+                    meta_testcases = common_fs.loadJSON(test_list_file)
+                    
+                    criterion_to_matrix = {\
                                     c: matrix_files[c] for c in criteria_set}
 
-                # TODO: check set based on the criteria for which execout is enabled
-                criterion_to_execoutput = {\
+                    # TODO: check set based on the criteria 
+                    # for which execout is enabled
+                    criterion_to_execoutput = {\
                                 c: execoutput_files[c] for c in criteria_set}
 
-                # TODO: make recovery mechanism (like atomic) if execution
-                #           is interrupted after the matrix is written 
-                #           but before checkpoint
-                #       The same goes for after the matrix is written to 
-                #       'update_matrix_to_cover_when_difference'
+                    # TODO: make recovery mechanism (like atomic) if execution
+                    #           is interrupted after the matrix is written 
+                    #           but before checkpoint
+                    #       The same goes for after the matrix is written to 
+                    #       'update_matrix_to_cover_when_difference'
 
-                # XXX execute
-                self.meta_criteria_tool.runtests_criteria_coverage( \
-                            testcases=meta_testcases, \
-                            criterion_to_matrix=criterion_to_matrix, \
-                            criterion_to_executionoutput=\
+                    # XXX execute
+                    self.meta_criteria_tool.runtests_criteria_coverage( \
+                                testcases=meta_testcases, \
+                                criterion_to_matrix=criterion_to_matrix, \
+                                criterion_to_executionoutput=\
                                                     criterion_to_execoutput, \
-                            criteria_element_list_by_criteria=\
+                                criteria_element_list_by_criteria=\
                                                     used_crit_TO_list_by_crit,
-                            cover_criteria_elements_once=self.config.\
+                                cover_criteria_elements_once=self.config.\
                                     COVER_CRITERIA_ELEMENTS_ONCE.get_val(),\
-                            prioritization_module_by_criteria=\
+                                prioritization_module_by_criteria=\
                                     self.meta_criteriaexec_optimization_tools,\
-                            finish_destroy_checkpointer=True)
+                                finish_destroy_checkpointer=True)
 
-                # Update matrix if needed to have output diff or such
-                for crit in criteria_set & set(self.config\
-                                .CRITERIA_REQUIRING_OUTDIFF_WITH_PROGRAM\
+                    # Update matrix if needed to have output diff or such
+                    for crit in criteria_set & set(self.config\
+                                    .CRITERIA_REQUIRING_OUTDIFF_WITH_PROGRAM\
                                                                 .get_val()):
-                    pf_matrix_file = self.head_explorer.get_file_pathname(\
-                                    outdir_struct.TMP_TEST_PASS_FAIL_MATRIX)
-                    if not os.path.isfile(pf_matrix_file):
-                        #In case already did stats
                         pf_matrix_file = self.head_explorer.get_file_pathname(\
-                                    outdir_struct.TEST_PASS_FAIL_MATRIX)
-                    if self.config.GET_PASSFAIL_OUTPUT_SUMMARY.get_val():
-                        pf_execoutput_file = \
+                                    outdir_struct.TMP_TEST_PASS_FAIL_MATRIX)
+                        if not os.path.isfile(pf_matrix_file):
+                            #In case already did stats
+                            pf_matrix_file = \
                                         self.head_explorer.get_file_pathname(\
-                                outdir_struct.TMP_PROGRAM_TESTEXECUTION_OUTPUT)
-                        if not os.path.isfile(pf_execoutput_file):
+                                        outdir_struct.TEST_PASS_FAIL_MATRIX)
+                        if self.config.GET_PASSFAIL_OUTPUT_SUMMARY.get_val():
                             pf_execoutput_file = \
                                         self.head_explorer.get_file_pathname(\
-                                outdir_struct.PROGRAM_TESTEXECUTION_OUTPUT)
-                    else:
-                        pf_execoutput_file = None
-                    DriversUtils.update_matrix_to_cover_when_difference(\
+                                outdir_struct.TMP_PROGRAM_TESTEXECUTION_OUTPUT)
+                            if not os.path.isfile(pf_execoutput_file):
+                                pf_execoutput_file = \
+                                        self.head_explorer.get_file_pathname(\
+                                    outdir_struct.PROGRAM_TESTEXECUTION_OUTPUT)
+                        else:
+                            pf_execoutput_file = None
+                        DriversUtils.update_matrix_to_cover_when_difference(\
                                                 criterion_to_matrix[crit], \
                                             criterion_to_execoutput[crit], \
                                             pf_matrix_file, pf_execoutput_file)
 
-                # @Checkpointing
-                self.checkpointer.write_checkpoint(self.cp_data.get_json_obj())
+                    # @Checkpointing
+                    self.checkpointer.write_checkpoint(\
+                                                self.cp_data.get_json_obj())
 
             # @Checkpointing
             self.cp_data.tasks_obj.set_task_completed(task)
