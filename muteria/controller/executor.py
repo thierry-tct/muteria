@@ -1033,7 +1033,7 @@ class Executor(object):
             criteria_info_files = {}
             for criterion in self.config.ENABLED_CRITERIA.get_val():
                 f = self.meta_criteria_tool.get_criterion_info_file(criterion)
-                criteria_info_files[criteria_set_sequence.get_str()] = f
+                criteria_info_files[criterion.get_str()] = f
 
             # Other results
             other_res = self.head_explorer.get_or_create_and_get_dir(\
@@ -1046,6 +1046,8 @@ class Executor(object):
                     shutil.copy2(f, os.path.join(other_res, f_name))
                 shutil.copytree(flake_dir, os.path.join(other_res, \
                                                 os.path.basename(flake_dir)))
+                common_fs.TarGz.compressDir(os.path.join(other_res, \
+                        os.path.basename(flake_dir)), remove_in_directory=True)
 
             # Compute the final stats (MS, ...)
             StatsComputer.compute_stats(self.config, self.head_explorer, \
