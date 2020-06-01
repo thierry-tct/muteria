@@ -193,7 +193,9 @@ class TestcasesToolKlee(BaseTestcaseTool):
         timeout_grace_period = 600
         max_time = None
         cur_max_time = float(self.get_value_in_arglist(args, 'max-time'))
-        max_time = cur_max_time + 10 #10 to give time to klee
+        #to give time to klee add FRAMEWORK GRACE
+        max_time = cur_max_time + \
+                                self.config.TEST_GEN_TIMEOUT_FRAMEWORK_GRACE
 
         # set stack to unlimited
         stack_ulimit_soft, stack_ulimit_hard = \

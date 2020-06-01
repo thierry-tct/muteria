@@ -423,6 +423,8 @@ class TestcaseToolsConfig(BaseToolConfig):
     TESTS_ORACLE_OTHER_EXECUTABLE = None
 
     TEST_GENERATION_MAXTIME = 7200.0 # in seconds
+    # time givn by the framework before sending alt signal
+    TEST_GEN_TIMEOUT_FRAMEWORK_GRACE = 100 # in second
     ONE_TEST_EXECUTION_TIMEOUT = 60.0 # in seconds (Handle inifnite loops)
 
     # consider test execution error as a test failure
@@ -437,6 +439,8 @@ class TestcaseToolsConfig(BaseToolConfig):
     
     def set_test_gen_maxtime(self, max_time):
         self.TEST_GENERATION_MAXTIME = max_time
+    def set_test_gen_timeout_framework_grace(self, grace_time):
+        self.TEST_GEN_TIMEOUT_FRAMEWORK_GRACE = grace_time
     def set_one_test_execution_timeout(self, timeout):
         self.ONE_TEST_EXECUTION_TIMEOUT = timeout
     def set_test_oracle_test(self, value):

@@ -225,10 +225,15 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
 
         # Adjust the max-time in args
         ## locate max-time
+        per_test_hard_timeout = None
         if len(cand_testpair_list) > 0:
             cur_max_time = float(self.get_value_in_arglist(args, 'max-time'))
-            self.set_value_in_arglist(args, 'max-time', \
-                        str(max(60, cur_max_time / len(cand_testpair_list))))
+            per_test_timeout = max(60, cur_max_time / len(cand_testpair_list))
+            self.set_value_in_arglist(args, 'max-time', str(per_test_timeout))
+
+            # give time to dump remaning states
+            per_test_hard_timeout = per_test_timeout + \
+                                self.config.TEST_GEN_TIMEOUT_FRAMEWORK_GRACE
 
         # Set the wrapper
         with open(call_shadow_wrapper_file, 'w') as wf:
@@ -269,7 +274,8 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
         self._dir_chmod777(self.tests_storage_dir)
         for test, meta_test in cand_testpair_list:
             self.parent_meta_tool.execute_testcase(meta_test, exe_path_map, \
-                                        env_vars, with_output_summary=False)
+                                    env_vars, timeout=per_test_hard_timeout,\
+                                                    with_output_summary=False)
 
             # copy the klee out
             test_out = os.path.join(self.tests_storage_dir, \
