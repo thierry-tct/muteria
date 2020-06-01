@@ -280,7 +280,7 @@ class ConvertCollectKtestsSeeds:
         # XXX Watch this: TMP: make sure all files are at the end
         firstFile_ind = -1
         postFileArgv_ind = []
-        ERROR_HANDLER.assert_true(b.objects[0][0] == 'model_version', \
+        ERROR_HANDLER.assert_true(b.objects[0][0] == b'model_version', \
                 "Invalid model_version position for file: {}.\nContent:\n{}"\
                                     .format(filename, b.objects), __file__)
         #skip model_version in this loop (start from index 1)
