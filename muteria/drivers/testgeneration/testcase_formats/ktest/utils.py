@@ -95,7 +95,8 @@ class ConvertCollectKtestsSeeds:
         for tc_name in os.listdir(src_old_shadow_zesti_ktest_dir):
             tc_name_dir = os.path.join(src_old_shadow_zesti_ktest_dir, tc_name)
             for kleeout in os.listdir(tc_name_dir):
-                kleeout_dir = os.path.join(tc_name_dir, kleeout)
+                if os.path.isdir(kleeout):
+                    kleeout_dir = os.path.join(tc_name_dir, kleeout)
 
             if len(glob.glob(os.path.join(kleeout_dir, \
                                     "*"+KTestTestFormat.ktest_extension))) > 0:
