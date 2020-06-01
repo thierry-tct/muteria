@@ -53,7 +53,7 @@ class ConvertCollectKtestsSeeds:
         """
         """
 
-        ERROR_HANDLER.assert_true(os.path.dirname(os.path.isdir(dest_dir)), \
+        ERROR_HANDLER.assert_true(os.path.isdir(os.path.dirname(dest_dir)), \
                                 "dest dir parent does not exists", __file__)
         ERROR_HANDLER.assert_true(not os.path.isdir(dest_dir), \
                                         "dest dir already exists", __file__)
