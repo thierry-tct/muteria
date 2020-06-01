@@ -152,11 +152,13 @@ class ConvertCollectKtestsSeeds:
         shutil.rmtree(tmpdir)
 
         # Fdupes the seedDir.
-        cmd_ret = DriversUtils.execute_and_get_retcode_out_err(prog='fdupes',
+        cmd_ret, out, _ = DriversUtils.execute_and_get_retcode_out_err(\
+                                        prog='fdupes',
                                         args_list=['-r', '-d', '-N', dest_dir],
-                                                    out_on=False, err_on=False)
-        ERROR_HANDLER.assert_true (cmd_ret == 0, "fdupes failed on SeedDir", \
-                                                                    __file__)
+                            out_on=True, err_on=True, merge_err_to_out=True)
+        if cmd_ret != 0:
+            ERROR_HANDLER.error_exit ("fdupes failed on SeedDir:\n{}".format(\
+                                                                out), __file__)
 
         # compress destdir
         if compress_dest:
