@@ -489,7 +489,7 @@ class TestcasesToolKlee(BaseTestcaseTool):
                                         KTestTestFormat.get_dir(dp, folders)) \
                                                 for dp in dup_tuple[1:]]
             for df in dup_tuple[1:]:
-                if KTestTestFormat.get_dir(kt, folders) == \
+                if KTestTestFormat.get_dir(df, folders) == \
                                                         self.tests_storage_dir:
                     os.remove(df)
         common_fs.dumpJSON(kepttest2duptest_map, self.keptktest2dupktests)
