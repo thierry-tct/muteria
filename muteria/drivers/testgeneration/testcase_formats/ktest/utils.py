@@ -280,12 +280,13 @@ class ConvertCollectKtestsSeeds:
         # XXX Watch this: TMP: make sure all files are at the end
         firstFile_ind = -1
         postFileArgv_ind = []
+        print(b.argv)
         ERROR_HANDLER.assert_true(b.objects[0][0] == 'model_version', \
                 "Invalid model_version position for file: {}.\nContent:\n{}"\
-                                    .format(filename, b), __file__)
+                                    .format(filename, b.objects), __file__)
         #skip model_version in this loop (start from index 1)
         for pos, (name, data) in enumerate(b.objects[1:]): 
-            if name == 'argv':
+            if name == b'argv':
                 if firstFile_ind >= 0:
                     postFileArgv_ind.append(pos+1)
             else:
