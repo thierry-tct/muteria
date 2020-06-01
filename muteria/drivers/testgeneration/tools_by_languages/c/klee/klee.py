@@ -474,7 +474,8 @@ class TestcasesToolKlee(BaseTestcaseTool):
                         custom_replay_tool_binary_dir=self.custom_binary_dir)
         if len(invalid) > 0:
             logging.warning(\
-                        "{} generated ktests are invalid".format(len(invalid)))
+                        "{} generated ktests are invalid ({})".format(\
+                                                        len(invalid), invalid))
             for kt in invalid:
                 if KTestTestFormat.get_dir(kt, folders) == \
                                                         self.tests_storage_dir:
