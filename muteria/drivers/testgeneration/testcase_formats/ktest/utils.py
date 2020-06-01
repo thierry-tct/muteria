@@ -25,7 +25,7 @@ class FileShortNames:
         #                    itertools.product(schar,['']+schar)], 'pos':0}
 
         # From KLEE: 'void klee_init_fds()' in runtime/POSIX/fd_init.c
-        self.ShortNames = [chr(i) for i in range(ord('A'), 256)]  
+        self.ShortNames = [bytes(chr(i), 'ascii') for i in range(ord('A'), 256)]  
         self.pos = 0
     def reinitialize_count (self):
         self.pos = 0
@@ -280,8 +280,9 @@ class ConvertCollectKtestsSeeds:
         # XXX Watch this: TMP: make sure all files are at the end
         firstFile_ind = -1
         postFileArgv_ind = []
-        print(b.args, b.objects)
-        ERROR_HANDLER.assert_true(b.objects[0][0] == 'model_version', \
+        #print(b.args) #str
+        #print(b.objects) #byte
+        ERROR_HANDLER.assert_true(b.objects[0][0] == b'model_version', \
                 "Invalid model_version position for file: {}.\nContent:\n{}"\
                                     .format(filename, b.objects), __file__)
         #skip model_version in this loop (start from index 1)
@@ -305,10 +306,10 @@ class ConvertCollectKtestsSeeds:
         # Since KLEE do not support directory it should be fine
         if '/' in b.args[1:]:
             for ind, (name,data) in enumerate(b.objects):
-                if name == '/':
-                    if data == '\0'*4096:
+                if name == b'/':
+                    if data == b'\0'*4096:
                         ERROR_HANDLER.assert_true(\
-                                        b.objects[ind+1][0] == '/-stat', \
+                                        b.objects[ind+1][0] == b'/-stat', \
                                         "Stat not following file", __file__)
                         del b.objects[ind:ind+2]
                     else:
@@ -327,7 +328,7 @@ class ConvertCollectKtestsSeeds:
             if ind in seenFileStatsPos:
                 continue
             if ind == 0:
-                if name != "model_version":
+                if name != b"model_version":
                     ERROR_HANDLER.error_exit("The first argument in the "
                                     "ktest must be 'model_version'", __file__)
                 else:
@@ -337,12 +338,13 @@ class ConvertCollectKtestsSeeds:
                 # (1) an ARGV obj with data the filename, 
                 # (2) an Obj with name the filename and data the file data, 
                 # (3) an Obj for file stat (<filename>-stat) 
-                indexes_ia = [i for i,x in enumerate(b.args[1:]) if x == name]
+                arguments = [bytes(_x, 'utf-8') for _x in b.args[1:]]
+                indexes_ia = [i for i,x in enumerate(arguments) if x == name]
                 
                 # filename in args, the corresponding position in 
                 # datalist is indexes_ia, or name is not argv but is contained.
                 # example "--file=in1" TODO
-                if len(indexes_ia) > 0 or name != "argv": 
+                if len(indexes_ia) > 0 or name != b"argv": 
                     # in case the same name appears many times in args, 
                     # let the user manually verify
                     if len(indexes_ia) > 1:
@@ -354,13 +356,13 @@ class ConvertCollectKtestsSeeds:
                                     actual_test = at
                                     break
                             msg = " ".join(["\n>> CONFLICT: the file object",\
-                                "at position ",ind,"with name","'"+name+"'",\
+                                "at position ",ind,"with name",str(name),\
                                 "in ktest",filename,"appears several times",\
                                 "in args list (The actual test is:", 
                                 actual_test,")."])
                         else:
                             msg = " ".join(["\n>> CONFLICT: the file object",\
-                                "at position ",ind,"with name","'"+name+"'",\
+                                "at position ",ind,"with name",str(name),\
                                 "in ktest",filename,"appears several times",\
                                 "in args list (Check",\
                                 "OUTPUT/caches/test2zestidirMap.json for",\
@@ -376,7 +378,8 @@ class ConvertCollectKtestsSeeds:
                     elif len(indexes_ia) == 1:
                         indinargs = indexes_ia
                     else: # name != "argv"
-                        indexes_ia = [i for i,x in enumerate(b.args[1:]) \
+                        arguments = [bytes(_x, 'utf-8') for _x in b.args[1:]]
+                        indexes_ia = [i for i,x in enumerate(arguments) \
                                                                 if name in x]
                         if len(indexes_ia) <= 0:
                             if not skip_failure:
@@ -395,13 +398,13 @@ class ConvertCollectKtestsSeeds:
                                         break
                                 msg = " ".join(["\n>> HINT NEEDED: the file",
                                     "object at position ",ind,"with name",\
-                                    name,"in ktest",filename, "has file", \
+                                    str(name),"in ktest",filename, "has file",\
                                     "with complex argv (The actual test is:",\
                                     actual_test,")."])
                             else:
                                 msg = " ".join(["\n>> HINT NEEDED: the file",\
                                     "object at position ",ind,"with name",\
-                                    name,"in ktest",filename, "has file", \
+                                    str(name),"in ktest",filename, "has file",\
                                     "with complex argv (Check",\
                                     "OUTPUT/caches/test2zestidirMap.json",\
                                     "for actual test).\n", \
@@ -428,7 +431,7 @@ class ConvertCollectKtestsSeeds:
 
                     # seach for its stat, it should be the next object
                     found = False
-                    if b.objects[ind + 1][0] == name+"-stat":
+                    if b.objects[ind + 1][0] == name + b"-stat":
                         seenFileStatsPos.add(ind + 1)
                         found = True
                     if not found:
@@ -441,7 +444,7 @@ class ConvertCollectKtestsSeeds:
                 #    stdin = ('STDIN', len(data)) #XXX 
                 else: 
                     #ARGV
-                    ERROR_HANDLER.assert_true(name == "argv", \
+                    ERROR_HANDLER.assert_true(name == b"argv", \
                             "name ({}) not in args and not argv: {}".format(\
                                                     name, filename), __file__)
                     #XXX
@@ -625,22 +628,23 @@ class ConvertCollectKtestsSeeds:
                             #       list(ktdat.objects[filenstatsInObj\
                             #                        [ktpos][2*ind_fai]][0])
                             msg = " ".join(["\n>> MANUAL REPLACE: the final",\
-                                "file name is '"+shortFnames[ind_fai]+"'.",\
-                                "initial name is '"+ktdat.objects[\
-                                filenstatsInObj[ktpos][2*ind_fai]][0]+"'.",
+                                "file name is "+str(shortFnames[ind_fai])+".",\
+                                "initial name is "+str(ktdat.objects[\
+                                filenstatsInObj[ktpos][2*ind_fai]][0])+".",
                                 "\n  >> Test name is:", \
                                 ktestContains["CORRESP_TESTNAME"][ktpos],\
                                 "\n    >> Please replace initial file name",\
-                                "with new in '"+ktdat.objects[fai][1]+"' :"])
-                            raw = input(msg).strip()
+                                "with new in "+str(ktdat.objects[fai][1])+
+                                "' :"])
+                            raw = bytes(input(msg).strip(), 'utf-8')
                             ktdat.objects[fai] = (ktdat.objects[fai][0], raw)
 
                 # first add file object of additional files
                 addedobj = []
                 # divide by two because also has stat
                 for _ in range(nmax_files - len(filenstatsInObj[ktpos])/2): 
-                    symf_obj = ('', '\0'*maxFileSize)
-                    symfstat_obj = ('-stat', '\0'*144)
+                    symf_obj = (b'', b'\0'*maxFileSize)
+                    symfstat_obj = (b'-stat', b'\0'*144)
                     addedobj.append(symf_obj)
                     addedobj.append(symfstat_obj)
                 insat = afterFileNStat[ktpos] 
@@ -653,16 +657,16 @@ class ConvertCollectKtestsSeeds:
                     find_ = filenstatsInObj[ktpos][fi_]
                     fsind_ = filenstatsInObj[ktpos][fi_ + 1]
                     ERROR_HANDLER.assert_true(ktdat.objects[find_][0] \
-                                    + '-stat' == ktdat.objects[fsind_][0],
+                                    + b'-stat' == ktdat.objects[fsind_][0],
                                                         "error", __file__)
                     #file
-                    ktdat.objects[find_] = (shortFnames[ni]+"-data", \
+                    ktdat.objects[find_] = (shortFnames[ni]+b"-data", \
                                         ktdat.objects[find_][1] + \
-                                        '\0'*(maxFileSize - \
+                                        b'\0'*(maxFileSize - \
                                         len(ktdat.objects[find_][1]))) 
                     #file
-                    ktdat.objects[fsind_] = (shortFnames[ni]+"-data" + \
-                                        '-stat', ktdat.objects[fsind_][1])
+                    ktdat.objects[fsind_] = (shortFnames[ni]+b"-data" + \
+                                        b'-stat', ktdat.objects[fsind_][1])
 
         # Make a general form out of listTestArgs by inserting what 
         # is needed with size 0
@@ -781,21 +785,21 @@ class ConvertCollectKtestsSeeds:
                 for i in range(len(ktestContains["CORRESP_TESTNAME"])):
                     siindex = len(ktestContains["KTEST-OBJ"][i].objects) - 1
                     while siindex>=0 and ktestContains["KTEST-OBJ"][i]\
-                                            .objects[siindex][0] != "stdin":
+                                            .objects[siindex][0] != b"stdin":
                         siindex -= 1
                     if siindex >= 0:
                         ERROR_HANDLER.assert_true(ktestContains["KTEST-OBJ"]\
-                                [i].objects[siindex+1][0] == "stdin-stat", \
+                                [i].objects[siindex+1][0] == b"stdin-stat", \
                                 "stdin must be followed by its stats", \
                                                                 __file__)
                         pre_si_dat = \
                             ktestContains["KTEST-OBJ"][i].objects[siindex][1]
                         ktestContains["KTEST-OBJ"][i].objects[siindex] = \
-                                        ('stdin', pre_si_dat + \
-                                        "\0"*(stdinMaxSize - len(pre_si_dat)))
+                                        (b'stdin', pre_si_dat + \
+                                        b"\0"*(stdinMaxSize - len(pre_si_dat)))
                     else:
-                        symin_obj = ('stdin', '\0'*stdinMaxSize)
-                        syminstat_obj = ('stdin-stat', '\0'*144)
+                        symin_obj = (b'stdin', b'\0'*stdinMaxSize)
+                        syminstat_obj = (b'stdin-stat', b'\0'*144)
                         ktestContains["KTEST-OBJ"][i].objects.insert(-1, \
                                                                     symin_obj)
                         ktestContains["KTEST-OBJ"][i].objects.insert(-1, \
@@ -808,8 +812,8 @@ class ConvertCollectKtestsSeeds:
             commonArgs.append('--sym-stdout')
             # add sym-out to ktets just before the last (model_version)
             for i in range(len(ktestContains["CORRESP_TESTNAME"])):
-                symout_obj = ('stdout', '\0'*1024)
-                symoutstat_obj = ('stdout-stat', '\0'*144)
+                symout_obj = (b'stdout', b'\0'*1024)
+                symoutstat_obj = (b'stdout-stat', b'\0'*144)
                 ktestContains["KTEST-OBJ"][i].objects.insert(-1, symout_obj)
                 ktestContains["KTEST-OBJ"][i].objects.insert(-1, \
                                                             symoutstat_obj)
@@ -837,7 +841,7 @@ class ConvertCollectKtestsSeeds:
                     assert commonArgsNumPerTest[t][apos] is not None
                     if commonArgsNumPerTest[t][apos] > 0 and not \
                             ktestContains["KTEST-OBJ"][t].objects[objpos][0]\
-                                                        .startswith("argv"):
+                                                        .startswith(b"argv"):
                         logging.debug("\n\nCommonArgs: {}".format(commonArgs))
                         logging.debug("\nCommonArgsNumPerTest: {}".format(\
                                                     commonArgsNumPerTest[t]))
@@ -861,7 +865,7 @@ class ConvertCollectKtestsSeeds:
                         #+1 Because last zero added after sym len
                         ktestContains["KTEST-OBJ"][t].objects[\
                                         objpos + sharedarg_i] = (curval[0], 
-                                            curval[1]+'\0'*(maxlen-curlen+1))
+                                            curval[1]+b'\0'*(maxlen-curlen+1))
 
                     # Insert n_args
                     ## XXX No insertion of n_args if min_n_arg and max_n_arg 
@@ -869,7 +873,7 @@ class ConvertCollectKtestsSeeds:
                     if self._is_sym_args_having_nargs(commonArgs[apos], \
                                                             check_good=True):
                         ktestContains["KTEST-OBJ"][t].objects.insert(\
-                                    objpos, ("n_args", struct.pack('<i', \
+                                    objpos, (b"n_args", struct.pack('<i', \
                                             commonArgsNumPerTest[t][apos])))       
                         objpos += 1 #pass just added 'n_args'
 
@@ -880,7 +884,7 @@ class ConvertCollectKtestsSeeds:
                 # is an ARGV non file
                 elif commonArgsNumPerTest[t][apos] is not None: 
                     if not ktestContains["KTEST-OBJ"][t].\
-                                        objects[objpos][0].startswith("argv"):
+                                    objects[objpos][0].startswith(b"argv"):
                         logging.debug("\n\nCommonArgs: {}".format(commonArgs))
                         logging.debug("\nCommonArgsNumPerTest: {}".format(\
                                                     commonArgsNumPerTest[t]))
@@ -900,7 +904,7 @@ class ConvertCollectKtestsSeeds:
                     curval = ktestContains["KTEST-OBJ"][t].objects[objpos]
                     #+1 Because last zero added after sym len
                     ktestContains["KTEST-OBJ"][t].objects[objpos] = \
-                                (curval[0], curval[1]+'\0'*(maxlen-curlen+1)) 
+                            (curval[0], curval[1]+b'\0'*(maxlen-curlen+1)) 
                     
                     objpos += 1
                 else:  
@@ -921,9 +925,10 @@ class ConvertCollectKtestsSeeds:
             for ktdat in ktestContains["KTEST-OBJ"]:
                 i_ = 0
                 for objpos, (name, data) in enumerate(ktdat.objects):
-                    if name != "argv":
+                    if name != b"argv":
                         continue
-                    ktdat.objects[objpos] = ('arg'+str(i_), data)
+                    ktdat.objects[objpos] = (b'arg'+bytes(str(i_), 'ascii'), \
+                                                                        data)
                     i_ += 1
 
         return commonArgs, ktestContains
@@ -969,7 +974,7 @@ class ConvertCollectKtestsSeeds:
                 if not a_has_stdin:
                     o_stdin_len = -1
                     for o in b.objects:
-                        if o[0] == 'stdin':
+                        if o[0] == b'stdin':
                             o_stdin_len = len(o[1])
                             break
                     if o_stdin_len >= 0:
@@ -982,7 +987,7 @@ class ConvertCollectKtestsSeeds:
                             stdin_fixed_common += s_a.split()
                 # make sure that model_version is the last object
                 ERROR_HANDLER.assert_true(\
-                                    b.objects[-1][0] == "model_version", \
+                                    b.objects[-1][0] == b"model_version", \
                                 "The last object is not 'model_version'" + \
                                                 " in klee's ktest", __file__)
             else:
@@ -1012,8 +1017,8 @@ class ConvertCollectKtestsSeeds:
         '''
 
         def isCmdArg(name):
-            if name == 'n_args' or name.startswith('argv') \
-                                or name.startswith('arg'):
+            if name == b'n_args' or name.startswith(b'argv') \
+                                or name.startswith(b'arg'):
                 return True
             return False
         #~ def isCmdArg()
@@ -1072,16 +1077,16 @@ class ConvertCollectKtestsSeeds:
             # sym-stdout
             if argvinfo['sym-std']['out-present']:
                 if not argvinfo['sym-std']['out-present-pre']:
-                    kt_obj.insert(pointer, ('stdout', '\0'*1024))
-                    kt_obj.insert(pointer, ('stdout-stat', '\0'*144))
+                    kt_obj.insert(pointer, (b'stdout', b'\0'*1024))
+                    kt_obj.insert(pointer, (b'stdout-stat', b'\0'*144))
                 pointer -= 2
             
             # sym-stdin
             if argvinfo['sym-std']['in-present']:
                 if not argvinfo['sym-std']['in-present-pre']:
                     kt_obj.insert(pointer, \
-                            ('stdin', '\0'*argvinfo['sym-std']['in-size']))
-                    kt_obj.insert(pointer, ('stdin-stat', '\0'*144))
+                            (b'stdin', b'\0'*argvinfo['sym-std']['in-size']))
+                    kt_obj.insert(pointer, (b'stdin-stat', b'\0'*144))
                     pointer -= 2
                 elif argvinfo['sym-std']['in-size-pre'] \
                                             != argvinfo['sym-std']['in-size']:
@@ -1090,12 +1095,12 @@ class ConvertCollectKtestsSeeds:
                     stdin_stat_pos = pointer - 1 
                     stdin_pos = stdin_stat_pos - 1
                     ERROR_HANDLER.assert_true(\
-                                        kt_obj[stdin_pos][0] == 'stdin', 
+                                        kt_obj[stdin_pos][0] == b'stdin', 
                                         "Expected stdin as object just before"
                                         "stdout and model_version", __file__)
                     kt_obj[stdin_pos] = (kt_obj[stdin_pos][0], \
                                     kt_obj[stdin_pos][1] + \
-                                    '\0'*(argvinfo['sym-std']['in-size'] - \
+                                    b'\0'*(argvinfo['sym-std']['in-size'] - \
                                         argvinfo['sym-std']['in-size-pre']))
                     pointer -= 2
                 else:
@@ -1115,7 +1120,7 @@ class ConvertCollectKtestsSeeds:
                                     "found cmd arg: Pos="+str(f_p)\
                                     +", object="+str(kt_obj[f_p]), __file__)
                         kt_obj[f_p] = (kt_obj[f_p][0], kt_obj[f_p][1] \
-                                    + '\0'*(argvinfo['sym-files']['size'] \
+                                    + b'\0'*(argvinfo['sym-files']['size'] \
                                         - argvinfo['sym-files']['size-pre']))
 
                 if argvinfo['sym-files']['nFiles-pre'] != \
@@ -1125,9 +1130,9 @@ class ConvertCollectKtestsSeeds:
                                     [argvinfo['sym-files']['nFiles-pre']\
                                             :argvinfo['sym-files']['nFiles']]
                     for sn in snames:
-                        kt_obj.insert(pointer, (sn+'-data', \
-                                        '\0'*argvinfo['sym-files']['size']))
-                        kt_obj.insert(pointer, (sn+'-data'+'-stat', '\0'*144))
+                        kt_obj.insert(pointer, (sn+b'-data', \
+                                        b'\0'*argvinfo['sym-files']['size']))
+                        kt_obj.insert(pointer, (sn+b'-data'+b'-stat', b'\0'*144))
                 pointer -= 2*argvinfo['sym-files']['nFiles']
             
             #sym cmdargv(arg)
@@ -1141,19 +1146,19 @@ class ConvertCollectKtestsSeeds:
                                         "min_n_args and max_n_arg must"+\
                                         " be different here", __file__)
                         kt_obj.insert(obj_ind, \
-                                            ("n_args", struct.pack('<i', 0)))
+                                            (b"n_args", struct.pack('<i', 0)))
                         obj_ind += 1
                 else:
                     ERROR_HANDLER.assert_true(isCmdArg(kt_obj[obj_ind][0]), \
-                        "Supposed to be CMD arg: "+str(kt_obj[obj_ind][0]), \
-                                                                    __file__)
+                        "Supposed to be CMD arg: {}".format(\
+                                                kt_obj[obj_ind][0]), __file__)
                     if '-sym-arg ' in argvinfo['old'][arg_ind]:
                         ERROR_HANDLER.assert_true(\
                                     len(argvinfo['new'][arg_ind]) == 1, \
                                     "must be one sym-args here", __file__)
                         if self._is_sym_args_having_nargs(\
                                                 argvinfo['new'][arg_ind][0]):
-                            kt_obj.insert(obj_ind, ("n_args", \
+                            kt_obj.insert(obj_ind, (b"n_args", \
                                                         struct.pack('<i', 1)))
                             #Go after n_args
                             obj_ind += 1 
@@ -1164,7 +1169,7 @@ class ConvertCollectKtestsSeeds:
                         if old_len_ < new_len_:
                             kt_obj[obj_ind] = (kt_obj[obj_ind][0], \
                                                 kt_obj[obj_ind][1] + \
-                                                '\0'*(new_len_ - old_len_))
+                                                b'\0'*(new_len_ - old_len_))
                         else:
                             ERROR_HANDLER.assert_true(old_len_ == new_len_, \
                                     "new arg len lower than pld len (BUG)", \
@@ -1176,7 +1181,7 @@ class ConvertCollectKtestsSeeds:
                         if self._is_sym_args_having_nargs(\
                                                 argvinfo['old'][arg_ind]):
                             ERROR_HANDLER.assert_true(\
-                                        kt_obj[obj_ind][0] == 'n_args', \
+                                        kt_obj[obj_ind][0] == b'n_args', \
                                             "must be n_args here", __file__)
                             nargs = struct.unpack('<i', kt_obj[obj_ind][1])[0]
                             old_has_nargs = True
