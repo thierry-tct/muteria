@@ -548,7 +548,7 @@ class ConvertCollectKtestsSeeds:
                                                     argv_becomes_arg_i=False, 
                                                     add_sym_stdout=False,
                                                     skip_failure=False):
-        testNamesList = test2zestidirMap_arg.keys()
+        testNamesList = list(test2zestidirMap_arg.keys())
         ERROR_HANDLER.assert_true(len(ktestFilesList) == len(testNamesList), 
                 "Error: size mismatch btw ktest and names: {} VS {}".format(\
                         len(ktestFilesList), len(testNamesList)), __file__)
