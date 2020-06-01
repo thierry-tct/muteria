@@ -77,7 +77,7 @@ class ConvertCollectKtestsSeeds:
             src_old_shadow_zesti_ktest_dir = \
                             src_old_shadow_zesti_ktest_dir[:-len(self.tar_gz)]
             common_fs.TarGz.decompressDir(tmp_ar, \
-                                            src_old_shadow_zesti_ktest_dir, \
+                            os.path.dirname(src_old_shadow_zesti_ktest_dir), \
                                                     remove_in_archive=False)
 
         # decompress new_klee ktest dir if compressed
@@ -86,7 +86,8 @@ class ConvertCollectKtestsSeeds:
             # decompress
             tmp_ar = src_new_klee_ktest_dir
             src_new_klee_ktest_dir = src_new_klee_ktest_dir[:-len(self.tar_gz)]
-            common_fs.TarGz.decompressDir(tmp_ar, src_new_klee_ktest_dir, \
+            common_fs.TarGz.decompressDir(tmp_ar, \
+                                    os.path.dirname(src_new_klee_ktest_dir), \
                                                     remove_in_archive=False)
 
         # Get test to zesti dir map (from the src_old... dir) TODO
@@ -170,7 +171,8 @@ class ConvertCollectKtestsSeeds:
             ERROR_HANDLER.assert_true(not os.path.isdir(ktests_dir), \
                     "make sure the uncompressed dir is abscent ({})".format(\
                                                         ktests_dir), __file__)
-            common_fs.TarGz.decompressDir(tmp_ar, ktests_dir, \
+            common_fs.TarGz.decompressDir(tmp_ar, \
+                                                os.path.dirname(ktests_dir), \
                                                     remove_in_archive=False)
 
         ERROR_HANDLER.assert_true(os.path.isdir(ktests_dir), \
