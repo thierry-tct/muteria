@@ -132,7 +132,7 @@ class TestcasesToolSemu(TestcasesToolKlee):
                                   '-'+only_replay_seeds_flag not in args: 
                 logging.warning("SEMu requires '-only-replay-seeds' flag to"
                                 " be set when using seeds. Muteria set it"
-                                "autmatically")
+                                " autmatically")
                 args.insert(0, only_replay_seeds_flag)
                 
         # use mutants_by_funcs to reorganize target mutants for scalability
