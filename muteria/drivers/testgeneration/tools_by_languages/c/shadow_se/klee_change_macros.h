@@ -32,6 +32,7 @@
                                                                 unsigned long start, unsigned long end) {}
     static my_large_type __attribute__ ((noinline)) klee_change(my_large_type x, my_large_type y)
     {
+      klee_semu_GenMu_Mutant_ID_Selector_Func(1, 1);
       switch (klee_semu_GenMu_Mutant_ID_Selector) {
         case 1:
           y = x;
@@ -39,7 +40,7 @@
         default:
           break;
       }
-      klee_semu_GenMu_Post_Mutation_Point_Func()
+      klee_semu_GenMu_Post_Mutation_Point_Func(1, 1)
       return y;
     }
   #else

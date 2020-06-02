@@ -214,6 +214,9 @@ class TestcasesToolSemu(TestcasesToolKlee):
 
         # XXX Case of manual annotation
         if meta_mu_src == MetaMuSource.ANNOTATION:
+            with open(self.cand_muts_file, 'w') as f:
+                # Single mutant (id 1, corresponding to old version)
+                f.write(str(1)+'\n')
             return super(TestcasesToolSemu, self)._get_input_bitcode_file(\
                                         code_builds_factory, rel_path_map, \
                                 meta_criteria_tool_obj=meta_criteria_tool_obj)
