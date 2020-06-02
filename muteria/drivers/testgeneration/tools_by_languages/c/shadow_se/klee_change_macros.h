@@ -40,7 +40,7 @@
         default:
           break;
       }
-      klee_semu_GenMu_Post_Mutation_Point_Func(1, 1)
+      klee_semu_GenMu_Post_Mutation_Point_Func(1, 1);
       return y;
     }
   #else
