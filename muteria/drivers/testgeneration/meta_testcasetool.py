@@ -245,7 +245,8 @@ class MetaTestcaseTool(object):
 
     def _update_tests_duplicates_map(self, recompute=False):
         if os.path.isfile(self.duplicated_tests_info_file) and not recompute:
-            return common_fs.loadJSON(self.duplicated_tests_info_file)
+            self.tests_duplicates_map = common_fs.loadJSON(self.duplicated_tests_info_file)
+            return 
 
         groups = {}
         for _, dat in self.testcases_configured_tools.items():
