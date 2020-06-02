@@ -440,6 +440,8 @@ class KTestTestFormat(object):
             if not os.path.isdir(kt_dir):
                 # test generation did not yet take place
                 continue
+            if custom_bin not in clusters:
+                clusters[custom_bin] = []
             clusters[custom_bin].append(kt_dir)
             testdir2ttalias[kt_dir] = tt.config.get_tool_config_alias()
 
