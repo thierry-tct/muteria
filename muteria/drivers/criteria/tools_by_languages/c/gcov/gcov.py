@@ -62,22 +62,24 @@ class CriteriaToolGCov(BaseCriteriaTool):
     #~ def __init__()
 
     def _get_gcov_list(self):
-        gcov_files = []
-        for root, dirs, files in os.walk(self.gc_files_dir):
-            for file_ in files:
-                if file_.endswith('.gcov'):
-                    gcov_files.append(os.path.join(root, file_))
+        gcov_files = self._recursive_list_files(self.gc_files_dir, '.gcov')
         return gcov_files
     #~ def _get_gcov_list()
 
     def _get_gcda_list(self):
-        gcda_files = []
-        for root, dirs, files in os.walk(self.gc_files_dir):
-            for file_ in files:
-                if file_.endswith('.gcda'):
-                    gcda_files.append(os.path.join(root, file_))
+        gcda_files = self._recursive_list_files(self.gc_files_dir, '.gcda')
         return gcda_files
     #~ def _get_gcda_list()
+
+    @staticmethod
+    def _recursive_list_files(topdir, file_suffix)
+        files = []
+        for root, dirs, files in os.walk(topdir):
+            for file_ in files:
+                if file_.endswith(file_suffix):
+                    files.append(os.path.join(root, file_))
+        return files
+    #~ def _recursive_list_files()
 
     class InstrumentCallbackObject(DefaultCallbackObject):
         def after_command(self):
@@ -271,12 +273,19 @@ class CriteriaToolGCov(BaseCriteriaTool):
 
             os.chdir(cwd)
             
-            if r != 0 or err_str:
+            if r != 0: # or err_str:
                 ERROR_HANDLER.error_exit("Program {} {}.".format(prog,\
-                        'gcov collecting coverage is problematic. ')+
+                        'collecting coverage is problematic. ')+
                         "The error msg is {}. \nThe command:\n{}".format(\
                                 err_str, " ".join([prog]+args_list)), __file__)
             
+            dot_gcov_file_list = self._get_gcov_list()
+            # FIXME: Check for partial failure (compare number of gcno and gcov)
+            ERROR_HANDLER.assert_true(len(dot_gcov_file_list) > 0,
+                    prog+" did not generate the '.gcov' files properly."+
+                    " its stderr is {}.\n CMD: {}".format(\
+                            err_str, " ".join([prog]+args_list)), __file__)
+
             # delete gcda
             for gcda_f in gcda_files:
                 os.remove(gcda_f)
@@ -285,7 +294,7 @@ class CriteriaToolGCov(BaseCriteriaTool):
                     "Testcase '{}' did not generate gcda, {}".format(\
                         testcase, "when allow missing coverage is disabled"))
 
-        common_fs.dumpJSON(self._get_gcov_list(), \
+        common_fs.dumpJSON(dot_gcov_file_list, \
                                 os.path.join(result_dir_tmp,\
                                                 self.gcov_files_list_filename))
     #~ def _collect_temporary_coverage_data()
