@@ -376,6 +376,9 @@ class CriteriaToolGCov(BaseCriteriaTool):
 
         flags = ['-g', '--coverage', '-fprofile-dir='+self.gc_files_dir, '-O0']
         additionals = ["-fkeep-inline-functions"]
+        additionals.append('-fprofile-abs-path')
+        additionals.append('-fprofile-prefix-path='+code_builds_factory\
+                                .repository_manager.get_repository_dir_path())
         
         # get gcc version
         ret, out, err = DriversUtils.execute_and_get_retcode_out_err(\
