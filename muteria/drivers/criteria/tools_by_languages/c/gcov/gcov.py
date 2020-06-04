@@ -137,19 +137,21 @@ class CriteriaToolGCov(BaseCriteriaTool):
     #~ def _get_separated_instrumentation_criteria()
 
     def get_instrumented_executable_paths_map(self, enabled_criteria):
-        # use wrapper if gdb is installed
-        using_gdb_wrapper = DriversUtils.check_tool(prog='gdb', \
+        use_gdb_wrapper = self.driver_config.get_use_gdb_wrapper()
+        if using_gdb_wrapper:
+            # use wrapper if gdb is installed
+            using_gdb_wrapper = DriversUtils.check_tool(prog='gdb', \
                                                     args_list=['--version'], \
                                                     expected_exit_codes=[0])
-        if using_gdb_wrapper:
-            # XXX: Docker has issues running programs in Docker, 
-            # unless the container is ran with the following arguments:
-            #
-            # docker run --cap-add=SYS_PTRACE \
-            #               --security-opt seccomp=unconfined ...
-            #
-            # We check that it is fine by testing on echo
-            ret, _, _ = DriversUtils.execute_and_get_retcode_out_err(
+            if using_gdb_wrapper:
+                # XXX: Docker has issues running programs in Docker, 
+                # unless the container is ran with the following arguments:
+                #
+                # docker run --cap-add=SYS_PTRACE \
+                #               --security-opt seccomp=unconfined ...
+                #
+                # We check that it is fine by testing on echo
+                ret, _, _ = DriversUtils.execute_and_get_retcode_out_err(
                                         prog='gdb', \
                                         args_list=['--batch-silent', \
                                                     '--quiet', 
@@ -157,7 +159,7 @@ class CriteriaToolGCov(BaseCriteriaTool):
                                                     '-ex', '"run"', 
                                                     '--args', 'echo'], \
                                         out_on=False, err_on=False)
-            using_gdb_wrapper = (ret == 0)
+                using_gdb_wrapper = (ret == 0)
 
         crit_to_exes_map = {}
         obj = common_fs.loadJSON(self.instrumentation_details)
