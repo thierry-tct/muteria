@@ -258,8 +258,8 @@ class CriteriaToolGCov(BaseCriteriaTool):
             if r != 0 or err_str:
                 ERROR_HANDLER.error_exit("Program {} {}.".format(prog,\
                         'gcov collecting coverage is problematic. ')+
-                        "gcda files are: {}. The error msg is {}".format(\
-                                                args_list, err_str), __file__)
+                        "The error msg is {}. \nThe command:\n{}".format(\
+                                err_str, " ".join([prog]+args_list), __file__)
             
             # delete gcda
             for gcda_f in gcda_files:
