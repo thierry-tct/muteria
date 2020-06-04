@@ -94,6 +94,20 @@ class CriteriaToolGCov(BaseCriteriaTool):
                 ERROR_HANDLER.assert_true(os.path.isfile(abs_gcno), \
                                     "gcno file missing after build", __file__)
                 shutil.copy2(abs_gcno, os.path.join(gc_files_dir, gcno_file))
+                # FIXME: For now, we store all gcda in th same directory. 
+                # FIXME: To ensure that coverage is generated with gcov when 
+                # FIXME: The source is not in rootdir (example of coreutils...)
+                gcno_dir, gcno_base = os.path.split(\
+                                os.path.dirname(os.path.normpath(gcno_file)))
+                gcno_in_top = os.path.join(gc_files_dir, gcno_base)
+                if gcno_dir != '':
+                    # The gcno file must not be in the top gcno_gcda folder
+                    ERROR_HANDLER.assert_true(not os.path.isfile(gcno_in_top),\
+                            "Overriding of gcno ({}). Source name clash?"\
+                                                .format(gcno_file), __file__)
+                    shutil.copy2(abs_gcno, gcno_in_top)
+                #~ FIXME end
+
             self._copy_from_repo(rel_path_map)
             return DefaultCallbackObject.after_command(self)
         #~ def after_command()
