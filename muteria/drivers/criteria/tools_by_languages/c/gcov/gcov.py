@@ -248,15 +248,18 @@ class CriteriaToolGCov(BaseCriteriaTool):
             os.chdir(self.gc_files_dir)
 
             # collect gcda (gcno)
-            r, _, _ = DriversUtils.execute_and_get_retcode_out_err(prog=prog, \
+            r, _, err_str = DriversUtils.execute_and_get_retcode_out_err(\
+                                        prog=prog, \
                                         args_list=args_list, out_on=False, \
-                                                                err_on=False)
+                                        err_on=True, merge_err_to_out=False)
 
             os.chdir(cwd)
             
-            if r != 0:
+            if r != 0 or err_str:
                 ERROR_HANDLER.error_exit("Program {} {}.".format(prog,\
-                        'error collecting coverage is problematic'), __file__)
+                        'gcov collecting coverage is problematic. '+
+                        "gcda files are: {}. The error msg is {}".format(\
+                                                args_list, err_str), __file__)
             
             # delete gcda
             for gcda_f in gcda_files:
