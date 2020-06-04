@@ -72,7 +72,7 @@ class CriteriaToolGCov(BaseCriteriaTool):
     #~ def _get_gcda_list()
 
     @staticmethod
-    def _recursive_list_files(topdir, file_suffix)
+    def _recursive_list_files(topdir, file_suffix):
         files = []
         for root, dirs, files in os.walk(topdir):
             for file_ in files:
