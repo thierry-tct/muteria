@@ -137,7 +137,7 @@ class CriteriaToolGCov(BaseCriteriaTool):
     #~ def _get_separated_instrumentation_criteria()
 
     def get_instrumented_executable_paths_map(self, enabled_criteria):
-        use_gdb_wrapper = self.driver_config.get_use_gdb_wrapper()
+        using_gdb_wrapper = self.driver_config.get_use_gdb_wrapper()
         if using_gdb_wrapper:
             # use wrapper if gdb is installed
             using_gdb_wrapper = DriversUtils.check_tool(prog='gdb', \
