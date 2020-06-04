@@ -1117,6 +1117,11 @@ class Executor(object):
     #~ def _create_meta_test_tool()
 
     def _create_meta_criteria_tool(self, config, testcase_tool):
+        criterion2toolconf = {}
+        for crit, toolconf in config.CRITERIA_TOOLS_CONFIGS_BY_CRITERIA.\
+                                                            get_val().items():
+            if crit in config.ENABLED_CRITERIA.get_val():
+                criterion2toolconf[crit] = toolconf
         meta_criteria_tool = MetaCriteriaTool(\
                     language=config.PROGRAMMING_LANGUAGE.get_val(),\
                     meta_test_generation_obj=testcase_tool,\
@@ -1124,8 +1129,7 @@ class Executor(object):
                                         self.head_explorer.get_dir_pathname(\
                                             outdir_struct.CRITERIA_WORKDIR),\
                     code_builds_factory=self.cb_factory,
-                    tools_config_by_criterion_dict=\
-                        config.CRITERIA_TOOLS_CONFIGS_BY_CRITERIA.get_val(),)
+                    tools_config_by_criterion_dict=criterion2toolconf,)
         return meta_criteria_tool
     #~ def _create_meta_criteria_tool()
 
