@@ -98,9 +98,10 @@ class CriteriaToolGCov(BaseCriteriaTool):
                 # FIXME: To ensure that coverage is generated with gcov when 
                 # FIXME: The source is not in rootdir (example of coreutils...)
                 gcno_dir, gcno_base = os.path.split(\
-                                os.path.dirname(os.path.normpath(gcno_file)))
+                                                os.path.normpath(gcno_file))
                 gcno_in_top = os.path.join(gc_files_dir, gcno_base)
-                logging.debug("gcno_instr: {} {}".format(gcno_dir, gcno_in_top))
+                #logging.debug("gcno_instr: '{}' '{}' '{}'".format(gcno_file, \
+                                                    #gcno_dir, gcno_in_top))
                 if gcno_dir != '':
                     # The gcno file must not be in the top gcno_gcda folder
                     ERROR_HANDLER.assert_true(not os.path.isfile(gcno_in_top),\
