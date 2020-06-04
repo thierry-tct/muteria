@@ -257,7 +257,7 @@ class CriteriaToolGCov(BaseCriteriaTool):
             
             if r != 0 or err_str:
                 ERROR_HANDLER.error_exit("Program {} {}.".format(prog,\
-                        'gcov collecting coverage is problematic. '+
+                        'gcov collecting coverage is problematic. ')+
                         "gcda files are: {}. The error msg is {}".format(\
                                                 args_list, err_str), __file__)
             
