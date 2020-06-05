@@ -333,7 +333,9 @@ class CriteriaToolGCov(BaseCriteriaTool):
         # Sources of interest
         _, src_map = self.code_builds_factory.repository_manager.\
                                                     get_relative_exe_path_map()
-
+        
+        logging.debug("gcov_list: {}".format(gcov_list))
+        
         for gcov_file in gcov_list:
             with open(gcov_file) as fp:
                 last_line = None
