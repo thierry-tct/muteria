@@ -348,14 +348,25 @@ class CriteriaToolGCov(BaseCriteriaTool):
                         # preamble
                         if col_split[2] == "Source":
                             src_file = os.path.normpath(col_split[3])
-                            if not (src_file in src_map or \
-                                      any(s.endswith(os.sep+src_file) \
-                                                    for s in src_map.keys())):
-                                # If src file does not represent (not equal
-                                # and not relatively equal, for case where
-                                # build happens not in rootdir),
-                                # src not in considered
-                                break
+                            if not src_file in src_map:
+                                s_cand = None
+                                for s in src_map.keys():
+                                    if s.endswith(os.sep+src_file):
+                                        ERROR_HANDLER.assert_true(s_cand is None,\
+                                              "multiple candidate, maybe same "+\
+                                              "source name in different dirs "+\
+                                              "for source {}".format(src_file), \
+                                                                        __file__)
+                                        s_cand = s
+                                if s_cand is None:
+                                    # If src file does not represent (not equal
+                                    # and not relatively equal, for case where
+                                    # build happens not in rootdir),
+                                    # src not in considered
+                                    break
+                                else:
+                                    # ensure compatibility in matrices
+                                    src_file = s_cand
                     elif line.startswith("function "):
                         # match function
                         parts = line.split()
