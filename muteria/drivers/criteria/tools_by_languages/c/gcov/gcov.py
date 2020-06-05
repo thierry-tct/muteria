@@ -280,10 +280,20 @@ class CriteriaToolGCov(BaseCriteriaTool):
                                 err_str, " ".join([prog]+args_list)), __file__)
             
             dot_gcov_file_list = self._get_gcov_list()
+            # Sources of interest
+            _, src_map = self.code_builds_factory.repository_manager.\
+                                                    get_relative_exe_path_map()
+            base_dot_gcov = [os.path.basename(f) for f in dot_gcov_file_list]
+            base_raw = [os.path.basename(f) for f in raw_filename_list]
+            interest = [os.path.basename(s) for s,o in src_map.items()]
+            interest = [s+'.gcov' for s in interest if os.path.splitext(s)[0] \
+                                                                in base_raw]
+            missed = set(interest) - set(base_dot_gcov)
+
             # FIXME: Check for partial failure (compare number of gcno and gcov)
-            ERROR_HANDLER.assert_true(len(dot_gcov_file_list) > 0,
-                    prog+" did not generate the '.gcov' files properly."+
-                    " its stderr is {}.\n CMD: {}".format(\
+            ERROR_HANDLER.assert_true(len(missed) == 0,
+                    "{} did not generate the '.gcov' files {}.".format(\
+                        prog, missed)+ "\nIts stderr is {}.\n CMD: {}".format(\
                             err_str, " ".join([prog]+args_list)), __file__)
 
             # delete gcda
