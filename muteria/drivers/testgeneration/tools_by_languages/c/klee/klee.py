@@ -221,6 +221,10 @@ class TestcasesToolKlee(BaseTestcaseTool):
             logging.error("\n>> CMD: " + " ".join([runtool]+args) + '\n')
             ERROR_HANDLER.error_exit("call to klee testgen failed, "
                                     + "error code is {}".format(ret), __file__)
+        
+        if self.driver_config.get_verbose_generation():
+            logging.debug(out)
+            logging.debug(err)
     #~ def _call_generation_run()
 
     # SHADOW should override
