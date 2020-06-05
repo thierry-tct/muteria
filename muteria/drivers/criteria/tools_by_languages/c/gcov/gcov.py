@@ -334,7 +334,7 @@ class CriteriaToolGCov(BaseCriteriaTool):
         _, src_map = self.code_builds_factory.repository_manager.\
                                                     get_relative_exe_path_map()
         
-        logging.debug("gcov_list: {}".format(gcov_list))
+        #logging.debug("gcov_list: {}".format(gcov_list))
         
         for gcov_file in gcov_list:
             with open(gcov_file) as fp:
@@ -385,6 +385,8 @@ class CriteriaToolGCov(BaseCriteriaTool):
         for gcov_f in self._get_gcov_list():
             os.remove(gcov_f)
 
+        logging.debug("gcov res is: {}".format(res))
+        
         return res
     #~ def _extract_coverage_data_of_a_test()
 
