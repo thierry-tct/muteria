@@ -73,12 +73,12 @@ class CriteriaToolGCov(BaseCriteriaTool):
 
     @staticmethod
     def _recursive_list_files(topdir, file_suffix):
-        files = []
+        filtered_files = []
         for root, dirs, files in os.walk(topdir):
             for file_ in files:
                 if file_.endswith(file_suffix):
-                    files.append(os.path.join(root, file_))
-        return files
+                    filtered_files.append(os.path.join(root, file_))
+        return filtered_files
     #~ def _recursive_list_files()
 
     class InstrumentCallbackObject(DefaultCallbackObject):
