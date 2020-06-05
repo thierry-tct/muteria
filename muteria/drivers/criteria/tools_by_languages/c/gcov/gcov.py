@@ -383,7 +383,7 @@ class CriteriaToolGCov(BaseCriteriaTool):
 
         # delete gcov files
         for gcov_f in self._get_gcov_list():
-            os.remove(gcov_f)
+            pass #os.remove(gcov_f)
 
         logging.debug("gcov res is: {}".format(res))
         
