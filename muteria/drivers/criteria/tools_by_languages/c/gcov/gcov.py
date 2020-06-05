@@ -347,8 +347,13 @@ class CriteriaToolGCov(BaseCriteriaTool):
                     if len(col_split) > 2 and col_split[1] == '0':
                         # preamble
                         if col_split[2] == "Source":
-                            src_file = col_split[3]
-                            if src_file not in src_map:
+                            src_file = os.path.normpath(col_split[3])
+                            if not (src_file in src_map or \
+                                      any(s.endswith(os.sep+src_file) \
+                                                    for s in src_map.keys())):
+                                # If src file does not represent (not equal
+                                # and not relatively equal, for case where
+                                # build happens not in rootdir),
                                 # src not in considered
                                 break
                     elif line.startswith("function "):
@@ -383,9 +388,9 @@ class CriteriaToolGCov(BaseCriteriaTool):
 
         # delete gcov files
         for gcov_f in self._get_gcov_list():
-            pass #os.remove(gcov_f)
+            os.remove(gcov_f)
 
-        logging.debug("gcov res is: {}".format(res))
+        #logging.debug("gcov res is: {}".format(res))
         
         return res
     #~ def _extract_coverage_data_of_a_test()
