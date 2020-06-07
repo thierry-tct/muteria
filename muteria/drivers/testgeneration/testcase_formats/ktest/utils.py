@@ -25,7 +25,7 @@ class FileShortNames:
         #                    itertools.product(schar,['']+schar)], 'pos':0}
 
         # From KLEE: 'void klee_init_fds()' in runtime/POSIX/fd_init.c
-        self.ShortNames = [bytes(chr(i), 'ascii') for i in range(ord('A'), 256)]  
+        self.ShortNames = [bytes(chr(i), 'utf-8') for i in range(ord('A'), 256)]  
         self.pos = 0
     def reinitialize_count (self):
         self.pos = 0
