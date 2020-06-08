@@ -607,7 +607,7 @@ class ConvertCollectKtestsSeeds:
         # update file data in objects (shortname and size)
 
         # divide by 2 beacause has stats
-        nmax_files = max([len(fpv) for fpv in filenstatsInObj]) / 2 
+        nmax_files = int(max([len(fpv) for fpv in filenstatsInObj]) / 2) 
         if nmax_files > 0:
             shortFnames = FileShortNames().ShortNames[:nmax_files]
             for ktpos in range(len(ktestContains["CORRESP_TESTNAME"])):
