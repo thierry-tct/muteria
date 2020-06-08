@@ -644,7 +644,7 @@ class ConvertCollectKtestsSeeds:
                 # first add file object of additional files
                 addedobj = []
                 # divide by two because also has stat
-                for _ in range(nmax_files - len(filenstatsInObj[ktpos])/2): 
+                for _ in range(nmax_files - int(len(filenstatsInObj[ktpos])/2)): 
                     symf_obj = (b'', b'\0'*maxFileSize)
                     symfstat_obj = (b'-stat', b'\0'*144)
                     addedobj.append(symf_obj)
