@@ -1,7 +1,7 @@
 #ifndef KLEE_CHANGE_MACROS_H_
 #define KLEE_CHANGE_MACROS_H_
 
-#include <stdio.h>  // DBG
+//#include <stdio.h>  // DBG
 #include <stdlib.h>
 
 //This is very important, as it is used by MFI (when RESOLVE_KLEE_CHANGE is not passed to the compiler, compile the NEW version)
@@ -41,7 +41,7 @@
           break;
       }
       klee_semu_GenMu_Post_Mutation_Point_Func(0, 1);
-      printf ("(DBG) in klee change!!!");
+      //printf ("(DBG) in klee change!!!");
       return y;
     }
   #else
