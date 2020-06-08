@@ -1054,7 +1054,7 @@ class ConvertCollectKtestsSeeds:
                     res.append(("n_args", struct.pack('<i', n)))
                 for j in range(ao_ind, ao_ind+n):
                     res.append((objSegment[j][0], objSegment[j][1] \
-                                            + '\0'*(list_new_sym_args[i][2] \
+                                         + b'\0'*(list_new_sym_args[i][2] \
                                             - len(objSegment[j][1]) + 1)))
                 ao_ind += n
             assert ao_ind == len(objSegment)
