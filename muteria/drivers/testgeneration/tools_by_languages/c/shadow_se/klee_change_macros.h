@@ -1,7 +1,7 @@
 #ifndef KLEE_CHANGE_MACROS_H_
 #define KLEE_CHANGE_MACROS_H_
 
-//#include <stdio.h>
+#include <stdio.h>  // DBG
 #include <stdlib.h>
 
 //This is very important, as it is used by MFI (when RESOLVE_KLEE_CHANGE is not passed to the compiler, compile the NEW version)
@@ -25,7 +25,7 @@
   #endif
 
   #ifdef MUTERIA_FOR_SEMU_TEST_GENERATION
-    extern unsigned long klee_semu_GenMu_Mutant_ID_Selector = 2;
+    extern unsigned int klee_semu_GenMu_Mutant_ID_Selector = 2;
     void __attribute__ ((noinline)) __attribute__(( unused )) klee_semu_GenMu_Mutant_ID_Selector_Func(
                                                                 unsigned int start, unsigned int end) {}
     void __attribute__ ((noinline)) __attribute__(( unused )) klee_semu_GenMu_Post_Mutation_Point_Func(
@@ -41,6 +41,7 @@
           break;
       }
       klee_semu_GenMu_Post_Mutation_Point_Func(0, 1);
+      printf ("(DBG) in klee change!!!")
       return y;
     }
   #else
