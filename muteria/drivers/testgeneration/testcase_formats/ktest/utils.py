@@ -495,8 +495,8 @@ class ConvertCollectKtestsSeeds:
                 with open(stdin_file) as f:
                     sidat = f.read()
                     if len(sidat) > 0:
-                        symin_obj = ('stdin', sidat) #'\0'*1024)
-                        syminstat_obj = ('stdin-stat', '\0'*144)
+                        symin_obj = (b'stdin', bytes(sidat, 'utf-8')) #'\0'*1024)
+                        syminstat_obj = (b'stdin-stat', b'\0'*144)
                         b.objects.append(symin_obj)
                         b.objects.append(syminstat_obj)
                         stdin = ('STDIN', len(sidat)) #XXX 
