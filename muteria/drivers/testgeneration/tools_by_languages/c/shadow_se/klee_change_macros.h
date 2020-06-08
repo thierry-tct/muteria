@@ -27,9 +27,9 @@
   #ifdef MUTERIA_FOR_SEMU_TEST_GENERATION
     extern unsigned long klee_semu_GenMu_Mutant_ID_Selector = 2;
     void __attribute__ ((noinline)) __attribute__(( unused )) klee_semu_GenMu_Mutant_ID_Selector_Func(
-                                                                unsigned long start, unsigned long end) {}
+                                                                unsigned int start, unsigned int end) {}
     void __attribute__ ((noinline)) __attribute__(( unused )) klee_semu_GenMu_Post_Mutation_Point_Func(
-                                                                unsigned long start, unsigned long end) {}
+                                                                unsigned int start, unsigned int end) {}
     static my_large_type __attribute__ ((noinline)) klee_change(my_large_type x, my_large_type y)
     {
       klee_semu_GenMu_Mutant_ID_Selector_Func(1, 1);
@@ -40,7 +40,7 @@
         default:
           break;
       }
-      klee_semu_GenMu_Post_Mutation_Point_Func(1, 1);
+      klee_semu_GenMu_Post_Mutation_Point_Func(0, 1);
       return y;
     }
   #else
