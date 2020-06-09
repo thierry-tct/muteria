@@ -32,17 +32,19 @@
                                                                 unsigned int start, unsigned int end) {}
     static my_large_type __attribute__ ((noinline)) klee_change(my_large_type x, my_large_type y)
     {
+      my_large_type ret;
       klee_semu_GenMu_Mutant_ID_Selector_Func(1, 1);
       switch (klee_semu_GenMu_Mutant_ID_Selector) {
         case 1:
-          y = x;
+          ret = x;
           break;
         default:
+          ret = y;
           break;
       }
       klee_semu_GenMu_Post_Mutation_Point_Func(0, 1);
       //printf ("(DBG) in klee change!!!");
-      return y;
+      return ret;
     }
   #else
     static my_large_type __attribute__ ((noinline)) klee_change(my_large_type x, my_large_type y)
