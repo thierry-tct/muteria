@@ -211,7 +211,18 @@ class TestcasesToolKlee(BaseTestcaseTool):
         o_d_dbg = self.get_value_in_arglist(args, "output-dir") #DBG
         if os.path.isdir(o_d_dbg): #DBG
             shutil.rmtree(o_d_dbg) #DBG
-        os.system(" ".join([runtool]+args)) #DBG
+        import subprocess #DBG
+        p = subprocess.Popen([runtool]+args, env=None, cwd=None, \
+                                                            #close_fds=True, \
+                                                        stdin=None, \
+                                                        stderr=subprocess.STDOUT, \
+                                                        stdout=subprocess.STDOUT, \
+                                                        preexec_fn=os.setsid) #DBG
+        try: #DBG
+            stdout, stderr = p.communicate(timeout=max_time) #DBG
+        except subprocess.TimeoutExpired: #DBG
+            stdout, stderr = p.communicate(timeout=max_time) #DBG
+        #os.system(" ".join([runtool]+args)) #DBG
          
         # restore stack
         if stack_ulimit_soft != -1:
