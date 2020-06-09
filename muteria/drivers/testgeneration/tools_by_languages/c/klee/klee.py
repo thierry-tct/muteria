@@ -200,8 +200,8 @@ class TestcasesToolKlee(BaseTestcaseTool):
         # set stack to unlimited
         stack_ulimit_soft, stack_ulimit_hard = \
                                     resource.getrlimit(resource.RLIMIT_STACK)
-        if stack_ulimit_soft != -1:
-            resource.setrlimit(resource.RLIMIT_STACK, (-1, stack_ulimit_hard))
+        #if stack_ulimit_soft != -1:
+        #    resource.setrlimit(resource.RLIMIT_STACK, (-1, stack_ulimit_hard))
 
         # Execute Klee
         ret, out, err = DriversUtils.execute_and_get_retcode_out_err(\
@@ -210,8 +210,8 @@ class TestcasesToolKlee(BaseTestcaseTool):
                                     #out_on=False, err_on=False)
         
         # restore stack
-        if stack_ulimit_soft != -1:
-            resource.setrlimit(resource.RLIMIT_STACK, \
+        #if stack_ulimit_soft != -1:
+        #    resource.setrlimit(resource.RLIMIT_STACK, \
                                         (stack_ulimit_soft, stack_ulimit_hard))
 
         if (ret != 0 and ret not in DriversUtils.EXEC_TIMED_OUT_RET_CODE \
@@ -225,6 +225,7 @@ class TestcasesToolKlee(BaseTestcaseTool):
         if self.driver_config.get_verbose_generation():
             logging.debug(out)
             logging.debug(err)
+            logging.debug("Cmd: " + " ".join([runtool]+args))
     #~ def _call_generation_run()
 
     # SHADOW should override
