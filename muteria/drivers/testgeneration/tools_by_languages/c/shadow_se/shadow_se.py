@@ -228,7 +228,11 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
         per_test_hard_timeout = None
         if len(cand_testpair_list) > 0:
             cur_max_time = float(self.get_value_in_arglist(args, 'max-time'))
-            per_test_timeout = max(60, cur_max_time / len(cand_testpair_list))
+            if self.driver_config.get_gen_timeout_is_per_test():
+                per_test_timeout = cur_max_time
+            else:
+                per_test_timeout = max(60, \
+                                       cur_max_time / len(cand_testpair_list))
             self.set_value_in_arglist(args, 'max-time', str(per_test_timeout))
 
             # give time to dump remaning states
