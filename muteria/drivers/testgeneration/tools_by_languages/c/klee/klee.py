@@ -208,6 +208,9 @@ class TestcasesToolKlee(BaseTestcaseTool):
                                     runtool, args_list=args, timeout=max_time,\
                                     timeout_grace_period=timeout_grace_period)
                                     #out_on=False, err_on=False)
+        o_d_dbg = self.get_value_in_arglist(args, "output-dir") #DBG
+        if os.path.isdir(o_d_dbg): #DBG
+            shutil.rmtree(o_d_dbg) #DBG
         os.system(" ".join([runtool]+args)) #DBG
          
         # restore stack
