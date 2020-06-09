@@ -215,7 +215,7 @@ class TestcasesToolKlee(BaseTestcaseTool):
         p = subprocess.Popen([runtool]+args, env=None, cwd=None, \
                                                             #close_fds=True, \
                                                         stdin=None, \
-                                                        stderr=subprocess.STDERR, \
+                                                        stderr=subprocess.STDOUT, \
                                                         stdout=None, \
                                                         preexec_fn=os.setsid) #DBG
         try: #DBG
