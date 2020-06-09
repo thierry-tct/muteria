@@ -215,8 +215,8 @@ class TestcasesToolKlee(BaseTestcaseTool):
         p = subprocess.Popen([runtool]+args, env=None, cwd=None, \
                                                             #close_fds=True, \
                                                         stdin=None, \
-                                                        stderr=subprocess.STDOUT, \
-                                                        stdout=subprocess.STDOUT, \
+                                                        stderr=subprocess.STDERR, \
+                                                        stdout=None, \
                                                         preexec_fn=os.setsid) #DBG
         try: #DBG
             stdout, stderr = p.communicate(timeout=max_time) #DBG
