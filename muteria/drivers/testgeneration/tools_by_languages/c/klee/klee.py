@@ -206,9 +206,10 @@ class TestcasesToolKlee(BaseTestcaseTool):
         # Execute Klee
         ret, out, err = DriversUtils.execute_and_get_retcode_out_err(\
                                     runtool, args_list=args, timeout=max_time,\
-                                    timeout_grace_period=timeout_grace_period)
+                                    timeout_grace_period=timeout_grace_period,\
+                                                                    shell=True)
                                     #out_on=False, err_on=False)
-        o_d_dbg = self.get_value_in_arglist(args, "output-dir") #DBG
+        '''o_d_dbg = self.get_value_in_arglist(args, "output-dir") #DBG
         if os.path.isdir(o_d_dbg): #DBG
             shutil.rmtree(o_d_dbg) #DBG
         import subprocess #DBG
@@ -222,7 +223,7 @@ class TestcasesToolKlee(BaseTestcaseTool):
             stdout, stderr = p.communicate(timeout=max_time) #DBG
         except subprocess.TimeoutExpired: #DBG
             stdout, stderr = p.communicate(timeout=max_time) #DBG
-        #os.system(" ".join([runtool]+args)) #DBG
+        #os.system(" ".join([runtool]+args)) #DBG'''
          
         # restore stack
         if stack_ulimit_soft != -1:
