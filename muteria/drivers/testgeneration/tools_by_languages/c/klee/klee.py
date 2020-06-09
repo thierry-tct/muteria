@@ -216,7 +216,7 @@ class TestcasesToolKlee(BaseTestcaseTool):
                                                             #close_fds=True, \
                                                         stdin=None, \
                                                         stderr=subprocess.STDOUT, \
-                                                        stdout=None, \
+                                                        stdout=None, shell=True, \
                                                         preexec_fn=os.setsid) #DBG
         try: #DBG
             stdout, stderr = p.communicate(timeout=max_time) #DBG
