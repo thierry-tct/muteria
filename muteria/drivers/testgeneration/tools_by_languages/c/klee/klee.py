@@ -206,8 +206,7 @@ class TestcasesToolKlee(BaseTestcaseTool):
         # Execute Klee
         ret, out, err = DriversUtils.execute_and_get_retcode_out_err(\
                                     runtool, args_list=args, timeout=max_time,\
-                                    timeout_grace_period=timeout_grace_period,\
-                                                                    shell=True)
+                                    timeout_grace_period=timeout_grace_period)
                                     #out_on=False, err_on=False)
         '''o_d_dbg = self.get_value_in_arglist(args, "output-dir") #DBG
         if os.path.isdir(o_d_dbg): #DBG
