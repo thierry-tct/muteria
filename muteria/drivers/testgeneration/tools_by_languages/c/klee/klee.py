@@ -122,9 +122,12 @@ class TestcasesToolKlee(BaseTestcaseTool):
         if seed_dir is not None:
             cv = ConvertCollectKtestsSeeds(\
                                     custom_binary_dir=self.custom_binary_dir)
-            klee_sym_args = cv.get_ktests_sym_args(seed_dir, \
+            grouped_klee_sym_args = cv.get_ktests_sym_args(seed_dir, \
                                         compressed=seed_dir.endswith(\
                                             ConvertCollectKtestsSeeds.tar_gz))
+            klee_sym_args = []
+            for tup in grouped_klee_sym_args:
+                klee_sym_args += list(tup)
 
         if klee_sym_args is None:
             klee_sym_args = default_sym_args
