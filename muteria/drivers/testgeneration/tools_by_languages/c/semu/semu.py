@@ -91,6 +91,7 @@ class TestcasesToolSemu(TestcasesToolKlee):
             '-semu-forkprocessfor-segv-externalcalls': True,
             '-semu-testsgen-only-for-critical-diffs': None,
             '-semu-consider-outenv-for-diffs': None,
+            '-semu-use-only-pair-branching-for-depth': None,
         }
         key_val_params = {
             '-output-dir': self.tests_storage_dir,
