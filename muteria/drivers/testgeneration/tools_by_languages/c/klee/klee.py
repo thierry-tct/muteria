@@ -103,6 +103,23 @@ class TestcasesToolKlee(BaseTestcaseTool):
         return bool_params, key_val_params
     #~ def _get_default_params()
     
+    @staticmethod
+    def _validate_passed_sym_args(raw_sym_args):
+        """ check that the sym args are properly formated
+        """
+        pb = []
+        for g in raw_sym_args:
+            if type(g) not in (list, tuple):
+                pb.append(g)
+            else:
+                for elem in g:
+                    if type(elem) != str or ' ' in elem:
+                        pb.append(g)
+        ERROR_HANDLER.assert_true(len(pb) == 0, \
+                "There are missformed passed sym args: {}".format(pb), \
+                                                                __file__)
+    #~ def _validate_passed_sym_args()
+    
     # SHADOW override
     def _get_sym_args(self, cfg_args):
         # sym args
@@ -113,6 +130,7 @@ class TestcasesToolKlee(BaseTestcaseTool):
         if uc is not None:
             post_bc_cmd = uc.POST_TARGET_CMD_ORDERED_FLAGS_LIST
             if post_bc_cmd is not None:
+                self._validate_passed_sym_args(post_bc_cmd)
                 klee_sym_args = []
                 for tup in post_bc_cmd:
                     klee_sym_args += list(tup)
@@ -125,6 +143,7 @@ class TestcasesToolKlee(BaseTestcaseTool):
             grouped_klee_sym_args = cv.get_ktests_sym_args(seed_dir, \
                                         compressed=seed_dir.endswith(\
                                             ConvertCollectKtestsSeeds.tar_gz))
+            self._validate_passed_sym_args(grouped_klee_sym_args)
             klee_sym_args = []
             for tup in grouped_klee_sym_args:
                 klee_sym_args += list(tup)
@@ -132,6 +151,7 @@ class TestcasesToolKlee(BaseTestcaseTool):
         if klee_sym_args is None:
             klee_sym_args = default_sym_args
 
+        
         return klee_sym_args
     #~ def _get_sym_args()
 
