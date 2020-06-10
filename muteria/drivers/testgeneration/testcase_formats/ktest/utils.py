@@ -144,6 +144,11 @@ class ConvertCollectKtestsSeeds:
                                         dest_dir, \
                                         zestKTContains, zest_sym_args_param, \
                                         kleeKTContains, klee_sym_args_param)
+        # convert sym_args_param from this format: 
+        # ["-sym-arg 1", "-sym-args 2 3 4", ...]
+        # into this format:
+        # [["-sym-arg", "1"], ["-sym-args", "2", "3", "4"], ...]
+        sym_args_param = [g.split() for g in sym_args_param]
         common_fs.dumpJSON([sym_args_param, \
                         self._stripRootTest2Dir(dest_dir, test2semudirMap)], \
                             os.path.join(dest_dir, self.test2semudirMapFile))
