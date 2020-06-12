@@ -146,11 +146,20 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
         call_shadow_wrapper_file = os.path.join(self.tests_working_dir, \
                                                                 "shadow_wrap")
         
-        test_list = list(self.code_builds_factory.repository_manager\
-                                                        .get_dev_tests_list())
         devtest_toolalias = self.parent_meta_tool.get_devtest_toolalias()
         ERROR_HANDLER.assert_true(devtest_toolalias is not None, \
                         "devtest must be used when using shadow_se", __file__)
+        
+        #test_list = list(self.code_builds_factory.repository_manager\
+        #                                               .get_dev_tests_list())
+        test_list = []
+        for meta_test in self.meta_testcase_tool.get_testcase_info_object(\
+                               candidate_tool_aliases=[devtest_toolalias])\
+                                                            .get_tests_list():
+            toolalias, test = DriversUtils.reverse_meta_element(meta_test)
+            ERROR_HANDLER.assert_true(toolalias == devtest_toolalias, \
+                           "BUG in above get_testcase_info_object", __file__)
+            test_list.append(test)
 
         # Get list of klee_change, klee_get_true/false locations.
         klee_change_stmts = []
