@@ -153,7 +153,7 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
         #test_list = list(self.code_builds_factory.repository_manager\
         #                                               .get_dev_tests_list())
         test_list = []
-        for meta_test in self.meta_testcase_tool.get_testcase_info_object(\
+        for meta_test in self.parent_meta_tool.get_testcase_info_object(\
                                candidate_tool_aliases=[devtest_toolalias])\
                                                             .get_tests_list():
             toolalias, test = DriversUtils.reverse_meta_element(meta_test)
