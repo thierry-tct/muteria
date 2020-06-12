@@ -91,7 +91,7 @@ class TestcasesToolSemu(TestcasesToolKlee):
             '-semu-forkprocessfor-segv-externalcalls': True,
             '-semu-testsgen-only-for-critical-diffs': None,
             '-semu-consider-outenv-for-diffs': None,
-            '-semu-use-only-pair-branching-for-depth': None,
+            '-semu-use-only-multi-branching-for-depth': None,
             '-semu-disable-post-mutation-check': None,
         }
         key_val_params = {
