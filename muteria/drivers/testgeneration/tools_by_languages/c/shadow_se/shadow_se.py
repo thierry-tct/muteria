@@ -292,7 +292,7 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
 
             # copy the klee out
             test_out = os.path.join(self.tests_storage_dir, \
-                                                    test.replace(os.sep, '_'))
+                                          self.get_sorage_name_of_test(test))
             os.mkdir(test_out)
             for d in glob.glob(self.tests_working_dir+"/klee-out-*"):
                 # make sure we can do anything with it
@@ -312,6 +312,11 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
         # store klee_change locs
         common_fs.dumpJSON(klee_change_stmts, self.klee_change_locs_list_file)
     #~ def _call_generation_run()
+    
+    @staticmethod
+    def get_sorage_name_of_test(testname):
+        return testname.replace(os.sep, '_')
+    #~ get_sorage_name_of_test()
 
     class GetLinesCallbackObject(DefaultCallbackObject):
         def before_command(self):
@@ -337,7 +342,7 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
             ret_lines.extend(matched_lines)
             return common_mix.GlobalConstants.COMMAND_SUCCESS
         #~ def after_command()
-    #~ class CopyCallbackObject
+    #~ class GetLinesCallbackObject
 
     # SHADOW should override
     def _get_testexec_extra_env_vars(self, testcase):
