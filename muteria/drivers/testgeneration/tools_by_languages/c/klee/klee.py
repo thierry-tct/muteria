@@ -567,7 +567,7 @@ class TestcasesToolKlee(BaseTestcaseTool):
             test2file[kt] = os.path.join(self.tests_storage_dir, kt)
         ktest2reqdir = Misc.get_must_exist_dirs_of_ktests(test2file, \
                                                     self.custom_binary_dir)
-        ktest2reqdir = {kt: v for kt, v ktest2reqdir.items() if len(v) > 0}
+        ktest2reqdir = {kt: v for kt, v in ktest2reqdir.items() if len(v) > 0}
         self.ktest_with_must_exist_dir = ktest2reqdir
         if len(ktest2reqdir) > 0:
             common_fs.dumpJSON(ktest2reqdir, \
