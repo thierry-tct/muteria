@@ -17,6 +17,54 @@ from muteria.drivers import DriversUtils
 from muteria.drivers.testgeneration.testcase_formats.ktest.ktest import \
                                                                 KTestTestFormat
 
+class Misc:
+    @staticmethod
+    def import_ktest_tool (custom_binary_dir=None):
+        if custom_binary_dir is None:
+            ktt_full_path = find_executable('ktest-tool')
+            ERROR_HANDLER.assert_true(ktt_full_path is not None, \
+                            "ktest-tool is not present on the PATH", __file__)
+        else:
+            ERROR_HANDLER.assert_true(os.path.isdir(custom_binary_dir), \
+                            "Custom_binary_dir inexistant ({})".format(\
+                                            custom_binary_dir), __file__)
+            ktt_full_path = os.path.join(custom_binary_dir, 'ktest-tool')
+            ERROR_HANDLER.assert_true(os.path.isfile(ktt_full_path), \
+                        "ktest-tool not found in custom binary dir", __file__)
+        ktest_tool = imp.load_source("ktest-tool", ktt_full_path)
+
+        return ktest_tool
+    #~ def import_ktest_tool ()
+    
+    @staticmethod
+    def get_must_exist_dirs_of_ktests(ktest_key_to_file, custom_binary_dir=None):
+        """ Takes a dict of ktest key to ktest file
+            returns the dict of ktest key to list of required dirs
+        """
+        ktest_tool = Misc.import_ktest_tool(\
+                                        custom_binary_dir=custom_binary_dir)
+        ktest2reqdir = {}
+        for ktest_key, ktest_file in ktest_key_to_file.items():
+            # Compute the list of req_dirs
+            req_dir_list = []
+            b = ktest_tool.KTest.fromfile(ktest_file)
+            prev_is_file = False
+            for ind, obj in enumerate(b.objects):
+                if prev_is_file:
+                    # case of file stat
+                    prev_is_file = False
+                    continue
+                name, data = b.objects[ind][0]
+                # is it a path
+                d, f = os.path.split(name)
+                if len(d) > 0 and len(f) > 0:
+                    if not os.path.isabs(d):
+                        req_dir_list.append(d.decode('utf-8'))
+            ktest2reqdir[ktest_key] = req_dir_list
+        return ktest2reqdir
+    #~ def get_must_exist_dirs_of_ktests()
+#~ class Misc
+
 class FileShortNames:
     def __init__(self):
         #schar = [chr(i) for i in range(ord('A'),ord('Z')+1)\
@@ -42,7 +90,7 @@ class ConvertCollectKtestsSeeds:
     test2semudirMapFile = "test2semudirMapFile.json"
 
     def __init__(self, custom_binary_dir=None):
-        self.ktest_tool = self._import_ktest_tool(\
+        self.ktest_tool = Misc.import_ktest_tool(\
                                         custom_binary_dir=custom_binary_dir)
     #~ def __init__ ()
 
@@ -218,25 +266,6 @@ class ConvertCollectKtestsSeeds:
             res[tc] = os.path.join(rootdir, test2dir[tc])
         return res
     #~ def _prependRootTest2Dir ()
-
-    @staticmethod
-    def _import_ktest_tool (custom_binary_dir=None):
-        if custom_binary_dir is None:
-            ktt_full_path = find_executable('ktest-tool')
-            ERROR_HANDLER.assert_true(ktt_full_path is not None, \
-                            "ktest-tool is not present on the PATH", __file__)
-        else:
-            ERROR_HANDLER.assert_true(os.path.isdir(custom_binary_dir), \
-                            "Custom_binary_dir inexistant ({})".format(\
-                                            custom_binary_dir), __file__)
-            ktt_full_path = os.path.join(custom_binary_dir, 'ktest-tool')
-            ERROR_HANDLER.assert_true(os.path.isfile(ktt_full_path), \
-                        "ktest-tool not found in custom binary dir", __file__)
-        ktest_tool = imp.load_source("ktest-tool", ktt_full_path)
-
-        return ktest_tool
-    #~ def import_ktest_tool ()
-
 
     @staticmethod
     def _ktestToFile(ktestData, outfilename):
