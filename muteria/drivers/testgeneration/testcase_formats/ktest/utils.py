@@ -54,12 +54,17 @@ class Misc:
                     # case of file stat
                     prev_is_file = False
                     continue
-                name, data = b.objects[ind][0]
+                name, data = obj
                 # is it a path
                 d, f = os.path.split(name)
                 if len(d) > 0 and len(f) > 0:
                     if not os.path.isabs(d):
-                        req_dir_list.append(d.decode('utf-8'))
+                        req_dir_list.append(d.decode('UTF-8', 'backslashreplace'))
+                        ERROR_HANDLER.assert_true(\
+                                      b.objects[ind+1][0] == (name + b"-stat"), \
+                              "Invalid ktest ofr bug? ({})".format(ktest_file), \
+                                                                        __file__)
+                        prev_is_file = True
             ktest2reqdir[ktest_key] = req_dir_list
         return ktest2reqdir
     #~ def get_must_exist_dirs_of_ktests()
