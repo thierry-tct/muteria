@@ -60,6 +60,10 @@ class Misc:
                 if len(d) > 0 and len(f) > 0:
                     if not os.path.isabs(d):
                         req_dir_list.append(d.decode('UTF-8', 'backslashreplace'))
+                        ERROR_HANDLER.assert_true((ind + 1) < len(b.objects), \
+                              "invalid ktest, '-stat' missing " +\
+                                "(ind is {}). ktest file is {}".format(\
+                                                       ind, ktest_file), __file__)
                         ERROR_HANDLER.assert_true(\
                                       b.objects[ind+1][0] == (name + b"-stat"), \
                               "Invalid ktest ofr bug? ({})".format(ktest_file), \
