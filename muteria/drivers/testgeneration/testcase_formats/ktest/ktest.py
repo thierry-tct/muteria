@@ -65,6 +65,7 @@ class KTestTestFormat(object):
 
     @classmethod
     def execute_test(cls, executable_file, test_file, env_vars, stdin=None, \
+                                        must_exist_dir_list=None, \
                                         timeout=None, collected_output=None, \
                                         custom_replay_tool_binary_dir=None):
 
@@ -84,6 +85,10 @@ class KTestTestFormat(object):
             except PermissionError:
                 cls._dir_chmod777(klee_replay_temps)
                 shutil.rmtree(klee_replay_temps)
+                
+        if must_exist_dir_list is not None:
+            for d in must_exist_dir_list:
+                os.makedirs(os.path.join(test_work_dir, d))
 
         # XXX Execution setup
         tmp_env = os.environ.copy()
@@ -142,6 +147,13 @@ class KTestTestFormat(object):
             except PermissionError:
                 cls._dir_chmod777(klee_replay_temps)
                 shutil.rmtree(klee_replay_temps)
+                
+        if must_exist_dir_list is not None:
+            try:
+                shutil.rmtree(test_work_dir)
+            except PermissionError:
+                cls._dir_chmod777(test_work_dir)
+                shutil.rmtree(test_work_dir)
 
         if retcode in timeout_return_codes + \
                                     DriversUtils.EXEC_SEGFAULT_OUT_RET_CODE:
