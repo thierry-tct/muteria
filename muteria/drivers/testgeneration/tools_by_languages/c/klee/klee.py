@@ -17,7 +17,7 @@ from muteria.drivers import DriversUtils
 from muteria.drivers.testgeneration.testcase_formats.ktest.ktest \
                                                         import KTestTestFormat
 from muteria.drivers.testgeneration.testcase_formats.ktest.utils \
-                                            import ConvertCollectKtestsSeeds
+                                         import ConvertCollectKtestsSeeds, Misc
 from muteria.drivers.testgeneration.tools_by_languages.c.klee.driver_config \
                                                         import DriverConfigKlee
 
@@ -69,6 +69,15 @@ class TestcasesToolKlee(BaseTestcaseTool):
 
         self.keptktest2dupktests = os.path.join(self.tests_working_dir, \
                                                 'kept_to_dup_ktests_map.json')
+        
+        self.ktest_with_must_exist_dir_file = os.path.join(\
+                                                self.tests_storage_dir, \
+                                                'ktest_to_must_exist_dir.json')
+        if os.path.isfile(self.ktest_with_must_exist_dir_file):
+            self.ktest_with_must_exist_dir = common_fs.loadJSON(\
+                                          self.ktest_with_must_exist_dir_file)
+        else:
+            self.ktest_with_must_exist_dir = {}
 
         self.gen_tests_no_dup_with_seeds = \
                         self.driver_config.get_gen_tests_no_dup_with_seeds ()
@@ -405,10 +414,17 @@ class TestcasesToolKlee(BaseTestcaseTool):
         else:
             stdin = None
 
+        if testcase in self.ktest_with_must_exist_dir_file and \
+                      len(self.ktest_with_must_exist_dir_file[testcase]) > 0:
+            must_exist_dirs = self.ktest_with_must_exist_dir_file[testcase]
+        else:
+            must_exist_dirs = None
+        
         verdict = KTestTestFormat.execute_test(local_exe, \
                         os.path.join(self.tests_storage_dir, testcase), \
                         env_vars=env_vars, \
                         stdin=stdin, \
+                        must_exist_dir_list=must_exist_dirs, \
                         timeout=timeout, \
                         collected_output=collected_output, \
                         custom_replay_tool_binary_dir=self.custom_binary_dir)
@@ -544,6 +560,18 @@ class TestcasesToolKlee(BaseTestcaseTool):
 
         store_obj = {repo_rel_exe_file: os.path.basename(bitcode_file)}
         common_fs.dumpJSON(store_obj, self.test_details_file)
+        
+        # Compute must exist dirs
+        test2file = {}
+        for kt in self.get_testcase_info_object()
+            test2file[kt] = os.path.join(self.tests_storage_dir, kt)
+        ktest2reqdir = Misc.get_must_exist_dirs_of_ktests(test2file, \
+                                                    self.custom_binary_dir)
+        ktest2reqdir = {kt: v for kt, v ktest2reqdir.items() if len(v) > 0}
+        self.ktest_with_must_exist_dir = ktest2reqdir
+        if len(ktest2reqdir) > 0:
+            common_fs.dumpJSON(ktest2reqdir, \
+                                        self.ktest_with_must_exist_dir_file)
     #~ def _do_generate_tests()
 
     def get_ktests_dir(self):
