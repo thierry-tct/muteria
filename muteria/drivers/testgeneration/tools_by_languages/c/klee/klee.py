@@ -563,7 +563,7 @@ class TestcasesToolKlee(BaseTestcaseTool):
         
         # Compute must exist dirs
         test2file = {}
-        for kt in self.get_testcase_info_object()
+        for kt in self.get_testcase_info_object().get_tests_list():
             test2file[kt] = os.path.join(self.tests_storage_dir, kt)
         ktest2reqdir = Misc.get_must_exist_dirs_of_ktests(test2file, \
                                                     self.custom_binary_dir)
