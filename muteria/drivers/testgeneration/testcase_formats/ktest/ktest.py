@@ -88,7 +88,9 @@ class KTestTestFormat(object):
                 
         if must_exist_dir_list is not None:
             for d in must_exist_dir_list:
-                os.makedirs(os.path.join(test_work_dir, d))
+                td = os.path.join(test_work_dir, d)
+                if not os.path.join(td):
+                    os.makedirs(td)
 
         # XXX Execution setup
         tmp_env = os.environ.copy()
