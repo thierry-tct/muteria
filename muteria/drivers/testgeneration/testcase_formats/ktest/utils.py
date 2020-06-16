@@ -48,17 +48,23 @@ class Misc:
             # Compute the list of req_dirs
             req_dir_list = []
             b = ktest_tool.KTest.fromfile(ktest_file)
-            prev_is_file = False
+            prev_name = None
             for ind, obj in enumerate(b.objects):
-                if prev_is_file:
-                    # case of file stat
-                    prev_is_file = False
-                    continue
                 name, data = obj
-                # is it a path
-                d, f = os.path.split(name)
+                if name == prev_name + b'-stat' and len(data) == 144:
+                    # case of file stat
+                    prev_name = None
+                    continue
+                
+                prev_name = name
+                
+                # is it a path?
+                d, f = os.path.split(os.path.normpath(name))
                 if len(d) > 0 and len(f) > 0:
                     if not os.path.isabs(d):
+                        ERROR_HANDLER.assert_true(b'..' not in d, \
+                                "acces to parent of cur dir not allowed. " + \
+                                    "ktest is {}".format(ktest_file), __file__)
                         req_dir_list.append(d.decode('UTF-8', 'backslashreplace'))
                         ERROR_HANDLER.assert_true((ind + 1) < len(b.objects), \
                               "invalid ktest, '-stat' missing " +\
@@ -68,7 +74,7 @@ class Misc:
                                       b.objects[ind+1][0] == (name + b"-stat"), \
                               "Invalid ktest ofr bug? ({})".format(ktest_file), \
                                                                         __file__)
-                        prev_is_file = True
+                
             ktest2reqdir[ktest_key] = req_dir_list
         return ktest2reqdir
     #~ def get_must_exist_dirs_of_ktests()
