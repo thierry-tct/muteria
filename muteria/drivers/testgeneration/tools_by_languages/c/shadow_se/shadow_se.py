@@ -235,6 +235,7 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
         # Adjust the max-time in args
         ## locate max-time
         per_test_hard_timeout = None
+        per_test_timeout = None
         if len(cand_testpair_list) > 0:
             cur_max_time = float(self.get_value_in_arglist(args, 'max-time'))
             if self.driver_config.get_gen_timeout_is_per_test():
@@ -254,6 +255,16 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
             wf.write('set -u\n')
             wf.write('set -o pipefail\n\n')
             wf.write('ulimit -s unlimited\n')
+            
+            # timeout the shadow execution (some test create daemon which)
+            # are not killed by test timeout. ALSO MAKE SURE TO DESACTIVATE 
+            # IN TEST SCRIPT TIMEOUT
+            kill_after = 30
+            wf.write('time_out_cmd="/usr/bin/timeout --kill-after={}s {}"\n'.\
+                                     format(kill_after, per_test_hard_timeout))
+            # kill after and time for timeout to act
+            per_test_hard_timeout += kill_after + 30 
+            
             #wf.write(' '.join(['exec', runtool] + args + ['"${@:1}"']) + '\n')
             wf.write('\nstdindata="{}/klee-last/{}"\n'.format(\
                                                     self.tests_working_dir, \
@@ -262,14 +273,15 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
                                         KTestTestFormat.STDIN_KTEST_DATA_FILE))
             wf.write('if [ -t 0 ] # check if stdin do not exist\n')
             wf.write('then\n')
-            wf.write(' '.join(['\t(', runtool] + args + \
+            wf.write(' '.join(['\t(', '$time_out_cmd', runtool] + args + \
                                     ['"${@:1}"', ') ; EXIT_CODE=$?', '\n']))
             wf.write('\t/usr/bin/touch $tmpstdindata\n')
 
             wf.write('else\n')
             wf.write('\t(/bin/cat - > $tmpstdindata ) || EXIT_CODE=1\n')
-            wf.write(' '.join(['\t(', '/bin/cat $tmpstdindata | ', runtool] \
-                            + args + ['"${@:1}"', ') ; EXIT_CODE=$?', '\n']))
+            wf.write(' '.join(['\t(', '/bin/cat $tmpstdindata | ', \
+                            '$time_out_cmd', runtool] + args + \
+                                ['"${@:1}"', ') ; EXIT_CODE=$?', '\n']))
             wf.write('fi\n\n')
             wf.write('/bin/mv $tmpstdindata $stdindata || EXIT_CODE=2\n')
             wf.write('\n# Provoke "unbound variable" if KLEE fails\n')
