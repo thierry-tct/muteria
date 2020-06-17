@@ -391,7 +391,10 @@ class KTestTestFormat(object):
         for kf in file_set:
             try:
                 b = ktest_tool.KTest.fromfile(kf)
-                kt2used_dat[kf] = (b.args[1:], b.objects)
+                if len(b.objects) == 0:
+                    invalid.append(kf)
+                else:
+                    kt2used_dat[kf] = (b.args[1:], b.objects)
             except:
                 invalid.append(kf)
 
