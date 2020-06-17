@@ -118,6 +118,8 @@ class KTestTestFormat(object):
                                                         clean_everything=True)
         
         # XXX Execute the ktest
+        logging.debug("DBG: test_work_dir is {}. its content is {}".format(
+                            test_work_dir, list(os.listdir(test_work_dir))))
         #if collected_output is not None:
         retcode, out, err = DriversUtils.execute_and_get_retcode_out_err(\
                                 prog=prog, args_list=args, env=tmp_env, \
