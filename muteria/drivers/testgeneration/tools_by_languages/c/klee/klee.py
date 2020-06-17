@@ -414,9 +414,9 @@ class TestcasesToolKlee(BaseTestcaseTool):
         else:
             stdin = None
 
-        if testcase in self.ktest_with_must_exist_dir_file and \
-                      len(self.ktest_with_must_exist_dir_file[testcase]) > 0:
-            must_exist_dirs = self.ktest_with_must_exist_dir_file[testcase]
+        if testcase in self.ktest_with_must_exist_dir and \
+                      len(self.ktest_with_must_exist_dir[testcase]) > 0:
+            must_exist_dirs = self.ktest_with_must_exist_dir[testcase]
         else:
             must_exist_dirs = None
         
