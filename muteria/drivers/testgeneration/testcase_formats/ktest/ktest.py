@@ -77,15 +77,17 @@ class KTestTestFormat(object):
         # XXX XXX. make sure each test has its own
         test_work_dir = test_file+".execdir"
         klee_replay_temps = test_work_dir + '.temps'
+        for d in (test_work_dir, klee_replay_temps):
+            if os.path.isdir(d):
+                try:
+                    shutil.rmtree(d)
+                except PermissionError:
+                    cls._dir_chmod777(d)
+                    shutil.rmtree(d)
+                
         if not os.path.isdir(test_work_dir):
             os.mkdir(test_work_dir)
-        if os.path.isdir(klee_replay_temps):
-            try:
-                shutil.rmtree(klee_replay_temps)
-            except PermissionError:
-                cls._dir_chmod777(klee_replay_temps)
-                shutil.rmtree(klee_replay_temps)
-                
+            
         if must_exist_dir_list is not None:
             for d in must_exist_dir_list:
                 td = os.path.join(test_work_dir, d)
@@ -145,19 +147,20 @@ class KTestTestFormat(object):
         #                                        cwd=test_work_dir)
 
         # XXX: Go back to previous CWD
-        if os.path.isdir(klee_replay_temps):
-            try:
-                shutil.rmtree(klee_replay_temps)
-            except PermissionError:
-                cls._dir_chmod777(klee_replay_temps)
-                shutil.rmtree(klee_replay_temps)
+        for d in (test_work_dir, klee_replay_temps):
+            if os.path.isdir(d):
+                try:
+                    shutil.rmtree(d)
+                except PermissionError:
+                    cls._dir_chmod777(d)
+                    shutil.rmtree(d)
                 
-        if must_exist_dir_list is not None:
-            try:
-                shutil.rmtree(test_work_dir)
-            except PermissionError:
-                cls._dir_chmod777(test_work_dir)
-                shutil.rmtree(test_work_dir)
+        #if must_exist_dir_list is not None:
+        #    try:
+        #        shutil.rmtree(test_work_dir)
+        #    except PermissionError:
+        #        cls._dir_chmod777(test_work_dir)
+        #        shutil.rmtree(test_work_dir)
 
         if retcode in timeout_return_codes + \
                                     DriversUtils.EXEC_SEGFAULT_OUT_RET_CODE:
