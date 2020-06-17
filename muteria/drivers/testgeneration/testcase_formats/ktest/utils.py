@@ -51,7 +51,8 @@ class Misc:
             prev_name = None
             for ind, obj in enumerate(b.objects):
                 name, data = obj
-                if name == prev_name + b'-stat' and len(data) == 144:
+                if prev_name is not None and \
+                            name == prev_name + b'-stat' and len(data) == 144:
                     # case of file stat
                     prev_name = None
                     continue
