@@ -46,7 +46,7 @@ class Misc:
         ktest2reqdir = {}
         for ktest_key, ktest_file in ktest_key_to_file.items():
             # Compute the list of req_dirs
-            req_dir_list = []
+            req_dir_set = set()
             b = ktest_tool.KTest.fromfile(ktest_file)
             prev_name = None
             for ind, obj in enumerate(b.objects):
@@ -66,7 +66,7 @@ class Misc:
                         ERROR_HANDLER.assert_true(b'..' not in d, \
                                 "acces to parent of cur dir not allowed. " + \
                                     "ktest is {}".format(ktest_file), __file__)
-                        req_dir_list.append(d.decode('UTF-8', 'backslashreplace'))
+                        req_dir_set.add(d.decode('UTF-8', 'backslashreplace'))
                         ERROR_HANDLER.assert_true((ind + 1) < len(b.objects), \
                               "invalid ktest, '-stat' missing " +\
                                 "(ind is {}). ktest file is {}".format(\
@@ -76,7 +76,7 @@ class Misc:
                               "Invalid ktest ofr bug? ({})".format(ktest_file), \
                                                                         __file__)
                 
-            ktest2reqdir[ktest_key] = req_dir_list
+            ktest2reqdir[ktest_key] = list(req_dir_set)
         return ktest2reqdir
     #~ def get_must_exist_dirs_of_ktests()
 #~ class Misc
