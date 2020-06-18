@@ -128,10 +128,10 @@ class ConvertCollectKtestsSeeds:
         
         if klee_ktest_is_sym_args:
             src_new_klee_ktest_dir = None
-            klee_ktest_sym_args = klee_ktest_is_sym_args_or_sym_args
+            klee_ktest_sym_args = src_new_klee_ktest_dir_or_sym_args
         else:
             klee_ktest_sym_args = None
-            src_new_klee_ktest_dir = klee_ktest_is_sym_args_or_sym_args
+            src_new_klee_ktest_dir = src_new_klee_ktest_dir_or_sym_args
             
         os.mkdir(dest_dir)
 
