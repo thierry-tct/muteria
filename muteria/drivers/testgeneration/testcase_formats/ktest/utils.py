@@ -700,8 +700,10 @@ class ConvertCollectKtestsSeeds:
                                 ktestContains["CORRESP_TESTNAME"][ktpos],\
                                 "\n    >> Please replace initial file name",\
                                 "with new in "+str(ktdat.objects[fai][1])+
-                                "' :"])
+                                " :"])
                             raw = bytes(input(msg).strip(), 'utf-8')
+                            if ktdat.objects[fai][1].endswith(b'\0'):
+                                raw += b'\0'
                             ktdat.objects[fai] = (ktdat.objects[fai][0], raw)
 
                 # first add file object of additional files
