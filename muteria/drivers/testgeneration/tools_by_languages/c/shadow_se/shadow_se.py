@@ -249,7 +249,7 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
             per_test_hard_timeout = per_test_timeout + \
                                 self.config.TEST_GEN_TIMEOUT_FRAMEWORK_GRACE
 
-        per_test_hard_timeout = 300 #DBG
+        #per_test_hard_timeout = 300 #DBG
         # Set the wrapper
         with open(call_shadow_wrapper_file, 'w') as wf:
             wf.write('#! /bin/bash\n\n')
@@ -264,7 +264,7 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
             wf.write('time_out_cmd="/usr/bin/timeout --kill-after={}s {}"\n'.\
                                      format(kill_after, per_test_hard_timeout))
             # kill after and time for timeout to act
-            per_test_hard_timeout += kill_after + 3600 
+            per_test_hard_timeout += kill_after + 60 
             
             #wf.write(' '.join(['exec', runtool] + args + ['"${@:1}"']) + '\n')
             wf.write('\nstdindata="{}/klee-last/{}"\n'.format(\
@@ -303,8 +303,8 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
                                     env_vars, timeout=per_test_hard_timeout,\
                                                     with_output_summary=False)
             
-            logging.debug("DBG: Just executed test '{}'".format(meta_test))
-            input(">>>> ") #DBG
+            #logging.debug("DBG: Just executed test '{}'".format(meta_test))
+            #input(">>>> ") #DBG
             
             # copy the klee out
             test_out = os.path.join(self.tests_storage_dir, \
