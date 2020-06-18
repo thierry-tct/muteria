@@ -1116,7 +1116,7 @@ class ConvertCollectKtestsSeeds:
             for i,n in enumerate(nums):
                 if self._is_sym_args_having_nargs(" ".join(['-sym-args']\
                                     +list(map(str, list_new_sym_args[i])))):
-                    res.append(("n_args", struct.pack('<i', n)))
+                    res.append((b"n_args", struct.pack('<i', n)))
                 for j in range(ao_ind, ao_ind+n):
                     res.append((objSegment[j][0], objSegment[j][1] \
                                          + b'\0'*(list_new_sym_args[i][2] \
