@@ -263,6 +263,7 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
             kill_after = 3600
             wf.write('time_out_cmd="/usr/bin/timeout --kill-after={}s {}"\n'.\
                                      format(kill_after, per_test_hard_timeout))
+            wf.write('time_out_cmd=""\n')  #DBG
             # kill after and time for timeout to act
             per_test_hard_timeout += kill_after + 3600 
             
