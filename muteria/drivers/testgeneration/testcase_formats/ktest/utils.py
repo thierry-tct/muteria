@@ -112,7 +112,8 @@ class ConvertCollectKtestsSeeds:
 
     def generate_seeds_from_various_ktests (self, dest_dir, \
                                             src_old_shadow_zesti_ktest_dir, \
-                                            src_new_klee_ktest_dir=None, \
+                                   src_new_klee_ktest_dir_or_sym_args=None, \
+                                            klee_ktest_is_sym_args=False, \
                                             compress_dest=True):
         """
         """
@@ -124,6 +125,14 @@ class ConvertCollectKtestsSeeds:
         ERROR_HANDLER.assert_true(not (compress_dest and \
                                         os.path.isfile(dest_dir+self.tar_gz)),\
                                 "dest dir compressed already exists", __file__)
+        
+        if klee_ktest_is_sym_args:
+            src_new_klee_ktest_dir = None
+            klee_ktest_sym_args = klee_ktest_is_sym_args_or_sym_args
+        else:
+            klee_ktest_sym_args = None
+            src_new_klee_ktest_dir = klee_ktest_is_sym_args_or_sym_args
+            
         os.mkdir(dest_dir)
 
         tmpdir = os.path.join(dest_dir, '.tmp')
@@ -201,6 +210,10 @@ class ConvertCollectKtestsSeeds:
                                     self._loadAndGetSymArgsFromKleeKTests (\
                                                     new_klee_test_list, \
                                                     src_new_klee_ktest_dir)
+        elif klee_ktest_sym_args is not None:
+            _, kleeKTContains = \
+                            self._loadAndGetSymArgsFromKleeKTests([], None)
+            klee_sym_args_param = [" ".join(l) fo l in klee_ktest_sym_args]
         else:
             klee_sym_args_param, kleeKTContains = None, None
             
