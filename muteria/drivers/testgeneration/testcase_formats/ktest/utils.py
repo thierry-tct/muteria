@@ -213,7 +213,7 @@ class ConvertCollectKtestsSeeds:
         elif klee_ktest_sym_args is not None:
             _, kleeKTContains = \
                             self._loadAndGetSymArgsFromKleeKTests([], None)
-            klee_sym_args_param = [" ".join(l) fo l in klee_ktest_sym_args]
+            klee_sym_args_param = [" ".join(l) for l in klee_ktest_sym_args]
         else:
             klee_sym_args_param, kleeKTContains = None, None
             
