@@ -84,7 +84,7 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
             '-emit-all-errors': True,
             '-no-std-out': True,
             '-shadow-allow-allocs': True,
-            '-watchdog': True,
+            '-watchdog': False, # was True before
             # XXX Enable this for seed collection
             '-shadow-replay-standalone': False,
             '-shadow-only-symbolic-tests': True,
@@ -260,10 +260,9 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
             # timeout the shadow execution (some test create daemon which)
             # are not killed by test timeout. ALSO MAKE SURE TO DESACTIVATE 
             # IN TEST SCRIPT TIMEOUT
-            kill_after = 3600
+            kill_after = 30
             wf.write('time_out_cmd="/usr/bin/timeout --kill-after={}s {}"\n'.\
                                      format(kill_after, per_test_hard_timeout))
-            wf.write('time_out_cmd=""\n')  #DBG
             # kill after and time for timeout to act
             per_test_hard_timeout += kill_after + 3600 
             
