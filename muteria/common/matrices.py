@@ -780,7 +780,7 @@ class OutputLogData(object):
         if self.filename is None or not os.path.isfile(self.filename):
             self.data = {}
         else:
-            self.data = {objective, self._mem_optimize_sub_dat(test2dat) \
+            self.data = {objective: self._mem_optimize_sub_dat(test2dat) \
                                 for objective, test2dat in \
                                     common_fs.loadJSON(self.filename).items()}
     #~ def __init__()
