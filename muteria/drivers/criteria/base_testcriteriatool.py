@@ -109,6 +109,9 @@ class BaseCriteriaTool(abc.ABC):
                                     prioritization_module_by_criteria=None, \
                                     test_parallel_count=1):
         """
+            testcases is assumed to be already in sys.intern
+            criteria_element_list_by_criteria's criteria_elements are 
+                                        assumed to be already in sys.intern
         """
 
         logging.debug("# Executing meta {}: {} ...".format("criteria" if \
@@ -161,6 +164,7 @@ class BaseCriteriaTool(abc.ABC):
         # Execute each test and gather the data
         processbar = tqdm.tqdm(testcases, leave=False, dynamic_ncols=True) 
         for testcase in processbar: 
+            testcase = sys.intern(testcase)
             processbar.set_description("Running Test %s"% testcase)
             for cg_criteria, cg_exe_path_map, cg_env_vars in groups:
                 # Create reult_tmp_dir
@@ -440,6 +444,9 @@ class BaseCriteriaTool(abc.ABC):
         ERROR_HANDLER.assert_true(test_parallel_count <= 1, \
                 "FIXME: Must first implement support for parallel mutation")
         #~ FXIMEnd
+
+        # save memory
+        testcases = [sys.intern(t) for t in testcases]
 
         # @Checkpoint: create a checkpoint handler (for time)
         cp_func_name = "runtests_criteria_coverage"

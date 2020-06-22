@@ -424,7 +424,7 @@ class RawExecutionMatrix(object):
             small_df = self.extract_by_rowkey(row_key_list).dataframe
             for _, row in small_df.iterrows():
                 result[row[self.key_column_name]] = \
-                                        [x for x in self.non_key_col_list \
+                                [sys.intern(x) for x in self.non_key_col_list \
                                         if self.is_active_cell_func(row[x])]
 
         return result
@@ -453,9 +453,9 @@ class RawExecutionMatrix(object):
         if len(non_key_col_list) > 0:
             small_df = self.extract_by_column(non_key_col_list).dataframe
             for col in non_key_col_list:
-                result[col] = list(small_df.loc[\
+                result[col] = [sys.intern(x) for x in small_df.loc[\
                                 small_df[col].apply(self.is_active_cell_func)]\
-                                                        [self.key_column_name])
+                                                        [self.key_column_name]]
 
         return result
     #~ def query_active_rows_of_columns()
@@ -484,7 +484,7 @@ class RawExecutionMatrix(object):
             small_df = self.extract_by_rowkey(row_key_list).dataframe
             for _, row in small_df.iterrows():
                 result[row[self.key_column_name]] = \
-                                        [x for x in self.non_key_col_list \
+                                [sys.intern(x) for x in self.non_key_col_list \
                                         if self.is_inactive_cell_func(row[x])]
 
         return result
@@ -513,9 +513,9 @@ class RawExecutionMatrix(object):
         if len(non_key_col_list) > 0:
             small_df = self.extract_by_column(non_key_col_list).dataframe
             for col in non_key_col_list:
-                result[col] = list(small_df.loc[\
+                result[col] = [sys.intern(x) for x in small_df.loc[\
                             small_df[col].apply(self.is_inactive_cell_func)]\
-                                                        [self.key_column_name])
+                                                        [self.key_column_name]]
 
         return result
     #~ def query_inactive_rows_of_columns()
@@ -544,7 +544,7 @@ class RawExecutionMatrix(object):
             small_df = self.extract_by_rowkey(row_key_list).dataframe
             for _, row in small_df.iterrows():
                 result[row[self.key_column_name]] = \
-                                        [x for x in self.non_key_col_list \
+                                [sys.intern(x) for x in self.non_key_col_list \
                                         if self.is_uncertain_cell_func(row[x])]
 
         return result
@@ -573,9 +573,9 @@ class RawExecutionMatrix(object):
         if len(non_key_col_list) > 0:
             small_df = self.extract_by_column(non_key_col_list).dataframe
             for col in non_key_col_list:
-                result[col] = list(small_df.loc[\
+                result[col] = [sys.intern(x) for x in small_df.loc[\
                             small_df[col].apply(self.is_uncertain_cell_func)]\
-                                                        [self.key_column_name])
+                                                        [self.key_column_name]]
 
         return result
     #~ def query_uncertain_rows_of_columns()
@@ -780,8 +780,20 @@ class OutputLogData(object):
         if self.filename is None or not os.path.isfile(self.filename):
             self.data = {}
         else:
-            self.data = common_fs.loadJSON(self.filename)
+            self.data = {objective, self._mem_optimize_sub_dat(test2dat) \
+                                for objective, test2dat in \
+                                    common_fs.loadJSON(self.filename).items()}
     #~ def __init__()
+
+    @classmethod
+    def _mem_optimize_sub_dat(cls, test2dat):
+        res = {}
+        for t, dat in test2dat.items():
+            t = sys.intern(t)
+            dat[cls.OUTLOG_HASH] = sys.intern(cls.OUTLOG_HASH)
+            res[t] = dat
+        return res
+    #~ def _mem_optimize_sub_dat()
 
     def is_empty(self):
         return len(self.data) == 0
@@ -825,9 +837,11 @@ class OutputLogData(object):
                                             "Some values are existing, "
                                             "do you confirm their override?"),\
                              "Existing values were not overriden", __file__)
-            self.data[objective].update(data_dict[objective])
+            self.data[objective].update(self._mem_optimize_sub_dat(\
+                                                        data_dict[objective]))
         for objective in onlynew_objective:
-            self.data[objective] = copy.deepcopy(data_dict[objective])
+            self.data[objective] = self._mem_optimize_sub_dat(\
+                                                        data_dict[objective])
         if serialize:
             self.serialize()
     #~ def add_data ()

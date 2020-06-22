@@ -496,7 +496,8 @@ class BaseTestcaseTool(abc.ABC):
 
             outlog_summary = {
                 common_matrices.OutputLogData.OUTLOG_LEN: out_len,
-                common_matrices.OutputLogData.OUTLOG_HASH: out_hash_val,
+                common_matrices.OutputLogData.OUTLOG_HASH: \
+                                                    sys.intern(out_hash_val),
                 common_matrices.OutputLogData.RETURN_CODE: retcode,
                 common_matrices.OutputLogData.TIMEDOUT: timedout,
             }
