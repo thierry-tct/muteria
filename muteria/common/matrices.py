@@ -790,7 +790,7 @@ class OutputLogData(object):
         res = {}
         for t, dat in test2dat.items():
             t = sys.intern(t)
-            dat[cls.OUTLOG_HASH] = sys.intern(cls.OUTLOG_HASH)
+            dat[cls.OUTLOG_HASH] = sys.intern(dat[cls.OUTLOG_HASH])
             res[t] = dat
         return res
     #~ def _mem_optimize_sub_dat()
