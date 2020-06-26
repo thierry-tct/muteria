@@ -181,7 +181,7 @@ class CriteriaToolGCov(BaseCriteriaTool):
                 using_gdb_wrapper = (ret == 0)
                 if not using_gdb_wrapper:
                     logging.warning("use gdb is enabled but call to gdb fails"
-                                   " with msg: {}".format(o_e))
+                                " (retcode {}) with msg: {}".format(ret, o_e))
             else:
                 logging.warning("use gdb is enabled but gdb is not installed")
 
