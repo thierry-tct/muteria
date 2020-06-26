@@ -202,7 +202,10 @@ class CriteriaToolGCov(BaseCriteriaTool):
         for criterion in enabled_criteria:
             crit_to_exes_map[criterion] = exes_map
             
-        logging.debug("DBG: Using gdb wrapper is {}. crit_exe_map is {}. wraper is {}!".format(using_gdb_wrapper, crit_to_exes_map, self.gcov_gdb_wrapper_sh))
+        logging.debug("DBG: {} {} {}".format(\
+                          "Using gdb wrapper is {}.".format(using_gdb_wrapper), \
+                          "crit_to_exe_map is {}.".format(crit_to_exes_map), \
+                          "wraper path is {}!".format(self.gcov_gdb_wrapper_sh))
             
         return crit_to_exes_map
     #~ def get_instrumented_executable_paths_map()
