@@ -454,6 +454,11 @@ class TestcaseToolsConfig(BaseToolConfig):
 class CriteriaToolsConfig(BaseToolConfig):
     SEPARATED_TEST_EXECUTION_EXTRA_TIMEOUT_TIMES = 1.5 # proportion
     META_TEST_EXECUTION_EXTRA_TIMEOUT_TIMES = 100.0 # proportion
+    
+    def set_separated_test_execution_extra_timeout_times(self, timeout_times):
+        self.SEPARATED_TEST_EXECUTION_EXTRA_TIMEOUT_TIMES = timeout_times
+    def set_meta_test_execution_extra_timeout_times(self, timeout_times):
+        self.META_TEST_EXECUTION_EXTRA_TIMEOUT_TIMES = timeout_times
 #~class CriteriaToolsConfig
 
 
