@@ -175,7 +175,7 @@ class CriteriaToolGCov(BaseCriteriaTool):
                                         args_list=['--batch-silent', \
                                                     '--quiet', 
                                                     '--return-child-result', 
-                                                    '-ex', '"run"', 
+                                                    '-ex', 'run', 
                                                     '--args', 'echo'], \
                                         )#out_on=False, err_on=False)
                 using_gdb_wrapper = (ret == 0)
