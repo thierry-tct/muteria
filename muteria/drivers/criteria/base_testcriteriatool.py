@@ -295,7 +295,7 @@ class BaseCriteriaTool(abc.ABC):
                                     cover_criteria_elements_once=False, \
                                     prioritization_module=None, \
                                     test_parallel_count=1,
-                                    serialize_period=5,
+                                    serialize_period=1000, #=5,
                                     checkpoint_handler=None, \
                                     cp_calling_func_name=None, \
                                     cp_calling_done_task_id=None, \
