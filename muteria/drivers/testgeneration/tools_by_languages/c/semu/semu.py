@@ -319,8 +319,8 @@ class TestcasesToolSemu(TestcasesToolKlee):
             if len(val) == 1:
                 gen_time = val[0]
                 break
-            ERROR_HANDLER.assert_true(len(val) == 0, "PB in ktestlist "
-                       klist + ". ktest appearing multiple times", __file__)
+            ERROR_HANDLER.assert_true(len(val) == 0, "PB in ktestlist " + \
+                  str(klist) + ". ktest appearing multiple times", __file__)
         ERROR_HANDLER.assert_true(gen_time is not None, \
                                    "test not found in ktestlists", __file__)
         return gen_time
