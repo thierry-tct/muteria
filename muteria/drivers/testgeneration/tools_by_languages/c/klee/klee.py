@@ -329,11 +329,22 @@ class TestcasesToolKlee(BaseTestcaseTool):
                 for f in files:
                     tc = os.path.normpath(os.path.join(root, f))
                     if tc.endswith(KTestTestFormat.ktest_extension):
-                        tc_info_obj.add_test(tc)
+                        gen_time = self._get_generation_time_of_test(tc, \
+                                                     self.tests_storage_dir)
+                        tc_info_obj.add_test(tc, generation_time=gen_time)
             os.chdir(cwd)
             self.testcase_info_object = tc_info_obj
             return self.testcase_info_object
     #~ def get_testcase_info_object()
+    
+    @staticmethod
+    def _get_generation_time_of_test(test, test_top_dir):
+        """ extract the generation timestamp of a test. the test and 
+            its top location are specified
+        """
+        # FIXME: implememnt this in klee
+        return None
+    #~ def _get_generation_time_of_test()
 
     def _prepare_executable(self, exe_path_map, env_vars, \
                                                         collect_output=False):
