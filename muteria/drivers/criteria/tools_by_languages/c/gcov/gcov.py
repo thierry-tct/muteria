@@ -315,6 +315,7 @@ class CriteriaToolGCov(BaseCriteriaTool):
             ERROR_HANDLER.error_exit(\
                     "Testcase '{}' did not generate gcda, {}".format(\
                         testcase, "when allow missing coverage is disabled"))
+            dot_gcov_file_list = []
 
         common_fs.dumpJSON(dot_gcov_file_list, \
                                 os.path.join(result_dir_tmp,\
