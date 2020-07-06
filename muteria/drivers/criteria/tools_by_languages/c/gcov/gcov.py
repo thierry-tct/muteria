@@ -311,8 +311,9 @@ class CriteriaToolGCov(BaseCriteriaTool):
             # delete gcda
             for gcda_f in gcda_files:
                 os.remove(gcda_f)
-        elif not self.driver_config.get_allow_missing_coverage():
-            ERROR_HANDLER.error_exit(\
+        else:
+            if not self.driver_config.get_allow_missing_coverage():
+                ERROR_HANDLER.error_exit(\
                     "Testcase '{}' did not generate gcda, {}".format(\
                         testcase, "when allow missing coverage is disabled"))
             dot_gcov_file_list = []
