@@ -421,13 +421,13 @@ class ConvertCollectKtestsSeeds:
                                     actual_test = at
                                     break
                             msg = " ".join(["\n>> CONFLICT: the file object",\
-                                "at position ",ind,"with name",str(name),\
+                                "at position ",str(ind),"with name",str(name),\
                                 "in ktest",filename,"appears several times",\
                                 "in args list (The actual test is:", 
                                 actual_test,")."])
                         else:
                             msg = " ".join(["\n>> CONFLICT: the file object",\
-                                "at position ",ind,"with name",str(name),\
+                                "at position ",str(ind),"with name",str(name),\
                                 "in ktest",filename,"appears several times",\
                                 "in args list (Check",\
                                 "OUTPUT/caches/test2zestidirMap.json for",\
