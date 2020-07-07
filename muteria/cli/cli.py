@@ -56,7 +56,7 @@ class CliUserInterface(object):
         parser_customexec = subparsers.add_parser('customexec', \
                                     help="Make some custom execution AFTER the"
                                         " main execution is done")
-        parser_run.add_argument("--nohashoutlog", action='store_true', \
+        parser_customexec.add_argument("--nohashoutlog", action='store_true', \
                                          help="When set, enforce no hash log")
 
         if len(sys.argv)==1:
