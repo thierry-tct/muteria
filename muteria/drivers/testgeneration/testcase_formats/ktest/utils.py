@@ -424,7 +424,9 @@ class ConvertCollectKtestsSeeds:
                                 "at position ",str(ind),"with name",str(name),\
                                 "in ktest",filename,"appears several times",\
                                 "in args list (The actual test is:", 
-                                actual_test,")."])
+                                actual_test,").\n",\
+                                "    >> Please choose its space separated",\
+                                "position(s), (",indexes_ia,"): "])
                         else:
                             msg = " ".join(["\n>> CONFLICT: the file object",\
                                 "at position ",str(ind),"with name",str(name),\
@@ -433,7 +435,7 @@ class ConvertCollectKtestsSeeds:
                                 "OUTPUT/caches/test2zestidirMap.json for",\
                                 "actual test).\n",\
                                 "    >> Please choose its space separated",\
-                                "position(s), (",indexes_ia,"):"])
+                                "position(s), (",indexes_ia,"): "])
                         raw = input(msg)
                         indinargs = [int(v) for v in raw.split()]
                         ERROR_HANDLER.assert_true(\
