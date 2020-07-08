@@ -418,6 +418,7 @@ class Executor(object):
                         fault_test_execution_execoutput_file=execoutput_file, \
                         test_prioritization_module=\
                                         meta_testexec_optimization_tool, \
+                        parallel_test_count=None, \
                         finish_destroy_checkpointer=True)
         elif mode == criteria_tests_key:
             print ("# This mode is just needed to reexecute tests with"
@@ -717,6 +718,7 @@ class Executor(object):
                         fault_test_execution_execoutput_file=execoutput_file, \
                         test_prioritization_module=\
                                         self.meta_testexec_optimization_tool, \
+                        parallel_test_count=None, \
                         finish_destroy_checkpointer=False)
             
             # @Checkpointing
