@@ -292,6 +292,9 @@ class CompleteConfiguration(object):
     RUN_PASSING_TESTS_WITH_CRITERIA = [
 
     ]
+    
+    # list of test tool aliases for which we should not measure coverages
+    TESTCASE_TOOLALIASES_TO_SKIP_CRITERIA_COVERAGE = []
 
     CRITERIA_RESTRICTION_ENABLED = True  # Enable restricting mutation(scope)
 
