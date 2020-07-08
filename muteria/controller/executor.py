@@ -921,6 +921,15 @@ class Executor(object):
                                         outdir_struct.TMP_SELECTED_TESTS_LIST)
                     meta_testcases = common_fs.loadJSON(test_list_file)
                     
+                    # remove tests of test tool to skip
+                    testtoolaliases_to_skip = self.config\
+                            .TESTCASE_TOOLALIASES_TO_SKIP_CRITERIA_COVERAGE\
+                            .get_val()
+                    if len(testtoolaliases_to_skip) > 0:
+                        meta_testcases = [mt for mt in meta_testcases if \
+                                    DriversUtils.reverse_meta_element(mt)[0] \
+                                             not in testtoolaliases_to_skip]
+                    
                     criterion_to_matrix = {\
                                     c: matrix_files[c] for c in criteria_set}
 
