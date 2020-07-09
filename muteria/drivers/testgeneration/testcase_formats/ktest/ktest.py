@@ -31,6 +31,9 @@ class KTestTestFormat(object):
             if not DriversUtils.check_tool(prog=prog, args_list=['--version'],\
                                                     expected_exit_codes=[1]):
                 return False
+        if not DriversUtils.check_tool(prog=stdbuf, args_list=['--version'],\
+                                                    expected_exit_codes=[0]):
+                return False
         return True
     #~ def installed()
 
@@ -106,7 +109,7 @@ class KTestTestFormat(object):
 
         if timeout is not None:
             tmp_env['KLEE_REPLAY_TIMEOUT'] = str(timeout)
-            kt_over = 5 # 1second
+            kt_over = 10 # 1second
             timeout += kt_over
         else:
             # DBG
@@ -123,6 +126,15 @@ class KTestTestFormat(object):
         #logging.debug("DBG: test_work_dir is {}. its content is {}".format(
         #                    test_work_dir, list(os.listdir(test_work_dir))))
         #if collected_output is not None:
+        
+        # XXX: Use stdbuf to line buffer the stderr to avoid mixing or 
+        # err between klee-replay and the executd prog
+        use_stdbuf = True
+        if use_stdbuf:
+            args = ["--output=L", "--error=L", prog] + args
+            prog = "stdbuf"
+            # TODO: check that stdbuf is installed
+            
         retcode, out, err = DriversUtils.execute_and_get_retcode_out_err(\
                                 prog=prog, args_list=args, env=tmp_env, \
                                 stdin=stdin, \
@@ -226,6 +238,7 @@ class KTestTestFormat(object):
     timedout_retcodes = (88,) # taken from klee_replay source code
         
     tool = 'klee-replay'
+    stdbuf = 'stdbuf'
 
     # Newer version (after klee github commit 88bb205)
     # (88bb205e422ee2aaf75594e4e314b21f77f219e3)
