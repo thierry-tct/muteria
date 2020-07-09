@@ -31,7 +31,7 @@ class KTestTestFormat(object):
             if not DriversUtils.check_tool(prog=prog, args_list=['--version'],\
                                                     expected_exit_codes=[1]):
                 return False
-        if not DriversUtils.check_tool(prog=stdbuf, args_list=['--version'],\
+        if not DriversUtils.check_tool(prog=cls.stdbuf, args_list=['--version'],\
                                                     expected_exit_codes=[0]):
                 return False
         return True
