@@ -10,8 +10,14 @@
 #endif
 
 #if RESOLVE_KLEE_CHANGE == 0
-  static int __attribute__ ((noinline)) __attribute__(( unused )) klee_get_true(void);
-  static int __attribute__ ((noinline)) __attribute__(( unused )) klee_get_false(void);
+  #ifdef ENFORCE_STATIC_KLEE_CHANGE
+  static
+  #endif
+   int __attribute__ ((noinline)) __attribute__(( unused )) klee_get_true(void);
+  #ifdef ENFORCE_STATIC_KLEE_CHANGE
+  static
+  #endif
+   int __attribute__ ((noinline)) __attribute__(( unused )) klee_get_false(void);
   int __attribute__ ((noinline)) __attribute__(( unused )) klee_get_true(void) { return 1; }
   int __attribute__ ((noinline)) __attribute__(( unused )) klee_get_false(void) { return 0; }
   
@@ -19,9 +25,9 @@
   // IMPORTANT: this function is actually not called but klee run a special function when klee_change is encountered in the program: This is just used for compilation-linking purpose.
   #if defined __x86_64__ && !defined __ILP32__  
     //static unsigned long int __attribute__ ((noinline)) klee_change(unsigned long int x, unsigned long int y)
-    typedef unsigned long long my_large_type;
+    typedef unsigned long long my_klee_change_large_type;
   #else
-    typedef unsigned long my_large_type;
+    typedef unsigned long my_klee_change_large_type;
   #endif
 
   #ifdef MUTERIA_FOR_SEMU_TEST_GENERATION
@@ -30,9 +36,12 @@
                                                                 unsigned int start, unsigned int end) {}
     void __attribute__ ((noinline)) __attribute__(( unused )) klee_semu_GenMu_Post_Mutation_Point_Func(
                                                                 unsigned int start, unsigned int end) {}
-    static my_large_type __attribute__ ((noinline)) klee_change(my_large_type x, my_large_type y)
+    #ifdef ENFORCE_STATIC_KLEE_CHANGE
+    static
+    #endif
+     my_klee_change_large_type __attribute__ ((noinline)) klee_change(my_klee_change_large_type x, my_klee_change_large_type y)
     {
-      my_large_type ret;
+      my_klee_change_large_type ret;
       klee_semu_GenMu_Mutant_ID_Selector_Func(1, 1);
       switch (klee_semu_GenMu_Mutant_ID_Selector) {
         case 1:
@@ -47,7 +56,10 @@
       return ret;
     }
   #else
-    static my_large_type __attribute__ ((noinline)) klee_change(my_large_type x, my_large_type y)
+    #ifdef ENFORCE_STATIC_KLEE_CHANGE
+    static
+    #endif
+     my_klee_change_large_type __attribute__ ((noinline)) klee_change(my_klee_change_large_type x, my_klee_change_large_type y)
     {
       static char * version_str;
       version_str = getenv("KLEE_CHANGE_RUNTIME_SET_OLD_VERSION");
@@ -66,8 +78,14 @@
 #if RESOLVE_KLEE_CHANGE == -1
   //Here we use the function but not the macro for klee_get_<true,false> because for the old version the code controled by klee_get_false will be removed by compiler, 
   //thus the diff considered not covered by any test (case were a change consists of adding code.). This is mainly used for the coverage
-  static int __attribute__ ((noinline)) __attribute__(( unused )) klee_get_true(void);
-  static int __attribute__ ((noinline)) __attribute__(( unused )) klee_get_false(void);
+  #ifdef ENFORCE_STATIC_KLEE_CHANGE
+  static
+  #endif
+   int __attribute__ ((noinline)) __attribute__(( unused )) klee_get_true(void);
+  #ifdef ENFORCE_STATIC_KLEE_CHANGE
+  static
+  #endif
+   int __attribute__ ((noinline)) __attribute__(( unused )) klee_get_false(void);
   int __attribute__ ((noinline)) __attribute__(( unused )) klee_get_true(void) { return 1; }
   int __attribute__ ((noinline)) __attribute__(( unused )) klee_get_false(void) { return 0; } 
   #define klee_change(x,y)    (x)
@@ -75,8 +93,14 @@
 #elif RESOLVE_KLEE_CHANGE == 1
   //Here we use the function but not the macro for klee_get_<true,false> because for the old version the code controled by klee_get_false will be removed by compiler, 
   //thus the diff considered not covered by any test (case were a change consists of adding code.). This is mainly used for the coverage
-  static int __attribute__ ((noinline)) __attribute__(( unused )) klee_get_true(void);
-  static int __attribute__ ((noinline)) __attribute__(( unused )) klee_get_false(void);
+  #ifdef ENFORCE_STATIC_KLEE_CHANGE
+  static
+  #endif
+   int __attribute__ ((noinline)) __attribute__(( unused )) klee_get_true(void);
+  #ifdef ENFORCE_STATIC_KLEE_CHANGE
+  static
+  #endif
+   int __attribute__ ((noinline)) __attribute__(( unused )) klee_get_false(void);
   int __attribute__ ((noinline)) __attribute__(( unused )) klee_get_true(void) { return 1; }
   int __attribute__ ((noinline)) __attribute__(( unused )) klee_get_false(void) { return 0; } 
   #define klee_change(x,y)    (y) 
