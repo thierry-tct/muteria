@@ -450,13 +450,17 @@ class ConvertCollectKtestsSeeds:
                         indexes_ia = [i for i,x in enumerate(arguments) \
                                                                 if name in x]
                         if len(indexes_ia) <= 0:
-                            if not skip_failure:
-                                ERROR_HANDLER.error_exit ("Error: Must have "
+                            err_msg = "Error: Must have "
                                     "at least one argv containing filename "
                                     "in its data.\n You could run with "
                                     "'skip_failure' enabled to neglect "
-                                    "the error. Ktest file is "+filename, 
-                                                                __file__)
+                                    "the error. Ktest file is "+filename
+                            do_skip = False
+                            if skip_failure is None:
+                                do_skip = common_mix.confirm_execution(err_msg + \
+                                      "\n>> DO YOU WANT TO Skip THE FAILURE? ")
+                            if not do_skip and not skip_failure:
+                                ERROR_HANDLER.error_exit (err_msg, __file__)
                         if len(indexes_ia) > 1:
                             if test2zestidirMap_arg is not None:
                                 actual_test = None
@@ -665,11 +669,14 @@ class ConvertCollectKtestsSeeds:
             afterFileNStat.append(afterFnS)
 
         if len(listTestArgs) <= 0:
-            logging.error("no ktest data, ktest PCs: " + ktestFilesList)
-            if not skip_failure:
-                ERROR_HANDLER.error_exit (
-                            "No ktest data could be extracted from ktests.",\
-                                                                    __file__)
+            logging.error("no ktest data, ktest PCs: " + str(ktestFilesList))
+            err_msg  "No ktest data could be extracted from ktests."
+            do_skip = False
+            if skip_failure is None:
+                do_skip = common_mix.confirm_execution(err_msg + \
+                             "\n>> DO YOU WANT TO Skip THE FAILURE? ")
+            if not do_skip and not skip_failure:
+                ERROR_HANDLER.error_exit (err_msg, __file__)
 
         # update file data in objects (shortname and size)
 
