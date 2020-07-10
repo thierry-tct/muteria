@@ -114,7 +114,7 @@ class ConvertCollectKtestsSeeds:
                                             src_old_shadow_zesti_ktest_dir, \
                                    src_new_klee_ktest_dir_or_sym_args=None, \
                                             klee_ktest_is_sym_args=False, \
-                                            compress_dest=True):
+                                      compress_dest=True, skip_failure=False):
         """
         """
 
@@ -193,7 +193,8 @@ class ConvertCollectKtestsSeeds:
                 zestKtests.append(ktestfile)
         # refactor the ktest fom zesti 
         zest_sym_args_param, zestKTContains = self._getSymArgsFromZestiKtests(\
-                                                zestKtests, test2zestidirMap)
+                                                zestKtests, test2zestidirMap, \
+                                                     skip_failure=skip_failure)
 
         # get new klee stuffs
         if src_new_klee_ktest_dir is not None:
