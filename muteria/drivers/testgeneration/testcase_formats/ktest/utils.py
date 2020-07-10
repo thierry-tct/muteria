@@ -450,10 +450,10 @@ class ConvertCollectKtestsSeeds:
                         indexes_ia = [i for i,x in enumerate(arguments) \
                                                                 if name in x]
                         if len(indexes_ia) <= 0:
-                            err_msg = "Error: Must have "
-                                    "at least one argv containing filename "
-                                    "in its data.\n You could run with "
-                                    "'skip_failure' enabled to neglect "
+                            err_msg = "Error: Must have " +\
+                                    "at least one argv containing filename " +\
+                                    "in its data.\n You could run with " +\
+                                    "'skip_failure' enabled to neglect " +\
                                     "the error. Ktest file is "+filename
                             do_skip = False
                             if skip_failure is None:
