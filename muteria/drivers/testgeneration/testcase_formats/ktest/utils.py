@@ -454,7 +454,8 @@ class ConvertCollectKtestsSeeds:
                                     "at least one argv containing filename "
                                     "in its data.\n You could run with "
                                     "'skip_failure' enabled to neglect "
-                                    "the error.", __file__)
+                                    "the error. Ktest file is "+filename, 
+                                                                __file__)
                         if len(indexes_ia) > 1:
                             if test2zestidirMap_arg is not None:
                                 actual_test = None
