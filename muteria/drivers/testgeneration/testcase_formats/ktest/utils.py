@@ -670,7 +670,7 @@ class ConvertCollectKtestsSeeds:
 
         if len(listTestArgs) <= 0:
             logging.error("no ktest data, ktest PCs: " + str(ktestFilesList))
-            err_msg  "No ktest data could be extracted from ktests."
+            err_msg = "No ktest data could be extracted from ktests."
             do_skip = False
             if skip_failure is None:
                 do_skip = common_mix.confirm_execution(err_msg + \
