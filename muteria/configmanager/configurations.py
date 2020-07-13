@@ -440,6 +440,10 @@ class TestcaseToolsConfig(BaseToolConfig):
     # Default is 8 GB
     OUTLOG_MAX_ALLOWED_BYTES_SIZE = 8 * (1024 ** 3) 
     
+    # Scaling factor to apply on recorded test execution time before using
+    # as timeout on cosecutive executions
+    RECORDED_TEST_TIMEOUT_FACTOR = 5
+    
     def set_test_gen_maxtime(self, max_time):
         self.TEST_GENERATION_MAXTIME = max_time
     def set_test_gen_timeout_framework_grace(self, grace_time):
@@ -452,6 +456,8 @@ class TestcaseToolsConfig(BaseToolConfig):
         self.TEST_EXECUTION_ERROR_AS_FAIL = value
     def set_outlog_max_allowed_bytes_size(self, value):
         self.OUTLOG_MAX_ALLOWED_BYTES_SIZE = value
+    def set_recorded_test_timeout_factor(self, value):
+        self.RECORDED_TEST_TIMEOUT_FACTOR = value
 #~class TestcaseToolsConfig
     
 class CriteriaToolsConfig(BaseToolConfig):
