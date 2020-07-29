@@ -93,6 +93,7 @@ class TestcasesToolSemu(TestcasesToolKlee):
             '-semu-consider-outenv-for-diffs': None,
             '-semu-use-only-multi-branching-for-depth': None,
             '-semu-disable-post-mutation-check': None,
+            '-semu-no-error-on-memory-limit': None,
         }
         key_val_params = {
             '-output-dir': self.tests_storage_dir,
