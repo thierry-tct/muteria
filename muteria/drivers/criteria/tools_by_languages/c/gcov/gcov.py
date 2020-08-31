@@ -161,6 +161,7 @@ class CriteriaToolGCov(BaseCriteriaTool):
             using_gdb_wrapper = DriversUtils.check_tool(prog='gdb', \
                                                     args_list=['--version'], \
                                                     expected_exit_codes=[0])
+            
             if using_gdb_wrapper:
                 # XXX: Docker has issues running programs in Docker, 
                 # unless the container is ran with the following arguments:
@@ -169,15 +170,20 @@ class CriteriaToolGCov(BaseCriteriaTool):
                 #               --security-opt seccomp=unconfined ...
                 #
                 # We check that it is fine by testing on echo
-                ret, _, _ = DriversUtils.execute_and_get_retcode_out_err(
+                ret, o_e, _ = DriversUtils.execute_and_get_retcode_out_err(
                                         prog='gdb', \
                                         args_list=['--batch-silent', \
                                                     '--quiet', 
                                                     '--return-child-result', 
-                                                    '-ex', '"run"', 
+                                                    '-ex', 'run', 
                                                     '--args', 'echo'], \
-                                        out_on=False, err_on=False)
+                                        )#out_on=False, err_on=False)
                 using_gdb_wrapper = (ret == 0)
+                if not using_gdb_wrapper:
+                    logging.warning("use gdb is enabled but call to gdb fails"
+                                " (retcode {}) with msg: {}".format(ret, o_e))
+            else:
+                logging.warning("use gdb is enabled but gdb is not installed")
 
         crit_to_exes_map = {}
         obj = common_fs.loadJSON(self.instrumentation_details)
@@ -201,6 +207,12 @@ class CriteriaToolGCov(BaseCriteriaTool):
         exes_map = obj
         for criterion in enabled_criteria:
             crit_to_exes_map[criterion] = exes_map
+            
+        #logging.debug("DBG: {} {} {}".format(\
+        #                  "Using gdb wrapper is {}.".format(using_gdb_wrapper), \
+        #                  "crit_to_exe_map is {}.".format(crit_to_exes_map), \
+        #                  "wraper path is {}!".format(self.gcov_gdb_wrapper_sh)))
+            
         return crit_to_exes_map
     #~ def get_instrumented_executable_paths_map()
 
@@ -299,10 +311,12 @@ class CriteriaToolGCov(BaseCriteriaTool):
             # delete gcda
             for gcda_f in gcda_files:
                 os.remove(gcda_f)
-        elif not self.driver_config.get_allow_missing_coverage():
-            ERROR_HANDLER.error_exit(\
+        else:
+            if not self.driver_config.get_allow_missing_coverage():
+                ERROR_HANDLER.error_exit(\
                     "Testcase '{}' did not generate gcda, {}".format(\
                         testcase, "when allow missing coverage is disabled"))
+            dot_gcov_file_list = []
 
         common_fs.dumpJSON(dot_gcov_file_list, \
                                 os.path.join(result_dir_tmp,\

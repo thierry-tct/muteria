@@ -418,6 +418,7 @@ class Executor(object):
                         fault_test_execution_execoutput_file=execoutput_file, \
                         test_prioritization_module=\
                                         meta_testexec_optimization_tool, \
+                        parallel_test_count=None, \
                         finish_destroy_checkpointer=True)
         elif mode == criteria_tests_key:
             print ("# This mode is just needed to reexecute tests with"
@@ -717,6 +718,7 @@ class Executor(object):
                         fault_test_execution_execoutput_file=execoutput_file, \
                         test_prioritization_module=\
                                         self.meta_testexec_optimization_tool, \
+                        parallel_test_count=None, \
                         finish_destroy_checkpointer=False)
             
             # @Checkpointing
@@ -918,6 +920,15 @@ class Executor(object):
                     test_list_file = self.head_explorer.get_file_pathname(\
                                         outdir_struct.TMP_SELECTED_TESTS_LIST)
                     meta_testcases = common_fs.loadJSON(test_list_file)
+                    
+                    # remove tests of test tool to skip
+                    testtoolaliases_to_skip = self.config\
+                            .TESTCASE_TOOLALIASES_TO_SKIP_CRITERIA_COVERAGE\
+                            .get_val()
+                    if len(testtoolaliases_to_skip) > 0:
+                        meta_testcases = [mt for mt in meta_testcases if \
+                                    DriversUtils.reverse_meta_element(mt)[0] \
+                                             not in testtoolaliases_to_skip]
                     
                     criterion_to_matrix = {\
                                     c: matrix_files[c] for c in criteria_set}

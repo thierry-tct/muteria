@@ -309,7 +309,8 @@ class BaseTestcaseTool(abc.ABC):
         # Record exec time if not existing
         if recalculate_execution_times:
             self.test_execution_time[testcase] = \
-                                        1 + int(time.time() - start_time)
+                                max(1, int(time.time() - start_time)) \
+                                    * self.config.RECORDED_TEST_TIMEOUT_FACTOR
 
         self._restore_env_vars()
         self._restore_default_executable(exe_path_map, env_vars, \
@@ -404,7 +405,8 @@ class BaseTestcaseTool(abc.ABC):
             with self.shared_loc:
                 if recalculate_execution_times:
                     self.test_execution_time[testcase] = \
-                                            1 + int(time.time() - start_time)
+                                     max(1, int(time.time() - start_time)) \
+                                 * self.config.RECORDED_TEST_TIMEOUT_FACTOR
 
                 test_failed_verdicts[testcase] = test_failed
                 test_outlog_hash[testcase] = execoutlog_hash
@@ -496,7 +498,8 @@ class BaseTestcaseTool(abc.ABC):
 
             outlog_summary = {
                 common_matrices.OutputLogData.OUTLOG_LEN: out_len,
-                common_matrices.OutputLogData.OUTLOG_HASH: out_hash_val,
+                common_matrices.OutputLogData.OUTLOG_HASH: \
+                                                    sys.intern(out_hash_val),
                 common_matrices.OutputLogData.RETURN_CODE: retcode,
                 common_matrices.OutputLogData.TIMEDOUT: timedout,
             }

@@ -93,6 +93,7 @@ class TestcasesToolSemu(TestcasesToolKlee):
             '-semu-consider-outenv-for-diffs': None,
             '-semu-use-only-multi-branching-for-depth': None,
             '-semu-disable-post-mutation-check': None,
+            '-semu-no-error-on-memory-limit': None,
         }
         key_val_params = {
             '-output-dir': self.tests_storage_dir,
@@ -283,6 +284,49 @@ class TestcasesToolSemu(TestcasesToolKlee):
         return t_alias2metamu_bc[list(t_alias2metamu_bc)[0]]
     #~ def _get_input_bitcode_file()
 
+    @staticmethod
+    def _get_generation_time_of_test(test, test_top_dir):
+        """ extract the generation timestamp of a test. the test and 
+            its top location are specified
+        """
+        test_path = os.path.join(test_top_dir, test)
+        # Seach the test and get the time. 
+        # If dup, get the time of the duplicate test
+        # 1. If test_path exist, is is not dup
+        to_search = None
+        if os.path.isfile(test_path):
+            to_search = test_path
+        else:
+            # seach the test it is dup of
+            kepttest2duptest_map = common_fs.loadJSON(\
+                                              self.keptktest2dupktests)
+            ERROR_HANDLER.asser_true(test not in kepttest2duptest_map, \
+                            "Test file not existing but in kept (BUG)", \
+                                                                __file__)
+            for kept, dup_list in kepttest2duptest_map.items():
+                if test in dup_list:
+                    to_search = os.path.join(test_top_dir, kept)
+        
+        ERROR_HANDLER.assert_true(to_search is not None, \
+                        "test not found in dup and inexistant", __file__)
+        # 2. search for the test and its time
+        ktestlists = glob.glob(os.path.join(os.path.dirname(to_search), \
+                                              "mutant-[0-9]*.ktestlist"))
+        gen_time = None
+        for klist in ktestlists:
+            df = common_fs.loadCSV(klist,  separator=",")
+            val = df.loc[df.ktest==os.path.basename(to_search), \
+                                                'ellapsedTime(s)'].values
+            if len(val) == 1:
+                gen_time = val[0]
+                break
+            ERROR_HANDLER.assert_true(len(val) == 0, "PB in ktestlist " + \
+                  str(klist) + ". ktest appearing multiple times", __file__)
+        ERROR_HANDLER.assert_true(gen_time is not None, \
+                                   "test not found in ktestlists", __file__)
+        return gen_time
+    #~ def _get_generation_time_of_test()
+    
     def fdupeGeneratedTest (self, mfi_ktests_dir_top, mfi_ktests_dir, \
                                                 semuoutputs, seeds_dir=None):
         # Implement and use (see run.py in Semu Analysis)

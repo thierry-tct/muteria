@@ -109,6 +109,9 @@ class BaseCriteriaTool(abc.ABC):
                                     prioritization_module_by_criteria=None, \
                                     test_parallel_count=1):
         """
+            testcases is assumed to be already in sys.intern
+            criteria_element_list_by_criteria's criteria_elements are 
+                                        assumed to be already in sys.intern
         """
 
         logging.debug("# Executing meta {}: {} ...".format("criteria" if \
@@ -158,9 +161,16 @@ class BaseCriteriaTool(abc.ABC):
 
         timeout_times = self.config.META_TEST_EXECUTION_EXTRA_TIMEOUT_TIMES
 
+        test2pos = {t: p for p, t in enumerate(testcases)}
+        def _get_init_elem_cov():
+            return [common_mix.GlobalConstants.ELEMENT_NOTCOVERED_VERDICT \
+                                                            for t in test2pos]
+        #~ def _get_init_elem_cov()
+
         # Execute each test and gather the data
         processbar = tqdm.tqdm(testcases, leave=False, dynamic_ncols=True) 
         for testcase in processbar: 
+            testcase = sys.intern(testcase)
             processbar.set_description("Running Test %s"% testcase)
             for cg_criteria, cg_exe_path_map, cg_env_vars in groups:
                 # Create reult_tmp_dir
@@ -194,7 +204,9 @@ class BaseCriteriaTool(abc.ABC):
                 for criterion in cg_criteria:
                     if len(criterion2coverage_per_test[criterion]) == 0:
                         for elem in coverage_tmp_data_per_criterion[criterion]:
-                            criterion2coverage_per_test[criterion][elem] = {}
+                            #criterion2coverage_per_test[criterion][elem] = {}
+                            criterion2coverage_per_test[criterion][elem] = \
+                                                        _get_init_elem_cov()
                         if criterion_to_executionoutput[criterion] is not None:
                             for elem in metaoutlog_tmp_data_per_criterion[\
                                                                     criterion]:
@@ -212,10 +224,13 @@ class BaseCriteriaTool(abc.ABC):
                         try:
                             res = criterion2coverage_per_test[criterion][elem]
                         except KeyError:
-                            res = {}
+                            #res = {}
+                            res = _get_init_elem_cov()
                             criterion2coverage_per_test[criterion][elem] = res
 
-                        res[testcase] = coverage_tmp_data_per_criterion\
+                        #res[testcase] = coverage_tmp_data_per_criterion\
+                        res[test2pos[testcase]] = \
+                                        coverage_tmp_data_per_criterion\
                                                             [criterion][elem]
 
                     if criterion_to_executionoutput[criterion] is not None:
@@ -242,7 +257,7 @@ class BaseCriteriaTool(abc.ABC):
 
         # Write the execution data into the matrices
         # Since for ExecutionMatrix, active is not 0 thus this is direct.
-        testcases_set = set(testcases)
+        #testcases_set = set(testcases)
         for criterion in criterion2coverage_per_test:
             matrix = criterion_to_matrix[criterion]
             matrix_file = matrix.get_store_filename()
@@ -251,10 +266,11 @@ class BaseCriteriaTool(abc.ABC):
                                     
             for key, value in list(\
                             criterion2coverage_per_test[criterion].items()):
-                missing_tests = {t:common_mix.GlobalConstants.\
-                                        ELEMENT_NOTCOVERED_VERDICT for t in \
-                                                    testcases_set - set(value)}
-                value.update(missing_tests)
+                #missing_tests = {t:common_mix.GlobalConstants.\
+                #                        ELEMENT_NOTCOVERED_VERDICT for t in \
+                #                                  testcases_set - set(value)}
+                #value.update(missing_tests)
+                value = {t: value[test2pos[t]] for t in test2pos}
                 matrix.add_row_by_key(key, value, serialize=False)
             # Serialize to disk
             matrix.serialize()
@@ -440,6 +456,9 @@ class BaseCriteriaTool(abc.ABC):
         ERROR_HANDLER.assert_true(test_parallel_count <= 1, \
                 "FIXME: Must first implement support for parallel mutation")
         #~ FXIMEnd
+
+        # save memory
+        testcases = [sys.intern(t) for t in testcases]
 
         # @Checkpoint: create a checkpoint handler (for time)
         cp_func_name = "runtests_criteria_coverage"

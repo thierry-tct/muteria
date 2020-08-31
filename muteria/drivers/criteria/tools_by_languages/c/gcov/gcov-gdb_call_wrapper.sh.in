@@ -41,7 +41,7 @@ args=("${@:-}")
 
 #run with gdb as daemon
 #exec /usr/bin/gdb --batch-silent --quiet --return-child-result -ex "run" -ex "thread apply all call __gcov_flush()"  -ex "thread apply all call exit()" --args $Prog "${args[@]}" 1>&1 2>&2 <&0 & 
-exec /usr/bin/gdb --batch-silent --quiet --return-child-result -ex "run" -ex "thread apply all call __gcov_flush()"  -ex "thread apply all call exit()" --args $Prog "${args[@]}" 1>&1 2>&2 &
+exec /usr/bin/gdb --batch-silent --quiet --return-child-result -ex "run" -ex "thread apply all call (void) __gcov_flush()"  -ex "thread apply all call exit()" --args $Prog "${args[@]}" 1>&1 2>&2 &
 gdbpid=$!
 
 

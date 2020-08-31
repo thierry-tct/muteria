@@ -112,8 +112,9 @@ class ConvertCollectKtestsSeeds:
 
     def generate_seeds_from_various_ktests (self, dest_dir, \
                                             src_old_shadow_zesti_ktest_dir, \
-                                            src_new_klee_ktest_dir=None, \
-                                            compress_dest=True):
+                                   src_new_klee_ktest_dir_or_sym_args=None, \
+                                            klee_ktest_is_sym_args=False, \
+                                      compress_dest=True, skip_failure=False):
         """
         """
 
@@ -124,6 +125,14 @@ class ConvertCollectKtestsSeeds:
         ERROR_HANDLER.assert_true(not (compress_dest and \
                                         os.path.isfile(dest_dir+self.tar_gz)),\
                                 "dest dir compressed already exists", __file__)
+        
+        if klee_ktest_is_sym_args:
+            src_new_klee_ktest_dir = None
+            klee_ktest_sym_args = src_new_klee_ktest_dir_or_sym_args
+        else:
+            klee_ktest_sym_args = None
+            src_new_klee_ktest_dir = src_new_klee_ktest_dir_or_sym_args
+            
         os.mkdir(dest_dir)
 
         tmpdir = os.path.join(dest_dir, '.tmp')
@@ -184,7 +193,8 @@ class ConvertCollectKtestsSeeds:
                 zestKtests.append(ktestfile)
         # refactor the ktest fom zesti 
         zest_sym_args_param, zestKTContains = self._getSymArgsFromZestiKtests(\
-                                                zestKtests, test2zestidirMap)
+                                                zestKtests, test2zestidirMap, \
+                                                     skip_failure=skip_failure)
 
         # get new klee stuffs
         if src_new_klee_ktest_dir is not None:
@@ -201,6 +211,10 @@ class ConvertCollectKtestsSeeds:
                                     self._loadAndGetSymArgsFromKleeKTests (\
                                                     new_klee_test_list, \
                                                     src_new_klee_ktest_dir)
+        elif klee_ktest_sym_args is not None:
+            _, kleeKTContains = \
+                            self._loadAndGetSymArgsFromKleeKTests([], None)
+            klee_sym_args_param = [" ".join(l) for l in klee_ktest_sym_args]
         else:
             klee_sym_args_param, kleeKTContains = None, None
             
@@ -408,19 +422,21 @@ class ConvertCollectKtestsSeeds:
                                     actual_test = at
                                     break
                             msg = " ".join(["\n>> CONFLICT: the file object",\
-                                "at position ",ind,"with name",str(name),\
+                                "at position ",str(ind),"with name",str(name),\
                                 "in ktest",filename,"appears several times",\
                                 "in args list (The actual test is:", 
-                                actual_test,")."])
+                                actual_test,").\n",\
+                                "    >> Please choose its space separated",\
+                                "position(s), (",str(indexes_ia),"): "])
                         else:
                             msg = " ".join(["\n>> CONFLICT: the file object",\
-                                "at position ",ind,"with name",str(name),\
+                                "at position ",str(ind),"with name",str(name),\
                                 "in ktest",filename,"appears several times",\
                                 "in args list (Check",\
                                 "OUTPUT/caches/test2zestidirMap.json for",\
                                 "actual test).\n",\
                                 "    >> Please choose its space separated",\
-                                "position(s), (",indexes_ia,"):"])
+                                "position(s), (",str(indexes_ia),"): "])
                         raw = input(msg)
                         indinargs = [int(v) for v in raw.split()]
                         ERROR_HANDLER.assert_true(\
@@ -434,12 +450,17 @@ class ConvertCollectKtestsSeeds:
                         indexes_ia = [i for i,x in enumerate(arguments) \
                                                                 if name in x]
                         if len(indexes_ia) <= 0:
-                            if not skip_failure:
-                                ERROR_HANDLER.error_exit ("Error: Must have "
-                                    "at least one argv containing filename "
-                                    "in its data.\n You could run with "
-                                    "'skip_failure' enabled to neglect "
-                                    "the error.", __file__)
+                            err_msg = "Error: Must have " +\
+                                    "at least one argv containing filename " +\
+                                    "in its data.\n You could run with " +\
+                                    "'skip_failure' enabled to neglect " +\
+                                    "the error. Ktest file is "+filename
+                            do_skip = False
+                            if skip_failure is None:
+                                do_skip = common_mix.confirm_execution(err_msg + \
+                                      "\n>> DO YOU WANT TO Skip THE FAILURE? ")
+                            if not do_skip and not skip_failure:
+                                ERROR_HANDLER.error_exit (err_msg, __file__)
                         if len(indexes_ia) > 1:
                             if test2zestidirMap_arg is not None:
                                 actual_test = None
@@ -461,8 +482,8 @@ class ConvertCollectKtestsSeeds:
                                     "OUTPUT/caches/test2zestidirMap.json",\
                                     "for actual test).\n", \
                                     "    >> Please choose its space", \
-                                    "separated position(s), (",indexes_ia, \
-                                    "):"])
+                                    "separated position(s), (",\
+                                    str(indexes_ia), "):"])
                             raw = input(msg)
                             indinargs = [int(v) for v in raw.split()]
                             ERROR_HANDLER.assert_true(\
@@ -648,11 +669,14 @@ class ConvertCollectKtestsSeeds:
             afterFileNStat.append(afterFnS)
 
         if len(listTestArgs) <= 0:
-            logging.error("no ktest data, ktest PCs: " + ktestFilesList)
-            if not skip_failure:
-                ERROR_HANDLER.error_exit (
-                            "No ktest data could be extracted from ktests.",\
-                                                                    __file__)
+            logging.error("no ktest data, ktest PCs: " + str(ktestFilesList))
+            err_msg = "No ktest data could be extracted from ktests."
+            do_skip = False
+            if skip_failure is None:
+                do_skip = common_mix.confirm_execution(err_msg + \
+                             "\n>> DO YOU WANT TO Skip THE FAILURE? ")
+            if not do_skip and not skip_failure:
+                ERROR_HANDLER.error_exit (err_msg, __file__)
 
         # update file data in objects (shortname and size)
 
@@ -687,8 +711,10 @@ class ConvertCollectKtestsSeeds:
                                 ktestContains["CORRESP_TESTNAME"][ktpos],\
                                 "\n    >> Please replace initial file name",\
                                 "with new in "+str(ktdat.objects[fai][1])+
-                                "' :"])
+                                " :"])
                             raw = bytes(input(msg).strip(), 'utf-8')
+                            if ktdat.objects[fai][1].endswith(b'\0'):
+                                raw += b'\0'
                             ktdat.objects[fai] = (ktdat.objects[fai][0], raw)
 
                 # first add file object of additional files
@@ -1101,7 +1127,7 @@ class ConvertCollectKtestsSeeds:
             for i,n in enumerate(nums):
                 if self._is_sym_args_having_nargs(" ".join(['-sym-args']\
                                     +list(map(str, list_new_sym_args[i])))):
-                    res.append(("n_args", struct.pack('<i', n)))
+                    res.append((b"n_args", struct.pack('<i', n)))
                 for j in range(ao_ind, ao_ind+n):
                     res.append((objSegment[j][0], objSegment[j][1] \
                                          + b'\0'*(list_new_sym_args[i][2] \

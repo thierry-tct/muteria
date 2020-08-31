@@ -53,9 +53,11 @@ class CliUserInterface(object):
         parser_run.add_argument("--cleanstart", action='store_true', \
                                             help="Clear out dir and restart")
 
-        parser_run = subparsers.add_parser('customexec', \
+        parser_customexec = subparsers.add_parser('customexec', \
                                     help="Make some custom execution AFTER the"
                                         " main execution is done")
+        parser_customexec.add_argument("--nohashoutlog", action='store_true', \
+                                         help="When set, enforce no hash log")
 
         if len(sys.argv)==1:
             parser.print_help(sys.stderr)
@@ -94,6 +96,8 @@ class CliUserInterface(object):
         elif args.command == 'internal':
             raw_conf['RUN_MODE'] = configurations.SessionMode.INTERNAL_MODE
         elif args.command == 'customexec':
+            if args.nohashoutlog:
+                raw_conf["HASH_OUTLOG"] = False
             raw_conf['RUN_MODE'] = \
                             configurations.SessionMode.CUSTOM_EXECUTION_MODE
         else:
