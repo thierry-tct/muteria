@@ -236,7 +236,15 @@ class TestcasesToolKlee(BaseTestcaseTool):
             resource.setrlimit(resource.RLIMIT_STACK, (-1, stack_ulimit_hard))
 
         # Execute Klee
-        ret, out, err = DriversUtils.execute_and_get_retcode_out_err(\
+        if self.driver_config.get_suppress_generation_stdout():
+            ret, out, err = DriversUtils.execute_and_get_retcode_out_err(\
+                                    runtool, args_list=args, timeout=max_time,\
+                                    timeout_grace_period=timeout_grace_period, \
+                                    out_on=False, err_on=True, \
+                                    merge_err_to_out=False)
+            out, err = err, out
+        else:
+            ret, out, err = DriversUtils.execute_and_get_retcode_out_err(\
                                     runtool, args_list=args, timeout=max_time,\
                                     timeout_grace_period=timeout_grace_period)
                                     #out_on=False, err_on=False)
