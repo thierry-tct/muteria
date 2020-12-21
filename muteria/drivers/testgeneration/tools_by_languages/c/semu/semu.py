@@ -125,6 +125,12 @@ class TestcasesToolSemu(TestcasesToolKlee):
         return bool_params, key_val_params
     #~ def _get_default_params()
     
+    def _handle_backward_compatibility_with_semu (self, args):
+        to_replace_map = {}
+        to_negate_map = {}
+        # TODO: Implement
+    #~ def _handle_backward_compatibility_with_semu()
+    
     def _call_generation_run(self, runtool, args):
         # If seed-dir is set, ensure that only-replay-seeds is set 
         # (semu requires it for now)
