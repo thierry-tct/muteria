@@ -85,12 +85,12 @@ class TestcasesToolSemu(TestcasesToolKlee):
           
             '-only-replay-seeds': None, # Useful to set this is using seeds
             # SEMu 
-            '-semu-disable-statediff-in-testgen': None,
-            '-semu-continue-mindist-out-heuristic': None,
+            '-semu-no-state-difference': None,
+            '-semu-MDO-propagation-selection-strategy': None,
             '-semu-use-basicblock-for-distance': None,
             '-semu-forkprocessfor-segv-externalcalls': True,
             '-semu-testsgen-only-for-critical-diffs': None,
-            '-semu-consider-outenv-for-diffs': None,
+            '-semu-no-environment-output-diff': None,
             '-semu-use-only-multi-branching-for-depth': None,
             '-semu-disable-post-mutation-check': None,
             '-semu-no-error-on-memory-limit': None,
@@ -108,12 +108,12 @@ class TestcasesToolSemu(TestcasesToolKlee):
           
             '-'+self.SEED_DIR_ARG_NAME: None, 
             # SEMu 
-            '-semu-mutant-max-fork': '0', #None,
-            '-semu-checknum-before-testgen-for-discarded': '2', # None,
-            '-semu-mutant-state-continue-proba': '0.25', #None,
+            '-semu-checkpoint-window': '0', #None,
+            '-semu-minimum-propagation-depth': '2', # None,
+            '-semu-propagation-proportion': '0.25', #None,
             '-semu-precondition-length': '0', #None,
             '-semu-max-total-tests-gen': None,
-            '-semu-max-tests-gen-per-mutant': '5', # None,
+            '-semu-number-of-tests-per-mutant': '5', # None,
             '-semu-loop-break-delay': '120.0',
         }
         key_val_params.update({
@@ -126,12 +126,63 @@ class TestcasesToolSemu(TestcasesToolKlee):
     #~ def _get_default_params()
     
     def _handle_backward_compatibility_with_semu (self, args):
-        to_replace_map = {}
-        to_negate_map = {}
-        # TODO: Implement
+        to_replace_map = {
+            '-semu-mutant-max-fork': '-semu-checkpoint-window',
+            '--semu-mutant-max-fork': '--semu-checkpoint-window',
+            '-semu-mutant-state-continue-proba': \
+                                            '-semu-propagation-proportion',
+            '--semu-mutant-state-continue-proba': \
+                                           '--semu-propagation-proportion',
+            '-semu-continue-mindist-out-heuristic': \
+                                '-semu-MDO-propagation-selection-strategy',
+            '--semu-continue-mindist-out-heuristic': \
+                                '--semu-MDO-propagation-selection-strategy',
+            '-semu-checknum-before-testgen-for-discarded': \
+                                        '-semu-minimum-propagation-depth',
+            '--semu-checknum-before-testgen-for-discarded': \
+                                        '--semu-minimum-propagation-depth',
+            '-semu-disable-statediff-in-testgen': \
+                                               '-semu-no-state-difference',
+            '--semu-disable-statediff-in-testgen': \
+                                            '--semu-no-state-difference',
+            '-semu-max-tests-gen-per-mutant': \
+                                        '-semu-number-of-tests-per-mutant',
+            '--semu-max-tests-gen-per-mutant': \
+                                        '--semu-number-of-tests-per-mutant'
+        }
+        
+        # Direct replace
+        for pos, val in enumerate(args):
+            for match, replace in to_replace_map.items():
+                if val == match:
+                    args[pos] = replace
+                    break
+                    
+        # negation (Now out env is set by default)
+        found_pos = None
+        for match in ['-semu-consider-outenv-for-diffs', \
+                                    '--semu-consider-outenv-for-diffs']:
+            try:
+                pos = args.index(match)
+                # present
+                ERROR_HANDLER.assert_true (found_pos is None, \
+                                 "Multiple occurence of "
+                           "'-semu-consider-outenv-for-diffs'", __file__)
+                found_pos = pos
+            except ValueError:
+                # abscent
+                pass
+        if found_pos is None:
+            # insert no outenv
+            args.insert(0, '--semu-no-environment-output-diff')
+        else:
+            del args[found_pos]
     #~ def _handle_backward_compatibility_with_semu()
     
     def _call_generation_run(self, runtool, args):
+        # Handle support for alod version of SEMu
+        self._handle_backward_compatibility_with_semu (args)
+        
         # If seed-dir is set, ensure that only-replay-seeds is set 
         # (semu requires it for now)
         seed_dir_key = self.SEED_DIR_ARG_NAME
