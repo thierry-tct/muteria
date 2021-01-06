@@ -140,6 +140,14 @@ def getFaultRevealingMutants (strong_mutant_kill_matrix_file, \
                                 selected_tests=None):
     """
     This function compute the set of fault revealing mutants.
+    
+    The inputs are:
+    - mutant kill matrix file, 
+    - expected program output file, Used to see which test fails
+    - obtained program output file, Used to see which test fails
+    - threshold, in case a relaxed fault revealing is looked for
+    - selected tests, in case part of the tests should be used
+    
     :return: A pair is returned, with first element the set of fault revealing
             Mutants, and second element, a dict with key the mutants and values
             the fault revelation ratio 
