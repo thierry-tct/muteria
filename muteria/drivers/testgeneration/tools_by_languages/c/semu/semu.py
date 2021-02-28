@@ -280,6 +280,9 @@ class TestcasesToolSemu(TestcasesToolKlee):
             return super(TestcasesToolSemu, self)._get_input_bitcode_file(\
                                         code_builds_factory, rel_path_map, \
                                 meta_criteria_tool_obj=meta_criteria_tool_obj)
+        if type(meta_mu_src) == str:
+            # XXX: The actual path to the meta is specified
+            return meta_mu_src
         
         # XXX: Case of other mutation tools like Mart
         # get the meta criterion file from MART or any compatible tool.
