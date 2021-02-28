@@ -395,6 +395,6 @@ class TestcasesToolSemu(TestcasesToolKlee):
     #~ def fdupeGeneratedTest ()
 
     def requires_criteria_instrumented(self):
-        return True
+        return self.driver_config.requires_criteria_instrumented()
     #~ def requires_criteria_instrumented()
 #~ class TestcasesToolSemu
