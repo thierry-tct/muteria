@@ -35,6 +35,12 @@ class DriverConfigSemu(DriverConfigKlee):
         self.target_only_live_mutants = target_only_live_mutants 
     #~ def __init__()
 
+    def requires_criteria_instrumented(self):
+        if type(meta_mutant_source) == str or meta_mutant_source == MetaMuSource.ANNOTATION:
+            return False
+        return True
+    #~ def requires_criteria_instrumented()
+    
     def get_max_mutant_count_per_cluster (self):
         return self.max_mutant_count_per_cluster
     #~ def get_max_mutant_count_per_cluster ()
