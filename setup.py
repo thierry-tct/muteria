@@ -13,8 +13,20 @@ from setuptools import setup, find_packages
 from _version import __version__, _framework_name
  
 thisdir = os.path.dirname(os.path.abspath(__file__))
-with open(os.path.join(thisdir, "README.md"), "r") as fh:
-    long_description = fh.read()
+
+def get_long_description():
+    with open(os.path.join(thisdir, "README.md"), "r") as fh:
+        long_description = fh.read()
+    return long_description
+
+def get_requirements_list():
+     requirements_list = []
+     with open(os.path.join(thisdir, "requirements.txt"), "r") as fh:
+         for line in fh:
+             req = line.strip().split()
+             if len(req) > 0 and not req.startswith('#'):
+                 requirements_list.append(req)
+     return requirements_list
 
 setup(
     # This is the name of your PyPI-package.
@@ -23,7 +35,7 @@ setup(
     # Update the version number for new releases
     version=__version__,
     description='Software Analysis and Testing Framework',
-    long_description=long_description,
+    long_description=get_long_description(),
     long_description_content_type='text/markdown',
     author='Thierry Titcheu Chekam',
     author_email='thierry_tct@yahoo.com',
@@ -32,21 +44,7 @@ setup(
     #packages=find_packages(),
     py_modules = ['_version'],
     include_package_data=True,
-    install_requires = [
-            "numpy",
-            "pandas",
-            "scipy",
-            "matplotlib",
-            "networkx",
-            "gitpython",
-            "tqdm",
-            "joblib",
-            "docker", # https://docker-py.readthedocs.io/en/stable/index.html
-
-            # SERVER
-            "flask",
-            "flask_socketio",
-    ],
+    install_requires = get_requirements_list(),
     # The name of your scipt, and also the command you'll be using for calling it
     #scripts=['cli/muteria'],
     entry_points={
