@@ -21,7 +21,7 @@ class DriverConfigSemu(DriverConfigKlee):
                                     and meta_mutant_source.endswith(".bc"):
             # Consider case when directly specifying meta-mu file in semu
             ERROR_HANDLER.assert_true(os.path.isfile(meta_mutant_source), 
-                    "Specified meta-mu bc file is missing: "+meta_mutant_file)
+                    "Specified meta-mu bc file is missing: "+meta_mutant_source)
             meta_mutant_source = os.path.realpath(meta_mutant_source)
         else:
             ERROR_HANDLER.assert_true(
