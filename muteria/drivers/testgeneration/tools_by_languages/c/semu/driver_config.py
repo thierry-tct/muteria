@@ -36,7 +36,7 @@ class DriverConfigSemu(DriverConfigKlee):
     #~ def __init__()
 
     def requires_criteria_instrumented(self):
-        if type(meta_mutant_source) == str or meta_mutant_source == MetaMuSource.ANNOTATION:
+        if type(self.meta_mutant_source) == str or meta_mutant_source == MetaMuSource.ANNOTATION:
             return False
         return True
     #~ def requires_criteria_instrumented()

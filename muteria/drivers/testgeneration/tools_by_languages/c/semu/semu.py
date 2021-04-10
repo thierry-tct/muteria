@@ -197,67 +197,70 @@ class TestcasesToolSemu(TestcasesToolKlee):
                 
         # use mutants_by_funcs to reorganize target mutants for scalability
 
-        max_mutant_count_per_cluster = \
-                        self.driver_config.get_max_mutant_count_per_cluster()
+        if os.path.isfile(self.cand_muts_file):
+            max_mutant_count_per_cluster = \
+                            self.driver_config.get_max_mutant_count_per_cluster()
 
-        cand_mut_file_bak = self.cand_muts_file + '.bak'
-        mut_list = []
-        with open(self.cand_muts_file) as f:
-            for m in f:
-                m = m.strip()
-                ERROR_HANDLER.assert_true(m.isdigit(), "Invalid mutant ID", \
-                                                                    __file__)
-                mut_list.append(m)
-        if self.mutants_by_funcs is None:
-            random.shuffle(mut_list)
-        else:
-            # make the mutants to be localized in same function as much as
-            # possible
-            # XXX Here the mutant ID are NOT meta but simple IDs
-            this_mutants_by_funcs = {}
-            mut_to_func = {}
-            for f, m_set in self.mutants_by_funcs.items():
-                this_mutants_by_funcs[f] = m_set & set(mut_list)
-                for m in this_mutants_by_funcs[f]:
-                    mut_to_func[m] = f
-            func_to_rank_dec = list(this_mutants_by_funcs.keys())
-            func_to_rank_dec.sort(key=lambda x: len(this_mutants_by_funcs[x]),\
-                                                                reverse=True)
-            func_to_rank_dec = {f: r for r, f in enumerate(func_to_rank_dec)}
-            mut_list.sort(key=lambda x: func_to_rank_dec[mut_to_func[x]])
-        nclust = int(len(mut_list) / max_mutant_count_per_cluster)
-        if len(mut_list) != max_mutant_count_per_cluster * nclust:
-            nclust += 1
-        clusters = np.array_split(mut_list, nclust)
+            cand_mut_file_bak = self.cand_muts_file + '.bak'
+            mut_list = []
+            with open(self.cand_muts_file) as f:
+                for m in f:
+                    m = m.strip()
+                    ERROR_HANDLER.assert_true(m.isdigit(), "Invalid mutant ID", \
+                                                                        __file__)
+                    mut_list.append(m)
+            if self.mutants_by_funcs is None:
+                random.shuffle(mut_list)
+            else:
+                # make the mutants to be localized in same function as much as
+                # possible
+                # XXX Here the mutant ID are NOT meta but simple IDs
+                this_mutants_by_funcs = {}
+                mut_to_func = {}
+                for f, m_set in self.mutants_by_funcs.items():
+                    this_mutants_by_funcs[f] = m_set & set(mut_list)
+                    for m in this_mutants_by_funcs[f]:
+                        mut_to_func[m] = f
+                func_to_rank_dec = list(this_mutants_by_funcs.keys())
+                func_to_rank_dec.sort(key=lambda x: len(this_mutants_by_funcs[x]),\
+                                                                    reverse=True)
+                func_to_rank_dec = {f: r for r, f in enumerate(func_to_rank_dec)}
+                mut_list.sort(key=lambda x: func_to_rank_dec[mut_to_func[x]])
+            nclust = int(len(mut_list) / max_mutant_count_per_cluster)
+            if len(mut_list) != max_mutant_count_per_cluster * nclust:
+                nclust += 1
+            clusters = np.array_split(mut_list, nclust)
 
-        # update max-time
-        if len(clusters) > 1:
-            cur_max_time = float(self.get_value_in_arglist(args, 'max-time'))
-            self.set_value_in_arglist(args, 'max-time', \
-                                    str(max(1, cur_max_time / len(clusters))))
-        
-        shutil.move(self.cand_muts_file, cand_mut_file_bak)
-
-        c_dirs = []
-        for c_id, clust in enumerate(clusters):
-            logging.debug("SEMU: targeting mutant cluster {}/{} ...".format(\
-                                                        c_id+1, len(clusters)))
-            with open(self.cand_muts_file, 'w') as f:
-                for m in clust:
-                    f.write(m+'\n')
-
-            super(TestcasesToolSemu, self)._call_generation_run(runtool, args)
+            # update max-time
+            if len(clusters) > 1:
+                cur_max_time = float(self.get_value_in_arglist(args, 'max-time'))
+                self.set_value_in_arglist(args, 'max-time', \
+                                        str(max(1, cur_max_time / len(clusters))))
             
-            c_dir = os.path.join(os.path.dirname(self.tests_storage_dir), \
-                                                                    str(c_id))
-            shutil.move(self.tests_storage_dir, c_dir)
-            c_dirs.append(c_dir)
+            shutil.move(self.cand_muts_file, cand_mut_file_bak)
 
-        os.mkdir(self.tests_storage_dir)
-        for c_dir in c_dirs:
-            shutil.move(c_dir, self.tests_storage_dir)
+            c_dirs = []
+            for c_id, clust in enumerate(clusters):
+                logging.debug("SEMU: targeting mutant cluster {}/{} ...".format(\
+                                                            c_id+1, len(clusters)))
+                with open(self.cand_muts_file, 'w') as f:
+                    for m in clust:
+                        f.write(m+'\n')
 
-        shutil.move(cand_mut_file_bak, self.cand_muts_file)
+                super(TestcasesToolSemu, self)._call_generation_run(runtool, args)
+                
+                c_dir = os.path.join(os.path.dirname(self.tests_storage_dir), \
+                                                                        str(c_id))
+                shutil.move(self.tests_storage_dir, c_dir)
+                c_dirs.append(c_dir)
+
+            os.mkdir(self.tests_storage_dir)
+            for c_dir in c_dirs:
+                shutil.move(c_dir, self.tests_storage_dir)
+
+            shutil.move(cand_mut_file_bak, self.cand_muts_file)
+        else:
+            super(TestcasesToolSemu, self)._call_generation_run(runtool, args)
     #~ def _call_generation_run()
 
     def _get_tool_name(self):
