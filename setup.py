@@ -20,13 +20,33 @@ def get_long_description():
     return long_description
 
 def get_requirements_list():
-     requirements_list = []
-     with open(os.path.join(thisdir, "requirements.txt"), "r") as fh:
-         for line in fh:
-             req = line.strip().split()
-             if len(req) > 0 and not req.startswith('#'):
-                 requirements_list.append(req)
-     return requirements_list
+    """
+    requirements_list = []
+    with open(os.path.join(thisdir, "requirements.txt"), "r") as fh:
+        for line in fh:
+            req = line.strip().split()
+            if len(req) > 0 and not req[0].startswith('#'):
+                requirements_list.append(req[0])
+    """
+    requirements_list = [
+        "numpy",
+        "pandas",
+        "scipy",
+        "matplotlib",
+        "networkx",
+        "gitpython",
+        "tqdm",
+        "joblib",
+        #docker # https://docker-py.readthedocs.io/en/stable/index.html
+        #sh # easy subprocess creation
+        #enum #(python 2.7)
+
+        # SERVER
+        #"flask",
+        #"flask_socketio"
+    ]
+
+    return requirements_list
 
 setup(
     # This is the name of your PyPI-package.
