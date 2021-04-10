@@ -1,4 +1,5 @@
 import os
+import errno
 import logging
 import importlib
 import subprocess
@@ -185,7 +186,7 @@ class DriversUtils(object):
                 ERROR_HANDLER.error_exit("Program {} {}.".format(prog,\
                                         ': check is problematic'), __file__)
         except OSError as e:
-            if e.errno == os.errno.ENOENT:
+            if e.errno == errno.ENOENT:
                 logging.info("{} not installed".format(prog))
                 return False
             else:
