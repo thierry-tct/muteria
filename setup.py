@@ -10,9 +10,10 @@
 import os
 from setuptools import setup, find_packages
 
-from _version import __version__, _framework_name
- 
 thisdir = os.path.dirname(os.path.abspath(__file__))
+
+# get __version__, _framework_name
+exec(open(os.path.join(thisdir, 'muteria', '_version.py')).read())
 
 def get_long_description():
     with open(os.path.join(thisdir, "README.md"), "r") as fh:
@@ -62,7 +63,7 @@ setup(
     url='https://github.com/muteria/muteria',
     packages = ['muteria'],
     #packages=find_packages(),
-    py_modules = ['_version'],
+    #py_modules = ['_version'],
     include_package_data=True,
     install_requires = get_requirements_list(),
     # The name of your scipt, and also the command you'll be using for calling it
