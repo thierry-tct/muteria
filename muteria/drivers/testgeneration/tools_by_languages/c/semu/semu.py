@@ -174,11 +174,12 @@ class TestcasesToolSemu(TestcasesToolKlee):
             except ValueError:
                 # abscent
                 pass
-        if found_pos is None and old_version:
-            # insert no outenv
-            args.insert(0, '--semu-no-environment-output-diff')
-        else:
-            del args[found_pos]
+        if old_version:
+            if found_pos is None:
+                # insert no outenv
+                args.insert(0, '--semu-no-environment-output-diff')
+            else:
+                del args[found_pos]
     #~ def _handle_backward_compatibility_with_semu()
     
     def _call_generation_run(self, runtool, args):
