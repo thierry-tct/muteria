@@ -152,10 +152,12 @@ class TestcasesToolSemu(TestcasesToolKlee):
         }
         
         # Direct replace
+        old_version = False
         for pos, val in enumerate(args):
             for match, replace in to_replace_map.items():
                 if val == match:
                     args[pos] = replace
+                    old_version = True
                     break
                     
         # negation (Now out env is set by default)
@@ -172,7 +174,7 @@ class TestcasesToolSemu(TestcasesToolKlee):
             except ValueError:
                 # abscent
                 pass
-        if found_pos is None:
+        if found_pos is None and old_version:
             # insert no outenv
             args.insert(0, '--semu-no-environment-output-diff')
         else:
