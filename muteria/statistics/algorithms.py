@@ -87,6 +87,15 @@ def getCommonSetsSizes_venn (setsElemsDict, setsize_from=None,
                                 not_common=None):
     '''
         TODO: 
+        
+    arguments are:
+        - setsElemsDict
+        - setsize_from
+        - setsize_to
+        - name_delim
+        - not_common
+        
+    return:
     '''
     if not_common is not None:
         assert type(not_common) == dict and len(not_common) == 0

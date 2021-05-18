@@ -1177,7 +1177,8 @@ class Executor(object):
     #~ def _create_meta_criteriaexec_optimization()
 
     def _initialize_output_structure(self, cleanstart=False):
-        if cleanstart:
+        if cleanstart and os.path.isdir(self.head_explorer.get_dir_pathname(\
+                                            outdir_struct.TOP_OUTPUT_DIR_KEY)):
             if common_mix.confirm_execution(
                                     "Do you really want to clean the outdir?"):
                 self.head_explorer.clean_create_and_get_dir(\

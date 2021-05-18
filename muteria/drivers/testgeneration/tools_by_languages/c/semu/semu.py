@@ -85,12 +85,12 @@ class TestcasesToolSemu(TestcasesToolKlee):
           
             '-only-replay-seeds': None, # Useful to set this is using seeds
             # SEMu 
-            '-semu-disable-statediff-in-testgen': None,
-            '-semu-continue-mindist-out-heuristic': None,
+            '-semu-no-state-difference': None,
+            '-semu-MDO-propagation-selection-strategy': None,
             '-semu-use-basicblock-for-distance': None,
             '-semu-forkprocessfor-segv-externalcalls': True,
             '-semu-testsgen-only-for-critical-diffs': None,
-            '-semu-consider-outenv-for-diffs': None,
+            '-semu-no-environment-output-diff': None,
             '-semu-use-only-multi-branching-for-depth': None,
             '-semu-disable-post-mutation-check': None,
             '-semu-no-error-on-memory-limit': None,
@@ -108,12 +108,12 @@ class TestcasesToolSemu(TestcasesToolKlee):
           
             '-'+self.SEED_DIR_ARG_NAME: None, 
             # SEMu 
-            '-semu-mutant-max-fork': '0', #None,
-            '-semu-checknum-before-testgen-for-discarded': '2', # None,
-            '-semu-mutant-state-continue-proba': '0.25', #None,
+            '-semu-checkpoint-window': '0', #None,
+            '-semu-minimum-propagation-depth': '2', # None,
+            '-semu-propagation-proportion': '0.25', #None,
             '-semu-precondition-length': '0', #None,
             '-semu-max-total-tests-gen': None,
-            '-semu-max-tests-gen-per-mutant': '5', # None,
+            '-semu-number-of-tests-per-mutant': '5', # None,
             '-semu-loop-break-delay': '120.0',
         }
         key_val_params.update({
@@ -125,7 +125,67 @@ class TestcasesToolSemu(TestcasesToolKlee):
         return bool_params, key_val_params
     #~ def _get_default_params()
     
+    def _handle_backward_compatibility_with_semu (self, args):
+        to_replace_map = {
+            '-semu-mutant-max-fork': '-semu-checkpoint-window',
+            '--semu-mutant-max-fork': '--semu-checkpoint-window',
+            '-semu-mutant-state-continue-proba': \
+                                            '-semu-propagation-proportion',
+            '--semu-mutant-state-continue-proba': \
+                                           '--semu-propagation-proportion',
+            '-semu-continue-mindist-out-heuristic': \
+                                '-semu-MDO-propagation-selection-strategy',
+            '--semu-continue-mindist-out-heuristic': \
+                                '--semu-MDO-propagation-selection-strategy',
+            '-semu-checknum-before-testgen-for-discarded': \
+                                        '-semu-minimum-propagation-depth',
+            '--semu-checknum-before-testgen-for-discarded': \
+                                        '--semu-minimum-propagation-depth',
+            '-semu-disable-statediff-in-testgen': \
+                                               '-semu-no-state-difference',
+            '--semu-disable-statediff-in-testgen': \
+                                            '--semu-no-state-difference',
+            '-semu-max-tests-gen-per-mutant': \
+                                        '-semu-number-of-tests-per-mutant',
+            '--semu-max-tests-gen-per-mutant': \
+                                        '--semu-number-of-tests-per-mutant'
+        }
+        
+        # Direct replace
+        old_version = False
+        for pos, val in enumerate(args):
+            for match, replace in to_replace_map.items():
+                if val == match:
+                    args[pos] = replace
+                    old_version = True
+                    break
+                    
+        # negation (Now out env is set by default)
+        found_pos = None
+        for match in ['-semu-consider-outenv-for-diffs', \
+                                    '--semu-consider-outenv-for-diffs']:
+            try:
+                pos = args.index(match)
+                # present
+                ERROR_HANDLER.assert_true (found_pos is None, \
+                                 "Multiple occurence of "
+                           "'-semu-consider-outenv-for-diffs'", __file__)
+                found_pos = pos
+            except ValueError:
+                # abscent
+                pass
+        if old_version:
+            if found_pos is None:
+                # insert no outenv
+                args.insert(0, '--semu-no-environment-output-diff')
+            else:
+                del args[found_pos]
+    #~ def _handle_backward_compatibility_with_semu()
+    
     def _call_generation_run(self, runtool, args):
+        # Handle support for alod version of SEMu
+        self._handle_backward_compatibility_with_semu (args)
+        
         # If seed-dir is set, ensure that only-replay-seeds is set 
         # (semu requires it for now)
         seed_dir_key = self.SEED_DIR_ARG_NAME
@@ -140,67 +200,70 @@ class TestcasesToolSemu(TestcasesToolKlee):
                 
         # use mutants_by_funcs to reorganize target mutants for scalability
 
-        max_mutant_count_per_cluster = \
-                        self.driver_config.get_max_mutant_count_per_cluster()
+        if os.path.isfile(self.cand_muts_file):
+            max_mutant_count_per_cluster = \
+                            self.driver_config.get_max_mutant_count_per_cluster()
 
-        cand_mut_file_bak = self.cand_muts_file + '.bak'
-        mut_list = []
-        with open(self.cand_muts_file) as f:
-            for m in f:
-                m = m.strip()
-                ERROR_HANDLER.assert_true(m.isdigit(), "Invalid mutant ID", \
-                                                                    __file__)
-                mut_list.append(m)
-        if self.mutants_by_funcs is None:
-            random.shuffle(mut_list)
-        else:
-            # make the mutants to be localized in same function as much as
-            # possible
-            # XXX Here the mutant ID are NOT meta but simple IDs
-            this_mutants_by_funcs = {}
-            mut_to_func = {}
-            for f, m_set in self.mutants_by_funcs.items():
-                this_mutants_by_funcs[f] = m_set & set(mut_list)
-                for m in this_mutants_by_funcs[f]:
-                    mut_to_func[m] = f
-            func_to_rank_dec = list(this_mutants_by_funcs.keys())
-            func_to_rank_dec.sort(key=lambda x: len(this_mutants_by_funcs[x]),\
-                                                                reverse=True)
-            func_to_rank_dec = {f: r for r, f in enumerate(func_to_rank_dec)}
-            mut_list.sort(key=lambda x: func_to_rank_dec[mut_to_func[x]])
-        nclust = int(len(mut_list) / max_mutant_count_per_cluster)
-        if len(mut_list) != max_mutant_count_per_cluster * nclust:
-            nclust += 1
-        clusters = np.array_split(mut_list, nclust)
+            cand_mut_file_bak = self.cand_muts_file + '.bak'
+            mut_list = []
+            with open(self.cand_muts_file) as f:
+                for m in f:
+                    m = m.strip()
+                    ERROR_HANDLER.assert_true(m.isdigit(), "Invalid mutant ID", \
+                                                                        __file__)
+                    mut_list.append(m)
+            if self.mutants_by_funcs is None:
+                random.shuffle(mut_list)
+            else:
+                # make the mutants to be localized in same function as much as
+                # possible
+                # XXX Here the mutant ID are NOT meta but simple IDs
+                this_mutants_by_funcs = {}
+                mut_to_func = {}
+                for f, m_set in self.mutants_by_funcs.items():
+                    this_mutants_by_funcs[f] = m_set & set(mut_list)
+                    for m in this_mutants_by_funcs[f]:
+                        mut_to_func[m] = f
+                func_to_rank_dec = list(this_mutants_by_funcs.keys())
+                func_to_rank_dec.sort(key=lambda x: len(this_mutants_by_funcs[x]),\
+                                                                    reverse=True)
+                func_to_rank_dec = {f: r for r, f in enumerate(func_to_rank_dec)}
+                mut_list.sort(key=lambda x: func_to_rank_dec[mut_to_func[x]])
+            nclust = int(len(mut_list) / max_mutant_count_per_cluster)
+            if len(mut_list) != max_mutant_count_per_cluster * nclust:
+                nclust += 1
+            clusters = np.array_split(mut_list, nclust)
 
-        # update max-time
-        if len(clusters) > 1:
-            cur_max_time = float(self.get_value_in_arglist(args, 'max-time'))
-            self.set_value_in_arglist(args, 'max-time', \
-                                    str(max(1, cur_max_time / len(clusters))))
-        
-        shutil.move(self.cand_muts_file, cand_mut_file_bak)
-
-        c_dirs = []
-        for c_id, clust in enumerate(clusters):
-            logging.debug("SEMU: targeting mutant cluster {}/{} ...".format(\
-                                                        c_id+1, len(clusters)))
-            with open(self.cand_muts_file, 'w') as f:
-                for m in clust:
-                    f.write(m+'\n')
-
-            super(TestcasesToolSemu, self)._call_generation_run(runtool, args)
+            # update max-time
+            if len(clusters) > 1:
+                cur_max_time = float(self.get_value_in_arglist(args, 'max-time'))
+                self.set_value_in_arglist(args, 'max-time', \
+                                        str(max(1, cur_max_time / len(clusters))))
             
-            c_dir = os.path.join(os.path.dirname(self.tests_storage_dir), \
-                                                                    str(c_id))
-            shutil.move(self.tests_storage_dir, c_dir)
-            c_dirs.append(c_dir)
+            shutil.move(self.cand_muts_file, cand_mut_file_bak)
 
-        os.mkdir(self.tests_storage_dir)
-        for c_dir in c_dirs:
-            shutil.move(c_dir, self.tests_storage_dir)
+            c_dirs = []
+            for c_id, clust in enumerate(clusters):
+                logging.debug("SEMU: targeting mutant cluster {}/{} ...".format(\
+                                                            c_id+1, len(clusters)))
+                with open(self.cand_muts_file, 'w') as f:
+                    for m in clust:
+                        f.write(m+'\n')
 
-        shutil.move(cand_mut_file_bak, self.cand_muts_file)
+                super(TestcasesToolSemu, self)._call_generation_run(runtool, args)
+                
+                c_dir = os.path.join(os.path.dirname(self.tests_storage_dir), \
+                                                                        str(c_id))
+                shutil.move(self.tests_storage_dir, c_dir)
+                c_dirs.append(c_dir)
+
+            os.mkdir(self.tests_storage_dir)
+            for c_dir in c_dirs:
+                shutil.move(c_dir, self.tests_storage_dir)
+
+            shutil.move(cand_mut_file_bak, self.cand_muts_file)
+        else:
+            super(TestcasesToolSemu, self)._call_generation_run(runtool, args)
     #~ def _call_generation_run()
 
     def _get_tool_name(self):
@@ -223,6 +286,9 @@ class TestcasesToolSemu(TestcasesToolKlee):
             return super(TestcasesToolSemu, self)._get_input_bitcode_file(\
                                         code_builds_factory, rel_path_map, \
                                 meta_criteria_tool_obj=meta_criteria_tool_obj)
+        if type(meta_mu_src) == str:
+            # XXX: The actual path to the meta is specified
+            return meta_mu_src
         
         # XXX: Case of other mutation tools like Mart
         # get the meta criterion file from MART or any compatible tool.
@@ -335,6 +401,6 @@ class TestcasesToolSemu(TestcasesToolKlee):
     #~ def fdupeGeneratedTest ()
 
     def requires_criteria_instrumented(self):
-        return True
+        return self.driver_config.requires_criteria_instrumented()
     #~ def requires_criteria_instrumented()
 #~ class TestcasesToolSemu

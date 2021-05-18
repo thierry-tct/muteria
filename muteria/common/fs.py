@@ -465,7 +465,7 @@ class FileDirStructureHandling(object):
         fullpathstring = self.get_dir_pathname(dirname, rel_path=False)
         if os.path.isdir(fullpathstring):
             shutil.rmtree(fullpathstring)
-        os.mkdir(fullpathstring)
+        os.makedirs(fullpathstring)
         if rel_path:
             return self.get_dir_pathname(dirname, rel_path=True)
         return fullpathstring

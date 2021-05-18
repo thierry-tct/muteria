@@ -1,5 +1,7 @@
 from __future__ import print_function
 
+import logging
+
 import muteria.statistics.algorithms as algorithms
 import muteria.common.matrices as common_matrices
 import muteria.common.mix as common_mix
@@ -131,3 +133,69 @@ def getHardToPropagateMutants (strong_mutant_kill_matrix_file, \
     return dualkillratio, [mut for mut, h in dualkillratio.items() if h <= threshold]
 #~ def getHardToPropagateMutants ()
 
+def getFaultRevealingMutants (strong_mutant_kill_matrix_file, \
+                                expected_program_output_file, \
+                                program_output_file, \
+                                threshold=1.0, \
+                                selected_tests=None):
+    """
+    This function compute the set of fault revealing mutants.
+    
+    The inputs are:
+    - mutant kill matrix file, 
+    - expected program output file, Used to see which test fails
+    - obtained program output file, Used to see which test fails
+    - threshold, in case a relaxed fault revealing is looked for
+    - selected tests, in case part of the tests should be used
+    
+    :return: A pair is returned, with first element the set of fault revealing
+            Mutants, and second element, a dict with key the mutants and values
+            the fault revelation ratio 
+            ('# test kill and find fault' divided (/) '# test that kill')
+            For equivalent mutants, the division isinvalid, 
+            we set the value to -1
+    """
+    prog_out = common_matrices.OutputLogData(filename=program_output_file)
+    exp_prog_out = common_matrices.OutputLogData(\
+                                            filename=expected_program_output_file)
+    _, prog_out_uniq = list(prog_out.get_zip_objective_and_data())[0]
+    _, exp_prog_out_uniq = list(exp_prog_out.get_zip_objective_and_data())[0]
+    
+    if set(prog_out_uniq) != set(exp_prog_out_uniq):
+        logging.warning("Test mismatch between program output and expected!")
+    intersect = set(prog_out_uniq) & set(exp_prog_out_uniq)
+    fault_tests = set()
+    for elem in intersect:
+        ol_equiv = common_matrices.OutputLogData.outlogdata_equiv(\
+                                    prog_out_uniq[elem], exp_prog_out_uniq[elem])
+        if not ol_equiv:
+            ERROR_HANDLER.assert_true (elem not in fault_tests, \
+                                                        "duplicate test", __file__)
+            fault_tests.add(elem)
+            
+    # get mutant to killing test dict
+    kill_matrix = common_matrices.ExecutionMatrix(\
+                                          filename=strong_mutant_kill_matrix_file)
+    mut_to_killtests = kill_matrix.query_active_columns_of_rows()
+    
+    # remove unselected tests
+    if selected_tests is not None:
+        selected_tests = set(selected_tests)
+        for mut, tests in mut_to_kiltests.items():
+            mut_to_killtests[mut] = set(tests) & selected_tests
+    
+    mutant_to_fr = {}
+    mut, tests in mut_to_killtests.items():
+        kill_fr = len(tests & fault_tests)
+        kill_all = len(tests)
+        if kill_all > 0: 
+            # Killable
+            mutant_to_fr[mut] = -1.0
+        else:
+            mutant_to_fr[mut] = kill_fr * 1.0 / kill_all
+    
+    fault_revealing_set = \
+                    [mut for mut, fr in mutant_to_fr.items() if fr >= threshold]
+    
+    return fault_revealing_set, mutant_to_fr
+#~ def getFaultRevealingMutants ()
