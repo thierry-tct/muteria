@@ -5,7 +5,7 @@ import sys
 import os
 import argparse
 
-from _version import __version__, _framework_name
+from muteria._version import __version__, _framework_name
 
 import muteria.common.mix as common_mix
 
