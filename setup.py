@@ -38,6 +38,7 @@ def get_requirements_list():
         "gitpython",
         "tqdm",
         "joblib",
+        "jinja2",
         #docker # https://docker-py.readthedocs.io/en/stable/index.html
         #sh # easy subprocess creation
         #enum #(python 2.7)
