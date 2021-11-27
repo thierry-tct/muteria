@@ -183,8 +183,9 @@ class DriversUtils(object):
                                             stdout=subprocess.DEVNULL)
             retcode = p.wait()
             if retcode not in expected_exit_codes:
-                ERROR_HANDLER.error_exit("Program {} {}.".format(prog,\
-                                        ': check is problematic'), __file__)
+                ERROR_HANDLER.error_exit("Program {}: {} {}.".format(prog,\
+                                        'check is problematic. returned', 
+                                         retcode), __file__)
         except OSError as e:
             if e.errno == errno.ENOENT:
                 logging.info("{} not installed".format(prog))

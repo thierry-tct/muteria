@@ -1012,7 +1012,8 @@ class ConvertCollectKtestsSeeds:
         return commonArgs, ktestContains
     #~ _getSymArgsFromZestiKtests()
 
-    def _loadAndGetSymArgsFromKleeKTests(self, ktestsList, teststopdir):
+    def _loadAndGetSymArgsFromKleeKTests(self, ktestsList, teststopdir, 
+                                                must_have_model_version=True):
         '''
             the list of klee tests (ktest names) are il ktestsList. 
             Each represent the location of the ktest w.r.t. teststopdir
@@ -1064,7 +1065,7 @@ class ConvertCollectKtestsSeeds:
                         for s_a in commonArgs:
                             stdin_fixed_common += s_a.split()
                 # make sure that model_version is the last object
-                ERROR_HANDLER.assert_true(\
+                ERROR_HANDLER.assert_true(not must_have_model_version or \
                                     b.objects[-1][0] == b"model_version", \
                                 "The last object is not 'model_version'" + \
                                                 " in klee's ktest", __file__)

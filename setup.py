@@ -1,8 +1,8 @@
 #
 #> python3 -m pip install --user --upgrade setuptools wheel
+#> python3 -m pip install --user --upgrade twine
 #
 #> python3 setup.py sdist bdist_wheel
-#> python3 -m pip install --user --upgrade twine
 #> python3 -m twine upload dist/muteria-<version>.tar.gz
 #> rm -rf dist build muteria.egg-info __pycache__/
 #
@@ -38,6 +38,7 @@ def get_requirements_list():
         "gitpython",
         "tqdm",
         "joblib",
+        "jinja2",
         #docker # https://docker-py.readthedocs.io/en/stable/index.html
         #sh # easy subprocess creation
         #enum #(python 2.7)

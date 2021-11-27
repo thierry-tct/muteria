@@ -6,10 +6,11 @@ networkx
 gitpython
 tqdm
 joblib
-docker # https://docker-py.readthedocs.io/en/stable/index.html
+jinja2
+#docker # https://docker-py.readthedocs.io/en/stable/index.html
 #sh # easy subprocess creation
 #enum #(python 2.7)
 
 # SERVER
-flask
-flask_socketio
+#flask
+#flask_socketio
