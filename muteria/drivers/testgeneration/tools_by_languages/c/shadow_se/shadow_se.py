@@ -257,15 +257,18 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
             wf.write('set -o pipefail\n\n')
             wf.write('ulimit -s unlimited\n')
             
-            # timeout the shadow execution (some test create daemon which)
-            # are not killed by test timeout. ALSO MAKE SURE TO DESACTIVATE 
-            # IN TEST SCRIPT TIMEOUT
-            kill_after = 30
-            wf.write('time_out_cmd="/usr/bin/timeout --kill-after={}s {}"\n'.\
-                                     format(kill_after, per_test_hard_timeout))
-            # kill after and time for timeout to act
-            per_test_hard_timeout += kill_after + 60 
-            
+            if per_test_hard_timeout is not None:
+                # timeout the shadow execution (some test create daemon which)
+                # are not killed by test timeout. ALSO MAKE SURE TO DESACTIVATE 
+                # IN TEST SCRIPT TIMEOUT
+                kill_after = 30
+                wf.write('time_out_cmd="/usr/bin/timeout --kill-after={}s {}"\n'.\
+                                         format(kill_after, per_test_hard_timeout))
+                # kill after and time for timeout to act
+                per_test_hard_timeout += kill_after + 60 
+            else:
+                wf.write('time_out_cmd="")
+                         
             #wf.write(' '.join(['exec', runtool] + args + ['"${@:1}"']) + '\n')
             wf.write('\nstdindata="{}/klee-last/{}"\n'.format(\
                                                     self.tests_working_dir, \
