@@ -447,6 +447,9 @@ class TestcaseToolsConfig(BaseToolConfig):
     # Whether to compress generated test storage dir. 
     # When true, the generated test storage dir is compressed into a tarball
     # with same name prefix as the folder name. The folder is deleted.
+    # XXX: Do not change in between execution to avoid 
+    # error finding the tarball (when changing from False -> True)
+    # Or error finding the folder (when changing from True -> False)
     COMPRESS_TEST_STORAGE_DIR = True
     
     def set_test_gen_maxtime(self, max_time):
