@@ -61,9 +61,10 @@ class BaseTestcaseTool(abc.ABC):
 
     def __init__(self, tests_working_dir, code_builds_factory, config, \
                                         head_explorer, checkpointer, \
-                                        parent_meta_tool=None):
+                                        parent_meta_tool=None,
+                                        compress_test_storage_dir=True):
         # Set Constants
-        self.compress_test_storage_dir = True
+        self.compress_test_storage_dir = compress_test_storage_dir
 
         # Set Direct Arguments Variables
         self.tests_working_dir = os.path.normpath(tests_working_dir)
