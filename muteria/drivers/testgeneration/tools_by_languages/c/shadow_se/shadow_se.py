@@ -267,7 +267,7 @@ class TestcasesToolShadowSE(TestcasesToolKlee):
                 # kill after and time for timeout to act
                 per_test_hard_timeout += kill_after + 60 
             else:
-                wf.write('time_out_cmd="")
+                wf.write('time_out_cmd=""\n')
                          
             #wf.write(' '.join(['exec', runtool] + args + ['"${@:1}"']) + '\n')
             wf.write('\nstdindata="{}/klee-last/{}"\n'.format(\
