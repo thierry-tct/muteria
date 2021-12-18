@@ -63,7 +63,6 @@ class BaseTestcaseTool(abc.ABC):
                                         head_explorer, checkpointer, \
                                         parent_meta_tool=None):
         # Set Constants
-        self.compress_test_storage_dir = compress_test_storage_dir
 
         # Set Direct Arguments Variables
         self.tests_working_dir = os.path.normpath(tests_working_dir)
@@ -78,7 +77,7 @@ class BaseTestcaseTool(abc.ABC):
                                     "Must specify tests_working_dir", __file__)
 
         # Set Indirect Arguments Variables
-        compress_test_storage_dir=self.config.COMPRESS_TEST_STORAGE_DIR
+        self.compress_test_storage_dir=self.config.COMPRESS_TEST_STORAGE_DIR
         ## Generate the tests into this folder (to be created by user)
         self.tests_storage_dir = os.path.join(
                         self.tests_working_dir, "tests_files")
