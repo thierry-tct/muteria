@@ -490,13 +490,13 @@ class ConvertCollectKtestsSeeds:
                                         actual_test = at
                                         break
                                 msg = " ".join(["\n>> HINT NEEDED: the file",
-                                    "object at position ",ind,"with name",\
+                                    "object at position ",str(ind),"with name",\
                                     str(name),"in ktest",filename, "has file",\
                                     "with complex argv (The actual test is:",\
                                     actual_test,")."])
                             else:
                                 msg = " ".join(["\n>> HINT NEEDED: the file",\
-                                    "object at position ",ind,"with name",\
+                                    "object at position ",str(ind),"with name",\
                                     str(name),"in ktest",filename, "has file",\
                                     "with complex argv (Check",\
                                     "OUTPUT/caches/test2zestidirMap.json",\
