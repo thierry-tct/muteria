@@ -1431,8 +1431,8 @@ class ConvertCollectKtestsSeeds:
                         argv_zest['old'].append(None)
                         argv_zest['new'].append([])
                         if k_cur_inf is not None:
-                            ERROR_HANDLER.assert_true(type(z_cur_inf) == dict,\
-                                                "Invalid z_cur_inf", __file__)
+                            ERROR_HANDLER.assert_true(type(k_cur_inf) == dict,\
+                                                "Invalid k_cur_inf", __file__)
                             newarg = " ".join(["-sym-args", \
                                                     str(k_cur_inf['min']), \
                                                     str(k_cur_inf['max']), \
