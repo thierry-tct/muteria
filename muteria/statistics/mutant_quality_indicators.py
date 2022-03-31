@@ -185,7 +185,7 @@ def getFaultRevealingMutants (strong_mutant_kill_matrix_file, \
             mut_to_killtests[mut] = set(tests) & selected_tests
     
     mutant_to_fr = {}
-    mut, tests in mut_to_killtests.items():
+    for mut, tests in mut_to_killtests.items():
         kill_fr = len(tests & fault_tests)
         kill_all = len(tests)
         if kill_all > 0: 
