@@ -1,3 +1,6 @@
 #
 # pip install pylint --upgrade
 pylint
+# Documentation
+sphinx
+myst-parser
