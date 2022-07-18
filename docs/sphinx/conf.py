@@ -12,7 +12,12 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../..'))
+
+CONF_MUTERIA_TOP_DIR = os.path.dirname(os.path.dirname(os.path.abspath('.')))
+CONF_MUTERIA_PKG = "muteria"
+
+sys.path.insert(0, CONF_MUTERIA_TOP_DIR)
+sys.path.insert(0, os.path.join(CONF_MUTERIA_TOP_DIR, CONF_MUTERIA_PKG))
 
 
 # -- Project information -----------------------------------------------------
@@ -22,7 +27,8 @@ copyright = '2022, Thierry TITCHEU CHEKAM'
 author = 'Thierry TITCHEU CHEKAM'
 
 # The full version, including alpha/beta/rc tags
-release = '0.2.2'
+import muteria
+release = muteria.__version__
 
 
 # -- General configuration ---------------------------------------------------
@@ -35,10 +41,16 @@ extensions = [
     'sphinx.ext.doctest',
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
+    'sphinx.ext.viewcode',
+    'sphinx.ext.autosectionlabel',
+    'sphinxcontrib.apidoc',
     'myst_parser'
 ]
 
 autosummary_generate = True  # Turn on sphinx.ext.autosummary
+apidoc_module_dir = os.path.join(CONF_MUTERIA_TOP_DIR, CONF_MUTERIA_PKG) # sphinxcontrib.apidoc config
+apidoc_output_dir = '_reference' # sphinxcontrib.apidoc config
+apidoc_separate_modules = True # sphinxcontrib.apidoc config
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -60,3 +72,10 @@ html_theme = 'bizstyle'
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
+
+html_context = {
+    'github_user_name': 'muteria', 
+    'github_repo_name': 'muteria',
+    'project_name': 'Muteria'
+}
+

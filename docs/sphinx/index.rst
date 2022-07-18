@@ -11,6 +11,7 @@ Welcome to Muteria's documentation!
    :caption: Contents:
 
    readme
+   _reference/modules.rst
 
 .. autosummary::
    :toctree: _autosummary
