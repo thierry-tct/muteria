@@ -9,7 +9,7 @@ pip3 install -r developer-requirements.txt
 
 Build the doc as following (From within the repository root dir)
 ```bash
-cd docs/sphinx
+cd docs
 make html
 ```
 

@@ -14,7 +14,7 @@ ERROR_HANDLER = common_mix.ErrorHandler
 
 class ToolsModulesLoader(object):
     """ Load tools drivers
-        Example:
+        :Example:
         >>> import muteria.drivers as md
         >>> md.ToolsModulesLoader.get_tools_modules(\
         ...                            md.ToolsModulesLoader.CRITERIA_TOOLS)

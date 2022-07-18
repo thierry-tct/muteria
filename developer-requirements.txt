@@ -4,3 +4,4 @@ pylint
 # Documentation
 sphinx
 myst-parser
+sphinxcontrib-apidoc

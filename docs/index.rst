@@ -7,14 +7,17 @@ Welcome to Muteria's documentation!
 ===================================
 
 .. toctree::
-   :maxdepth: 4
+   :glob:
+   :maxdepth: 3
    :caption: Contents:
 
-   readme
-   _reference/modules.rst
+   about
+   user_doc/*
+   developer_doc/*
+   sphinx/_reference/modules.rst
 
 .. autosummary::
-   :toctree: _autosummary
+   :toctree: sphinx/_autosummary
    :template: custom-module-template.rst
    :recursive:
 

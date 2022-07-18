@@ -134,7 +134,7 @@ class EnumAutoName(enum.Enum):
 
     def get_str(self):
         """ get the string representation of the enum field.
-            Example:
+            :Example:
             >>> class MyEnum(EnumAutoName):
             ...     FIELD1 = "abc"
             ...     FIELD2 = 3
@@ -148,7 +148,7 @@ class EnumAutoName(enum.Enum):
 
     def get_field_value(self):
         """ get the value of the enum field.
-            Example:
+            :Example:
             >>> class MyEnum(EnumAutoName):
             ...     FIELD1 = "abc"
             ...     FIELD2 = 3
@@ -164,7 +164,7 @@ class EnumAutoName(enum.Enum):
     def has_element_named(cls, e_name):
         """ Check that the string e_name represent the name of a field
             of the enum.
-            Example:
+            :Example:
             >>> class MyEnum(EnumAutoName):
             ...     FIELD1 = "abc"
             ...     FIELD2 = 3
@@ -180,7 +180,7 @@ class EnumAutoName(enum.Enum):
     @classmethod
     def is_valid(cls, elem):
         """ Check that the object elem is a field of the enum
-            Example:
+            :Example:
             >>> class MyEnum(EnumAutoName):
             ...     FIELD1 = "abc"
             ...     FIELD2 = 3

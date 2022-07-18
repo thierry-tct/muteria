@@ -4,7 +4,7 @@ class Lib(object):
         pass
     def compute(self, a, b):
         """
-        Example:
+        :Example:
         >>> l = Lib()
         >>> l.compute(1, 2)
         3
