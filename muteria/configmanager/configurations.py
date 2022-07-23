@@ -444,6 +444,14 @@ class TestcaseToolsConfig(BaseToolConfig):
     # as timeout on cosecutive executions
     RECORDED_TEST_TIMEOUT_FACTOR = 5
     
+    # Whether to compress generated test storage dir. 
+    # When true, the generated test storage dir is compressed into a tarball
+    # with same name prefix as the folder name. The folder is deleted.
+    # XXX: Do not change in between execution to avoid 
+    # error finding the tarball (when changing from False -> True)
+    # Or error finding the folder (when changing from True -> False)
+    COMPRESS_TEST_STORAGE_DIR = True
+    
     def set_test_gen_maxtime(self, max_time):
         self.TEST_GENERATION_MAXTIME = max_time
     def set_test_gen_timeout_framework_grace(self, grace_time):
@@ -458,6 +466,8 @@ class TestcaseToolsConfig(BaseToolConfig):
         self.OUTLOG_MAX_ALLOWED_BYTES_SIZE = value
     def set_recorded_test_timeout_factor(self, value):
         self.RECORDED_TEST_TIMEOUT_FACTOR = value
+    def set_compress_test_storage_dir(self, value):
+        self.COMPRESS_TEST_STORAGE_DIR = value
 #~class TestcaseToolsConfig
     
 class CriteriaToolsConfig(BaseToolConfig):

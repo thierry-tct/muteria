@@ -1,4 +1,5 @@
-# MUTERIA (MUlti-Tools and criTERIA framework for automated software testing)
+# About Muteria
+
 [https://github.com/muteria/muteria](https://github.com/muteria/muteria)
 
 *Muteria* is a Software Analysis/Testing framework that integrate multiple tools. 
@@ -6,28 +7,25 @@
 
   Report Sample. 
 
-![sample](docs/imgs/report_summary.png?raw=true "Title")
+![sample](imgs/report_summary.png "Title")
 
 *Muteria* can be used through:
 
 - Its [API](https://muteria.github.io/muteria)
 
-- Commnad Line Interface ([CLI](docs/user_doc/usage.md))
+- Commnad Line Interface ([CLI](user_doc/usage.md))
 
 Go to:
 
-* [Usage](docs/user_doc/usage.md) to get started with using `Muteria`.
+* [Usage](user_doc/usage.md) to get started with using `Muteria`.
 
 * Extend `Muteria` with new tool's drivers
-	- [Testcase Tools Drivers](docs/user_doc/testcase_tool_driver.md) details the development of new drivers for testcase (test generation) tools.
-	- [Test Criteria Tools Drivers](docs/user_doc/criterion_tool_driver.md) details the development of new drivers for test criteria tools.
+	- [Testcase Tools Drivers](user_doc/testcase_tool_driver.md) details the development of new drivers for testcase (test generation) tools.
+	- [Test Criteria Tools Drivers](user_doc/criterion_tool_driver.md) details the development of new drivers for test criteria tools.
 
-* [Development Manual](docs/developer_doc/developer_manual.md)
+* [Development Manual](developer_doc/developer_manual.md)
 
-* [Project Status](docs/developer_doc/project_status.md) to view the features and development plan on the project.
-
-
-For further information and documentation, see the [webpage](https://muteria.github.io/muteria).
+* [Project Status](developer_doc/project_status.md) to view the features and development plan on the project.
 
 
 ---

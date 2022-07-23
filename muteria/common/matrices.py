@@ -128,7 +128,7 @@ class RawExecutionMatrix(object):
                             file upon creation
         :return: a deep copy of this matrix
 
-        Example:
+        :Example:
         >>> nc = ['a', 'b', 'c']
         >>> mat = ExecutionMatrix(non_key_col_list=nc)
         >>> mat.add_row_by_key('k', [1, 2, 3])
@@ -182,7 +182,7 @@ class RawExecutionMatrix(object):
         :param value: cell value type
         :return: nothing
             
-        Example:
+        :Example:
         >>> nc = ['a', 'b', 'c']
         >>> mat = ExecutionMatrix(non_key_col_list=nc)
         >>> mat.add_row_by_key('k', [1, 2, 3])
@@ -209,7 +209,7 @@ class RawExecutionMatrix(object):
                         file after adding
         :return: nothing
 
-        Example:
+        :Example:
         >>> nc = ['a', 'b', 'c']
         >>> mat = ExecutionMatrix(non_key_col_list=nc)
         >>> mat.add_row_by_key('k', [1, 2, 3])
@@ -246,7 +246,7 @@ class RawExecutionMatrix(object):
                          to file after deletion
         :return: nothing
 
-        Example:
+        :Example:
         >>> nc = ['a', 'b', 'c']
         >>> mat = ExecutionMatrix(non_key_col_list=nc)
         >>> mat.add_row_by_key('k', [1, 2, 3])
@@ -273,7 +273,7 @@ class RawExecutionMatrix(object):
         :return: a deep copy of the underlying pandas dataframe 
                 (modifying the dataframe do ot affect the matrix)
 
-        Example:
+        :Example:
         >>> nc = ['a', 'b', 'c']
         >>> mat = ExecutionMatrix(non_key_col_list=nc)
         >>> mat.add_row_by_key('k', [1, 2, 3])
@@ -293,7 +293,7 @@ class RawExecutionMatrix(object):
 
     def get_nonkey_colname_list(self):
         """ get list of non key columns
-        Example:
+        :Example:
         >>> nc = ['a', 'b', 'c']
         >>> mat = ExecutionMatrix(non_key_col_list=nc)
         >>> mat.get_nonkey_colname_list() == nc
@@ -306,7 +306,7 @@ class RawExecutionMatrix(object):
 
     def get_keys(self):
         """ get a pandas serie of the keys (example mutant ids)
-        Example:
+        :Example:
         >>> nc = ['a', 'b', 'c']
         >>> mat = ExecutionMatrix(non_key_col_list=nc)
         >>> type(mat.get_keys()) == pd.core.series.Series
@@ -321,7 +321,7 @@ class RawExecutionMatrix(object):
 
     def is_empty(self):
         """ Check that the matrix have no row (all columns have no row)
-        Example:
+        :Example:
         >>> nc = ['a', 'b', 'c']
         >>> mat = ExecutionMatrix(non_key_col_list=nc)
         >>> mat.is_empty()
@@ -342,7 +342,7 @@ class RawExecutionMatrix(object):
                             extracted matrix. Default is None (no storage)
         :return: matrix which is sub matrix of this
 
-        Example:
+        :Example:
         >>> nc = ['a', 'b', 'c']
         >>> mat = ExecutionMatrix(non_key_col_list=nc)
         >>> mat.add_row_by_key('k', [1, 2, 3])
@@ -376,7 +376,7 @@ class RawExecutionMatrix(object):
                             extracted matrix. Default is None (no storage)
         :return: matrix which is sub matrix of this
 
-        Example:
+        :Example:
         >>> nc = ['a', 'b', 'c']
         >>> mat = ExecutionMatrix(non_key_col_list=nc)
         >>> mat.add_row_by_key('k', [1, 2, 3])
@@ -406,7 +406,7 @@ class RawExecutionMatrix(object):
         :return: a dict representing a mapping between the passed rows
                 and the list of columns active for those rows
 
-        Example:
+        :Example:
         >>> nc = ['a', 'b', 'c']
         >>> mat = ExecutionMatrix(non_key_col_list=nc)
         >>> act = mat.getActiveCellDefaultVal()
@@ -436,7 +436,7 @@ class RawExecutionMatrix(object):
         :return: a dict representing a mapping between the passed columns
                 and the list of rows active for those columns
 
-        Example:
+        :Example:
         >>> nc = ['a', 'b', 'c']
         >>> mat = ExecutionMatrix(non_key_col_list=nc)
         >>> act = mat.getActiveCellDefaultVal()
@@ -466,7 +466,7 @@ class RawExecutionMatrix(object):
         :return: a dict representing a mapping between the passed rows
                 and the list of columns inactive for those rows
 
-        Example:
+        :Example:
         >>> nc = ['a', 'b', 'c']
         >>> mat = ExecutionMatrix(non_key_col_list=nc)
         >>> act = mat.getActiveCellDefaultVal()
@@ -496,7 +496,7 @@ class RawExecutionMatrix(object):
         :return: a dict representing a mapping between the passed columns
                 and the list of rows inactive for those columns
 
-        Example:
+        :Example:
         >>> nc = ['a', 'b', 'c']
         >>> mat = ExecutionMatrix(non_key_col_list=nc)
         >>> act = mat.getActiveCellDefaultVal()
@@ -526,7 +526,7 @@ class RawExecutionMatrix(object):
         :return: a dict representing a mapping between the passed rows
                 and the list of columns uncertain for those rows
 
-        Example:
+        :Example:
         >>> nc = ['a', 'b', 'c']
         >>> mat = ExecutionMatrix(non_key_col_list=nc)
         >>> act = mat.getActiveCellDefaultVal()
@@ -556,7 +556,7 @@ class RawExecutionMatrix(object):
         :return: a dict representing a mapping between the passed columns
                 and the list of rows inactive for those columns
 
-        Example:
+        :Example:
         >>> nc = ['a', 'b', 'c']
         >>> mat = ExecutionMatrix(non_key_col_list=nc)
         >>> act = mat.getActiveCellDefaultVal()
@@ -589,7 +589,7 @@ class RawExecutionMatrix(object):
                     row values. 
                     each row value is a dict of column to cell value
 
-        Example:
+        :Example:
         >>> nc = ['a', 'b', 'c']
         >>> mat = ExecutionMatrix(non_key_col_list=nc)
         >>> mat.add_row_by_key('k', [1, 2, 3])
@@ -612,7 +612,7 @@ class RawExecutionMatrix(object):
         :param values: dict representing the new cell values by column name
         :return: nothing
 
-        Example:
+        :Example:
         >>> nc = ['a', 'b', 'c']
         >>> mat = ExecutionMatrix(non_key_col_list=nc)
         >>> mat.add_row_by_key('k', [1, 2, 3])
@@ -652,7 +652,7 @@ class RawExecutionMatrix(object):
                         matrix (this matrix), after update, into its file.
         :return: nothing
 
-        Example:
+        :Example:
         >>> nc = ['a', 'b', 'c']
         >>> mat = ExecutionMatrix(non_key_col_list=nc)
         >>> mat.add_row_by_key('k', [1, 2, 3])
