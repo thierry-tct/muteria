@@ -13,6 +13,12 @@ cd docs
 make html
 ```
 
+push the doc as following (From within the repository root dir)
+```bash
+cd docs
+make push-docs
+```
+
 The build documentation will be available in the folder `docs/sphinx/_build/html`.
 
 ## Package Project

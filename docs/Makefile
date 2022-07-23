@@ -18,3 +18,12 @@ help:
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
 %: Makefile
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+
+.PHONY: push-docs
+
+push-docs: html
+	ghp-import --no-jekyll $(BUILDDIR)/html/
+	git push -u origin gh-pages
+	@echo
+	@echo "Published to Github pages"
+
